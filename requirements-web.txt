@@ -1,0 +1,3 @@
+# Installed into a SEPARATE environment, never the existing Hermes/Python install.
+crawl4ai==0.9.5
+browser-use==0.13.1

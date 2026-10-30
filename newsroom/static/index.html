@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#17645b">
+  <title>Bàn tin — Góc biên tập của bạn</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Bàn tin, trang chủ"><span class="brand-mark">b.</span><span>Bàn tin<small>GÓC BIÊN TẬP CỦA BẠN</small></span></a>
+    <div class="workspace-label"><span class="live-dot"></span> Không gian cá nhân</div>
+    <nav aria-label="Điều hướng chính">
+      <button class="nav-item active" data-view="inbox"><span class="nav-icon">▤</span> Hộp tin <span id="nav-count" class="count">0</span></button>
+      <button class="nav-item" data-view="drafts"><span class="nav-icon">✎</span> Bàn biên tập <span id="draft-count" class="count">0</span></button>
+      <button class="nav-item" data-view="sources"><span class="nav-icon">◎</span> Nguồn tin</button>
+      <button class="nav-item" data-view="guide"><span class="nav-icon">⌘</span> Cách sử dụng</button>
+    </nav>
+    <section class="trial-card">
+      <span class="eyebrow">THỬ NGHIỆM 30 BÀI</span>
+      <strong><span id="trial-total">0</span><span class="muted"> / 30 bài</span></strong>
+      <progress id="trial-progress" max="30" value="0" aria-label="Tiến độ 30 bài"></progress>
+      <p>15 bài AI thực dụng<br>15 bài thiết bị & phần mềm</p>
+      <small id="trial-detail">Tính theo 30 ngày gần nhất.</small>
+    </section>
+    <div class="sidebar-bottom"><span class="avatar">T</span><div>Biên tập viên<small>Chạy trên máy của bạn</small></div><span class="local-dot" title="Không tự xuất bản"></span></div>
+  </aside>
+
+  <main>
+    <div id="demo-banner" class="notice warning" hidden>BẢN MINH HỌA — dữ liệu giả, không phải tin thật. Không đăng các ví dụ này.</div>
+    <header class="page-header">
+      <div><div class="eyebrow">MỖI NGÀY MỘT GÓC NHÌN MỚI</div><h1>Một tin hay, một góc nhìn riêng.</h1><p>Công nghệ mới có ích gì cho người Việt?</p></div>
+      <div class="header-actions"><button id="import-button" class="button secondary">＋ Nhập bài thủ công</button><button id="refresh-button" class="button primary"><span id="refresh-icon">↻</span> <span id="refresh-label">Lấy tin mới</span></button></div>
+    </header>
+
+    <div class="status-strip"><span><span class="live-dot"></span> Chỉ trên máy này</span><span>ChatGPT: chuyển thủ công</span><span>AI trình duyệt: xác nhận riêng · Không tự đăng</span><span id="refresh-status" class="status-end">Đang mở dữ liệu…</span></div>
+    <section class="stats" aria-label="Tổng quan">
+      <div class="stat"><span>Tin đã thu thập</span><strong id="stat-articles">0</strong><small>Đã lọc trùng URL / tiêu đề</small></div>
+      <div class="stat"><span>Bản đang soạn</span><strong id="stat-drafts">0</strong><small>Chưa sẵn sàng để đăng</small></div>
+      <div class="stat"><span>Đã duyệt</span><strong id="stat-approved">0</strong><small>Sẵn sàng sao chép thủ công</small></div>
+      <div class="stat"><span>Đã ghi nhận đăng</span><strong id="stat-published">0</strong><small>Do bạn ghi nhận · 30 ngày</small></div>
+    </section>
+
+    <section id="view-inbox" class="view">
+      <div class="section-heading"><div><h2>Hộp tin của bạn <span class="badge subtle">NGUỒN QUỐC TẾ</span></h2><p>Chọn một tin có ích. Đọc nguồn trước khi viết.</p></div><span class="small-note">Ưu tiên biên tập ≠ mức độ thịnh hành</span></div>
+      <div class="inbox-grid">
+        <section class="panel story-panel" aria-label="Danh sách tin">
+          <div class="filter-row"><label class="search-label"><span>⌕</span><input id="search-input" type="search" placeholder="Tìm theo tiêu đề, nguồn…" aria-label="Tìm tin"></label><select id="age-filter" aria-label="Khoảng thời gian"><option value="7">7 ngày</option><option value="2">48 giờ</option><option value="all">Tất cả</option></select></div>
+          <div class="tabs category-tabs" aria-label="Lọc chủ đề"><button class="active" data-category="all">Tất cả</button><button data-category="ai">AI thực dụng</button><button data-category="tools">Thiết bị & phần mềm</button></div>
+          <div id="story-list" class="story-list"></div>
+          <div id="list-footer" class="list-footer">Tối đa 500 tin gần nhất.</div>
+        </section>
+        <section id="article-detail" class="panel article-panel" aria-label="Tư liệu tin đã chọn"><div class="empty-state"><span class="empty-symbol">▤</span><h3>Bắt đầu bằng một nguồn tốt.</h3><p>Nhấn “Lấy tin mới” hoặc tự nhập liên kết.<br>Không có bài nào được tự động đăng.</p></div></section>
+      </div>
+    </section>
+
+    <section id="view-drafts" class="view" hidden>
+      <div class="section-heading"><div><h2>Bàn biên tập</h2><p>Tư liệu → ChatGPT → chỉnh sửa → bạn duyệt → đăng thủ công.</p></div></div>
+      <div class="editor-grid">
+        <aside class="panel draft-panel"><div class="panel-title"><h3>Các bài của bạn</h3><select id="draft-filter" aria-label="Lọc bản nháp"><option value="all">Tất cả</option><option value="draft">Đang soạn</option><option value="approved">Đã duyệt</option><option value="published">Đã ghi nhận đăng</option></select></div><div id="draft-list"></div></aside>
+        <section class="panel editor-panel">
+          <div id="editor-empty" class="empty-state"><span class="empty-symbol">✎</span><h3>Chưa chọn bản nháp.</h3><p>Chọn tin trong Hộp tin rồi nhấn “Tạo bản nháp”.</p><button class="button secondary" data-view="inbox">Về Hộp tin</button></div>
+          <div id="editor-content" hidden>
+            <div class="editor-top"><div><span id="editor-status" class="badge">Đang soạn</span><small id="editor-revision"></small></div><button id="history-button" class="text-button">Lịch sử</button></div>
+            <div class="tabs editor-tabs"><button data-tab="packet" class="active">1. Sang ChatGPT</button><button data-tab="write">2. Biên tập</button><button data-tab="review">3. Duyệt & xuất</button></div>
+            <div id="unsaved-notice" class="notice warning" hidden>Bạn có thay đổi chưa lưu. Lưu nội dung trước khi kiểm tra và duyệt.</div>
+            <div id="tab-packet" class="editor-tab">
+              <h3>Mang tư liệu sang ChatGPT Plus</h3><p class="muted">Sao chép yêu cầu dưới đây vào ChatGPT. Sau khi có kết quả, chuyển riêng tiêu đề, nội dung bài và góc nhìn về bước 2.</p>
+              <div class="notice">Chỉ là trích đoạn RSS/API/web hoặc ghi chú, không phải bài gốc đầy đủ. Hãy mở nguồn để kiểm chứng; không coi câu trả lời AI là bằng chứng.</div>
+              <label>Yêu cầu và hồ sơ nguồn<textarea id="packet-text" class="packet-text" readonly spellcheck="false"></textarea></label>
+              <div class="action-row"><button id="copy-packet" class="button primary">Sao chép sang ChatGPT</button><a class="button secondary" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Mở ChatGPT ↗</a><button class="text-button" data-tab="write">Đã có kết quả →</button></div>
+              <p class="small-note">Nếu nút sao chép không hoạt động: chọn ô tư liệu, nhấn Ctrl+A rồi Ctrl+C. Không gửi mật khẩu hoặc dữ liệu nhạy cảm. Ứng dụng không đăng nhập hay đọc lịch sử ChatGPT.</p>
+            </div>
+            <div id="tab-write" class="editor-tab" hidden>
+              <form id="draft-form">
+                <div class="two-fields"><label>Tên Page dự kiến đăng<input id="field-page" maxlength="120" placeholder="Tên thương hiệu / Facebook Page"></label><label>Nhóm nội dung<select id="field-category"><option value="ai">AI thực dụng</option><option value="tools">Thiết bị & phần mềm</option></select></label></div>
+                <label>Tiêu đề tiếng Việt<input id="field-title" maxlength="180" placeholder="Có gì mới, và vì sao người đọc nên quan tâm?"></label>
+                <label>Nội dung bài đăng <span id="body-length" class="label-meta">0 ký tự</span><textarea id="field-body" class="body-text" maxlength="12000" placeholder="Chỉ dán phần bài đăng ở đây. Không dán toàn bộ lời trả lời của ChatGPT, bảng kiểm chứng hay nhận xét của AI."></textarea></label>
+                <label>Góc nhìn riêng của bài<textarea id="field-angle" rows="2" maxlength="1000" placeholder="Bài này giúp người Việt hiểu hoặc làm được điều gì?"></textarea></label>
+                <details class="source-details"><summary>Nguồn tham khảo & ghi chú kiểm chứng</summary><p class="small-note">Có thể thêm nguồn đối chiếu và sửa ghi chú sau khi tự đọc. Không tự tải liên kết, không sao chép toàn bộ bài có bản quyền.</p><div id="source-fields"></div><button type="button" id="add-source" class="button secondary small">＋ Bổ sung nguồn</button></details>
+                <div class="action-row sticky-actions"><button id="save-draft" type="submit" class="button primary">Lưu bản nháp</button><button id="preview-button" type="button" class="button secondary">Xem trước</button><button type="button" class="text-button" data-tab="review">Sang kiểm tra →</button></div>
+              </form>
+            </div>
+            <div id="tab-review" class="editor-tab" hidden>
+              <h3>Bạn là người quyết định cuối cùng.</h3><p class="muted">Lưu nội dung trước, sau đó hoàn tất từng mục. Đây là xác nhận của bạn, không phải kết quả kiểm chứng tự động.</p>
+              <div id="review-summary" class="review-summary"></div>
+              <div id="review-checks" class="review-checks"></div>
+              <div class="action-row"><button id="approve-button" class="button primary">Duyệt phiên bản này</button><button id="export-button" class="button secondary" disabled>Sao chép bài đã duyệt</button></div>
+              <p class="small-note">Chỉ quản lý bài chữ. Sửa nội dung, nguồn, nhóm bài hoặc tên Page sẽ hủy duyệt. Nếu thêm ảnh khi đăng, bạn phải tự kiểm tra quyền ảnh.</p>
+              <section id="publish-section" class="manual-publish" hidden><h4>Sau khi bạn đã tự đăng lên Facebook</h4><p>Ứng dụng không đăng thay bạn và không xác minh được bài ngoài Facebook.</p><label>Liên kết bài bạn đã đăng<input id="post-url" type="url" placeholder="https://www.facebook.com/…/posts/…"></label><button id="mark-published" class="button secondary">Ghi nhận tôi đã đăng thủ công</button></section>
+              <section id="metrics-section" class="manual-publish" hidden><h4>Theo dõi kết quả thủ công</h4><a id="published-link" target="_blank" rel="noopener noreferrer">Mở bài đã ghi nhận ↗</a><div class="metric-fields"><label>Lượt lưu<input id="metric-saves" type="number" min="0" max="1000000" value="0"></label><label>Lượt chia sẻ<input id="metric-shares" type="number" min="0" max="1000000" value="0"></label><label>Người theo dõi mới<input id="metric-followers" type="number" min="0" max="1000000" value="0"></label><label>Phút chuẩn bị<input id="metric-minutes" type="number" min="0" max="1000000" value="0"></label></div><label>Ghi chú / thời điểm quan sát<textarea id="metric-note" maxlength="1000" rows="2"></textarea></label><button id="save-metrics" class="button secondary">Lưu số liệu</button><p class="small-note">Số do bạn nhập, không tự đo hoặc chứng minh người theo dõi đến từ bài này.</p></section>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="view-sources" class="view" hidden>
+      <div class="section-heading sources-heading"><div><h2>Nguồn tin & thu thập nhiều tầng.</h2><p>Theo dõi website để lấy bài mới định kỳ. Nhập một bài riêng lẻ bằng “Nhập bài thủ công”.</p></div><button id="follow-button" class="button primary">＋ Thêm nguồn theo dõi</button></div>
+      <div id="source-upgrade-notice" class="notice warning" hidden>Lưu bài đang làm, dừng cửa sổ chạy Bàn tin bằng Ctrl+C rồi mở lại MO-BAN-TIN.cmd để dùng chức năng thêm nguồn. Chỉ tải lại trang chưa đủ.</div>
+      <div id="collector-status" class="notice"></div>
+      <div id="sources-grid" class="sources-grid"></div>
+      <section class="panel source-card"><h3>Tác vụ trình duyệt cần xem xét</h3><p>Không tự gọi AI trả phí. Chỉ chạy sau khi đã kết nối và bạn xác nhận. Agent chỉ mang tư liệu về, không duyệt hoặc đăng.</p><div id="collection-jobs"></div></section>
+      <div class="notice">Mỗi nguồn web tối đa 3 bài mới/lượt, trích đoạn tối đa 3.000 ký tự. Không vượt robots.txt, chặn truy cập hoặc tường phí. Nội dung hãng có thể thiên về quảng bá. Nguồn lỗi không xóa dữ liệu cũ.</div>
+    </section>
+
+    <section id="view-guide" class="view" hidden>
+      <div class="section-heading"><div><h2>Một giờ cho một bài có giá trị.</h2><p>Quy trình đề xuất để thử nghiệm, chưa phải thời gian thực tế đã đo.</p></div></div>
+      <div class="guide-grid"><section class="panel guide-card"><span class="step-number">01</span><h3>10 phút · Chọn tin</h3><p>Lấy tin mới, chọn một chủ đề bạn hiểu và người Việt có thể dùng được. Điểm ưu tiên là bộ lọc từ khóa và độ mới, không phải số liệu Google Trends.</p></section><section class="panel guide-card"><span class="step-number">02</span><h3>25 phút · Đọc & biên tập</h3><p>Mở nguồn gốc, chuyển gói tư liệu sang ChatGPT Plus. Nhận kết quả, kiểm tra từng thông tin và viết lại góc nhìn riêng.</p></section><section class="panel guide-card"><span class="step-number">03</span><h3>15 phút · Duyệt & tự đăng</h3><p>Lưu bài, hoàn tất 5 mục kiểm tra, duyệt đúng tên Page. Sao chép bài đã duyệt và tự đăng trên Facebook. Không có kết nối tài khoản trong bản này.</p></section><section class="panel guide-card"><span class="step-number">04</span><h3>10 phút · Học từ kết quả</h3><p>Ghi nhận liên kết đã đăng, lượt lưu, chia sẻ và thời gian chuẩn bị. Chọn điều cần cải thiện cho bài ngày mai. Không giả định đã được bật kiếm tiền.</p></section></div>
+      <section class="panel storage-card"><h3>Dữ liệu ở đâu?</h3><p id="data-path" class="path"></p><p>Mã nguồn có thể ở OneDrive; dữ liệu đang hoạt động nằm ngoài OneDrive. Nhấn sao lưu rồi chép tệp sao lưu sang một nơi khác để có thêm bản dự phòng.</p><button id="backup-button" class="button secondary">Tạo bản sao lưu</button><p class="small-note">Đóng cửa sổ chạy hoặc tắt / cho máy ngủ sẽ dừng lấy tin. Mở lại ứng dụng để tiếp tục. Khi đang chạy, ứng dụng đọc RSS/API/web đang bật lúc khởi động và mỗi 2 giờ; không tự chạy hàng đợi AI. Sao lưu trong cùng ổ không bảo vệ khỏi hỏng ổ.</p></section>
+    </section>
+    <footer>Bàn tin <span>·</span> Ít bài hơn, nhiều giá trị hơn. <span class="version">Bản 0.3 · nguồn theo dõi riêng, bạn duyệt</span></footer>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="import-dialog"><div class="dialog-heading"><h2>Nhập bài thủ công</h2><button class="icon-button" data-close="import-dialog" aria-label="Đóng">×</button></div><p>Lưu một bài vào Hộp tin, không tạo nguồn theo dõi và không tự tải trang. Nhập liên kết bài cụ thể và ghi chú bạn đã đọc hợp lệ.</p><form id="import-form"><label>Liên kết bài viết HTTPS<input id="import-url" type="url" required placeholder="https://…/bai-viet"></label><label>Tiêu đề bài viết<input id="import-title" maxlength="300" minlength="4" required></label><label>Trích đoạn ngắn / ghi chú của bạn<textarea id="import-summary" maxlength="3000" rows="4"></textarea></label><button class="button primary" type="submit">Thêm bài vào Hộp tin</button></form></dialog>
+  <dialog id="follow-dialog">
+    <div class="dialog-heading"><h2>Thêm nguồn theo dõi</h2><button id="follow-close" class="icon-button" data-close="follow-dialog" aria-label="Đóng">×</button></div>
+    <p>Nguồn mới sẽ hiện trong Nguồn tin, tách biệt với bài nhập thủ công. Chỉ đọc nội dung công khai, không đăng nhập hoặc vượt chặn.</p>
+    <form id="follow-form">
+      <label>Tên nguồn<input id="follow-name" minlength="2" maxlength="120" required placeholder="Ví dụ: DEV Community"></label>
+      <label>Địa chỉ website hoặc RSS (HTTPS)<input id="follow-url" type="url" maxlength="2000" required placeholder="https://dev.to/"></label>
+      <label>Cách đọc nguồn<select id="follow-kind"><option value="auto">Tự tìm RSS/Atom (nên dùng trước)</option><option value="rss">Tôi đã có địa chỉ RSS/Atom</option><option value="web">Đọc web bằng Crawl4AI</option></select></label>
+      <div id="follow-web-fields" hidden><label>Phạm vi đường dẫn bài viết<input id="follow-prefix" maxlength="500" placeholder="/news/"></label><p class="small-note">Ví dụ /news/ chỉ đọc chuyên mục đó và trang danh sách bạn nhập. Dùng / nghĩa là cho phép cả tên miền. Không tự mở rộng sang tên miền khác.</p></div>
+      <label class="consent-label"><input id="follow-confirmed" type="checkbox" required><span>Tôi xác nhận nguồn được truy cập công khai và cho phép đọc tự động trong phạm vi này. Khi thêm, kiểm tra trang/RSS cùng tên miền; sau đó bật theo dõi lúc khởi động và mỗi 2 giờ khi Bàn tin đang chạy. Không gọi AI trả phí.</span></label>
+      <p id="follow-error" class="notice warning" role="alert" hidden></p>
+      <button id="follow-submit" class="button primary" type="submit">Kiểm tra và thêm nguồn</button>
+      <p id="follow-progress" class="small-note" role="status" hidden>Đang kiểm tra nguồn qua HTTPS và robots.txt. Có thể mất một lúc; chưa tạo bài hoặc gọi AI.</p>
+    </form>
+  </dialog>
+  <dialog id="text-dialog" class="wide-dialog"><div class="dialog-heading"><h2 id="text-dialog-title">Xem trước</h2><button class="icon-button" data-close="text-dialog" aria-label="Đóng">×</button></div><p id="text-dialog-note"></p><textarea id="dialog-text" readonly spellcheck="false"></textarea><div class="action-row"><button id="copy-dialog" class="button primary">Sao chép nội dung</button><button id="download-export" class="button secondary" hidden>Tải tệp .txt</button></div></dialog>
+</body>
+</html>

@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+*.sqlite3*
+*.db
+.env*
+backups/
+test-results/
+WORKLOG.md
+docs/KE-HOACH-XAY-KENH.md
