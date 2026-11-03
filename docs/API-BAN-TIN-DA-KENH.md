@@ -68,6 +68,25 @@ Kiểm tra trùng bao gồm ghi nhận đa kênh đang hiệu lực và URL Face
 
 [Hướng dẫn X về URL bài đăng](https://help.x.com/en/using-x/post-and-moment-url) mô tả cách sao chép liên kết bài; [tài liệu X về Media Studio](https://help.x.com/en/using-x/media-studio-faqs) minh họa dạng `x.com/USERNAME/STATUS/postID`. Các nguồn này chưa xác nhận toàn bộ mẫu, alias hoặc phép so trùng ở trên. Chưa có bằng chứng chính thức đầy đủ cho Facebook và Threads trong lần rà soát này; BASE-03 vẫn mở.
 
+## Cấu trúc phản hồi thường dùng
+
+Các trường dưới đây mô tả mã hiện tại, không phải cam kết tương thích về sau. Các đối tượng danh sách là mảng JSON; các ID và revision là số nguyên. Không suy diễn một bản ghi publication là bài tồn tại trên nền tảng.
+
+| Phản hồi | Trường được trả về |
+| --- | --- |
+| `GET /api/bulletins` | Mỗi phần tử có `id`, `revision`, `title`, `edition_date`, `created_at`, `updated_at`, `item_count`. |
+| Chi tiết bản tin và mutation trả bản tin | Có `id`, `revision`, `title`, `introduction`, `conclusion`, `edition_date`, `created_at`, `updated_at`, `items`. Mỗi item có `id`, `bulletin_id`, `article_id` (có thể `null`), `position` bắt đầu từ 0, `revision`, cùng các trường `title`, `body`, `angle`, `verification_note`, `verified`, `sources`, `claims`. |
+| Phiên bản | Có `id`, `bulletin_id`, `platform`, `account_label`, `revision`, `bulletin_revision`, `status`, `approval_id`, `locked_at`, `created_at`, `updated_at`, `segments`, `checks`, `needs_update`, `policy_stale`, `publication_progress`. `approval_id` và `locked_at` có thể `null`; `publication_progress` là `null` hoặc `{active, total}`. Bản sao có thể có thêm `attribution_review_required`. |
+| Preview | Có `platform`, `policy_version`, `renderer_version`, `posts`, `valid`, `warning`; API preview bổ sung `needs_update`, `omitted_item_ids`. Mỗi post có `position`, `text`, `body`, `item_ids`, `source_ids`, `urls`, `length`, `limit`, `valid`. `text` là đầu ra đầy đủ đã gồm số thứ tự và nguồn. |
+| Split | `{segments, preview}`; `preview` là kết quả renderer và không có hai trường bổ sung riêng của API preview. Kết quả chưa được lưu. |
+| Export | `{approval_id, platform, account_label, policy_version, archive, posts}` với `posts` là mảng chuỗi. Archive bổ sung `items`, `rendered_posts`, `checks`; chỉ download mới trả văn bản thuần. |
+| Danh sách publication | Mỗi phần tử có các trường bản ghi gồm `id`, `variant_id`, `approval_id`, `position`, `url`, `active` (số `0` hoặc `1`), `reported_at` (có thể `null`), `recorded_at`, `idempotency_key`, `request_hash`, kèm `events` và `metrics`. Trường `payload` của từng event/metric là **chuỗi JSON**, không phải object đã giải mã. API ghi nhận trả bản ghi publication không kèm hai mảng này. |
+| Thống kê | `{bulletins, variants, recorded_posts, recorded_bulletins}`; hai số `recorded_*` chỉ tính ghi nhận đang hiệu lực. |
+
+`checks` của phiên bản có năm khóa `sources`, `facts`, `original`, `rights`, `claims`. `status` có thể là `draft`, `approved`, `partially_recorded`, `recorded`; không dùng riêng `status` để suy ra quyền xuất: còn phải xét khóa, thay đổi bản tin, policy và tính toàn vẹn snapshot. `needs_update` chỉ áp dụng bản chưa khóa; bản đã khóa giữ snapshot lịch sử. Đầu ra archive là lịch sử, không xác nhận rằng policy hiện tại còn cho phép xuất để đăng.
+
+Lịch sử bản tin trả tối đa 100 bản ghi mới nhất, gồm `id`, `entity_type`, `entity_id`, `revision`, `action`, `snapshot`, `at`; `snapshot` là chuỗi JSON. Danh sách publication gồm cả ghi nhận đã hủy hoặc đính chính, vì vậy cần xét `active` và `events`, không đếm toàn bộ phần tử là bài còn hiệu lực.
+
 ## Giới hạn bằng chứng
 
 Đây là bản đồ route và điều kiện chính đọc từ mã, chưa phải đặc tả đầy đủ mọi trường trả về, tất cả tổ hợp lỗi hoặc hợp đồng đã được người dùng chấp nhận. Bộ đếm Threads là ước lượng; hành vi X thực tế, mọi mẫu URL và emoji mới chưa được xác minh đầy đủ. Xem [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) và [bằng chứng kiểm thử](KIEM-THU.md) trước khi dùng để quyết định phát hành.
