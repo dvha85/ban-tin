@@ -90,6 +90,7 @@ class BulletinMixin:
         for item in conn.execute('SELECT * FROM bulletin_items WHERE bulletin_id=? ORDER BY position', (bulletin_id,)):
             value = dict(item)
             value.update(json.loads(value.pop('payload')))
+            value.setdefault('claims', [])
             result['items'].append(value)
         return result
 
@@ -256,7 +257,7 @@ class BulletinMixin:
                 raise ValidationError('Không tìm thấy mục tin.')
             if type(data.get('revision')) is not int or item['revision'] != data['revision']:
                 raise Conflict('Mục tin đã thay đổi ở cửa sổ khác.')
-            payload = {key: item[key] for key in ('title', 'body', 'angle', 'verification_note', 'verified', 'sources')}
+            payload = {key: item[key] for key in ('title', 'body', 'angle', 'verification_note', 'verified', 'sources', 'claims')}
             for key, limit in (('title', 300), ('body', 4000), ('angle', 1000), ('verification_note', 3000)):
                 if key in data:
                     payload[key] = _text(data[key], key, limit)
@@ -265,8 +266,26 @@ class BulletinMixin:
                     raise ValidationError('Xác nhận kiểm chứng không hợp lệ.')
                 payload['verified'] = data['verified']
             changed = any(payload[key] != item[key] for key in ('title', 'body', 'angle', 'verification_note'))
+            if 'claims' in data:
+                claims = data['claims']
+                if not isinstance(claims, list) or len(claims) > 10:
+                    raise ValidationError('Mỗi mục có tối đa 10 khẳng định cần kiểm tra.')
+                parsed = []
+                for claim in claims:
+                    if not isinstance(claim, dict) or type(claim.get('checked')) is not bool:
+                        raise ValidationError('Khẳng định kiểm chứng không hợp lệ.')
+                    text = _text(claim.get('text', ''), 'Khẳng định', 500)
+                    evidence = _text(claim.get('evidence', ''), 'Nguồn đối chiếu hoặc lý do', 1000)
+                    if not text:
+                        raise ValidationError('Khẳng định không được để trống.')
+                    parsed.append({'text': text, 'evidence': evidence, 'checked': claim['checked']})
+                old_facts = [(c['text'], c['evidence']) for c in item['claims']]
+                new_facts = [(c['text'], c['evidence']) for c in parsed]
+                changed = changed or old_facts != new_facts
+                payload['claims'] = parsed
             if changed:
                 payload['verified'] = False
+                payload['claims'] = [{**claim, 'checked': False} for claim in payload['claims']]
             if 'add_source' in data:
                 source = data['add_source']
                 if not isinstance(source, dict) or len(payload['sources']) >= MAX_SOURCES_PER_ITEM:
@@ -283,6 +302,7 @@ class BulletinMixin:
                     'published_at': None, 'date_kind': 'unknown', 'retrieved_at': _now(),
                     'scope': 'excerpt', 'note_kind': 'manual_note'}]
                 payload['verified'] = False
+                payload['claims'] = [{**claim, 'checked': False} for claim in payload['claims']]
             if 'remove_source_id' in data:
                 source_id = data['remove_source_id']
                 if not isinstance(source_id, str) or not any(source['source_id'] == source_id for source in payload['sources']):
@@ -291,6 +311,7 @@ class BulletinMixin:
                     raise ValidationError('Mỗi mục phải giữ ít nhất một nguồn.')
                 payload['sources'] = [source for source in payload['sources'] if source['source_id'] != source_id]
                 payload['verified'] = False
+                payload['claims'] = [{**claim, 'checked': False} for claim in payload['claims']]
             self._validate_total_sources([payload if existing['id'] == item_id else existing for existing in bulletin['items']])
             if all(payload[key] == item[key] for key in payload):
                 return bulletin

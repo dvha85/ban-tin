@@ -24,10 +24,12 @@ class VariantTests(unittest.TestCase):
             bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
                 'bulletin_revision': bulletin['revision'], 'revision': current['revision'],
                 'body': 'Một mục tin được biên tập rõ ràng.',
-                'verification_note': 'Đã đối chiếu nguồn gốc và ngày phát hành.'})
+                'verification_note': 'Đã đối chiếu nguồn gốc và ngày phát hành.',
+                'claims': [{'text': 'Thông tin chính của mục', 'evidence': 'Đối chiếu nguồn đã chọn', 'checked': True}]})
             current = next(row for row in bulletin['items'] if row['id'] == item['id'])
             bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
-                'bulletin_revision': bulletin['revision'], 'revision': current['revision'], 'verified': True})
+                'bulletin_revision': bulletin['revision'], 'revision': current['revision'], 'verified': True,
+                'claims': [{**current['claims'][0], 'checked': True}]})
         self.bulletin = bulletin
 
     def tearDown(self):
@@ -112,6 +114,35 @@ class VariantTests(unittest.TestCase):
         result = render_segments('x', [{'text': 'x' * 255, 'item_ids': [item['id']]}], self.bulletin)
         self.assertFalse(result['valid'])  # source URL and its label count too
         self.assertIn(item['sources'][0]['url'], result['posts'][0]['text'])
+
+    def test_approval_requires_each_claim_checked_with_evidence(self):
+        item = self.bulletin['items'][0]
+        modified = self.room.save_bulletin_item(self.bulletin['id'], item['id'], {
+            'bulletin_revision': self.bulletin['revision'], 'revision': item['revision'],
+            'claims': [{'text': 'Một dữ kiện cần xác minh', 'evidence': '', 'checked': False}]})
+        item = modified['items'][0]
+        self.room.save_bulletin_item(modified['id'], item['id'], {
+            'bulletin_revision': modified['revision'], 'revision': item['revision'], 'verified': True})
+        self.bulletin = self.room.bulletin(modified['id'])
+        with self.assertRaises(ValidationError):
+            self.make_approved('threads')
+
+    def test_approval_rejects_missing_claim_or_evidence_and_unresolved_markers(self):
+        cases = [[],
+                 [{'text': 'Dữ kiện', 'evidence': '', 'checked': True}],
+                 [{'text': '[CẦN KIỂM TRA] Dữ kiện', 'evidence': 'Nguồn', 'checked': True}],
+                 [{'text': 'Dữ kiện', 'evidence': '[CẦN KIỂM TRA]', 'checked': True}]]
+        for claims in cases:
+            with self.subTest(claims=claims):
+                item = self.bulletin['items'][0]
+                self.bulletin = self.room.save_bulletin_item(self.bulletin['id'], item['id'], {
+                    'bulletin_revision': self.bulletin['revision'], 'revision': item['revision'], 'claims': claims})
+                item = self.bulletin['items'][0]
+                self.bulletin = self.room.save_bulletin_item(self.bulletin['id'], item['id'], {
+                    'bulletin_revision': self.bulletin['revision'], 'revision': item['revision'],
+                    'claims': claims, 'verified': True})
+                with self.assertRaises(ValidationError):
+                    self.make_approved('threads')
 
     def test_split_rechecks_numbering_and_keeps_sources_and_text(self):
         item = self.bulletin['items'][0]
@@ -363,6 +394,15 @@ class VariantTests(unittest.TestCase):
             with self.assertRaises(ValidationError):
                 self.room.export_variant(variant['id'])
             self.assertTrue(self.room.export_variant(variant['id'], archive=True)['archive'])
+
+    def test_v1_approval_is_stale_under_v2_but_archive_remains_available(self):
+        with patch('newsroom.variants.POLICY_VERSION', '2026-11-03-v1'):
+            variant = self.make_approved('x')
+            archive = self.room.export_variant(variant['id'], archive=True)
+        self.assertTrue(self.room.variant(variant['id'])['policy_stale'])
+        with self.assertRaises(ValidationError):
+            self.room.export_variant(variant['id'])
+        self.assertEqual(self.room.export_variant(variant['id'], archive=True), archive)
 
     def test_policy_change_requires_new_checks_before_reapproval(self):
         variant = self.make_approved('threads')

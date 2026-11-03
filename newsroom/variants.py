@@ -192,6 +192,11 @@ class VariantMixin:
                 if item['id'] in used_ids and (not item['body'] or not item['verified']
                         or len(item['verification_note']) < 20 or UNRESOLVED.search(item['body'])):
                     raise ValidationError('Mỗi mục được dùng cần nội dung, ghi chú kiểm chứng và xác nhận đã kiểm tra.')
+                if item['id'] in used_ids and (not item.get('claims') or any(
+                        not claim.get('checked') or not claim.get('evidence', '').strip()
+                        or UNRESOLVED.search(claim.get('text', '')) or UNRESOLVED.search(claim.get('evidence', ''))
+                        for claim in item['claims'])):
+                    raise ValidationError('Mỗi mục cần các khẳng định đã kiểm tra cùng nguồn đối chiếu hoặc lý do.')
             if any(UNRESOLVED.search(post['text']) for post in rendered['posts']):
                 raise ValidationError('Bài còn dấu cần kiểm tra hoặc chưa xác minh.')
             snapshot = {'bulletin': bulletin, 'platform': variant['platform'], 'account_label': variant['account_label'],

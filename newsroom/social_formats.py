@@ -4,7 +4,7 @@ import unicodedata
 
 from ._vendor.twitter_text import parse_tweet, extract_emojis_with_indices
 
-POLICY_VERSION = '2026-11-03-v1'
+POLICY_VERSION = '2026-11-03-v2'
 RENDERER_VERSION = '1'
 LIMITS = {'facebook': 12000, 'threads': 500, 'x': 280}
 MAX_SEGMENTS = 20

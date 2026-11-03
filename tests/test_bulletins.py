@@ -83,6 +83,45 @@ class BulletinTests(unittest.TestCase):
             'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'verified': True})
         self.assertTrue(bulletin['items'][0]['verified'])
 
+    def test_claims_survive_restart_and_are_reset_when_item_or_source_changes(self):
+        bulletin = self.room.create_bulletin({'article_ids': [self.articles[0]['id']]})
+        item = bulletin['items'][0]
+        claim = {'text': 'Một khẳng định', 'evidence': 'Theo nguồn đã đọc', 'checked': True}
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'claims': [claim]})
+        self.assertFalse(bulletin['items'][0]['claims'][0]['checked'])
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'claims': [claim], 'verified': True})
+        self.assertEqual(Newsroom(Path(self.temp.name)).bulletin(bulletin['id'])['items'][0]['claims'], [claim])
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'body': 'Nội dung sửa'})
+        self.assertFalse(bulletin['items'][0]['verified'])
+        self.assertFalse(bulletin['items'][0]['claims'][0]['checked'])
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'claims': [claim], 'verified': True})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'add_source': {'url': 'https://example.org/other', 'title': 'Nguồn', 'summary': 'Ghi chú'}})
+        self.assertFalse(bulletin['items'][0]['claims'][0]['checked'])
+        self.assertFalse(bulletin['items'][0]['verified'])
+
+    def test_claim_validation_rejects_invalid_payload_without_partial_save(self):
+        bulletin = self.room.create_bulletin({'article_ids': [self.articles[0]['id']]})
+        item = bulletin['items'][0]
+        for claims in ([{}], [{'text': 'Tin', 'evidence': '', 'checked': 1}],
+                       [{'text': '', 'evidence': '', 'checked': False}],
+                       [{'text': 'Tin', 'evidence': '', 'checked': False}] * 11):
+            with self.subTest(claims=claims), self.assertRaises(ValidationError):
+                self.room.save_bulletin_item(bulletin['id'], item['id'], {
+                    'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'claims': claims})
+        self.assertEqual(self.room.bulletin(bulletin['id']), bulletin)
+
     def test_add_remove_and_manual_source(self):
         bulletin = self.room.create_bulletin({'article_ids': [self.articles[0]['id']]})
         bulletin = self.room.change_bulletin_items(bulletin['id'], {'revision': bulletin['revision'],

@@ -560,6 +560,36 @@ function renderBulletin() {
     const fields = Object.fromEntries([['title', 'Tiêu đề'], ['body', 'Nội dung'], ['angle', 'Góc nhìn'],
       ['verification_note', 'Ghi chú kiểm chứng']].map(([key, label]) => [key, bulletinField(label, item[key], key !== 'title')]));
     Object.values(fields).forEach(field => section.append(field.wrapper));
+    const claimList = node('div', 'bulletin-claims');
+    const claimState = node('input'); claimState.type = 'hidden';
+    const collectClaims = () => [...claimList.children].map(row => row.collect());
+    const syncClaims = () => { claimState.value = JSON.stringify(collectClaims()); };
+    function addClaim(claim) {
+      const row = node('div', 'bulletin-block');
+      const text = bulletinField('Khẳng định cần kiểm tra', claim.text);
+      const evidence = bulletinField('Nguồn đối chiếu hoặc lý do chỉ dùng nguồn hãng', claim.evidence, true);
+      const label = node('label', 'bulletin-check');
+      const checked = node('input'); checked.type = 'checkbox'; checked.checked = claim.checked;
+      label.append(checked, document.createTextNode(' Tôi đã đối chiếu khẳng định này'));
+      const remove = node('button', 'button secondary', 'Bỏ khẳng định');
+      listen(remove, 'click', () => {
+        row.remove(); syncClaims(); claimState.dispatchEvent(new Event('input', {bubbles: true}));
+      });
+      row.collect = () => ({text: text.input.value, evidence: evidence.input.value, checked: checked.checked});
+      row.addEventListener('input', syncClaims); row.addEventListener('change', syncClaims);
+      row.append(text.wrapper, evidence.wrapper, label, remove); claimList.append(row);
+    }
+    (item.claims || []).forEach(addClaim);
+    syncClaims();
+    const addClaimButton = node('button', 'button secondary', 'Thêm khẳng định');
+    listen(addClaimButton, 'click', () => {
+      if (claimList.children.length >= 10) throw new Error('Mỗi mục chỉ có tối đa 10 khẳng định.');
+      addClaim({text: '', evidence: '', checked: false}); syncClaims();
+      claimState.dispatchEvent(new Event('input', {bubbles: true}));
+    });
+    section.append(node('h4', '', 'Kiểm tra các khẳng định chính'),
+      node('p', 'small-note', 'Ghi từng khẳng định, nguồn đối chiếu hoặc lý do chỉ dùng nguồn hãng; không tự coi các nguồn là độc lập.'),
+      claimList, claimState, addClaimButton);
     const sources = node('div', 'source-link-list');
     item.sources.forEach(source => {
       sources.append(link(source.url, source.title || source.source_name || source.url));
@@ -583,13 +613,14 @@ function renderBulletin() {
     const verified = node('input'); verified.type = 'checkbox'; verified.checked = item.verified;
     checkLabel.append(verified, document.createTextNode(' Tôi đã đọc nguồn và kiểm chứng mục này'));
     section.append(checkLabel, node('p', 'small-note', 'Khi sửa nội dung, xác nhận kiểm chứng sẽ được bỏ; lưu lại rồi xác nhận ở lần lưu tiếp theo.'));
-    trackBulletinSection(section, [...Object.values(fields).map(field => field.input), verified]);
+    trackBulletinSection(section, [...Object.values(fields).map(field => field.input), claimState, verified]);
     const actions = node('div', 'action-row');
     const saveItem = node('button', 'button secondary', 'Lưu mục');
     bulletinAction(saveItem, async () => {
       if (hasPendingBulletinUrl() || top.dataset.dirty === 'true' || [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el !== section && el.dataset.dirty === 'true'))
         throw new Error('Hãy lưu hoặc bỏ thay đổi ở các phần khác trước.');
-      const data = {bulletin_revision: bulletin.revision, revision: item.revision, verified: verified.checked};
+      const data = {bulletin_revision: bulletin.revision, revision: item.revision, verified: verified.checked,
+        claims: collectClaims()};
       for (const [key, field] of Object.entries(fields)) data[key] = field.input.value;
       app.bulletin = await api(`/api/bulletins/${bulletin.id}/items/${item.id}/save`, data);
       app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã lưu mục tin.');
