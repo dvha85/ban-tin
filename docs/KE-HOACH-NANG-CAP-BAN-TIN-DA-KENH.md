@@ -461,6 +461,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | BASE-02 / NEWS-01 | Đang làm | Test kho giả xác nhận 10/11 mục, 3/4 nguồn mỗi mục và 20/21 URL khác nhau; URL dùng chung không tăng số URL, trường hợp bị từ chối không lưu dở, mở lại kho giữ dữ liệu | Chưa nghiệm thu mọi giới hạn qua giao diện hoặc hoàn tất hợp đồng API |
 | 03/11/2026 | DIG-01 / QA-02 | Đang làm | Chụp danh sách ID một lần cho toàn lượt tạo bản tin; khóa thêm Hộp tin khi thao tác đang chờ và chỉ bỏ lựa chọn thuộc lượt tạo thành công. Smoke Edge trên kho tạm, service tạo chậm 35 giây: chọn tin B, thử chọn A trong lúc chờ, bản tin kết quả chỉ có B | Test helper và hồi quy đạt; chưa thử mọi đường lỗi và thao tác bàn phím trong lúc chờ |
 | 03/11/2026 | NEWS-06 / BASE-02 | Đang làm | Test HTTP tạo bản tin bằng JSON UTF-8 đúng 128.000 byte trả 201; vượt một byte trả 413, không tạo thêm hoặc sửa bản tin. Bộ hồi quy 145/145 Python và 10/10 JS đạt | Đệm bằng trường không sử dụng; chưa smoke yêu cầu quá ngưỡng qua UI hoặc hoàn tất hợp đồng API |
+| 03/11/2026 | BASE-02 / DOC-01 | Đang làm | Thêm bản đồ API đa kênh theo route và mã service hiện hành, gồm revision, giới hạn, ghi nhận và lỗi thường gặp | Chưa liệt kê đầy đủ schema phản hồi, mọi tổ hợp lỗi hoặc có xác nhận hợp đồng; chưa đóng BASE-02 |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
@@ -481,5 +482,6 @@ Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết q
 - [Kiến trúc hiện hành](KIEN-TRUC.md): schema, snapshot, bảo mật và giới hạn thu thập.
 - [Hướng dẫn sử dụng hiện hành](HUONG-DAN-SU-DUNG.md): luồng thủ công và backup/restore.
 - [Bằng chứng kiểm thử](KIEM-THU.md): tách test phần mềm, nguồn thật và giới hạn chưa xác nhận.
+- [API bản tin đa kênh](API-BAN-TIN-DA-KENH.md): bản đồ route và điều kiện chính của nhánh phát triển.
 
 Tài liệu này bổ sung roadmap kỹ thuật; không thay thế mô tả chức năng hiện đang có trong README cho tới khi từng mốc thực sự được triển khai và kiểm thử.
