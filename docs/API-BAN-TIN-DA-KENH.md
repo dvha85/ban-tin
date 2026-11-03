@@ -45,6 +45,8 @@ Các trường mục có thể gửi gồm `title`, `body`, `angle`, `verificati
 
 Mỗi segment có `text` và `item_ids`; `source_ids` có thể chỉ định nguồn được dùng. Sửa nội dung hoặc đích bỏ checklist và duyệt tương ứng; khi lưu thay đổi, không giả định các giá trị `checks` gửi cùng sẽ được xác nhận. Kiểm tra nội dung và xác nhận checklist ở lượt lưu tiếp theo. Phiên bản đã có ghi nhận bị khóa; muốn sửa hãy tạo bản sao.
 
+Khi duyệt mới, nguồn được chọn mà có `excerpt_hash` phải khớp SHA-256 của `summary` UTF-8; sai lệch trả 400 và không tạo bản duyệt. Người biên tập cần đối chiếu nguồn, thêm nguồn chính xác và bỏ nguồn sai rồi kiểm tra lại. Nguồn không có hash vẫn cần kiểm chứng thủ công; hash khớp chỉ chứng minh trích đoạn khớp dấu vết lưu, không chứng minh tính xác thực. Bản duyệt lịch sử không được tự sửa hoặc rà soát lại bởi cổng này.
+
 ## Ghi nhận thủ công và số liệu
 
 | Phương thức và đường dẫn | Đầu vào chính | Kết quả / lưu ý |

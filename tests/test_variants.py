@@ -201,6 +201,34 @@ class VariantTests(unittest.TestCase):
             split_segments('x', segments, self.bulletin)
         self.assertEqual(segments[0]['text'], '😀' * 400)
 
+    def test_approval_rejects_used_excerpt_with_mismatched_hash(self):
+        import hashlib
+        item = self.bulletin['items'][0]
+        with self.room.connection() as conn:
+            row = conn.execute('SELECT payload FROM bulletin_items WHERE id=?', (item['id'],)).fetchone()
+            payload = json.loads(row['payload'])
+            payload['sources'][0].update({'collection_method': 'api', 'excerpt_hash': '0' * 64,
+                                          'content_hash': 'a' * 64, 'scope': 'excerpt'})
+            conn.execute('UPDATE bulletin_items SET payload=? WHERE id=?', (json.dumps(payload), item['id']))
+        variant = self.room.create_variant(self.bulletin['id'], {'platform': 'x', 'account_label': 'Kênh thử',
+                                               'bulletin_revision': self.bulletin['revision']})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'segments': [
+            {'text': 'Nội dung thử.', 'item_ids': [item['id']]}]})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                                                          'checks': {key: True for key in CHECKS}})
+        with self.assertRaisesRegex(ValidationError, 'hash.*trích đoạn'):
+            self.room.approve_variant(variant['id'], {'revision': variant['revision']})
+        self.assertEqual(self.room.variant(variant['id'])['status'], 'draft')
+        payload['sources'][0]['excerpt_hash'] = hashlib.sha256(payload['sources'][0]['summary'].encode('utf-8')).hexdigest()
+        with self.room.connection() as conn:
+            conn.execute('UPDATE bulletin_items SET payload=? WHERE id=?', (json.dumps(payload), item['id']))
+            unused_id = self.bulletin['items'][1]['id']
+            unused = json.loads(conn.execute('SELECT payload FROM bulletin_items WHERE id=?', (unused_id,)).fetchone()['payload'])
+            unused['sources'][0]['excerpt_hash'] = '0' * 64
+            conn.execute('UPDATE bulletin_items SET payload=? WHERE id=?', (json.dumps(unused), unused_id))
+        approved = self.room.approve_variant(variant['id'], {'revision': variant['revision']})
+        self.assertEqual(approved['status'], 'approved')
+
     def test_split_preserves_internal_blank_lines(self):
         item = self.bulletin['items'][0]
         original = 'Đoạn đầu.\n\n\n\nĐoạn tiếp theo.'

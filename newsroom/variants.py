@@ -224,7 +224,16 @@ class VariantMixin:
             if not all(variant['checks'].get(key) is True for key in CHECKS):
                 raise ValidationError('Hãy hoàn thành cả 5 mục kiểm tra của phiên bản.')
             used_ids = {item_id for post in rendered['posts'] for item_id in post['item_ids']}
+            used_source_ids = {source_id for post in rendered['posts'] for source_id in post['source_ids']}
             for item in bulletin['items']:
+                for source in item['sources']:
+                    if source['source_id'] in used_source_ids and 'excerpt_hash' in source:
+                        try:
+                            actual_hash = hashlib.sha256(source['summary'].encode('utf-8')).hexdigest()
+                        except (KeyError, AttributeError, UnicodeError):
+                            actual_hash = None
+                        if actual_hash != source['excerpt_hash']:
+                            raise ValidationError('Mã hash không khớp trích đoạn nguồn. Hãy đối chiếu, bổ sung nguồn đúng và bỏ nguồn sai trước khi duyệt.')
                 if item['id'] in used_ids and (not item['body'] or not item['verified']
                         or len(item['verification_note']) < 20 or UNRESOLVED.search(item['body'])):
                     raise ValidationError('Mỗi mục được dùng cần nội dung, ghi chú kiểm chứng và xác nhận đã kiểm tra.')
