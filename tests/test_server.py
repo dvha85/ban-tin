@@ -151,6 +151,89 @@ class ServerTests(unittest.TestCase):
         for endpoint in ('/api/ai', '/api/facebook/publish', '/api/login/chatgpt'):
             self.assertEqual(self.request('POST', endpoint, {}, headers)[0], 404)
 
+    def test_multichannel_response_contract_and_publication_lifecycle_over_http(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin giả lập hợp đồng HTTP',
+            'url': 'https://example.com/http-contract', 'summary': 'Tư liệu giả cho kiểm thử.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'body': 'Nội dung giả để kiểm thử hợp đồng.',
+            'verification_note': 'Kiểm chứng giả lập trên dữ liệu thử.',
+            'claims': [{'text': 'Dữ liệu là giả lập', 'evidence': 'Fixture', 'checked': True}]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'verified': True, 'claims': [{**item['claims'][0], 'checked': True}]})
+        variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+            'platform': 'x', 'account_label': 'Kênh giả lập'})
+        segments = [{'text': 'Đoạn thử thứ nhất.', 'item_ids': [item['id']]},
+                    {'text': 'Đoạn thử thứ hai.', 'item_ids': [item['id']]}]
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'segments': segments})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+            'checks': {key: True for key in ('sources', 'facts', 'original', 'rights', 'claims')}})
+        variant = self.room.approve_variant(variant['id'], {'revision': variant['revision']})
+        path = f"/api/variants/{variant['id']}"
+
+        def get(path):
+            status, _, body = self.request('GET', path, headers=headers)
+            self.assertEqual(status, 200)
+            return json.loads(body)
+
+        def post(path, data):
+            status, _, body = self.request('POST', path, data, headers)
+            self.assertEqual(status, 200, body)
+            return json.loads(body)
+
+        detail = get(f"/api/bulletins/{bulletin['id']}")
+        self.assertEqual(detail, bulletin)
+        self.assertEqual(get('/api/bulletins')[0]['item_count'], 1)
+        current = get(path)
+        self.assertEqual(current['status'], 'approved')
+        self.assertEqual(current['publication_progress'], {'active': 0, 'total': 2})
+        export = get(path + '/export')
+        archive = get(path + '/archive')
+        self.assertEqual(export['posts'], [post['text'] for post in archive['rendered_posts']])
+        self.assertFalse(export['archive'])
+        self.assertTrue(archive['archive'])
+        self.assertEqual(archive['items'][0]['sources'][0]['url'], article['url'])
+        preview = post(path + '/preview', {})
+        self.assertEqual([row['text'] for row in preview['posts']], export['posts'])
+        self.assertEqual(preview['omitted_item_ids'], [])
+        self.assertFalse(preview['needs_update'])
+        self.assertEqual(get('/api/bulletin-stats')['recorded_posts'], 0)
+
+        reported = post(path + '/publications', {'revision': current['revision'], 'position': 0,
+            'url': 'https://x.com/fixture/status/1001', 'idempotency_key': 'http_contract_1001'})
+        self.assertEqual(reported['active'], 1)
+        self.assertIsNone(reported['reported_at'])
+        self.assertNotIn('events', reported)
+        current = get(path)
+        self.assertEqual(current['status'], 'partially_recorded')
+        self.assertEqual(current['publication_progress'], {'active': 1, 'total': 2})
+        self.assertIsNotNone(current['locked_at'])
+        metric = post(f"/api/publications/{reported['id']}/metrics", {
+            'observed_at': '2026-11-03T10:00:00+07:00', 'views': 0})
+        self.assertEqual(metric['views'], 0)
+        self.assertIsNone(metric['likes'])
+        correction = post(f"/api/publications/{reported['id']}/corrections", {
+            'revision': current['revision'], 'reason': 'Hủy ghi nhận giả lập', 'url': ''})
+        self.assertEqual(correction['status'], 'approved')
+        self.assertIsNone(correction['replacement_id'])
+        records = get(path + '/publications')
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]['active'], 0)
+        self.assertEqual([event['action'] for event in records[0]['events']], ['reported', 'cancelled'])
+        self.assertEqual(json.loads(records[0]['events'][1]['payload'])['reason'], 'Hủy ghi nhận giả lập')
+        self.assertEqual(json.loads(records[0]['metrics'][0]['payload'])['views'], 0)
+        current = get(path)
+        self.assertEqual(current['publication_progress'], {'active': 0, 'total': 2})
+        self.assertIsNotNone(current['locked_at'])
+        self.assertEqual(get('/api/bulletin-stats')['recorded_posts'], 0)
+        history = get(f"/api/bulletins/{bulletin['id']}/history")
+        self.assertIsInstance(json.loads(history[0]['snapshot']), dict)
+
     def test_bulletin_and_variant_routes_enforce_session_and_support_preview_split(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin trong fixture HTTP',
