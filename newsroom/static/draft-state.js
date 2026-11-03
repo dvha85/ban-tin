@@ -83,6 +83,12 @@ function metricFields(platform) {
     ['views', 'likes', 'replies', 'reposts', 'quotes', ...(platform === 'x' ? ['saves'] : [])];
   return [...postFields, 'followers', 'minutes'].map(key => [key, METRIC_LABELS[key]]);
 }
+function parseMetricValues(fields, values) {
+  const trimmed = values.map(value => value.trim());
+  if (trimmed.length !== fields.length || trimmed.some(value => value && !/^\d+$/.test(value)))
+    throw new Error(`Cần đúng ${fields.length} giá trị; mỗi giá trị là số nguyên không âm hoặc để trống.`);
+  return Object.fromEntries(fields.map(([key], index) => [key, trimmed[index] === '' ? null : Number(trimmed[index])]));
+}
 function metricDisplayFields(platform, values) {
   const fields = metricFields(platform);
   for (const key of Object.keys(METRIC_LABELS)) {
@@ -104,5 +110,5 @@ function parseConflictTarget(search) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails, hasOtherPendingChanges, metricFields, metricDisplayFields};
+  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails, hasOtherPendingChanges, metricFields, metricDisplayFields, parseMetricValues};
 }

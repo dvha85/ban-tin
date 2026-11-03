@@ -978,19 +978,15 @@ async function renderVariantPublication(area, variant) {
         const values = window.prompt(`Nhập ${metrics.length} số nguyên cách nhau bằng dấu phẩy theo thứ tự: ${metrics.map(([, label]) => label).join(', ')}. Để trống giá trị chưa biết.`, pendingMetrics.values);
         if (values === null) return;
         pendingMetrics.values = values; showPendingMetrics();
-        const fields = values.split(',').map(value => value.trim());
-        if (fields.length !== metrics.length || fields.some(value => value && !/^\d+$/.test(value))) {
-          showPendingMetrics(`Cần đúng ${metrics.length} giá trị; mỗi giá trị là số nguyên không âm hoặc để trống.`); return;
-        }
+        let parsed;
+        try { parsed = parseMetricValues(metrics, values.split(',')); }
+        catch (error) { showPendingMetrics(error.message); return; }
         const observed = window.prompt('Thời điểm quan sát (ISO 8601 có múi giờ):', pendingMetrics.observed ?? new Date().toISOString());
         if (observed === null) return;
         pendingMetrics.observed = observed; showPendingMetrics();
         const note = window.prompt('Ghi chú số liệu (không bắt buộc):', pendingMetrics.note); if (note === null) return;
         pendingMetrics.note = note; showPendingMetrics();
-        const payload = {observed_at: observed, note};
-        metrics.forEach(([key], index) => {
-          payload[key] = fields[index] === '' ? null : Number(fields[index]);
-        });
+        const payload = {observed_at: observed, note, ...parsed};
         const fingerprint = JSON.stringify(payload);
         if (metricFingerprint !== fingerprint) {
           metricFingerprint = fingerprint; metricKey = crypto.randomUUID();

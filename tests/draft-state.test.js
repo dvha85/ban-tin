@@ -1,7 +1,17 @@
 'use strict';
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails, hasOtherPendingChanges, metricFields, metricDisplayFields} = require('../newsroom/static/draft-state.js');
+const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails, hasOtherPendingChanges, metricFields, metricDisplayFields, parseMetricValues} = require('../newsroom/static/draft-state.js');
+
+test('metric values preserve channel keys, zero and unknown while rejecting invalid input', () => {
+  const fields = metricFields('x');
+  assert.deepEqual(parseMetricValues(fields, ['10', '0', '', '3', '4', '5', '', '15']),
+    {views: 10, likes: 0, replies: null, reposts: 3, quotes: 4, saves: 5, followers: null, minutes: 15});
+  for (const values of [['1'], ['1','-1','','','','','',''], ['1','1.2','','','','','',''], ['1','1e3','','','','','','']])
+    assert.throws(() => parseMetricValues(fields, values), /số nguyên không âm/);
+  assert.deepEqual(parseMetricValues(metricFields('facebook'), ['', ' 0 ', '', '', '', '']),
+    {views: null, likes: 0, saves: null, shares: null, followers: null, minutes: null});
+});
 
 test('platform metrics differ while recorded legacy values remain visible', () => {
   assert.ok(metricFields('x').some(([key]) => key === 'reposts'));
