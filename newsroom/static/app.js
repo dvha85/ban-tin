@@ -557,6 +557,11 @@ function hasPendingBulletinUrl(except = null) {
 function hasPendingPublicationEdit() {
   return Boolean($('bulletin-editor').querySelector('[data-pending-publication-edit="true"]'));
 }
+function markVariantDirty(area, event) {
+  if (!event.target.dataset.publicationUrl && !event.target.dataset.metricField) {
+    app.bulletinDirty = true; area.dataset.dirty = 'true';
+  }
+}
 function renderBulletin() {
   const bulletin = app.bulletin;
   const editor = $('bulletin-editor');
@@ -848,8 +853,8 @@ async function renderVariants(container, bulletin) {
     area.append(node('p', 'notice warning', 'Bản sao giữ nguyên nội dung, nhưng một số mục hoặc nguồn đã thay đổi. Hãy chọn và đối chiếu lại nguồn cho từng đoạn.'));
     const row = node('label', 'bulletin-check'); row.append(attributionReview, document.createTextNode(' Tôi đã kiểm tra lại các mục và nguồn của bản sao')); area.append(row);
   }
-  area.addEventListener('input', event => { if (!event.target.dataset.publicationUrl) { app.bulletinDirty = true; area.dataset.dirty = 'true'; } });
-  area.addEventListener('change', event => { if (!event.target.dataset.publicationUrl) { app.bulletinDirty = true; area.dataset.dirty = 'true'; } });
+  area.addEventListener('input', event => markVariantDirty(area, event));
+  area.addEventListener('change', event => markVariantDirty(area, event));
   const collect = () => [...segmentList.children].map(block => block.collect());
   const actions = node('div', 'action-row');
   const save = node('button', 'button secondary', 'Lưu phiên bản'); save.disabled = locked;
@@ -953,48 +958,50 @@ async function renderVariantPublication(area, variant) {
       const addMetrics = node('button', 'button secondary', 'Nhập số liệu');
       const metricNotice = node('div'); metricNotice.hidden = true;
       const metrics = metricFields(variant.platform);
-      const emptyMetrics = () => ({values: ','.repeat(metrics.length - 1), observed: null, note: ''});
-      let pendingMetrics = emptyMetrics();
       let metricFingerprint = null, metricKey = null;
-      const showPendingMetrics = message => {
-        metricNotice.replaceChildren(node('p', '', message || 'Số liệu chưa được gửi.'),
-          node('p', 'small-note', `Theo thứ tự ${metrics.map(([, label]) => label).join(', ')}: ${pendingMetrics.values}`),
-          node('p', 'small-note', `Thời điểm: ${pendingMetrics.observed ?? 'chưa nhập'} · Ghi chú: ${pendingMetrics.note}`));
-        metricNotice.append(node('p', 'small-note', 'Giữ thẻ này để tiếp tục. Nếu mất kết nối, hãy kiểm tra số liệu đã lưu trước khi thử lại.'));
-        metricNotice.className = 'notice warning'; metricNotice.hidden = false;
+      const markPendingMetrics = () => {
         metricNotice.dataset.dirty = 'true'; metricNotice.dataset.pendingPublicationEdit = 'true'; app.bulletinDirty = true;
-        const discard = node('button', 'button secondary', 'Bỏ số liệu chưa lưu');
-        listen(discard, 'click', () => {
-          delete metricNotice.dataset.dirty; delete metricNotice.dataset.pendingPublicationEdit;
-          metricNotice.hidden = true; metricNotice.replaceChildren(); pendingMetrics = emptyMetrics();
-          metricFingerprint = null; metricKey = null;
-          app.bulletinDirty = hasOtherPendingChanges($('bulletin-editor'), null, hasPendingBulletinUrl());
-        });
-        metricNotice.append(discard);
       };
       bulletinAction(addMetrics, async () => {
         if (hasOtherPendingChanges($('bulletin-editor'), metricNotice, hasPendingBulletinUrl()))
           throw new Error('Hãy lưu các thay đổi khác trước khi nhập số liệu.');
-        const values = window.prompt(`Nhập ${metrics.length} số nguyên cách nhau bằng dấu phẩy theo thứ tự: ${metrics.map(([, label]) => label).join(', ')}. Để trống giá trị chưa biết.`, pendingMetrics.values);
-        if (values === null) return;
-        pendingMetrics.values = values; showPendingMetrics();
-        let parsed;
-        try { parsed = parseMetricValues(metrics, values.split(',')); }
-        catch (error) { showPendingMetrics(error.message); return; }
-        const observed = window.prompt('Thời điểm quan sát (ISO 8601 có múi giờ):', pendingMetrics.observed ?? new Date().toISOString());
-        if (observed === null) return;
-        pendingMetrics.observed = observed; showPendingMetrics();
-        const note = window.prompt('Ghi chú số liệu (không bắt buộc):', pendingMetrics.note); if (note === null) return;
-        pendingMetrics.note = note; showPendingMetrics();
-        const payload = {observed_at: observed, note, ...parsed};
-        const fingerprint = JSON.stringify(payload);
-        if (metricFingerprint !== fingerprint) {
-          metricFingerprint = fingerprint; metricKey = crypto.randomUUID();
-        }
-        payload.idempotency_key = metricKey;
-        try { await api(`/api/publications/${existing.id}/metrics`, payload); }
-        catch (error) { showPendingMetrics(error.message); return; }
-        app.bulletinDirty = false; renderBulletin(); toast('Đã lưu số liệu do bạn nhập.');
+        if (!metricNotice.hidden) return;
+        metricNotice.hidden = false; metricNotice.className = 'notice';
+        const error = node('p', 'small-note'); error.setAttribute('role', 'status');
+        metricNotice.append(node('p', '', 'Nhập số nguyên không âm; để trống nếu chưa biết.'), error);
+        const fields = metrics.map(([key, label]) => {
+          const wrapper = node('label', '', label); const input = node('input');
+          input.type = 'text'; input.inputMode = 'numeric'; input.dataset.metricField = key;
+          listen(input, 'input', markPendingMetrics); wrapper.append(input); metricNotice.append(wrapper); return input;
+        });
+        const observedLabel = node('label', '', 'Thời điểm quan sát (ISO 8601 có múi giờ)');
+        const observed = node('input'); observed.type = 'text'; observed.value = new Date().toISOString(); observed.dataset.metricField = 'observed_at';
+        listen(observed, 'input', markPendingMetrics); observedLabel.append(observed); metricNotice.append(observedLabel);
+        const noteLabel = node('label', '', 'Ghi chú (không bắt buộc)');
+        const note = node('input'); note.type = 'text'; note.dataset.metricField = 'note';
+        listen(note, 'input', markPendingMetrics); noteLabel.append(note); metricNotice.append(noteLabel);
+        const save = node('button', 'button secondary', 'Lưu số liệu');
+        const discard = node('button', 'button secondary', 'Bỏ số liệu chưa lưu');
+        bulletinAction(save, async () => {
+          if (hasOtherPendingChanges($('bulletin-editor'), metricNotice, hasPendingBulletinUrl()))
+            throw new Error('Hãy lưu các thay đổi khác trước khi nhập số liệu.');
+          markPendingMetrics(); let parsed;
+          try { parsed = parseMetricValues(metrics, fields.map(input => input.value)); }
+          catch (err) { error.textContent = err.message; return; }
+          const payload = {observed_at: observed.value, note: note.value, ...parsed};
+          const fingerprint = JSON.stringify(payload);
+          if (metricFingerprint !== fingerprint) { metricFingerprint = fingerprint; metricKey = crypto.randomUUID(); }
+          payload.idempotency_key = metricKey;
+          try { await api(`/api/publications/${existing.id}/metrics`, payload); }
+          catch (err) { error.textContent = `${err.message} Kiểm tra số liệu đã lưu trước khi thử lại nếu mất kết nối.`; return; }
+          app.bulletinDirty = false; renderBulletin(); toast('Đã lưu số liệu do bạn nhập.');
+        });
+        listen(discard, 'click', () => {
+          delete metricNotice.dataset.dirty; delete metricNotice.dataset.pendingPublicationEdit;
+          metricNotice.hidden = true; metricNotice.replaceChildren(); metricFingerprint = null; metricKey = null;
+          app.bulletinDirty = hasOtherPendingChanges($('bulletin-editor'), null, hasPendingBulletinUrl());
+        });
+        metricNotice.append(save, discard);
       });
       const correct = node('button', 'button secondary', 'Đính chính liên kết');
       const conflict = node('div'); conflict.hidden = true;

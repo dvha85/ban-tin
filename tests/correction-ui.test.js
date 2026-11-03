@@ -32,6 +32,58 @@ class Element {
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
 }
 
+test('variant dirty tracking ignores publication and metric fields but tracks edits', () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+    setTimeout, clearTimeout, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.area = new Element();
+  vm.runInContext("markVariantDirty(area, {target: {dataset: {metricField: 'views'}}})", context);
+  vm.runInContext("markVariantDirty(area, {target: {dataset: {publicationUrl: 'true'}}})", context);
+  assert.notEqual(context.area.dataset.dirty, 'true');
+  vm.runInContext('markVariantDirty(area, {target: {dataset: {}}})', context);
+  assert.equal(context.area.dataset.dirty, 'true');
+  assert.equal(vm.runInContext('app.bulletinDirty', context), true);
+});
+
+test('metric form retains edits on error and retries the same payload idempotently', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = []; let count = 0;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout, calls,
+    crypto: {randomUUID: () => `key-${++count}`}, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, confirm: () => false, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`api = async (path, body) => path.endsWith('/metrics') ? (calls.push(body), Promise.reject(new Error('Lỗi thử'))) : path.endsWith('/publications') ?
+    [{id: 11, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : {posts: ['test']};`, context);
+  const area = new Element(); get('bulletin-editor').append(area); context.area = area;
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const button = name => walk(area).find(el => el.tagName === 'button' && el.textContent === name);
+  const field = name => walk(area).find(el => el.dataset.metricField === name);
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  button('Nhập số liệu').listeners.click[0]({}); await tick();
+  assert.ok(field('views')); assert.ok(field('likes')); assert.ok(field('observed_at')); assert.ok(field('note'));
+  field('views').value = '10'; field('likes').value = '0'; field('observed_at').value = '2026-11-03T10:00:00+07:00';
+  field('note').value = 'Thử'; field('views').listeners.input[0]({}); await tick();
+  assert.equal(vm.runInContext('app.bulletinDirty', context), true);
+  button('Lưu số liệu').listeners.click[0]({}); await tick();
+  assert.equal(calls[0].views, 10); assert.equal(calls[0].likes, 0); assert.equal(calls[0].replies, null);
+  assert.equal(field('views').value, '10'); assert.ok(walk(area).some(el => el.textContent.includes('Lỗi thử')));
+  button('Lưu số liệu').listeners.click[0]({}); await tick();
+  assert.equal(calls[1].idempotency_key, calls[0].idempotency_key);
+  field('views').value = '11'; button('Lưu số liệu').listeners.click[0]({}); await tick();
+  assert.notEqual(calls[2].idempotency_key, calls[0].idempotency_key);
+  button('Bỏ số liệu chưa lưu').listeners.click[0]({}); await tick();
+  assert.equal(vm.runInContext('app.bulletinDirty', context), false);
+});
+
 test('pending correction remains dirty until explicitly discarded', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
@@ -106,6 +158,11 @@ test('X metrics handler keeps the order, zero and unknown values, and displays l
   assert.ok(walk(area).some(el => el.textContent.includes('Lượt chia sẻ: 0')));
   walk(area).find(el => el.tagName === 'button' && el.textContent === 'Nhập số liệu').listeners.click[0]({});
   await new Promise(resolve => setImmediate(resolve));
+  const field = key => walk(area).find(el => el.dataset.metricField === key);
+  ['10','0','','3','4','5','','15'].forEach((value, i) => { field(helpers.metricFields('x')[i][0]).value = value; });
+  field('observed_at').value = '2026-11-03T10:00:00+07:00'; field('note').value = 'Ghi chú thử';
+  walk(area).find(el => el.tagName === 'button' && el.textContent === 'Lưu số liệu').listeners.click[0]({});
+  await new Promise(resolve => setImmediate(resolve));
   assert.equal(calls.length, 1);
   assert.equal(calls[0].path, '/api/publications/11/metrics');
   assert.deepEqual(JSON.parse(JSON.stringify(calls[0].body)), {observed_at: '2026-11-03T10:00:00+07:00',
@@ -137,27 +194,25 @@ test('cancelled metric entry remains available and blocks navigation until disca
   const button = text => walk(area).find(el => el.tagName === 'button' && el.textContent === text);
   button('Nhập số liệu').listeners.click[0]({});
   await new Promise(resolve => setImmediate(resolve));
+  const field = key => walk(area).find(el => el.dataset.metricField === key);
+  ['10','0','','3','4','5','','15'].forEach((value, i) => { field(helpers.metricFields('x')[i][0]).value = value; });
+  field('views').listeners.input[0]({}); await new Promise(resolve => setImmediate(resolve));
   assert.equal(vm.runInContext('app.bulletinDirty', context), true);
   vm.runInContext("app.view = 'bulletins'; view('inbox')", context);
   assert.equal(vm.runInContext('app.view', context), 'bulletins');
-  prompts.push(null);
-  button('Nhập số liệu').listeners.click[0]({});
-  await new Promise(resolve => setImmediate(resolve));
-  assert.equal(defaults[2], '10,0,,3,4,5,,15');
-  prompts.push('10,0,,3,4,5,,15', 'sai ngày', 'ghi chú thử');
-  button('Nhập số liệu').listeners.click[0]({});
+  field('observed_at').value = 'sai ngày'; field('note').value = 'ghi chú thử';
+  button('Lưu số liệu').listeners.click[0]({});
   await new Promise(resolve => setImmediate(resolve));
   assert.ok(walk(area).some(el => el.textContent.includes('Thời điểm không hợp lệ')));
-  assert.ok(walk(area).some(el => el.textContent.includes('sai ngày') && el.textContent.includes('ghi chú thử')));
+  assert.equal(field('observed_at').value, 'sai ngày'); assert.equal(field('note').value, 'ghi chú thử');
   assert.equal(vm.runInContext('app.bulletinDirty', context), true);
-  prompts.push('10,0,,3,4,5,,15', 'sai ngày', 'ghi chú thử');
-  button('Nhập số liệu').listeners.click[0]({});
+  button('Lưu số liệu').listeners.click[0]({});
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(calls.length, 2);
   assert.equal(calls[0].idempotency_key, 'test-key-1');
   assert.equal(calls[1].idempotency_key, calls[0].idempotency_key);
-  prompts.push('11,0,,3,4,5,,15', 'sai ngày', 'ghi chú thử');
-  button('Nhập số liệu').listeners.click[0]({});
+  field('views').value = '11';
+  button('Lưu số liệu').listeners.click[0]({});
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(calls[2].idempotency_key, 'test-key-2');
   button('Bỏ số liệu chưa lưu').listeners.click[0]({});

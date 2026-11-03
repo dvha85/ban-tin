@@ -8,6 +8,8 @@
 4. Tạo phiên bản cho từng kênh, nhập tên tài khoản, nội dung và chọn các mục cùng nguồn thực sự sử dụng. Xem trước bao gồm nguồn và bộ đếm. Threads/X có thể đề xuất chia theo câu hoặc đoạn; nếu câu quá dài, hãy tự sửa. Lưu nội dung, sau đó hoàn tất và lưu lại năm mục kiểm tra trước khi duyệt.
 5. Sao chép từng đoạn từ bản duyệt hoặc tải `.txt`. Tự đăng, sau đó ghi URL tương ứng cho từng đoạn. Có thể nhập số liệu thủ công, để trống nếu chưa biết, và đính chính liên kết với lý do. Phiên bản đã ghi nhận bị khóa; các mục, nguồn và bản xem trước của nó lấy từ bản duyệt lịch sử. Tạo bản sao nếu cần chỉnh sửa. Nếu mục hoặc nguồn đã bị bỏ khỏi bản tin gốc, bản sao giữ nội dung từng đoạn và yêu cầu bạn chọn lại, đối chiếu và xác nhận nguồn trước khi lưu.
 
+Để ghi số liệu, chọn **Nhập số liệu** ở đúng đoạn đã ghi nhận. Điền từng ô bằng số nguyên không âm; để trống khi chưa biết, vì `0` là giá trị đã biết. Kiểm tra thời điểm quan sát có múi giờ và thêm ghi chú nếu cần, rồi chọn **Lưu số liệu**. Giá trị đang nhập được giữ khi có lỗi; có thể sửa và thử lại hoặc chọn **Bỏ số liệu chưa lưu**. Nếu mất kết nối và chưa rõ kết quả, kiểm tra mục **Số liệu đã lưu** trước khi thử lại, nhất là sau khi tải lại trang.
+
 Nếu trình duyệt từ chối quyền clipboard, hộp **Sao chép thủ công** sẽ hiện nội dung đã chọn sẵn. Nhấn `Ctrl+C`, sau đó chuyển đến nơi cần dán và nhấn `Ctrl+V`; kiểm tra lại cả nội dung và nguồn trước khi đăng. Bạn cũng có thể tải tệp `.txt` của bản duyệt.
 
 Trong **Bàn biên tập**, nút **Tạo bản sao sang bản tin** sao chép bài cũ đã lưu thành bản tin và phiên bản Facebook chưa duyệt. Bài cũ và lịch sử của nó được giữ nguyên. Nếu bài dài hơn 4.000 ký tự, toàn văn nằm trong phiên bản Facebook; bạn cần viết lại nội dung mục để kiểm chứng trước khi duyệt.
