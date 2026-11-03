@@ -77,7 +77,10 @@ Nút cũ đổi thành **Nhập bài thủ công**: chỉ thêm một bài và g
 
 ```powershell
 python -m unittest discover -s tests -v
+node --test tests/draft-state.test.js tests/source-warnings.test.js tests/request-size.test.js tests/inbox-utils.test.js tests/correction-ui.test.js
 ```
+
+Node.js chỉ cần cho kiểm thử JavaScript; kiểm thử DOM giả không thay thế kiểm tra trên trình duyệt.
 
 - [Kết quả và giới hạn kiểm thử](docs/KIEM-THU.md)
 - [Thiết kế, dữ liệu và cách bảo trì](docs/KIEN-TRUC.md)
