@@ -6,6 +6,8 @@
 
 > Bổ sung restart: từ kho fixture đó tạo backup qua UI, khôi phục sang thư mục riêng, dừng và chạy lại server của bản khôi phục. Edge mở bản tin #2 vẫn thấy đúng thứ tự Alpha → Charlie → Bravo và ba URL nguồn. Không suy rộng sang mất điện hay dữ liệu vận hành.
 
+> QA-02 còn lỗi phục hồi phiên: dữ liệu nhập được giữ sau lỗi kết nối, nhưng lưu lại sau restart bị từ chối và yêu cầu tải lại; thao tác tải lại có thể mất nội dung chưa lưu. Cần xử lý và thử lại; chi tiết tại `KIEM-THU.md`.
+
 Ngày rà soát: 03/11/2026. Đối chiếu mục 10 của [kế hoạch nâng cấp](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) với mã và bằng chứng được ghi trong [nhật ký kiểm thử](KIEM-THU.md). Đây là trạng thái kiểm chứng, không phải chấp thuận triển khai. Các lệnh và kết quả chi tiết, dữ liệu sử dụng và giới hạn được ghi tại nhật ký đó.
 
 | Điều kiện mục 10 | Bằng chứng hiện có | Phần còn thiếu để kết luận |

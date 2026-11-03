@@ -8,6 +8,8 @@
 
 > Bổ sung QA-02: biểu mẫu số liệu Threads giữ giá trị 303 và chặn chuyển sang Facebook khi chưa lưu; sau khi lưu có thể chuyển kênh và xem lại cả hai lượt số liệu. Các tình huống rời trang và mất kết nối vẫn cần kiểm tra riêng.
 
+> QA-02 / lỗi cần xử lý: khi server thử dừng trước lúc lưu, giá trị đang nhập được giữ và có thông báo mất kết nối. Sau restart, lần lưu lại trên trang cũ bị từ chối vì phiên thay đổi và thông báo yêu cầu tải lại, có nguy cơ mất nội dung chưa lưu. Cần cơ chế khôi phục an toàn và kiểm thử cả kết quả lưu không rõ; trước mắt sao chép nội dung trước khi tải lại. Xem `KIEM-THU.md`.
+
 > Bổ sung PUB-02/03: tách namespace khóa đính chính nội bộ khỏi khóa client để tránh lỗi trùng khóa; kiểm thử tái hiện lỗi cũ và đối chiếu lịch sử, retry trên kho tạm. Xem `KIEM-THU.md`.
 
 > Bổ sung FIX-03: trên nhánh 0.4, giao diện chặn URL bài cũ để trống và giữ trạng thái đã duyệt; test service kiểm tra thêm URL sai miền và trang chủ. Hồi quy gần nhất 164 Python, 28 JavaScript đạt. Chưa kiểm tra các URL sai này qua UI hoặc xác nhận bản 0.3.1 phát hành độc lập.
