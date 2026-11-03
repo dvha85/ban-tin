@@ -62,6 +62,8 @@ class MigrationV4Tests(unittest.TestCase):
             'wrong_index': 'DROP INDEX active_publication_position',
             'columns': 'DROP TABLE publication_metrics',
             'no_fk': 'DROP TABLE publication_metrics',
+            'legacy_table': 'DROP TABLE collection_settings',
+            'legacy_column': 'ALTER TABLE collection_settings DROP COLUMN confirmed_at',
             'orphan': "INSERT INTO publication_metrics (publication_id,observed_at,payload,created_at) VALUES (999,'t','{}','t')",
         }
         for name, sql in changes.items():
@@ -107,6 +109,11 @@ class MigrationV4Tests(unittest.TestCase):
         with closing(sqlite3.connect(backup[0])) as conn:
             self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
             self.assertEqual(conn.execute('SELECT COUNT(*) FROM drafts').fetchone()[0], 3)
+        restored_dir = self.directory / 'restored-upgraded-v3'
+        restore(upgraded.backup(), restored_dir)
+        restored = Newsroom(restored_dir)
+        for draft_id, expected_export in expected['exports'].items():
+            self.assertEqual(restored.export(int(draft_id)), expected_export)
 
     def test_upgrade_reduced_schema_1_and_2_preserves_legacy_exports(self):
         fixture_dir = Path(__file__).parent / 'fixtures'
@@ -132,6 +139,11 @@ class MigrationV4Tests(unittest.TestCase):
                     for table in ('drafts', 'history', 'metrics'):
                         self.assertEqual([dict(row) for row in conn.execute(f'SELECT * FROM {table} ORDER BY rowid')], expected[table])
                 self.assertEqual(len(list((target / 'backups').glob(f'pre-v0{version + 1}-*.sqlite3'))), 1)
+                restored_dir = self.directory / f'restored-upgraded-v{version}'
+                restore(upgraded.backup(), restored_dir)
+                restored = Newsroom(restored_dir)
+                for draft_id, expected_export in expected['exports'].items():
+                    self.assertEqual(restored.export(int(draft_id)), expected_export)
 
     def test_failed_migration_rolls_back_all_tables_and_version(self):
         destination = self.directory / 'fault.sqlite3'

@@ -128,7 +128,7 @@ python -m newsroom --data-dir "C:\Users\hadv\AppData\Local\BanTinLocal-KhoiPhuc-
 
 Thay đường dẫn mẫu bằng đường dẫn của bạn, không chạy nguyên ví dụ. Không ghi đè thư mục bản chính. Mở bản khôi phục để kiểm tra các bài trước khi quyết định sử dụng nó; bản chính vẫn được giữ lại.
 
-Với bản sao schema 4, restore kiểm tra thêm cấu trúc các bảng bản tin và dữ liệu khóa ngoại trước khi tạo thư mục đích. Nếu báo cấu trúc hoặc khóa ngoại không hợp lệ, giữ nguyên tệp sao lưu để kiểm tra và thử bản sao khác; không sửa trực tiếp tệp gốc chỉ để vượt lỗi. Việc kiểm tra này chưa xác nhận nội dung từng bản tin hoặc mọi lỗi hệ thống tập tin.
+Với bản sao schema 4, restore kiểm tra thêm cấu trúc các bảng bản tin, sự hiện diện của bảng và cột legacy cần thiết, và dữ liệu khóa ngoại trước khi tạo thư mục đích. Nếu báo cấu trúc hoặc khóa ngoại không hợp lệ, giữ nguyên tệp sao lưu để kiểm tra và thử bản sao khác; không sửa trực tiếp tệp gốc chỉ để vượt lỗi. Việc kiểm tra này chưa xác nhận nội dung từng bản tin, toàn bộ ràng buộc legacy hoặc mọi lỗi hệ thống tập tin.
 
 ## 8. Xử lý các trường hợp thường gặp
 

@@ -7,6 +7,9 @@ CURRENT_SCHEMA = 4
 
 V4_TABLES = ('bulletins', 'bulletin_items', 'content_variants', 'variant_approvals',
              'publications', 'publication_events', 'publication_metrics', 'bulletin_history')
+LEGACY_TABLES = ('articles', 'article_sources', 'drafts', 'history', 'source_health', 'metrics',
+                 'collection_settings', 'collection_jobs', 'collection_evidence', 'collection_attempts',
+                 'custom_sources')
 
 # Statements are executed one at a time in an explicit transaction. In
 # particular, do not use executescript(), which can commit a pending transaction.
@@ -120,6 +123,12 @@ def validate_v4_structure(conn):
     with closing(sqlite3.connect(':memory:')) as reference:
         for statement in SCHEMA:
             reference.execute(statement)
+        for table in LEGACY_TABLES:
+            quoted = quote(table)
+            required = {row[1] for row in reference.execute(f'PRAGMA table_info({quoted})')}
+            present = {row[1] for row in conn.execute(f'PRAGMA table_info({quoted})')}
+            if not required <= present:
+                raise ValueError(f'Tệp schema mới thiếu cấu trúc dữ liệu cũ cần thiết: {table}.')
         for table in V4_TABLES:
             quoted = quote(table)
             columns = lambda db: [tuple(row[1:]) for row in db.execute(f'PRAGMA table_info({quoted})')]
