@@ -81,6 +81,22 @@ class ServerTests(unittest.TestCase):
         unicode_token = dict(headers, **{'X-CSRF-Token': '\u00e9'})
         self.assertEqual(self.request('POST', '/api/backup', {}, unicode_token)[0], 403)
 
+    def test_json_rejects_unpaired_surrogates_without_saving_and_accepts_emoji(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin fixture Unicode',
+            'url': 'https://example.com/unicode', 'summary': 'Nguồn minh họa.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        variant = self.room.create_variant(bulletin['id'], {
+            'bulletin_revision': bulletin['revision'], 'platform': 'x', 'account_label': 'Kênh thử'})
+        path = f"/api/variants/{variant['id']}/save"
+        segment = {'text': 'Lỗi \ud800', 'item_ids': [bulletin['items'][0]['id']]}
+        status, _, body = self.request('POST', path, {'revision': variant['revision'], 'segments': [segment]}, headers)
+        self.assertEqual(status, 400)
+        self.assertIn('Unicode không hợp lệ', json.loads(body)['error'])
+        self.assertEqual(self.room.variant(variant['id']), variant)
+        segment['text'] = 'Emoji hợp lệ 😀'
+        self.assertEqual(self.request('POST', path, {'revision': variant['revision'], 'segments': [segment]}, headers)[0], 200)
+
     def test_no_publish_or_ai_integration_endpoint(self):
         headers = self.session()
         for endpoint in ('/api/ai', '/api/facebook/publish', '/api/login/chatgpt'):

@@ -442,9 +442,10 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | APR-04 / APPROVE-05 | Đang làm | Xem trước và xuất đọc phiên bản, bản tin, bản duyệt trong cùng snapshot SQLite; test WAL xen kẽ ghi cho thấy kết quả nhất quán theo thời điểm bắt đầu đọc | Cần bao phủ các tổ hợp race HTTP/copy/ghi nhận còn lại |
 | 03/11/2026 | APR-02 / TEXT-06 | Đang làm | Sửa checklist chưa đăng không bị xóa khi bản tin gốc đổi; chặn tái duyệt bằng checklist cũ khi policy/renderer đổi, thêm cảnh báo UI. Test service giữ nguyên bản đã ghi nhận | Smoke UI khi đổi policy và các tổ hợp nguồn/thứ tự còn lại |
 | 03/11/2026 | DIG-03 / APR-01 | Đang làm | Thêm checklist tối đa 10 khẳng định/mục, ghi nguồn hoặc lý do và xác nhận riêng; chặn duyệt nếu thiếu/bỏ kiểm tra. Test lưu/restart, sửa nội dung/nguồn và smoke nhập/lưu trên demo | Kiểm tra toàn luồng duyệt đa kênh và chuyển đổi bản đã duyệt policy cũ trên giao diện |
-| 03/11/2026 | QA/DOC/PILOT/REL | Đang làm | Lần chạy gần nhất 132/132 Python, 7/7 JS; Edge tải `.txt` một đoạn và đối chiếu nội dung/nguồn; đã cập nhật tài liệu cho nhánh phát triển | Clipboard thật, QA còn lại, ba pilot và quyết định kho vận hành vẫn chưa có |
+| 03/11/2026 | QA/DOC/PILOT/REL | Đang làm | Lần chạy gần nhất 133/133 Python, 7/7 JS; Edge tải `.txt` một đoạn và đối chiếu nội dung/nguồn; đã cập nhật tài liệu cho nhánh phát triển | Clipboard thật, QA còn lại, ba pilot và quyết định kho vận hành vẫn chưa có |
 | 03/11/2026 | APR-01 / QA-02 | Đang làm | Edge tạo và duyệt Facebook từ mục có checklist khẳng định trên kho demo, dùng server thử khởi động theo policy v1; dữ liệu và xác nhận là giả | Cần thử các kênh khác; nút copy báo thành công nhưng clipboard của trình điều khiển rỗng, chưa chứng minh dán thực tế |
 | 03/11/2026 | TEXT-06 / APR-02 | Đang làm | Edge mở lại biến thể Facebook v1 trên server v2: cảnh báo policy, chặn xuất sẵn sàng, lưu bỏ 5 xác nhận, xác nhận lại và duyệt v2 thành công | Chưa thử giao diện khi đã ghi nhận một phần; các xác nhận dùng dữ liệu giả |
+| 03/11/2026 | TEXT-03 / SAFE-01 | Đang làm | HTTP trả lỗi Unicode rõ ràng và không lưu một phần với surrogate đơn lẻ; emoji hợp lệ lưu được. Sửa nhãn ước lượng Threads vì emoji U+1FAE8 được đếm 1 dù biểu diễn UTF-8 là 4 byte | Chưa biết quy tắc thực tế của Meta cho trường hợp này; bộ đếm và BASE-03 vẫn chưa nghiệm thu |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
@@ -455,7 +456,7 @@ Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết q
 | 03/11/2026 / SCOPE | Giữ người dùng duyệt và tự đăng; chưa AI API/tự đăng | Đề xuất mặc định của kế hoạch; phù hợp workflow hiện có |
 | 03/11/2026 / DATA | Additive schema 4 + legacy nguyên vẹn; clone không kế thừa approval | Đề xuất để giảm rủi ro dữ liệu |
 | 03/11/2026 / LIMIT | 1–10 mục, 3 nguồn/mục, 20 URL, packet 64 KiB, tối đa 20 đoạn | Cần chốt bằng fixture tại BASE-02; không phải hạn mức nền tảng |
-| 03/11/2026 / COUNTER | X dùng twitter-text vendored; 24 fixture upstream có commit và giấy phép ghim trong `tests/fixtures/TWITTER-TEXT-README.md`. Threads dùng ước lượng thận trọng | Chưa đóng BASE-03: emoji X mới và cách đếm Threads chưa được xác minh đầy đủ; phải đóng trước gate G3 |
+| 03/11/2026 / COUNTER | X dùng twitter-text vendored; 24 fixture upstream có commit và giấy phép ghim trong `tests/fixtures/TWITTER-TEXT-README.md`. Threads dùng ước lượng có thể đếm thiếu | Chưa đóng BASE-03: emoji X mới và cách đếm Threads chưa được xác minh đầy đủ; phải đóng trước gate G3 |
 | — / URL | Mẫu URL bài đăng và alias hợp lệ Facebook/Threads/X | Chưa chốt; BASE-03/PUB-01 |
 | — / RELEASE | Bằng chứng pilot và chấp thuận dùng trên DB chính | Chưa có; G6 |
 

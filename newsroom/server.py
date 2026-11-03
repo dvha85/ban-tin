@@ -362,6 +362,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.json_error(404, 'Không tìm thấy chức năng.')
         except Conflict as exc:
             self.json_error(409, str(exc))
+        except UnicodeError:
+            self.json_error(400, 'Nội dung chứa ký tự Unicode không hợp lệ. Hãy nhập lại đoạn văn bản.')
         except (ValidationError, ValueError) as exc:
             self.json_error(400, str(exc))
         except (sqlite3.Error, OSError):

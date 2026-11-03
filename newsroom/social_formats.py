@@ -11,8 +11,8 @@ MAX_SEGMENTS = 20
 
 
 def thread_length(text):
-    # Meta documents a 500-character text limit. Emoji can take multiple UTF-8
-    # bytes through its API; this conservative count also handles joined emoji.
+    # Heuristic only: the vendored emoji list predates newer emoji. This does
+    # not establish an upper bound or reproduce Meta's undocumented counting.
     count = len(text)
     for match in extract_emojis_with_indices(text):
         emoji = match['emoji']
@@ -70,8 +70,10 @@ def render_segments(platform, segments, bulletin):
                       'limit': LIMITS[platform], 'valid': bool(text.strip()) and within_limit})
     return {'platform': platform, 'policy_version': POLICY_VERSION, 'renderer_version': RENDERER_VERSION,
             'posts': posts, 'valid': all(post['valid'] for post in posts),
-            'warning': ('Bộ đếm là công cụ hỗ trợ; kiểm tra lại trên nền tảng, đặc biệt với emoji mới.'
-                        if platform in ('threads', 'x') else 'Giới hạn 12.000 ký tự là giới hạn nội bộ.')}
+            'warning': ('Bộ đếm Threads chỉ là ước lượng, có thể đếm thiếu; kiểm tra lại trên nền tảng.'
+                        if platform == 'threads' else
+                        'Bộ đếm X là công cụ hỗ trợ; kiểm tra lại trên nền tảng, đặc biệt với emoji mới.'
+                        if platform == 'x' else 'Giới hạn 12.000 ký tự là giới hạn nội bộ.')}
 
 
 def split_segments(platform, segments, bulletin):
