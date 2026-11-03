@@ -50,11 +50,27 @@ def restore(backup, destination):
                                                'publication_metrics', 'bulletin_history'} <= tables:
             raise ValueError('Tệp schema mới thiếu bảng dữ liệu bản tin.')
         target_dir.mkdir(parents=True, exist_ok=False)
-        destination_conn = sqlite3.connect(target_dir / 'bantin.sqlite3')
+        destination_path = target_dir / 'bantin.sqlite3'
+        created_file = False
         try:
-            source.backup(destination_conn)
-        finally:
-            destination_conn.close()
+            # Reserve the file exclusively; never overwrite a file created by
+            # another process after the directory was created.
+            with destination_path.open('xb'):
+                created_file = True
+            with closing(sqlite3.connect(destination_path)) as destination_conn:
+                source.backup(destination_conn)
+                if destination_conn.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
+                    raise RuntimeError('Bản khôi phục không toàn vẹn.')
+        except Exception as exc:
+            # Remove only the file created above and the directory if empty.
+            # Never recursively delete a destination containing other files.
+            try:
+                if created_file:
+                    destination_path.unlink(missing_ok=True)
+                target_dir.rmdir()
+            except OSError as cleanup_error:
+                exc.add_note(f'Không dọn được thư mục khôi phục chưa hoàn tất: {cleanup_error}')
+            raise
     print(f'Da khoi phuc vao thu muc moi: {target_dir}')
 
 

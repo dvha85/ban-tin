@@ -187,6 +187,61 @@ class MigrationV4Tests(unittest.TestCase):
             self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 99)
             self.assertEqual(conn.execute('PRAGMA journal_mode').fetchone()[0], previous_mode)
 
+    def test_restore_interrupted_copy_removes_its_partial_destination(self):
+        backup = self.room.backup()
+        target = self.directory / 'restore-interrupted'
+        real_connect = sqlite3.connect
+
+        class FailingSource:
+            def __init__(self, connection):
+                self.connection = connection
+
+            def __getattr__(self, name):
+                return getattr(self.connection, name)
+
+            def backup(self, destination):
+                destination.execute('CREATE TABLE partial (id INTEGER)')
+                destination.commit()
+                raise OSError('simulated interrupted copy')
+
+        def connect(path, *args, **kwargs):
+            connection = real_connect(path, *args, **kwargs)
+            return FailingSource(connection) if kwargs.get('uri') else connection
+
+        with patch('newsroom.__main__.sqlite3.connect', side_effect=connect):
+            with self.assertRaisesRegex(OSError, 'interrupted'):
+                restore(backup, target)
+        self.assertFalse(target.exists())
+        restore(backup, target)
+        self.assertEqual(Newsroom(target).articles(), self.room.articles())
+
+    def test_restore_failure_never_removes_other_files_in_destination(self):
+        backup = self.room.backup()
+        target = self.directory / 'restore-with-extra-file'
+        real_connect = sqlite3.connect
+
+        class FailingSource:
+            def __init__(self, connection):
+                self.connection = connection
+
+            def __getattr__(self, name):
+                return getattr(self.connection, name)
+
+            def backup(self, destination):
+                (target / 'other.txt').write_text('keep', encoding='utf-8')
+                raise OSError('simulated interrupted copy')
+
+        def connect(path, *args, **kwargs):
+            connection = real_connect(path, *args, **kwargs)
+            return FailingSource(connection) if kwargs.get('uri') else connection
+
+        with patch('newsroom.__main__.sqlite3.connect', side_effect=connect):
+            with self.assertRaises(OSError) as caught:
+                restore(backup, target)
+        self.assertEqual((target / 'other.txt').read_text(encoding='utf-8'), 'keep')
+        self.assertFalse((target / 'bantin.sqlite3').exists())
+        self.assertTrue(any('Không dọn được' in note for note in caught.exception.__notes__))
+
 
 if __name__ == '__main__':
     unittest.main()
