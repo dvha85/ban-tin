@@ -69,6 +69,22 @@ class ServerTests(unittest.TestCase):
                 self.assertIn('error', json.loads(body))
                 self.assertEqual(self.room.variants(bulletin['id']), [])
 
+    def test_bulletin_rejects_article_ids_outside_sqlite_range(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử giới hạn ID',
+            'url': 'https://example.com/id-range', 'summary': 'Dữ liệu giả.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        before = self.room.bulletin(bulletin['id'])
+        for value in (2**63, -(2**63)-1):
+            with self.subTest(article_id=value):
+                status, _, body = self.request('POST', '/api/bulletins', {'article_ids': [value]}, headers)
+                self.assertEqual(status, 400, body)
+                status, _, body = self.request('POST', f"/api/bulletins/{bulletin['id']}/items", {
+                    'revision': bulletin['revision'], 'article_id': value}, headers)
+                self.assertEqual(status, 400, body)
+                self.assertEqual(self.room.bulletin(bulletin['id']), before)
+                self.assertEqual(len(self.room.bulletins()), 1)
+
     def test_session_reacquisition_after_server_restart_preserves_revision_guards(self):
         old = self.session()
         article = self.room.import_article({'title': 'Tin giả kiểm tra phiên',

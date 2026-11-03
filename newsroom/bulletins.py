@@ -158,7 +158,7 @@ class BulletinMixin:
 
     def _snapshot_article(self, conn, article_id, selections=None):
         from .service import ValidationError
-        if type(article_id) is not int:
+        if type(article_id) is not int or not -(2**63) <= article_id < 2**63:
             raise ValidationError('ID tin không hợp lệ.')
         row = conn.execute('SELECT * FROM articles WHERE id=?', (article_id,)).fetchone()
         if not row:

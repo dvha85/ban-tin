@@ -2,6 +2,8 @@
 
 ## Smoke test giao diện đa kênh 04/11/2026
 
+- BASE-02 / NEWS-01: ID tin nằm ngoài phạm vi số nguyên 64-bit của SQLite trước sửa làm HTTP ngắt kết nối khi tạo bản tin; sau sửa, tạo bản tin và thêm mục đều trả 400, không thay đổi bản tin hoặc tạo bản mới. Hồi quy 172/172 Python, 33/33 JavaScript đạt. Chưa khẳng định mọi ID trên mọi route đã được kiểm tra biên.
+
 - BASE-02: test HTTP tạo phiên bản với `platform` là mảng/object tái hiện `TypeError` và kết nối bị đóng trước sửa. Sau sửa, mảng, object, null, boolean, số và tên không hỗ trợ trả 400 JSON và không tạo phiên bản; hồi quy 171/171 Python và 33/33 JavaScript đạt. Chưa bao phủ mọi trường và tổ hợp kiểu dữ liệu của API.
 
 - PUB-03/04, đọc đồng thời: test SQLite WAL tiêm hủy ghi nhận giữa lúc đọc danh sách và đọc sự kiện; trước sửa một bản ghi còn hiệu lực nhưng đã có sự kiện hủy trong cùng phản hồi. Sau sửa danh sách ghi nhận, sự kiện và số liệu thuộc cùng snapshot đọc. Hồi quy 170/170 Python, 33/33 JavaScript đạt; chưa smoke tình huống đồng thời qua HTTP/UI.
