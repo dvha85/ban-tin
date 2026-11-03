@@ -127,6 +127,7 @@
 - Edge mở server fixture tạm có hai mục, phiên bản X hai đoạn và một liên kết giả đã ghi nhận bằng service. Trang hiển thị trạng thái 1/2, nguồn, liên kết và nút nhập số liệu/đính chính. Chưa kiểm thử luồng tạo dữ liệu từ đầu trong lượt này.
 - Chọn nhập số liệu và gửi dãy `1,2,3,4,5,6,7,8` vào hộp đầu; công cụ điều khiển không tiếp tục được khi chuyển hộp. Không xác nhận lưu hay đính chính thành công; không xem lỗi điều khiển là lỗi ứng dụng. Chưa có đủ quan sát để quyết định thay hộp thoại bằng biểu mẫu. Server fixture đã dừng.
 - Người dùng xác nhận chưa có dữ liệu SQLite cũ, nên không áp dụng bước thử migration/restore trên bản sao dữ liệu cũ trong đợt này. Không có kiểm thử dữ liệu vận hành.
+- Sau lần thử hộp xác nhận trên trình duyệt tích hợp, mở bản tin trên thẻ mới của cùng server fixture: phiên bản X hiển thị trạng thái 2/2; đoạn 1 giữ `https://x.com/fixture/status/123456789` và đoạn 2 giữ `https://x.com/fixture/status/987654321`. Đoạn 1 được chuẩn bị bằng service; kết quả xác nhận đoạn 2 được quan sát sau lần thử, không xác định được thao tác xác nhận nào đã hoàn tất. Chưa kiểm tra restart server hoặc luồng nhập số liệu/đính chính thành công.
 
 ## Không được suy ra từ kết quả trên
 
