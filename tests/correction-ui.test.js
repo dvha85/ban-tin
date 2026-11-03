@@ -51,6 +51,24 @@ test('variant dirty tracking ignores publication and metric fields but tracks ed
   assert.equal(vm.runInContext('app.bulletinDirty', context), true);
 });
 
+test('publication URL fields have a distinct accessible label for each segment', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), crypto: {randomUUID: () => 'test-key'},
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext("api = async path => path.endsWith('/publications') ? [] : {posts: ['một', 'hai']};", context);
+  const area = new Element(); get('bulletin-editor').append(area); context.area = area;
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const inputs = walk(area).filter(el => el.dataset.publicationUrl);
+  assert.equal(inputs.length, 2);
+  assert.deepEqual(inputs.map(input => input['aria-label']), ['Liên kết bài đã đăng cho đoạn 1', 'Liên kết bài đã đăng cho đoạn 2']);
+});
+
 test('metric form retains edits on error and retries the same payload idempotently', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

@@ -512,6 +512,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 04/11/2026 | QA-03 | Không áp dụng trong đợt này | Người dùng xác nhận chưa có dữ liệu SQLite cũ; bỏ bước thử trên bản sao dữ liệu cũ | Fixture migration/restore vẫn được kiểm thử; không khẳng định đã thử dữ liệu vận hành |
 | 04/11/2026 | PUB-04 / QA-02 | Đang làm | Thay prompt bằng biểu mẫu có nhãn; smoke trên trình duyệt tích hợp với fixture X lưu 10 lượt xem, 0 lượt thích và các giá trị chưa biết. Sửa lỗi sự kiện nhập khiến vùng phiên bản bị đánh dấu sửa; có test hồi quy | Chưa thử mọi kênh, mất mạng thật hoặc toàn bộ QA; cần đối chiếu số liệu sau khi tải lại nếu kết quả lưu không rõ |
 | 04/11/2026 | PUB-03 / QA-02 | Đang làm | Biểu mẫu đính chính có xác nhận và giữ nội dung khi lỗi. Trình duyệt trên kho giả chặn URL trùng, yêu cầu xác nhận lại khi sửa, lưu URL mới đúng đoạn và hiện lịch sử URL cũ | Chưa thử hủy ghi nhận qua UI, mọi kênh hoặc mất mạng thật; không tác động bài trên mạng xã hội |
+| 04/11/2026 | PUB-03 / QA-02 | Đang làm | Hủy hai ghi nhận giả qua UI: 2/2 → 1/2 → 0/2, lịch sử giữ lý do và URL, nội dung vẫn khóa sau mở lại. Bổ sung tên truy cập riêng cho ô URL từng đoạn và kiểm tra cây accessibility | Chưa thử trình đọc màn hình, mọi kênh, ghi lại qua hộp xác nhận hoặc mất mạng thật |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 

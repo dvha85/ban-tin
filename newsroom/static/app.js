@@ -1048,6 +1048,7 @@ async function renderVariantPublication(area, variant) {
       block.append(addMetrics, metricNotice, correct, conflict);
     } else {
       const url = node('input'); url.type = 'url'; url.placeholder = 'Liên kết bài đã tự đăng'; url.dataset.publicationUrl = 'true';
+      url.setAttribute('aria-label', `Liên kết bài đã đăng cho đoạn ${position + 1}`);
       const report = node('button', 'button secondary', 'Ghi nhận đã đăng');
       const conflict = node('div'); conflict.hidden = true;
       bulletinAction(report, async () => {
