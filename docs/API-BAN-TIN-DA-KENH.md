@@ -54,6 +54,20 @@ Mỗi segment có `text` và `item_ids`; `source_ids` có thể chỉ định ng
 
 Các timestamp người dùng cung cấp phải có múi giờ hợp lệ. URL cần đúng mẫu validator của nền tảng; validator không truy cập URL để chứng minh bài đã được đăng. Sau ghi nhận hoặc đính chính, đọc lại phiên bản để lấy revision mới.
 
+### Phạm vi URL ghi nhận hiện tại
+
+Đây là hành vi đọc từ `normalize_post_url` và `_post_identity` trong `newsroom/publications.py`, không phải danh mục URL chính thức hay đầy đủ của các nền tảng. Mẫu bên dưới dùng dữ liệu giả. URL phải là HTTPS, không có thông tin đăng nhập hoặc cổng khác 443; dấu `/` cuối được bỏ trước khi kiểm tra.
+
+| Kênh | Host và đường dẫn được mã hiện tại chấp nhận | Chuẩn hóa và so trùng |
+| --- | --- | --- |
+| Facebook | `facebook.com`, `www.facebook.com`, `m.facebook.com`; đường dẫn dạng `/page/posts/123`, `/share/p/abc`, hoặc `/permalink.php`, `/story.php` có `story_fbid` khác rỗng. | Host về `www.facebook.com`; bỏ query trừ `story_fbid` và `id` của hai đường dẫn PHP. So trùng theo đường dẫn không phân biệt hoa thường và query còn lại. |
+| Threads | `threads.net`, `www.threads.net`, `threads.com`, `www.threads.com`; dạng `/@user/post/abc`. | Host về `www.threads.com`, bỏ query; so trùng theo mã đoạn cuối. |
+| X | `x.com`, `www.x.com`, `twitter.com`, `www.twitter.com`; dạng `/user/status/123`, tên gồm 1–15 chữ ASCII, số hoặc `_`, mã bài là số. | Host về `x.com`, bỏ query; so trùng theo mã bài, kể cả khi tên tài khoản trong URL khác nhau. |
+
+Kiểm tra trùng bao gồm ghi nhận đa kênh đang hiệu lực và URL Facebook legacy mà validator nhận diện được. Hai URL Facebook khác dạng, chẳng hạn `/share/p/...` và `/page/posts/...`, có thể cùng dẫn đến một bài nhưng không được suy ra là trùng; URL legacy ngoài tập mẫu cũng không được đối chiếu. Không tự sửa dữ liệu cũ để xử lý các trường hợp này. Trước khi dùng cần đối soát thủ công, thu thập ví dụ được phép và xác minh alias trên nền tảng; không coi URL hợp lệ theo cú pháp là bằng chứng bài tồn tại hoặc đã đăng.
+
+[Hướng dẫn X về URL bài đăng](https://help.x.com/en/using-x/post-and-moment-url) mô tả cách sao chép liên kết bài; [tài liệu X về Media Studio](https://help.x.com/en/using-x/media-studio-faqs) minh họa dạng `x.com/USERNAME/STATUS/postID`. Các nguồn này chưa xác nhận toàn bộ mẫu, alias hoặc phép so trùng ở trên. Chưa có bằng chứng chính thức đầy đủ cho Facebook và Threads trong lần rà soát này; BASE-03 vẫn mở.
+
 ## Giới hạn bằng chứng
 
 Đây là bản đồ route và điều kiện chính đọc từ mã, chưa phải đặc tả đầy đủ mọi trường trả về, tất cả tổ hợp lỗi hoặc hợp đồng đã được người dùng chấp nhận. Bộ đếm Threads là ước lượng; hành vi X thực tế, mọi mẫu URL và emoji mới chưa được xác minh đầy đủ. Xem [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) và [bằng chứng kiểm thử](KIEM-THU.md) trước khi dùng để quyết định phát hành.
