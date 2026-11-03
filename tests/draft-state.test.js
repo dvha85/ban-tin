@@ -13,14 +13,14 @@ test('copy requires the same currently valid approval and the same segment', () 
   }
 });
 
-test('pending bulletin action blocks editor, list and navigation and restores them on failure', async () => {
-  const targets = [{inert: false}, {inert: false}, {inert: true}];
+test('pending bulletin action blocks editor, list, inbox and navigation and restores them on failure', async () => {
+  const targets = [{inert: false}, {inert: false}, {inert: false}, {inert: true}];
   let release;
   const pending = withInertTargets(targets, () => new Promise((resolve, reject) => { release = reject; }));
-  assert.deepEqual(targets.map(target => target.inert), [true, true, true]);
+  assert.deepEqual(targets.map(target => target.inert), [true, true, true, true]);
   release(new Error('thử lỗi'));
   await assert.rejects(pending, /thử lỗi/);
-  assert.deepEqual(targets.map(target => target.inert), [false, false, true]);
+  assert.deepEqual(targets.map(target => target.inert), [false, false, false, true]);
 });
 
 test('opening a bulletin keeps its editor and list inert until the response arrives', async () => {

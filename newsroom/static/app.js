@@ -476,7 +476,7 @@ function bulletinAction(button, action) {
     $('create-bulletin').disabled = true;
     $('clear-bulletin-selection').disabled = true;
     try {
-      return await withInertTargets([$('bulletin-editor'), $('bulletin-list'), document.querySelector('.sidebar nav')], action);
+      return await withInertTargets([$('bulletin-editor'), $('bulletin-list'), $('view-inbox'), document.querySelector('.sidebar nav')], action);
     }
     finally {
       app.busy = false;
@@ -978,23 +978,24 @@ function chooseBulletinSources(article) {
 bulletinAction($('create-bulletin'), async () => {
   if (!app.selectedArticles.size) return;
   if (app.bulletinDirty && !window.confirm('Bản tin đang mở có thay đổi chưa lưu. Bỏ thay đổi và tạo bản mới?')) return;
+  const selectedIds = [...app.selectedArticles];
   await loadState();
-  const reused = [...app.selectedArticles].map(id => {
+  const reused = selectedIds.map(id => {
     const article = app.state.articles.find(row => row.id === id);
     const count = (app.state.bulletin_usage || {})[id] || 0;
     return article && count ? `• ${article.title} (${count} bản tin)` : null;
   }).filter(Boolean);
   if (reused.length && !window.confirm(`Các tin sau đã dùng trong bản tin khác:\n${reused.join('\n')}\n\nVẫn tạo bản tin mới?`)) return;
   const sourceSelection = {};
-  for (const id of app.selectedArticles) {
+  for (const id of selectedIds) {
     const article = app.state.articles.find(row => row.id === id);
     if (!article) throw new Error('Một tin đã chọn không còn trong danh sách. Hãy tải lại và chọn lại.');
     const chosen = chooseBulletinSources(article);
     if (chosen === null) return;
     if (chosen !== undefined) sourceSelection[String(id)] = chosen;
   }
-  app.bulletin = await api('/api/bulletins', {article_ids: [...app.selectedArticles], title: '', source_selection: sourceSelection});
-  app.selectedArticles.clear(); app.bulletinDirty = false; await loadState(); renderBulletin(); view('bulletins');
+  app.bulletin = await api('/api/bulletins', {article_ids: selectedIds, title: '', source_selection: sourceSelection});
+  selectedIds.forEach(id => app.selectedArticles.delete(id)); app.bulletinDirty = false; await loadState(); renderBulletin(); view('bulletins');
   toast('Đã tạo bản tin. Hãy bổ sung và kiểm chứng từng mục.');
 });
 

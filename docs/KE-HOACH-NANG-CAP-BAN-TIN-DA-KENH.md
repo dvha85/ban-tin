@@ -459,6 +459,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | APR-03 / APR-04 | Đang làm | Nút copy đoạn kiểm tra lại export, đối chiếu ID duyệt và văn bản với nội dung đang hiển thị; từ chối nếu khác hoặc đang sửa chưa lưu. Smoke hai tab: sửa bản tin ở tab hai hủy duyệt; copy ở tab một báo không còn bản duyệt | Chưa thử duyệt lại và clipboard thật sau thay đổi; không loại bỏ thay đổi sau phản hồi export |
 | 03/11/2026 | APR-03 / QA-02 | Đang làm | Smoke bản X hợp lệ sau sửa: nút copy báo thành công | Công cụ báo clipboard ảo không có dữ liệu khi thử dán; chưa xác nhận nội dung clipboard thực tế hoặc fallback từ chối quyền |
 | 03/11/2026 | BASE-02 / NEWS-01 | Đang làm | Test kho giả xác nhận 10/11 mục, 3/4 nguồn mỗi mục và 20/21 URL khác nhau; URL dùng chung không tăng số URL, trường hợp bị từ chối không lưu dở, mở lại kho giữ dữ liệu | Chưa nghiệm thu mọi giới hạn qua giao diện hoặc hoàn tất hợp đồng API |
+| 03/11/2026 | DIG-01 / QA-02 | Đang làm | Chụp danh sách ID một lần cho toàn lượt tạo bản tin; khóa thêm Hộp tin khi thao tác đang chờ và chỉ bỏ lựa chọn thuộc lượt tạo thành công | Test helper và hồi quy đạt; chưa smoke yêu cầu tạo bản tin chậm trên trình duyệt |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
