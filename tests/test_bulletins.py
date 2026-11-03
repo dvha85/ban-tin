@@ -5,7 +5,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from newsroom.bulletins import MAX_PACKET_BYTES, PACKET_PREFIX, PACKET_SUFFIX, _json
+from newsroom.__main__ import restore
 from newsroom.service import Conflict, Newsroom, ValidationError
+from newsroom.variants import CHECKS
 
 
 class BulletinTests(unittest.TestCase):
@@ -96,6 +98,69 @@ class BulletinTests(unittest.TestCase):
         packet = restarted.bulletin_packet(bulletin['id'])
         self.assertIn('DỮ LIỆU NGUỒN', packet)
         self.assertLess(packet.index('story-2'), packet.index('story-0'))
+
+    def test_three_channel_bulletin_survives_backup_restore_with_partial_publication(self):
+        bulletin = self.create()
+        original_ids = [item['id'] for item in bulletin['items']]
+        bulletin = self.room.save_bulletin(bulletin['id'], {'revision': bulletin['revision'],
+                                                             'item_ids': original_ids[::-1]})
+        for item_id in original_ids[::-1]:
+            item = next(row for row in bulletin['items'] if row['id'] == item_id)
+            bulletin = self.room.save_bulletin_item(bulletin['id'], item_id, {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'body': f'Nội dung đã biên tập cho mục {item_id}.',
+                'verification_note': 'Đã đối chiếu thông tin trong nguồn giả.',
+                'claims': [{'text': 'Thông tin được nêu', 'evidence': 'Nguồn thử', 'checked': True}]})
+            item = next(row for row in bulletin['items'] if row['id'] == item_id)
+            bulletin = self.room.save_bulletin_item(bulletin['id'], item_id, {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'verified': True,
+                'claims': [{**item['claims'][0], 'checked': True}]})
+        variants = {}
+        for platform in ('facebook', 'threads', 'x'):
+            variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+                'platform': platform, 'account_label': f'Kênh {platform}'})
+            segments = ([{'text': f'Đoạn thử {i}.', 'item_ids': [item['id']]}
+                         for i, item in enumerate(bulletin['items'])] if platform == 'x' else
+                        [{'text': f'Bản tổng hợp {platform}.', 'item_ids': original_ids[::-1]}])
+            variant = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'segments': segments})
+            variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                'checks': {key: True for key in CHECKS}})
+            variants[platform] = self.room.approve_variant(variant['id'], {'revision': variant['revision']})
+        x = variants['x']
+        publication = self.room.record_publication(x['id'], {'revision': x['revision'], 'position': 0,
+            'url': 'https://x.com/fixture/status/12345', 'idempotency_key': 'restore_three_channels'})
+        self.room.save_publication_metrics(publication['id'], {'observed_at': '2026-11-03T12:00:00+07:00',
+                                                               'views': 0, 'likes': None})
+        before_bulletin = self.room.bulletin(bulletin['id'])
+        before_variants = {platform: self.room.variant(variant['id']) for platform, variant in variants.items()}
+        before_exports = {platform: self.room.export_variant(variant['id']) for platform, variant in variants.items()}
+        before_archive = self.room.export_variant(x['id'], archive=True)
+        before_publications = self.room.publications(x['id'])
+        before_history = self.room.bulletin_history(bulletin['id'])
+        backup = self.room.backup()
+
+        # Diverge the source after backup so restore cannot pass by rereading it.
+        self.room.save_bulletin(bulletin['id'], {'revision': bulletin['revision'], 'title': 'Đã đổi sau sao lưu'})
+        destination = Path(self.temp.name) / 'restored-multichannel'
+        restore(backup, destination)
+        restored = Newsroom(destination)
+        self.assertEqual(restored.bulletin(bulletin['id']), before_bulletin)
+        self.assertEqual([item['id'] for item in before_bulletin['items']], original_ids[::-1])
+        self.assertEqual(restored.bulletin_history(bulletin['id']), before_history)
+        self.assertEqual(restored.publications(x['id']), before_publications)
+        metric = json.loads(restored.publications(x['id'])[0]['metrics'][0]['payload'])
+        self.assertEqual(metric['views'], 0)
+        self.assertIsNone(metric['likes'])
+        self.assertEqual(restored.variant(x['id'])['publication_progress'], {'active': 1, 'total': 3})
+        for platform, variant in variants.items():
+            self.assertEqual(restored.variant(variant['id']), before_variants[platform])
+            self.assertEqual(restored.export_variant(variant['id']), before_exports[platform])
+        self.assertEqual(restored.export_variant(x['id'], archive=True), before_archive)
+        for item in before_bulletin['items']:
+            source = item['sources'][0]
+            self.assertIn(source['url'], restored.bulletin_packet(bulletin['id']))
+            self.assertTrue(any(source['source_id'] in post['source_ids']
+                                for post in before_archive['rendered_posts']))
 
     def test_packet_limit_counts_complete_utf8_output_and_identifies_large_items(self):
         bulletin = {'items': [{'body': ''}], 'title': 'Tin thử'}
