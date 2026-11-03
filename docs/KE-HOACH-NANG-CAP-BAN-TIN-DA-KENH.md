@@ -406,6 +406,8 @@ Các cải tiến để sau 0.4: tải lại nguồn web đã biết theo yêu c
 
 ## 10. Định nghĩa hoàn thành bản 0.4
 
+Đối chiếu từng điều kiện với bằng chứng và phần còn thiếu tại [DOI-CHIEU-NGHIEM-THU-0.4.md](DOI-CHIEU-NGHIEM-THU-0.4.md); các ô dưới đây chỉ được đánh dấu sau khi đủ bằng chứng tương ứng.
+
 - [ ] Tạo được bản tin từ ít nhất ba bài nguồn, giữ thứ tự và truy vết nguồn từng mục qua restart.
 - [ ] Biên tập được hoàn toàn thủ công hoặc qua gói tư liệu AI thủ công, không phát sinh model call.
 - [ ] Tạo được ba biến thể độc lập; có thể chỉ chọn một kênh để sử dụng.
