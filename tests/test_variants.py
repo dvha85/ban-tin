@@ -45,6 +45,65 @@ class VariantTests(unittest.TestCase):
                                                           'checks': {key: True for key in CHECKS}})
         return self.room.approve_variant(variant['id'], {'revision': variant['revision']})
 
+    def make_approved_legacy(self):
+        article_id = self.bulletin['items'][0]['article_id']
+        draft = self.room.create_draft(article_id)
+        draft = self.room.save_draft(draft['id'], {
+            'revision': draft['revision'], 'title': 'Bài kiểm thử legacy',
+            'body': 'Nội dung kiểm thử có đủ thông tin để biên tập. ' * 5,
+            'angle': 'Giải thích lợi ích và giới hạn.', 'page_name': 'Trang thử',
+        })
+        draft = self.room.save_draft(draft['id'], {
+            'revision': draft['revision'], 'checks': {key: True for key in self.room.CHECKS}})
+        return self.room.approve(draft['id'], draft['revision'])
+
+    def test_legacy_and_variant_cannot_claim_same_facebook_post_in_either_order(self):
+        legacy = self.make_approved_legacy()
+        variant = self.make_approved('facebook')
+        self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
+            'url': 'https://www.facebook.com/page/posts/100', 'idempotency_key': 'cross_claim_100'})
+        with self.assertRaises(Conflict):
+            self.room.mark_published(legacy['id'], legacy['revision'], 'https://m.facebook.com/page/posts/100?ref=share')
+        self.assertEqual(self.room.draft(legacy['id'])['status'], 'approved')
+
+        legacy = self.make_approved_legacy()
+        self.room.mark_published(legacy['id'], legacy['revision'], 'https://facebook.com/page/posts/200')
+        another = self.make_approved('facebook')
+        with self.assertRaises(Conflict):
+            self.room.record_publication(another['id'], {'revision': another['revision'], 'position': 0,
+                'url': 'https://m.facebook.com/page/posts/200?ref=share', 'idempotency_key': 'cross_claim_200'})
+        self.assertEqual(self.room.variant(another['id'])['status'], 'approved')
+
+    def test_two_legacy_drafts_cannot_claim_same_facebook_post(self):
+        first = self.make_approved_legacy()
+        second = self.make_approved_legacy()
+        self.room.mark_published(first['id'], first['revision'], 'https://facebook.com/page/posts/300')
+        with self.assertRaises(Conflict):
+            self.room.mark_published(second['id'], second['revision'], 'https://m.facebook.com/page/posts/300?ref=share')
+        self.assertEqual(self.room.draft(second['id'])['status'], 'approved')
+
+    def test_legacy_and_variant_competing_for_same_url_have_one_winner(self):
+        legacy = self.make_approved_legacy()
+        variant = self.make_approved('facebook')
+        barrier = threading.Barrier(2)
+
+        def claim(kind):
+            barrier.wait(timeout=5)
+            try:
+                if kind == 'legacy':
+                    self.room.mark_published(legacy['id'], legacy['revision'],
+                                             'https://m.facebook.com/page/posts/400?ref=share')
+                else:
+                    self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
+                        'url': 'https://www.facebook.com/page/posts/400', 'idempotency_key': 'cross_race_400'})
+                return 'recorded'
+            except Conflict:
+                return 'conflict'
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            outcomes = list(pool.map(claim, ('legacy', 'variant')))
+        self.assertCountEqual(outcomes, ['recorded', 'conflict'])
+
     def test_format_counts_and_source_links(self):
         self.assertEqual(count_text('x', 'english text 日本語 😷 https://example.com')[0], 46)
         self.assertEqual(count_text('x', '🙋🏽👨‍🎤')[0], 4)

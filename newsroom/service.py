@@ -332,6 +332,16 @@ class Newsroom(PublicationMixin, VariantMixin, BulletinMixin, CollectionMixin):
             if draft['status'] != 'approved':
                 raise ValidationError('Bài phải đang ở trạng thái đã duyệt, chưa ghi nhận đăng.')
             self._approved(draft)
+            # Older drafts permit Facebook URL shapes that the multi-channel
+            # validator does not yet recognize. Preserve those legacy shapes;
+            # enforce a shared claim for the post forms we can identify.
+            from .publications import normalize_post_url
+            try:
+                claim_url = normalize_post_url('facebook', url)
+            except ValidationError:
+                claim_url = None
+            if claim_url is not None:
+                self._check_url_claim(conn, claim_url, 'facebook')
             at = now_iso()
             conn.execute('''UPDATE drafts SET status='published',post_url=?,published_at=?,
                 revision=revision+1,updated_at=? WHERE id=?''', (url, at, at, draft_id))

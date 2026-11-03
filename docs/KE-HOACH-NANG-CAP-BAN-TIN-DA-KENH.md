@@ -436,7 +436,8 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | NEWS-02/05/06 | Đang làm | Thêm xóa lựa chọn, đếm tin đã chọn đang ẩn, lọc số ngày tùy chọn và nhãn loại ngày; smoke trên kho thử. Packet tính cả hướng dẫn trong 64 KiB và chỉ ra mục lớn, test biên Unicode | Bổ sung kiểm tra UI ngày tương lai/unknown và smoke lỗi packet |
 | 03/11/2026 | FMT-01/APR-02 | Đang làm | Sửa mất nội dung khi clone bản có mục đã bị bỏ: giữ các đoạn, không tự gán nguồn thay thế, yêu cầu kiểm tra; test mất mục/nguồn và smoke trên kho thử | Tiếp tục kiểm tra các trường hợp thay đổi policy và đối chiếu nguồn |
 | 03/11/2026 | APPROVE-06 | Đang làm | Phiên bản đã khóa hiển thị mục, nguồn và preview từ snapshot đã kiểm tra hash; test backend và smoke bản gốc đã bỏ mục trên kho thử | Kiểm tra thêm thay đổi policy trong giao diện và tình huống nhiều đoạn |
-| 03/11/2026 | QA/DOC/PILOT/REL | Đang làm | Lần chạy gần nhất 119/119 Python, 6/6 JS; Edge tải `.txt` một đoạn và đối chiếu nội dung/nguồn; đã cập nhật tài liệu cho nhánh phát triển | Clipboard thật, QA còn lại, ba pilot và quyết định kho vận hành vẫn chưa có |
+| 03/11/2026 | PUB-02 / POST-03 | Đang làm | Sửa kiểm tra trùng URL theo cả hai chiều legacy/đa kênh trong giao dịch; test alias và hai thao tác đồng thời cùng URL | URL legacy có dạng chưa được validator nhận diện vẫn chưa thể đối chiếu trùng; cần chốt policy URL |
+| 03/11/2026 | QA/DOC/PILOT/REL | Đang làm | Lần chạy gần nhất 122/122 Python, 6/6 JS; Edge tải `.txt` một đoạn và đối chiếu nội dung/nguồn; đã cập nhật tài liệu cho nhánh phát triển | Clipboard thật, QA còn lại, ba pilot và quyết định kho vận hành vẫn chưa có |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 

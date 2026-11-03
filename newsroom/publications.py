@@ -101,12 +101,14 @@ class PublicationMixin:
                 continue
             if _post_identity(platform, existing_url) == identity:
                 raise Conflict('Liên kết đã được ghi nhận cho một đoạn khác. Hãy kiểm tra nhật ký.')
+        if platform != 'facebook':
+            return
         for row in conn.execute('SELECT id,post_url FROM drafts WHERE post_url IS NOT NULL'):
             try:
                 old = normalize_post_url('facebook', row['post_url'])
             except ValueError:
                 continue
-            if old == url:
+            if _post_identity('facebook', old) == identity:
                 raise Conflict(f"Liên kết đã thuộc bài cũ #{row['id']}. Hãy kiểm tra nhật ký.")
 
     def _publication_progress(self, conn, variant_id, approval_id):
