@@ -2,11 +2,15 @@
 
 ## Phần 0.4 đang phát triển (03/11/2026)
 
-- Lần chạy 03/11/2026: `python -B -m unittest discover -s tests` đạt 110/110; `node --test tests/draft-state.test.js` đạt 2/2; `node --check newsroom/static/app.js` đạt. Có test lỗi rollback/restore, từ chối khi không thể sao lưu, snapshot duyệt, lưu không thay đổi không hủy duyệt, sao chép bài cũ, URL, số liệu `null`/`0`, HTTP/CSRF và chia đoạn 9 → 10, giữ nguồn, từ chối câu quá dài.
+- Lần chạy 03/11/2026: `python -m unittest discover -s tests` đạt 114/114; `node --test tests/draft-state.test.js` đạt 2/2; `node --check newsroom/static/app.js` đạt. Có test lỗi rollback/restore, từ chối khi không thể sao lưu, snapshot duyệt, lưu không thay đổi không hủy duyệt, sao chép bài cũ, URL, số liệu `null`/`0`, HTTP/CSRF và chia đoạn 9 → 10, giữ nguồn, từ chối câu quá dài.
 - Kiểm tra thủ công trên ứng dụng qua trình duyệt trong máy, với kho fixture nằm tại thư mục tạm tách khỏi kho vận hành: chọn ba tin, tạo bản tin, lưu và xác nhận một mục, tạo và duyệt một phiên bản X, ghi nhận URL X giả, khởi động lại, và tạo bản sao từ một bài cũ trống. Không có bài đăng thật.
 - Fixture `tests/fixtures/legacy-v3.sql` và expected JSON được tạo từ mã commit `a180354` bằng dữ liệu giả: có bài draft/approved/published, history, metrics và nguồn tùy chỉnh. Test migration đối chiếu nguyên hàng cũ, hash trong hàng draft và nội dung xuất, đồng thời kiểm tra bản backup schema 3.
 - Schema 1 và 2 được kiểm tra bằng fixture **mô phỏng** từ schema 3 đã bỏ các bảng về sau; đây không phải snapshot từ bản phát hành lịch sử. Có kiểm thử hủy migration nếu một kết nối khác ghi trong lúc sao lưu.
-- Nút sao chép hiển thị thành công nhưng lần đọc clipboard trong trình duyệt kiểm thử trả về rỗng; **chưa xác nhận nội dung clipboard thực tế**. Chưa kiểm tra đầy đủ bàn phím, fallback clipboard, file tải, restart tiến trình, ba pilot, mọi chính sách ký tự hoặc kho vận hành.
+- Bộ đếm X được đối chiếu với 24 trường hợp từ bộ [twitter-text conformance](https://github.com/twitter/twitter-text/blob/30e2430d90cff3b46393ea54caf511441983c260/conformance/validate.yml), gồm URL, chuẩn hóa, ký tự CJK, emoji ghép và ký tự không hợp lệ; nguồn, hash và giấy phép ở `tests/fixtures/TWITTER-TEXT-README.md`. Bộ fixture không chứng minh tính đúng với mọi emoji mới.
+- [Tài liệu X](https://docs.x.com/fundamentals/counting-characters) mô tả trọng số và rút gọn URL; [Meta](https://about.fb.com/news/2025/09/attach-text-threads-posts-share-longer-perspectives/) mô tả bài Threads 500 ký tự và tính năng đính kèm văn bản dài. Ứng dụng này chỉ hỗ trợ văn bản chính, chưa hỗ trợ tính năng đính kèm; chưa tìm được đặc tả đủ chi tiết để xác minh cách đếm mọi emoji trên Threads.
+- Trên Edge, tải `.txt` cho một đoạn X đã duyệt từ kho thử và đọc tệp UTF-8: nội dung và URL nguồn khớp đoạn hiển thị. Đây mới là một trường hợp một đoạn.
+- Khi sửa tiêu đề chưa lưu rồi chuyển bản tin, Edge đã hiện hộp xác nhận bỏ thay đổi. Phiên điều khiển bị dừng tại hộp xác nhận nên chưa xác minh cả hai nhánh tiếp tục/hủy.
+- Nút sao chép hiển thị thành công nhưng lần đọc clipboard trong trình duyệt kiểm thử trả về rỗng; **chưa xác nhận nội dung clipboard thực tế**. Chưa kiểm tra đầy đủ bàn phím, fallback clipboard, file nhiều đoạn, ba pilot, mọi chính sách ký tự hoặc kho vận hành.
 - Để chạy: `python -B -m unittest discover -s tests -v` và `node --test tests/draft-state.test.js`. Kết quả cụ thể cần ghi lại sau lần chạy cuối trước phát hành.
 
 ## Bản 0.3 — thêm nguồn theo dõi (16/10/2026)

@@ -85,6 +85,6 @@ python -m unittest discover -s tests -v
 
 ## Kế hoạch nâng cấp đang theo dõi
 
-[Kế hoạch sửa lỗi và nâng cấp bản tin đa kênh](docs/KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) — lập ngày 03/11/2026, gồm hotfix liên kết bài đăng, bản tin nhiều mục, đầu ra Facebook / Threads / X, migration dữ liệu, tiêu chí nghiệm thu và checklist tiến độ. Đây là **kế hoạch, chưa phải các tính năng đã triển khai**; quy trình sử dụng hiện tại ở trên vẫn giữ nguyên.
+[Kế hoạch sửa lỗi và nâng cấp bản tin đa kênh](docs/KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) — theo dõi các chức năng đã triển khai trên nhánh phát triển, bằng chứng kiểm thử và các điều kiện nghiệm thu còn mở. Chưa áp dụng nâng cấp vào kho dữ liệu vận hành.
 
 Không cần mua API để dùng các tầng đọc tin thông thường và biên tập thủ công. Tầng trình duyệt AI cần kết nối model riêng nếu bạn chọn bật. Giới hạn số lượt/vòng không phải trần tiền; chưa đo được chi phí thực tế. Internet, điện và thuê bao đang có vẫn là chi phí của bạn.

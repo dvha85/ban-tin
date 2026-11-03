@@ -1,0 +1,21 @@
+"""Pinned X twitter-text conformance cases; no network or YAML dependency."""
+import json
+import unittest
+from pathlib import Path
+
+from newsroom.social_formats import count_text
+
+
+class TwitterTextConformance(unittest.TestCase):
+    def test_weighted_lengths_and_validity_from_upstream(self):
+        path = Path(__file__).parent / 'fixtures' / 'twitter-text-conformance.json'
+        fixture = json.loads(path.read_text(encoding='utf-8'))
+        self.assertEqual(fixture['source_commit'], '30e2430d90cff3b46393ea54caf511441983c260')
+        self.assertEqual(len(fixture['cases']), 24)
+        for case in fixture['cases']:
+            with self.subTest(group=case['group'], description=case['description']):
+                self.assertEqual(count_text('x', case['text']), (case['weightedLength'], case['valid']))
+
+
+if __name__ == '__main__':
+    unittest.main()

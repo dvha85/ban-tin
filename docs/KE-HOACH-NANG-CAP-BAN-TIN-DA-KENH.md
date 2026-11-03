@@ -259,7 +259,7 @@ Quy mô S/M/L là tương đối, không phải cam kết số ngày. Mặc đ�
 | G3 | Ba biến thể, preview, đếm/chia đoạn | G1, G2 | L | Đang làm — còn kiểm chứng bộ đếm và QA chia đoạn |
 | G4 | Duyệt/xuất đúng snapshot | G2, G3 | M | Đang làm — chưa QA toàn luồng |
 | G5 | Nhật ký đa kênh, chống lặp, chỉ số | G0, G4 | M | Đang làm — còn giao diện và QA |
-| G6 | Hồi quy, QA Windows, tài liệu và pilot | G0–G5 | M | Chưa bắt đầu |
+| G6 | Hồi quy, QA Windows, tài liệu và pilot | G0–G5 | M | Đang làm — chưa đủ bằng chứng nghiệm thu |
 
 ### G0 — Hotfix URL
 
@@ -430,7 +430,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | FIX-01…03 | Đang làm | `tests/draft-state.test.js` 2/2 và 88/88 Python đạt; chưa thử trình duyệt thực | Smoke trình duyệt trên kho thử |
 | 03/11/2026 | BASE/DB | Đang làm | Migration schema 4, rollback/restore và lỗi sao lưu; fixture tổng hợp từ mã schema 3 gồm ba trạng thái, history, metrics, custom source và bản xuất được đối chiếu | Kiểm thử thêm schema 1/2, backup/restore đầu cuối và trên bản sao được phép |
 | 03/11/2026 | DIG/FMT/APR/PUB | Đang làm | Có lõi, giao diện, test chia đoạn 9→10 và test HTTP CSRF; đã smoke một bản tin/phiên bản X với URL giả trên kho thử | Kiểm chứng bộ đếm, QA toàn luồng, clipboard, file tải, restart và thêm pilot |
-| — | QA/DOC/PILOT/REL | Chưa bắt đầu | — | Chỉ đóng khi đủ bằng chứng mục 10 |
+| 03/11/2026 | QA/DOC/PILOT/REL | Đang làm | 114/114 Python, 2/2 JS; Edge tải `.txt` một đoạn và đối chiếu nội dung/nguồn; đã cập nhật tài liệu cho nhánh phát triển | Clipboard thật, QA còn lại, ba pilot và quyết định kho vận hành vẫn chưa có |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
@@ -441,7 +441,7 @@ Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết q
 | 03/11/2026 / SCOPE | Giữ người dùng duyệt và tự đăng; chưa AI API/tự đăng | Đề xuất mặc định của kế hoạch; phù hợp workflow hiện có |
 | 03/11/2026 / DATA | Additive schema 4 + legacy nguyên vẹn; clone không kế thừa approval | Đề xuất để giảm rủi ro dữ liệu |
 | 03/11/2026 / LIMIT | 1–10 mục, 3 nguồn/mục, 20 URL, packet 64 KiB, tối đa 20 đoạn | Cần chốt bằng fixture tại BASE-02; không phải hạn mức nền tảng |
-| — / COUNTER | Chọn triển khai bộ đếm, version fixture, license/dependency | Chưa chốt; BASE-03, phải đóng trước gate G3 |
+| 03/11/2026 / COUNTER | X dùng twitter-text vendored; 24 fixture upstream có commit và giấy phép ghim trong `tests/fixtures/TWITTER-TEXT-README.md`. Threads dùng ước lượng thận trọng | Chưa đóng BASE-03: emoji X mới và cách đếm Threads chưa được xác minh đầy đủ; phải đóng trước gate G3 |
 | — / URL | Mẫu URL bài đăng và alias hợp lệ Facebook/Threads/X | Chưa chốt; BASE-03/PUB-01 |
 | — / RELEASE | Bằng chứng pilot và chấp thuận dùng trên DB chính | Chưa có; G6 |
 
