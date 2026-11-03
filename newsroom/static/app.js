@@ -698,9 +698,13 @@ async function renderVariants(container, bulletin) {
   const variant = variants.find(row => row.id === app.variantId);
   if (!variant) return;
   const locked = !!variant.locked_at;
-  const account = bulletinField('Tên tài khoản / Page', variant.account_label);
+  const history = locked ? await api(`/api/variants/${variant.id}/archive`) : null;
+  if (!container.isConnected) return;
+  const displayItems = locked ? history.items : bulletin.items;
+  const displaySegments = locked ? history.rendered_posts.map(post => ({text: post.body, item_ids: post.item_ids, source_ids: post.source_ids})) : variant.segments;
+  const account = bulletinField('Tên tài khoản / Page', locked ? history.account_label : variant.account_label);
   account.input.disabled = locked;
-  area.append(node('p', 'small-note', `Trạng thái: ${variant.status}${variant.needs_update ? ' · Bản tin gốc đã đổi, cần kiểm tra lại' : ''}`), account.wrapper);
+  area.append(node('p', 'small-note', `Trạng thái: ${variant.status}${variant.needs_update ? ' · Bản tin gốc đã đổi, cần kiểm tra lại' : ''}${locked ? ` · Mục và nguồn theo bản duyệt lịch sử (${history.policy_version})` : ''}`), account.wrapper);
   const segmentList = node('div');
   function addSegment(segment) {
     const block = node('section', 'bulletin-block');
@@ -708,7 +712,7 @@ async function renderVariants(container, bulletin) {
     body.input.disabled = locked;
     block.append(body.wrapper, node('p', 'small-note', 'Chọn mục và ít nhất một nguồn cho mỗi mục được nhắc đến.'));
     const rows = [];
-    for (const item of bulletin.items) {
+    for (const item of displayItems) {
       const row = node('div', 'bulletin-source-row');
       const itemLabel = node('label', 'bulletin-check');
       const selected = node('input'); selected.type = 'checkbox'; selected.checked = segment.item_ids.includes(item.id); selected.disabled = locked;
@@ -730,7 +734,7 @@ async function renderVariants(container, bulletin) {
     block.collect = () => ({text: body.input.value, item_ids: rows.filter(row => row.selected.checked).map(row => row.id),
       source_ids: rows.filter(row => row.selected.checked).flatMap(row => row.sourceChecks.filter(source => source.check.checked).map(source => source.id))});
   }
-  variant.segments.forEach(addSegment);
+  displaySegments.forEach(addSegment);
   area.append(segmentList);
   const add = node('button', 'button secondary', 'Thêm đoạn'); add.disabled = locked || variant.platform === 'facebook';
   listen(add, 'click', () => {
@@ -742,7 +746,7 @@ async function renderVariants(container, bulletin) {
   for (const [key, label] of [['sources', 'Đã đọc và đối chiếu nguồn'], ['facts', 'Đã kiểm tra dữ kiện'],
     ['original', 'Nội dung có góc nhìn riêng'], ['rights', 'Đã kiểm tra quyền sử dụng'], ['claims', 'Không còn thông tin chưa xác minh']]) {
     const row = node('label', 'bulletin-check'); const check = node('input');
-    check.type = 'checkbox'; check.checked = variant.checks[key]; check.disabled = locked;
+    check.type = 'checkbox'; check.checked = (locked ? history.checks : variant.checks)[key]; check.disabled = locked;
     checks[key] = check; row.append(check, document.createTextNode(label)); area.append(row);
   }
   const adopt = node('input'); adopt.type = 'checkbox'; adopt.disabled = locked;
@@ -768,8 +772,13 @@ async function renderVariants(container, bulletin) {
     app.variantId = saved.id; app.bulletinDirty = false; renderBulletin();
     toast('Đã lưu. Nếu vừa sửa nội dung, hãy xác nhận lại 5 mục kiểm tra và lưu lần nữa.');
   });
-  const preview = node('button', 'button secondary', 'Xem trước');
+  const preview = node('button', 'button secondary', locked ? 'Xem trước bản duyệt lịch sử' : 'Xem trước');
   listen(preview, 'click', async () => {
+    if (locked) {
+      showText('Bản duyệt lịch sử', history.rendered_posts.map(post => `${post.position + 1}. ${post.length}/${post.limit}\n${post.text}`).join('\n\n────────────\n\n'),
+        `Văn bản và bộ đếm tại policy ${history.policy_version}; không xác nhận phù hợp với quy tắc hiện hành.`, null, false);
+      return;
+    }
     const result = await api(`/api/variants/${variant.id}/preview`, {segments: collect()});
     const omitted = result.omitted_item_ids.length ? ` Mục không có trong phiên bản: ${result.omitted_item_ids.join(', ')}.` : '';
     showText('Xem trước phiên bản', result.posts.map(post => `${post.position + 1}. ${post.length}/${post.limit}${post.valid ? '' : ' · CHƯA ĐẠT'}\n${post.text}`).join('\n\n────────────\n\n'), result.warning + omitted, null, false);

@@ -136,8 +136,11 @@ class VariantMixin:
         return result
 
     def preview_variant(self, variant_id, data=None):
+        from .service import Conflict
         with self.connection() as conn:
             variant = self._variant(conn, variant_id)
+            if variant['locked_at'] is not None:
+                raise Conflict('Phiên bản đã ghi nhận được xem theo bản duyệt lịch sử, không dựng lại từ bản tin hiện tại.')
             bulletin = self._bulletin(conn, variant['bulletin_id'])
             segments = data.get('segments', variant['segments']) if data is not None else variant['segments']
             result = render_segments(variant['platform'], segments, bulletin)
@@ -212,6 +215,16 @@ class VariantMixin:
         with self.connection() as conn:
             variant = self._variant(conn, variant_id)
             snapshot = self._approved_variant(conn, variant, archive=archive)
-            return {'platform': snapshot['platform'], 'account_label': snapshot['account_label'],
-                    'policy_version': snapshot['policy_version'], 'archive': archive,
-                    'posts': [post['text'] for post in snapshot['rendered']['posts']]}
+            result = {'platform': snapshot['platform'], 'account_label': snapshot['account_label'],
+                      'policy_version': snapshot['policy_version'], 'archive': archive,
+                      'posts': [post['text'] for post in snapshot['rendered']['posts']]}
+            if archive:
+                # Provenance is part of the hash-verified historical snapshot,
+                # not the possibly changed current bulletin.
+                result['items'] = [{'id': item['id'], 'title': item['title'],
+                                    'sources': [{'source_id': source['source_id'], 'url': source['url']}
+                                                for source in item['sources']]}
+                                   for item in snapshot['bulletin']['items']]
+                result['rendered_posts'] = snapshot['rendered']['posts']
+                result['checks'] = snapshot['checks']
+            return result

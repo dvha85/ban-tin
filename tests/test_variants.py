@@ -110,6 +110,13 @@ class VariantTests(unittest.TestCase):
         self.assertFalse(saved.get('attribution_review_required', False))
         self.assertEqual([s['text'] for s in saved['segments']], [s['text'] for s in variant['segments']])
         self.assertEqual(self.room.publications(variant['id'])[0]['id'], record['id'])
+        archived = self.room.export_variant(variant['id'], archive=True)
+        self.assertEqual([item['id'] for item in archived['items']], [item['id'] for item in self.bulletin['items']])
+        self.assertEqual(archived['items'][1]['sources'][0]['url'], self.bulletin['items'][1]['sources'][0]['url'])
+        self.assertEqual(archived['rendered_posts'][1]['text'], archived['posts'][1])
+        self.assertTrue(all(archived['checks'].values()))
+        with self.assertRaises(Conflict):
+            self.room.preview_variant(variant['id'])
 
     def test_clone_requires_review_when_a_selected_source_was_removed(self):
         item = self.bulletin['items'][0]
