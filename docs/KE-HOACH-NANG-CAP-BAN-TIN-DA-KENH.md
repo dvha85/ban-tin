@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> Cập nhật kiểm thử 04/11/2026: Trên fixture, đã ghi nhận URL giả Facebook và Threads, đối chiếu số liệu riêng 101/0 và 202/3, rồi tải lại và xác nhận số liệu Threads còn lưu. Tổng quan có ba đoạn ghi nhận trên ba phiên bản, trong đó X mới có 1/2 đoạn. QA-02 và BASE-03 vẫn mở; chi tiết tại `KIEM-THU.md`.
+
 - Ngày lập / cập nhật: **03/11/2026**, giờ Việt Nam.
 - Repository: [dvha85/ban-tin](https://github.com/dvha85/ban-tin).
 - Mốc mã nguồn được review: **`a180354e52e98a678d093609f9e8f2d37e6cd0a3`**, nhánh `main`, phiên bản ứng dụng `0.3.0`, dữ liệu schema `3`.

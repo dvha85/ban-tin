@@ -1,5 +1,7 @@
 # Đối chiếu điều kiện nghiệm thu 0.4
 
+> Cập nhật 04/11/2026: Bằng chứng giao diện mới hơn các nhận xét ban đầu trong bảng: trên kho fixture, đã thử đính chính, hủy và ghi lại cùng URL cho X; ghi nhận URL giả trên Facebook và Threads, lưu và xem lại số liệu riêng của hai kênh. Sau tải lại, tổng số ba đoạn và URL cùng số liệu Threads vẫn hiển thị. Đây là smoke test; QA-02 và việc đối chiếu URL thực tế vẫn mở. Xem `KIEM-THU.md`.
+
 Ngày rà soát: 03/11/2026. Đối chiếu mục 10 của [kế hoạch nâng cấp](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) với mã và bằng chứng được ghi trong [nhật ký kiểm thử](KIEM-THU.md). Đây là trạng thái kiểm chứng, không phải chấp thuận triển khai. Các lệnh và kết quả chi tiết, dữ liệu sử dụng và giới hạn được ghi tại nhật ký đó.
 
 | Điều kiện mục 10 | Bằng chứng hiện có | Phần còn thiếu để kết luận |

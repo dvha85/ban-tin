@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## Smoke test giao diện đa kênh 04/11/2026
+
+- Trên kho fixture tạm, bản tin hai mục có ba phiên bản: ghi nhận URL giả Facebook và Threads qua vùng xác nhận; phiên bản X giữ một trong hai đoạn đã ghi nhận. Tổng quan hiển thị một bản tin, ba phiên bản và ba đoạn được ghi nhận.
+- Nhập và xem lại số liệu: Facebook 101 lượt xem, 0 lượt thích; Threads 202 lượt xem, 3 lượt thích. Các trường không nhập hiển thị chưa biết. Liên kết và số liệu của hai kênh được đối chiếu riêng trên giao diện.
+- Sau tải lại trang, tổng quan vẫn hiển thị ba đoạn; mở lại Threads thấy URL giả và số liệu 202/3. Lượt X trước đó đã thử đính chính, hủy và ghi lại cùng URL trên một trang, từ 0/2 → 1/2 → 0/2 → 1/2.
+- Dữ liệu và URL chỉ là giả lập; ứng dụng không xác minh hay đăng lên mạng xã hội. Chưa kiểm tra toàn bộ hành trình ba kênh, mất mạng thật, trình đọc màn hình, mọi URL thực tế hoặc kho vận hành. QA-02 và BASE-03 tiếp tục mở.
+
 ## Phần 0.4 đang phát triển (03/11/2026)
 
 - 04/11/2026, PUB-02 / POST-03/05: thay hộp xác nhận ghi nhận đa kênh bằng vùng xác nhận nêu đoạn, kênh và URL; sửa URL làm vô hiệu xác nhận. Trên cùng trang của kho fixture X, ghi URL giả → hủy → ghi lại cùng URL: 0/2 → 1/2 → 0/2 → 1/2, URL hiển thị đúng đoạn. Test handler kiểm tra phải xác nhận, thay URL, retry giữ key và lượt mới dùng key mới. Chưa thử mất mạng thật, mọi kênh hoặc toàn bộ thao tác bàn phím.
