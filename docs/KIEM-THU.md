@@ -247,3 +247,8 @@ python -m newsroom --collect
 
 - Tạo ba bản tin bằng service trên kho tạm với dữ liệu, xác nhận và URL giả lập; lưu và duyệt từng phiên bản, rồi ghi nguyên các chuỗi từ export vào [mẫu đầu ra](MAU-DAU-RA-GIA-LAP-0.4.md): Facebook và Threads một đoạn, X hai đoạn.
 - Đây là mẫu mới, không phải tệp của ba pilot đo thời gian trước; không chứng minh thao tác giao diện, nguồn thật hay bài đăng. Người dùng vẫn cần đánh giá quy trình và quyết định triển khai.
+
+### 04/11/2026 — Rà hướng dẫn khi mất kết nối (DOC-01 / QA-02)
+
+- Đối chiếu hướng dẫn xử lý sự cố với `session-recovery` trong `index.html` và `recoverSession` trong `app.js`: dòng xử lý mất kết nối được bổ sung bước giữ trang và sao chép nội dung trước khi tải lại, rồi dẫn tới hướng dẫn khôi phục phiên đã có.
+- Chỉ sửa hướng dẫn; chưa kiểm chứng cơ chế khôi phục trên trình duyệt thật và không thay đổi kết luận QA-02.
