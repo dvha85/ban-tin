@@ -128,6 +128,8 @@
 - Chọn nhập số liệu và gửi dãy `1,2,3,4,5,6,7,8` vào hộp đầu; công cụ điều khiển không tiếp tục được khi chuyển hộp. Không xác nhận lưu hay đính chính thành công; không xem lỗi điều khiển là lỗi ứng dụng. Chưa có đủ quan sát để quyết định thay hộp thoại bằng biểu mẫu. Server fixture đã dừng.
 - Người dùng xác nhận chưa có dữ liệu SQLite cũ, nên không áp dụng bước thử migration/restore trên bản sao dữ liệu cũ trong đợt này. Không có kiểm thử dữ liệu vận hành.
 - Sau lần thử hộp xác nhận trên trình duyệt tích hợp, mở bản tin trên thẻ mới của cùng server fixture: phiên bản X hiển thị trạng thái 2/2; đoạn 1 giữ `https://x.com/fixture/status/123456789` và đoạn 2 giữ `https://x.com/fixture/status/987654321`. Đoạn 1 được chuẩn bị bằng service; kết quả xác nhận đoạn 2 được quan sát sau lần thử, không xác định được thao tác xác nhận nào đã hoàn tất. Chưa kiểm tra restart server hoặc luồng nhập số liệu/đính chính thành công.
+- Trên cùng fixture, tạo và lưu qua trình duyệt hai bản nháp Facebook và Threads với tên, nội dung khác nhau; chuyển Facebook → Threads → X và đọc lại: hai nội dung/nhãn giữ riêng, hai URL giả vẫn hiển thị ở đúng hai đoạn X. Chưa thử rời trang khi nội dung chưa lưu, duyệt hai bản nháp này hoặc restart server.
+- Chạy lại hồi quy không thay đổi mã: 163/163 Python và 20/20 JavaScript đạt. Không có bài đăng thật hoặc kiểm tra tài khoản nền tảng.
 
 ## Không được suy ra từ kết quả trên
 
