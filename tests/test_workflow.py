@@ -114,6 +114,19 @@ class WorkflowTests(unittest.TestCase):
             self.room.save_draft(posted['id'], {'revision': posted['revision'], 'body': 'overwrite'})
         self.assertTrue(self.room.history(posted['id']))
 
+    def test_invalid_publication_url_does_not_change_draft_or_counts(self):
+        draft = self.valid_draft()
+        approved = self.room.approve(draft['id'], draft['revision'])
+        before_history = self.room.history(approved['id'])
+        before_stats = self.room.state()['stats']
+        for url in ('', 'https://evil.example/post', 'https://facebook.com/'):
+            with self.subTest(url=url):
+                with self.assertRaises(ValidationError):
+                    self.room.mark_published(approved['id'], approved['revision'], url)
+                self.assertEqual(self.room.draft(approved['id']), approved)
+                self.assertEqual(self.room.history(approved['id']), before_history)
+                self.assertEqual(self.room.state()['stats'], before_stats)
+
     def test_manual_source_is_not_automatically_fetched(self):
         result = self.room.import_article({
             'title': 'Nguồn do người dùng nhập', 'url': 'https://example.org/manual',

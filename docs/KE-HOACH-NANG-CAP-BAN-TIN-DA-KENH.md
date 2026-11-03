@@ -427,7 +427,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | --- | --- | --- | --- | --- |
 | 03/11/2026 | Review hiện trạng | Hoàn tất | Commit nền `a180354`; 88/88 test; probe RSS chỉ đọc; tái hiện URL bằng DOM giả | Giữ làm baseline, không coi là nghiệm thu 0.4 |
 | 03/11/2026 | Lập kế hoạch nâng cấp | Hoàn tất | Tài liệu này; chưa triển khai chức năng | Xem/chốt phạm vi rồi bắt đầu G0 |
-| 03/11/2026 | FIX-01…03 | Đang làm | `tests/draft-state.test.js` 2/2 và 88/88 Python đạt; chưa thử trình duyệt thực | Smoke trình duyệt trên kho thử |
+| 03/11/2026 | FIX-01…03 | Đang làm | Test JS binding và smoke kho thử: URL A không tràn sang B trước/sau ghi nhận, A hiện đúng link; nhánh hủy giữ URL B. Test service từ chối URL rỗng/sai, không đổi draft, history và thống kê | Đối chiếu gate export legacy và kiểm tra lỗi URL trên giao diện |
 | 03/11/2026 | BASE/DB | Đang làm | Migration schema 4, rollback/restore và lỗi sao lưu; fixture tổng hợp từ mã schema 3 gồm ba trạng thái, history, metrics, custom source và bản xuất được đối chiếu | Kiểm thử thêm schema 1/2, backup/restore đầu cuối và trên bản sao được phép |
 | 03/11/2026 | DIG/FMT/APR/PUB | Đang làm | Có lõi, giao diện, test chia đoạn 9→10 và test HTTP CSRF; đã smoke một bản tin/phiên bản X với URL giả trên kho thử | Kiểm chứng bộ đếm, QA toàn luồng, clipboard, file tải, restart và thêm pilot |
 | 03/11/2026 | DIG-03 | Đang làm | Thêm cảnh báo nguồn thiếu/ngắn và ngày không rõ/tương lai/quá 7 ngày, kèm test ngưỡng JS | Smoke giao diện và đối chiếu các tiêu chí nguồn còn lại |
@@ -436,7 +436,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | NEWS-02/05/06 | Đang làm | Thêm xóa lựa chọn, đếm tin đã chọn đang ẩn, lọc số ngày tùy chọn và nhãn loại ngày; smoke trên kho thử. Packet tính cả hướng dẫn trong 64 KiB và chỉ ra mục lớn, test biên Unicode | Bổ sung kiểm tra UI ngày tương lai/unknown và smoke lỗi packet |
 | 03/11/2026 | FMT-01/APR-02 | Đang làm | Sửa mất nội dung khi clone bản có mục đã bị bỏ: giữ các đoạn, không tự gán nguồn thay thế, yêu cầu kiểm tra; test mất mục/nguồn và smoke trên kho thử | Tiếp tục kiểm tra các trường hợp thay đổi policy và đối chiếu nguồn |
 | 03/11/2026 | APPROVE-06 | Đang làm | Phiên bản đã khóa hiển thị mục, nguồn và preview từ snapshot đã kiểm tra hash; test backend và smoke bản gốc đã bỏ mục trên kho thử | Kiểm tra thêm thay đổi policy trong giao diện và tình huống nhiều đoạn |
-| 03/11/2026 | QA/DOC/PILOT/REL | Đang làm | 114/114 Python, 2/2 JS; Edge tải `.txt` một đoạn và đối chiếu nội dung/nguồn; đã cập nhật tài liệu cho nhánh phát triển | Clipboard thật, QA còn lại, ba pilot và quyết định kho vận hành vẫn chưa có |
+| 03/11/2026 | QA/DOC/PILOT/REL | Đang làm | Lần chạy gần nhất 119/119 Python, 6/6 JS; Edge tải `.txt` một đoạn và đối chiếu nội dung/nguồn; đã cập nhật tài liệu cho nhánh phát triển | Clipboard thật, QA còn lại, ba pilot và quyết định kho vận hành vẫn chưa có |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
