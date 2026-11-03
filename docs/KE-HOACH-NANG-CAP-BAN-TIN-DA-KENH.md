@@ -44,6 +44,8 @@
 
 > Bổ sung APR-01: lỗi dấu chưa xác minh nêu thứ tự mục và trường cần sửa; test service/HTTP đạt, chưa smoke hiển thị trên UI.
 
+> Bổ sung APR-01 / QA-02: lỗi duyệt được giữ tại vùng phiên bản với role alert cho đến lần thử tiếp theo hoặc dựng lại giao diện; nội dung đang nhập được giữ khi lỗi. Đã kiểm tra handler với DOM/API giả; chưa smoke trên trình duyệt.
+
 > Bổ sung PUB-02/03: tách namespace khóa đính chính nội bộ khỏi khóa client để tránh lỗi trùng khóa; kiểm thử tái hiện lỗi cũ và đối chiếu lịch sử, retry trên kho tạm. Xem `KIEM-THU.md`.
 
 > Bổ sung FIX-03: trên nhánh 0.4, giao diện chặn URL bài cũ để trống và giữ trạng thái đã duyệt; test service kiểm tra thêm URL sai miền và trang chủ. Hồi quy gần nhất 164 Python, 28 JavaScript đạt. Chưa kiểm tra các URL sai này qua UI hoặc xác nhận bản 0.3.1 phát hành độc lập.

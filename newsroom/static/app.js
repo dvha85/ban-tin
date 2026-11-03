@@ -926,9 +926,18 @@ async function renderVariants(container, bulletin) {
     toast('Đã chia theo ranh giới câu/đoạn. Mục và nguồn được giữ từ đoạn gốc; hãy đối chiếu từng đoạn, bỏ phần không liên quan rồi lưu.');
   });
   const approve = node('button', 'button primary', 'Duyệt phiên bản'); approve.disabled = locked;
+  const approvalError = node('p', 'notice warning');
+  approvalError.setAttribute('role', 'alert'); approvalError.hidden = true;
   bulletinAction(approve, async () => {
-    if (app.bulletinDirty) throw new Error('Hãy lưu phiên bản và xác nhận 5 mục trước khi duyệt.');
-    await api(`/api/variants/${variant.id}/approve`, {revision: variant.revision}); renderBulletin();
+    approvalError.hidden = true; approvalError.textContent = '';
+    try {
+      if (app.bulletinDirty) throw new Error('Hãy lưu phiên bản và xác nhận 5 mục trước khi duyệt.');
+      await api(`/api/variants/${variant.id}/approve`, {revision: variant.revision});
+    } catch (error) {
+      approvalError.textContent = error.message; approvalError.hidden = false;
+      throw error;
+    }
+    renderBulletin();
     toast('Đã duyệt phiên bản; ứng dụng chưa đăng bài.');
   });
   const exportButton = node('button', 'button secondary', 'Xem bản đã duyệt');
@@ -947,7 +956,7 @@ async function renderVariants(container, bulletin) {
     if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi tạo bản sao.');
     const result = await api(`/api/variants/${variant.id}/clone`, {revision: variant.revision}); app.variantId = result.id; renderBulletin(); await loadBulletinList();
   });
-  actions.append(save, preview, split, approve, exportButton, archive, clone); area.append(actions);
+  actions.append(save, preview, split, approve, exportButton, archive, clone); area.append(actions, approvalError);
   if (variant.status !== 'draft') await renderVariantPublication(area, variant);
 }
 async function renderVariantPublication(area, variant) {

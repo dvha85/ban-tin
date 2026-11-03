@@ -228,3 +228,10 @@ python -m newsroom --collect
 ```
 
 Để thử bằng mắt mà không làm lẫn tin thật: mở `MO-BAN-MINH-HOA.cmd`. Mọi ví dụ trong demo có nhãn minh họa; không dùng để xuất bản.
+
+
+### 04/11/2026 — Thông báo lỗi duyệt cố định (APR-01 / QA-02)
+
+- Test handler thực thi app.js với DOM/API giả: lỗi duyệt chỉ rõ mục được giữ trong vùng phiên bản có role alert; nội dung đang nhập và revision gửi đi được giữ, có thể thử lại. Test mới thất bại trước sửa vì chưa có alert.
+- Hồi quy: 178/178 Python unittest discover và 34/34 Node test đạt. Đây là mô phỏng, chưa xác nhận hiển thị, trình đọc màn hình hoặc mất mạng trên trình duyệt thật.
+- Trình duyệt tích hợp lần thử lại hết thời gian chờ tại Emulation.setFocusEmulationEnabled; QA-02 vẫn mở. Kết quả lưu không rõ sau mất mạng vẫn cần đối chiếu trước khi thử lại.

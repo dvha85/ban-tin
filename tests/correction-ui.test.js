@@ -504,3 +504,30 @@ test('cancelled metric entry remains available and blocks navigation until disca
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(vm.runInContext('app.bulletinDirty', context), false);
 });
+
+
+test('approval error stays visible and preserves editor contents until a new attempt', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.calls = calls;
+  vm.runInContext(`app.variantId = 3; api = async (path, body) => { if (path.endsWith('/variants')) return [{id: 3, revision: 4, platform: 'x', account_label: 'Kênh', status: 'draft', segments: [{text: 'Bản nháp', item_ids: [], source_ids: []}], checks: {}}];
+    calls.push(body); throw new Error('Mục 1: ghi chú còn chưa xác minh'); }; toast = () => {};`, context);
+  const container = new Element(); get('bulletin-editor').append(container); context.container = container;
+  await vm.runInContext('renderVariants(container, {id: 1, items: []})', context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const button = walk(container).find(el => el.tagName === 'button' && el.textContent === 'Duyệt phiên bản');
+  const field = walk(container).find(el => el.tagName === 'textarea');
+  field.value = 'Nội dung đang nhập';
+  button.listeners.click[0]({}); await new Promise(resolve => setImmediate(resolve));
+  const alert = walk(container).find(el => el.role === 'alert' && el.textContent.includes('Mục 1'));
+  assert.ok(alert); assert.equal(alert.hidden, false);
+  assert.equal(field.value, 'Nội dung đang nhập'); assert.equal(calls[0].revision, 4);
+  button.listeners.click[0]({}); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls.length, 2); assert.match(alert.textContent, /Mục 1/);
+});
