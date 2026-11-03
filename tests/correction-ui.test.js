@@ -23,6 +23,7 @@ class Element {
       if (!(element instanceof Element)) return;
       if (selector === '[data-dirty="true"]' && element.dataset.dirty === 'true') rows.push(element);
       if (selector === '[data-pending-correction="true"]' && element.dataset.pendingCorrection === 'true') rows.push(element);
+      if (selector === '[data-pending-publication-edit="true"]' && element.dataset.pendingPublicationEdit === 'true') rows.push(element);
       if (selector === '[data-publication-url]' && element.dataset.publicationUrl) rows.push(element);
       element.children.forEach(visit);
     };
@@ -65,7 +66,7 @@ test('pending correction remains dirty until explicitly discarded', async () => 
   windowListeners.beforeunload({preventDefault() { prevented = true; }});
   assert.equal(prevented, true);
   assert.ok(walk(notice).some(el => el.textContent.includes('Lý do sửa thử')));
-  assert.equal(vm.runInContext('hasPendingCorrection()', context), true);
+  assert.equal(vm.runInContext('hasPendingPublicationEdit()', context), true);
   vm.runInContext("app.view = 'bulletins'; view('inbox')", context);
   assert.equal(vm.runInContext('app.view', context), 'bulletins');
   prompts.push('Lý do sửa thử', 'https://wrong.example/post'); confirm = true;
@@ -109,4 +110,44 @@ test('X metrics handler keeps the order, zero and unknown values, and displays l
   assert.equal(calls[0].path, '/api/publications/11/metrics');
   assert.deepEqual(JSON.parse(JSON.stringify(calls[0].body)), {observed_at: '2026-11-03T10:00:00+07:00',
     note: 'Ghi chú thử', views: 10, likes: 0, replies: null, reposts: 3, quotes: 4, saves: 5, followers: null, minutes: 15});
+});
+
+test('cancelled metric entry remains available and blocks navigation until discarded', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const prompts = ['10,0,,3,4,5,,15', null];
+  const defaults = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+    setTimeout, clearTimeout, crypto: {randomUUID: () => 'test-key'},
+    fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, prompt: (text, value) => { defaults.push(value); return prompts.shift(); },
+      confirm: () => false, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context, {filename: 'app.js'});
+  vm.runInContext(`api = async path => path.endsWith('/metrics') ? Promise.reject(new Error('Thời điểm không hợp lệ')) : path.endsWith('/publications') ?
+    [{id: 11, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : {posts: ['test']};`, context);
+  const area = new Element(); get('bulletin-editor').append(area); context.area = area;
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  const walk = element => [element, ...element.children.filter(child => child instanceof Element).flatMap(walk)];
+  const button = text => walk(area).find(el => el.tagName === 'button' && el.textContent === text);
+  button('Nhập số liệu').listeners.click[0]({});
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(vm.runInContext('app.bulletinDirty', context), true);
+  vm.runInContext("app.view = 'bulletins'; view('inbox')", context);
+  assert.equal(vm.runInContext('app.view', context), 'bulletins');
+  prompts.push(null);
+  button('Nhập số liệu').listeners.click[0]({});
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(defaults[2], '10,0,,3,4,5,,15');
+  prompts.push('10,0,,3,4,5,,15', 'sai ngày', 'ghi chú thử');
+  button('Nhập số liệu').listeners.click[0]({});
+  await new Promise(resolve => setImmediate(resolve));
+  assert.ok(walk(area).some(el => el.textContent.includes('Thời điểm không hợp lệ')));
+  assert.ok(walk(area).some(el => el.textContent.includes('sai ngày') && el.textContent.includes('ghi chú thử')));
+  assert.equal(vm.runInContext('app.bulletinDirty', context), true);
+  button('Bỏ số liệu chưa lưu').listeners.click[0]({});
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(vm.runInContext('app.bulletinDirty', context), false);
 });

@@ -554,8 +554,8 @@ function hasPendingBulletinUrl(except = null) {
   return [...$('bulletin-editor').querySelectorAll('[data-publication-url]')]
     .some(input => input !== except && input.value.trim());
 }
-function hasPendingCorrection() {
-  return Boolean($('bulletin-editor').querySelector('[data-pending-correction="true"]'));
+function hasPendingPublicationEdit() {
+  return Boolean($('bulletin-editor').querySelector('[data-pending-publication-edit="true"]'));
 }
 function renderBulletin() {
   const bulletin = app.bulletin;
@@ -572,7 +572,7 @@ function renderBulletin() {
   const conclusion = bulletinField('Lời kết', bulletin.conclusion, true);
   const save = node('button', 'button primary', 'Lưu thông tin bản tin');
   bulletinAction(save, async () => {
-    if (hasPendingBulletinUrl() || hasPendingCorrection() || (app.bulletinDirty && [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el.dataset.dirty === 'true')))
+    if (hasPendingBulletinUrl() || hasPendingPublicationEdit() || (app.bulletinDirty && [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el.dataset.dirty === 'true')))
       throw new Error('Hãy lưu hoặc bỏ thay đổi ở mục tin trước.');
     app.bulletin = await api(`/api/bulletins/${bulletin.id}/save`, {revision: bulletin.revision,
       title: title.input.value, edition_date: edition.input.value, introduction: intro.input.value, conclusion: conclusion.input.value});
@@ -645,7 +645,7 @@ function renderBulletin() {
     const actions = node('div', 'action-row');
     const saveItem = node('button', 'button secondary', 'Lưu mục');
     bulletinAction(saveItem, async () => {
-      if (hasPendingBulletinUrl() || hasPendingCorrection() || top.dataset.dirty === 'true' || [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el !== section && el.dataset.dirty === 'true'))
+      if (hasPendingBulletinUrl() || hasPendingPublicationEdit() || top.dataset.dirty === 'true' || [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el !== section && el.dataset.dirty === 'true'))
         throw new Error('Hãy lưu hoặc bỏ thay đổi ở các phần khác trước.');
       const data = {bulletin_revision: bulletin.revision, revision: item.revision, verified: verified.checked,
         claims: collectClaims()};
@@ -854,7 +854,7 @@ async function renderVariants(container, bulletin) {
   const actions = node('div', 'action-row');
   const save = node('button', 'button secondary', 'Lưu phiên bản'); save.disabled = locked;
   bulletinAction(save, async () => {
-    if (hasPendingBulletinUrl() || hasPendingCorrection() || container.previousElementSibling?.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
+    if (hasPendingBulletinUrl() || hasPendingPublicationEdit() || container.previousElementSibling?.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
       throw new Error('Hãy lưu các phần bản tin khác trước.');
     const saved = await api(`/api/variants/${variant.id}/save`, {revision: variant.revision, account_label: account.input.value,
       segments: collect(), checks: Object.fromEntries(Object.entries(checks).map(([key, value]) => [key, value.checked])),
@@ -951,33 +951,57 @@ async function renderVariantPublication(area, variant) {
         block.append(details);
       }
       const addMetrics = node('button', 'button secondary', 'Nhập số liệu');
+      const metricNotice = node('div'); metricNotice.hidden = true;
+      const metrics = metricFields(variant.platform);
+      const emptyMetrics = () => ({values: ','.repeat(metrics.length - 1), observed: null, note: ''});
+      let pendingMetrics = emptyMetrics();
+      const showPendingMetrics = message => {
+        metricNotice.replaceChildren(node('p', '', message || 'Số liệu chưa được gửi.'),
+          node('p', 'small-note', `Theo thứ tự ${metrics.map(([, label]) => label).join(', ')}: ${pendingMetrics.values}`),
+          node('p', 'small-note', `Thời điểm: ${pendingMetrics.observed ?? 'chưa nhập'} · Ghi chú: ${pendingMetrics.note}`));
+        metricNotice.append(node('p', 'small-note', 'Giữ thẻ này để tiếp tục. Nếu mất kết nối, hãy kiểm tra số liệu đã lưu trước khi thử lại.'));
+        metricNotice.className = 'notice warning'; metricNotice.hidden = false;
+        metricNotice.dataset.dirty = 'true'; metricNotice.dataset.pendingPublicationEdit = 'true'; app.bulletinDirty = true;
+        const discard = node('button', 'button secondary', 'Bỏ số liệu chưa lưu');
+        listen(discard, 'click', () => {
+          delete metricNotice.dataset.dirty; delete metricNotice.dataset.pendingPublicationEdit;
+          metricNotice.hidden = true; metricNotice.replaceChildren(); pendingMetrics = emptyMetrics();
+          app.bulletinDirty = hasOtherPendingChanges($('bulletin-editor'), null, hasPendingBulletinUrl());
+        });
+        metricNotice.append(discard);
+      };
       bulletinAction(addMetrics, async () => {
-        if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi nhập số liệu.');
-        const metrics = metricFields(variant.platform);
-        const values = window.prompt(`Nhập ${metrics.length} số nguyên cách nhau bằng dấu phẩy theo thứ tự: ${metrics.map(([, label]) => label).join(', ')}. Để trống giá trị chưa biết.`, ','.repeat(metrics.length - 1));
+        if (hasOtherPendingChanges($('bulletin-editor'), metricNotice, hasPendingBulletinUrl()))
+          throw new Error('Hãy lưu các thay đổi khác trước khi nhập số liệu.');
+        const values = window.prompt(`Nhập ${metrics.length} số nguyên cách nhau bằng dấu phẩy theo thứ tự: ${metrics.map(([, label]) => label).join(', ')}. Để trống giá trị chưa biết.`, pendingMetrics.values);
         if (values === null) return;
+        pendingMetrics.values = values; showPendingMetrics();
         const fields = values.split(',').map(value => value.trim());
-        if (fields.length !== metrics.length || fields.some(value => value && !/^\d+$/.test(value)))
-          throw new Error(`Cần đúng ${metrics.length} giá trị; mỗi giá trị là số nguyên không âm hoặc để trống.`);
-        const observed = window.prompt('Thời điểm quan sát (ISO 8601 có múi giờ):', new Date().toISOString());
+        if (fields.length !== metrics.length || fields.some(value => value && !/^\d+$/.test(value))) {
+          showPendingMetrics(`Cần đúng ${metrics.length} giá trị; mỗi giá trị là số nguyên không âm hoặc để trống.`); return;
+        }
+        const observed = window.prompt('Thời điểm quan sát (ISO 8601 có múi giờ):', pendingMetrics.observed ?? new Date().toISOString());
         if (observed === null) return;
-        const note = window.prompt('Ghi chú số liệu (không bắt buộc):', ''); if (note === null) return;
+        pendingMetrics.observed = observed; showPendingMetrics();
+        const note = window.prompt('Ghi chú số liệu (không bắt buộc):', pendingMetrics.note); if (note === null) return;
+        pendingMetrics.note = note; showPendingMetrics();
         const payload = {observed_at: observed, note};
         metrics.forEach(([key], index) => {
           payload[key] = fields[index] === '' ? null : Number(fields[index]);
         });
-        await api(`/api/publications/${existing.id}/metrics`, payload);
-        renderBulletin(); toast('Đã lưu số liệu do bạn nhập.');
+        try { await api(`/api/publications/${existing.id}/metrics`, payload); }
+        catch (error) { showPendingMetrics(error.message); return; }
+        app.bulletinDirty = false; renderBulletin(); toast('Đã lưu số liệu do bạn nhập.');
       });
       const correct = node('button', 'button secondary', 'Đính chính liên kết');
       const conflict = node('div'); conflict.hidden = true;
       let pendingCorrection = {reason: '', url: existing.url};
       const showPendingCorrection = error => {
         showClaimConflict(conflict, error || new Error('Đính chính chưa được gửi.'), pendingCorrection);
-        conflict.dataset.dirty = 'true'; conflict.dataset.pendingCorrection = 'true'; app.bulletinDirty = true;
+        conflict.dataset.dirty = 'true'; conflict.dataset.pendingCorrection = 'true'; conflict.dataset.pendingPublicationEdit = 'true'; app.bulletinDirty = true;
         const discard = node('button', 'button secondary', 'Bỏ đính chính chưa lưu');
         listen(discard, 'click', () => {
-          delete conflict.dataset.dirty; delete conflict.dataset.pendingCorrection;
+          delete conflict.dataset.dirty; delete conflict.dataset.pendingCorrection; delete conflict.dataset.pendingPublicationEdit;
           conflict.hidden = true; conflict.replaceChildren(); pendingCorrection = {reason: '', url: existing.url};
           app.bulletinDirty = hasOtherPendingChanges($('bulletin-editor'), null, hasPendingBulletinUrl());
         });
@@ -997,13 +1021,13 @@ async function renderVariantPublication(area, variant) {
         catch (error) { showPendingCorrection(error); return; }
         app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã lưu đính chính.');
       });
-      block.append(addMetrics, correct, conflict);
+      block.append(addMetrics, metricNotice, correct, conflict);
     } else {
       const url = node('input'); url.type = 'url'; url.placeholder = 'Liên kết bài đã tự đăng'; url.dataset.publicationUrl = 'true';
       const report = node('button', 'button secondary', 'Ghi nhận đã đăng');
       const conflict = node('div'); conflict.hidden = true;
       bulletinAction(report, async () => {
-        if (hasPendingBulletinUrl(url) || hasPendingCorrection() || area.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
+        if (hasPendingBulletinUrl(url) || hasPendingPublicationEdit() || area.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
           throw new Error('Hãy lưu các thay đổi khác trước khi ghi nhận.');
         const value = url.value.trim(); if (!value) throw new Error('Hãy nhập liên kết bài đã đăng.');
         if (!window.confirm(`Ghi nhận đoạn ${position + 1} đã đăng trên ${variant.platform.toUpperCase()} · ${variant.account_label}?\n\n${value}\n\nỨng dụng không kiểm tra bài đăng.`)) return;
