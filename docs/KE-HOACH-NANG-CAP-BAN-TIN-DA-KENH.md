@@ -321,7 +321,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [ ] **QA-03 / P0:** Migration/restore end-to-end trên fixture và bản sao được phép; xác nhận đường lui và dữ liệu sau nâng cấp.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.
-- [ ] **PILOT-01 / P1:** Làm ít nhất ba bản tin thử với số mục/ngôn ngữ/độ dài khác nhau; ghi thời gian thao tác và vấn đề, không tự đăng công khai.
+- [x] **PILOT-01 / P1:** Làm ít nhất ba bản tin thử với số mục/ngôn ngữ/độ dài khác nhau; ghi thời gian thao tác và vấn đề, không tự đăng công khai. Ba lượt dùng kho demo tạm và trình duyệt tích hợp; chi tiết và giới hạn tại `KIEM-THU.md`.
 - [ ] **REL-01 / P0:** Chốt checklist mục 10, tổng hợp bằng chứng và phần chưa kiểm chứng trước khi đề nghị triển khai bản chính.
 
 ## 8. Ma trận kiểm thử bắt buộc
@@ -468,6 +468,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | DOC-01 / PILOT-01 | Đang làm | Cập nhật hướng dẫn tích hợp trong giao diện về tự viết/AI tùy chọn, Facebook/Threads/X, duyệt và tự đăng; nhãn 0.4 đang phát triển. Test HTTP và hồi quy 147/147 Python, 10/10 JS đạt | Điều khiển Edge không phản hồi khi mở kho thử; chưa smoke nội dung mới, chưa bắt đầu hoặc đo pilot |
 | 03/11/2026 | BASE-03 / PUB-02 | Đang làm | Đối chiếu mã chuẩn hóa và so trùng URL, ghi tập host/đường dẫn hiện nhận trong `API-BAN-TIN-DA-KENH.md`; tài liệu X xác nhận cách lấy URL bài và minh họa một dạng URL | Chưa xác minh đầy đủ mẫu/alias nền tảng; các dạng Facebook khác nhau có thể trỏ cùng bài mà không bị nhận diện trùng, URL legacy ngoài validator không được đối chiếu. Cần đối soát thủ công và tiếp tục khảo sát; không đóng gate |
 | 03/11/2026 | PILOT-01 | Đang làm | Kho demo tạm qua trình duyệt tích hợp: chọn, soạn, xác nhận giả lập, duyệt và tải tệp cho Facebook một mục tiếng Việt (56,9 giây), Threads hai mục tiếng Việt/Anh (56,7 giây); đọc lại tệp khớp văn bản và nguồn giả | Thời gian gồm điều khiển công cụ; chưa đủ ba pilot, chưa kiểm chứng nguồn thật hay quy tắc nền tảng, chưa kiểm thử X ở lượt này; xem `KIEM-THU.md` |
+| 03/11/2026 | PILOT-01 | Hoàn tất phạm vi thử | Lượt thứ ba: kho demo mới, X ba mục tiếng Việt, đề xuất chia năm đoạn, duyệt và tải tệp; 87,0 giây, tệp khớp các đoạn hiển thị và nguồn giả | Cả ba nguồn được giữ trong mỗi đoạn, cần biên tập lại nếu không liên quan; thời gian gồm điều khiển công cụ. Đây không phải xác minh nền tảng thật hoặc nghiệm thu phát hành |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
