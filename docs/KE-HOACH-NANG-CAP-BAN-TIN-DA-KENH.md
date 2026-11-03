@@ -455,6 +455,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | QA-02 / APR-04 | Đang làm | Khóa vùng biên tập, danh sách và điều hướng khi thao tác/chia đoạn đang chờ; test JS xác nhận phục hồi khi lỗi. Smoke trình duyệt với service giả chậm: vùng khóa khỏi cây tương tác, nhấn điều hướng không chuyển; sau xử lý, chuyển bản hiện cảnh báo chưa lưu | Chưa thử nhấn danh sách trong lúc chờ hoặc hai lựa chọn của cảnh báo; phiên điều khiển treo ở hộp xác nhận |
 | 03/11/2026 | QA-02 | Đang làm | Mở bản tin từ danh sách dùng cùng khóa trong lúc chờ tải; test helper xác nhận khóa tới khi phản hồi hoàn tất | Chưa smoke request mở bản tin chậm trên trình duyệt |
 | 03/11/2026 | BASE-03 / TEXT-02 | Đang làm | [Hướng dẫn X](https://help.x.com/en/using-twitter/how-to-tweet-a-link.html) xác nhận URL tính 23 ký tự; test URL ngắn/dài và biên 280/281 đạt | Chưa chứng minh mọi URL, emoji mới, cách đếm Threads hoặc hành vi nền tảng thực tế |
+| 03/11/2026 | TEXT-03 / SAFE-01 | Đang làm | Mở rộng test HTTP cho high/low surrogate đơn lẻ trên cả ba kênh: trả 400, không đổi revision/nội dung, emoji hợp lệ lưu được | Chưa bao phủ mọi chuỗi Unicode hoặc cách tính trên nền tảng thật |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 

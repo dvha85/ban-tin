@@ -86,16 +86,19 @@ class ServerTests(unittest.TestCase):
         article = self.room.import_article({'title': 'Tin fixture Unicode',
             'url': 'https://example.com/unicode', 'summary': 'Nguồn minh họa.'})
         bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
-        variant = self.room.create_variant(bulletin['id'], {
-            'bulletin_revision': bulletin['revision'], 'platform': 'x', 'account_label': 'Kênh thử'})
-        path = f"/api/variants/{variant['id']}/save"
-        segment = {'text': 'Lỗi \ud800', 'item_ids': [bulletin['items'][0]['id']]}
-        status, _, body = self.request('POST', path, {'revision': variant['revision'], 'segments': [segment]}, headers)
-        self.assertEqual(status, 400)
-        self.assertIn('Unicode không hợp lệ', json.loads(body)['error'])
-        self.assertEqual(self.room.variant(variant['id']), variant)
-        segment['text'] = 'Emoji hợp lệ 😀'
-        self.assertEqual(self.request('POST', path, {'revision': variant['revision'], 'segments': [segment]}, headers)[0], 200)
+        for platform in ('x', 'threads', 'facebook'):
+            with self.subTest(platform=platform):
+                variant = self.room.create_variant(bulletin['id'], {
+                    'bulletin_revision': bulletin['revision'], 'platform': platform, 'account_label': 'Kênh thử'})
+                path = f"/api/variants/{variant['id']}/save"
+                for invalid in ('\ud800', '\udfff'):
+                    segment = {'text': 'Lỗi ' + invalid, 'item_ids': [bulletin['items'][0]['id']]}
+                    status, _, body = self.request('POST', path, {'revision': variant['revision'], 'segments': [segment]}, headers)
+                    self.assertEqual(status, 400)
+                    self.assertIn('Unicode không hợp lệ', json.loads(body)['error'])
+                    self.assertEqual(self.room.variant(variant['id']), variant)
+                segment['text'] = 'Emoji hợp lệ 😀'
+                self.assertEqual(self.request('POST', path, {'revision': variant['revision'], 'segments': [segment]}, headers)[0], 200)
 
     def test_no_publish_or_ai_integration_endpoint(self):
         headers = self.session()
