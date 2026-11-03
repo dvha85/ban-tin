@@ -59,6 +59,29 @@ class VariantTests(unittest.TestCase):
             'revision': draft['revision'], 'checks': {key: True for key in self.room.CHECKS}})
         return self.room.approve(draft['id'], draft['revision'])
 
+    def test_legacy_duplicate_overlay_preserves_original_records(self):
+        drafts = [self.make_approved_legacy() for _ in range(3)]
+        urls = ['https://facebook.com/page/posts/77',
+                'https://m.facebook.com/page/posts/77?ref=share',
+                'https://facebook.com/other/posts/88']
+        with self.room.connection() as conn:
+            for draft, url in zip(drafts, urls):
+                conn.execute("UPDATE drafts SET status='published',post_url=? WHERE id=?", (url, draft['id']))
+            before = [tuple(row) for row in conn.execute('SELECT * FROM drafts ORDER BY id')]
+        groups = self.room.legacy_publication_duplicates()
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0]['match'], 'recognized')
+        self.assertEqual([entry['id'] for entry in groups[0]['drafts']], [drafts[0]['id'], drafts[1]['id']])
+        self.assertEqual([entry['url'] for entry in groups[0]['drafts']], urls[:2])
+        with self.room.connection() as conn:
+            self.assertEqual(before, [tuple(row) for row in conn.execute('SELECT * FROM drafts ORDER BY id')])
+            conn.execute('UPDATE drafts SET post_url=? WHERE id=?', ('https://facebook.com/reel/123?utm_source=share', drafts[0]['id']))
+            conn.execute('UPDATE drafts SET post_url=? WHERE id=?', ('https://m.facebook.com/reel/123', drafts[1]['id']))
+        groups = self.room.legacy_publication_duplicates()
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0]['match'], 'exact')
+        self.assertEqual([entry['id'] for entry in groups[0]['drafts']], [drafts[0]['id'], drafts[1]['id']])
+
     def test_legacy_and_variant_cannot_claim_same_facebook_post_in_either_order(self):
         legacy = self.make_approved_legacy()
         variant = self.make_approved('facebook')

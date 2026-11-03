@@ -159,6 +159,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.respond(200, self.server.room.bulletins())
             elif path == '/api/bulletin-stats':
                 self.respond(200, self.server.room.bulletin_stats())
+            elif path == '/api/legacy-publication-duplicates':
+                self.respond(200, self.server.room.legacy_publication_duplicates())
             elif path.startswith('/api/bulletins/'):
                 parts = path.split('/')
                 if len(parts) not in (4, 5) or not parts[3].isdigit():

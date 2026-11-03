@@ -18,6 +18,7 @@ Tài liệu này mô tả API nội bộ của nhánh phát triển 0.4, chưa p
 | `GET /api/bulletins/{id}/packet` | — | Object `text` là gói tư liệu; vượt giới hạn trả lỗi, không cắt nội dung. |
 | `GET /api/bulletins/{id}/history` | — | Lịch sử bản tin. |
 | `GET /api/bulletin-stats` | — | Thống kê bản tin và ghi nhận đa kênh. |
+| `GET /api/legacy-publication-duplicates` | — | Mảng nhóm `{match, drafts}` đối soát bài cũ; mỗi draft có `id`, `url` gốc. `match` là `recognized` hoặc `exact`; chỉ đọc, không sửa dữ liệu. |
 | `POST /api/bulletins` | `article_ids` (1–10 ID nguyên khác nhau), tùy chọn `title`, `edition_date`, `source_selection` | 201 và bản tin mới. `source_selection` là object khóa theo article ID dạng chuỗi; nguồn phải thuộc tin. |
 | `POST /api/bulletins/{id}/save` | `revision`; tùy chọn `title`, `edition_date`, `introduction`, `conclusion`, `item_ids` | Trả bản tin. `item_ids` xác định thứ tự đầy đủ các mục hiện có. |
 | `POST /api/bulletins/{id}/items` | `revision` và một trong `article_id` hoặc `remove_item_id`; khi thêm có thể gửi `source_selection` | Trả bản tin. Không thêm trùng article; phải giữ ít nhất một mục. |
@@ -65,6 +66,8 @@ Các timestamp người dùng cung cấp phải có múi giờ hợp lệ. URL c
 | X | `x.com`, `www.x.com`, `twitter.com`, `www.twitter.com`; dạng `/user/status/123`, tên gồm 1–15 chữ ASCII, số hoặc `_`, mã bài là số. | Host về `x.com`, bỏ query; so trùng theo mã bài, kể cả khi tên tài khoản trong URL khác nhau. |
 
 Kiểm tra trùng bao gồm ghi nhận đa kênh đang hiệu lực và URL Facebook legacy mà validator nhận diện được. Hai URL Facebook khác dạng, chẳng hạn `/share/p/...` và `/page/posts/...`, có thể cùng dẫn đến một bài nhưng không được suy ra là trùng; URL legacy ngoài tập mẫu cũng không được đối chiếu. Không tự sửa dữ liệu cũ để xử lý các trường hợp này. Trước khi dùng cần đối soát thủ công, thu thập ví dụ được phép và xác minh alias trên nền tảng; không coi URL hợp lệ theo cú pháp là bằng chứng bài tồn tại hoặc đã đăng.
+
+Danh sách đối soát legacy riêng còn nhóm các URL ngoài validator khi host Facebook được nhận diện và đường dẫn/query giống nhau sau chuẩn hóa; không đồng nghĩa cơ chế chặn ghi nhận mới đã nhận diện các dạng này. URL không hợp lệ hoặc khác host được bỏ qua. Các alias khác dạng, query có ý nghĩa chưa rõ hoặc liên kết rút gọn có thể không được phát hiện.
 
 [Hướng dẫn X về URL bài đăng](https://help.x.com/en/using-x/post-and-moment-url) mô tả cách sao chép liên kết bài; [tài liệu X về Media Studio](https://help.x.com/en/using-x/media-studio-faqs) minh họa dạng `x.com/USERNAME/STATUS/postID`. Các nguồn này chưa xác nhận toàn bộ mẫu, alias hoặc phép so trùng ở trên. Chưa có bằng chứng chính thức đầy đủ cho Facebook và Threads trong lần rà soát này; BASE-03 vẫn mở.
 

@@ -151,6 +151,24 @@ class ServerTests(unittest.TestCase):
         for endpoint in ('/api/ai', '/api/facebook/publish', '/api/login/chatgpt'):
             self.assertEqual(self.request('POST', endpoint, {}, headers)[0], 404)
 
+    def test_legacy_duplicate_overlay_requires_session(self):
+        path = '/api/legacy-publication-duplicates'
+        self.assertEqual(self.request('GET', path)[0], 401)
+        headers = self.session()
+        drafts = []
+        for index in range(2):
+            article = self.room.import_article({'title': f'Tin giả {index}',
+                'url': f'https://example.com/overlay-{index}', 'summary': 'Nguồn giả.'})
+            drafts.append(self.room.create_draft(article['id']))
+        with self.room.connection() as conn:
+            for draft in drafts:
+                conn.execute("UPDATE drafts SET status='published',post_url=? WHERE id=?",
+                             ('https://facebook.com/page/posts/77', draft['id']))
+        status, _, body = self.request('GET', path, headers=headers)
+        self.assertEqual(status, 200)
+        groups = json.loads(body)
+        self.assertEqual([entry['id'] for entry in groups[0]['drafts']], [draft['id'] for draft in drafts])
+
     def test_multichannel_response_contract_and_publication_lifecycle_over_http(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin giả lập hợp đồng HTTP',

@@ -69,6 +69,26 @@ def _reported_time(value):
 
 
 class PublicationMixin:
+    def legacy_publication_duplicates(self):
+        """Read-only overlay for legacy URLs that can be compared safely."""
+        groups = {}
+        with self.connection() as conn:
+            for row in conn.execute("SELECT id,post_url FROM drafts WHERE post_url IS NOT NULL AND post_url<>'' ORDER BY id"):
+                url = row['post_url']
+                try:
+                    normalized = normalize_post_url('facebook', url)
+                    key = ('recognized', _post_identity('facebook', normalized))
+                except ValueError:
+                    try:
+                        parts = urlsplit(canonical_url(url))
+                        if parts.hostname not in ('facebook.com', 'www.facebook.com', 'm.facebook.com'):
+                            continue
+                        key = ('exact', (parts.path, parts.query))
+                    except (ValueError, TypeError):
+                        continue
+                groups.setdefault(key, []).append({'id': row['id'], 'url': url})
+        return [{'match': key[0], 'drafts': entries} for key, entries in groups.items() if len(entries) > 1]
+
     def _publication(self, conn, publication_id):
         from .service import ValidationError
         row = conn.execute('SELECT * FROM publications WHERE id=?', (publication_id,)).fetchone()

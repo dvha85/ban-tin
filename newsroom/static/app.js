@@ -485,8 +485,21 @@ function bulletinAction(button, action) {
   });
 }
 async function loadBulletinList() {
-  const [entries, stats] = await Promise.all([api('/api/bulletins'), api('/api/bulletin-stats')]);
+  const [entries, stats, duplicates] = await Promise.all([api('/api/bulletins'), api('/api/bulletin-stats'), api('/api/legacy-publication-duplicates')]);
   $('bulletin-stats').textContent = `${stats.bulletins} bản tin · ${stats.variants} phiên bản kênh · ${stats.recorded_bulletins} bản tin có ghi nhận · ${stats.recorded_posts} đoạn đã ghi nhận. Không cộng với thống kê bài cũ ở trên.`;
+  const notice = $('legacy-duplicate-notice');
+  notice.replaceChildren();
+  notice.hidden = !duplicates.length;
+  if (duplicates.length) {
+    notice.append(node('strong', '', `Có ${duplicates.length} nhóm liên kết bài cũ cần đối soát.`),
+      node('p', '', 'Chỉ hiển thị các liên kết có thể so sánh; các dạng khác vẫn có thể trùng. Không tự sửa dữ liệu hoặc bài trên mạng xã hội.'));
+    for (const group of duplicates) {
+      const list = node('ul');
+      for (const draft of group.drafts) list.append(node('li', '', `Bài cũ #${draft.id}: ${draft.url}`));
+      notice.append(node('p', '', group.match === 'recognized' ? 'Cùng định danh theo bộ kiểm tra hiện tại:' : 'Cùng đường dẫn và tham số sau chuẩn hóa:'));
+      notice.append(list);
+    }
+  }
   const list = $('bulletin-list');
   list.replaceChildren();
   if (!entries.length) list.append(empty('Chưa có bản tin.', 'Chọn tin trong Hộp tin để bắt đầu.'));
