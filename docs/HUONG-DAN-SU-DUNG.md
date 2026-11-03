@@ -108,7 +108,7 @@ Nhấn **Sao chép bài đã duyệt**, chọn **Sao chép nội dung** hoặc *
 - Nếu bạn sửa trực tiếp trong Facebook, ứng dụng không biết thay đổi đó. Quay lại sửa và duyệt lại để hồ sơ khớp bản thực tế.
 - Bản này chỉ lưu bài chữ. Nếu thêm ảnh, tự kiểm tra quyền, nguồn và sự phù hợp của ảnh; việc duyệt bài chữ không phải duyệt ảnh.
 
-Sau khi đã tự đăng, dán URL bài Facebook và nhấn **Ghi nhận tôi đã đăng thủ công**. Việc này chỉ lưu lời xác nhận của bạn, không gửi yêu cầu đến Facebook và không chứng minh bài công khai / kiếm tiền được. Bản nội dung đã ghi nhận đăng không sửa đè được; tạo bản nháp mới từ tin để làm bài mới.
+Sau khi đã tự đăng, dán URL bài Facebook và nhấn **Ghi nhận tôi đã đăng thủ công**. Kiểm tra tên bài, Page và liên kết trong vùng xác nhận rồi nhấn **Xác nhận ghi nhận**. Nếu sửa URL hoặc đổi bài, cần kiểm tra và xác nhận lại. Việc này chỉ lưu lời xác nhận của bạn, không gửi yêu cầu đến Facebook và không chứng minh bài công khai / kiếm tiền được. Bản nội dung đã ghi nhận đăng không sửa đè được; tạo bản nháp mới từ tin để làm bài mới.
 
 ## 6. Theo dõi trong 10 phút
 

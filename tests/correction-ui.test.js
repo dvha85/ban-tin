@@ -129,6 +129,42 @@ test('publication confirmation identifies destination and invalidates when URL c
   assert.equal(calls.length, 1); assert.equal(calls[0].url, 'https://x.com/a/status/456');
 });
 
+test('legacy publication requires in-page confirmation and invalidates changed context', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = []; const messages = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout, calls, messages,
+    fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {},
+      confirm: () => { throw new Error('Unexpected browser dialog'); }},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.draft = {id: 1, revision: 4, status: 'approved', title: 'Bài thử', page_name: 'Page thử'};
+    api = async (path, body) => { calls.push({path, body}); throw new Error('Lỗi thử'); };
+    mutation = async action => action(); toast = message => messages.push(message);`, context);
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  get('post-url').value = 'https://facebook.com/test/posts/123';
+  get('mark-published').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 0);
+  assert.equal(get('legacy-publish-confirmation').hidden, false);
+  assert.match(get('legacy-publish-summary').textContent, /Bài thử/);
+  assert.match(get('legacy-publish-summary').textContent, /Page thử/);
+  assert.match(get('legacy-publish-summary').textContent, /posts\/123/);
+  get('post-url').value = 'https://facebook.com/test/posts/456';
+  get('post-url').listeners.input[0]({});
+  get('legacy-confirm-published').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 0);
+  get('mark-published').listeners.click[0]({}); await tick();
+  vm.runInContext('app.draft.revision += 1', context);
+  get('legacy-confirm-published').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 0);
+  get('mark-published').listeners.click[0]({}); await tick();
+  get('legacy-confirm-published').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].body.post_url, 'https://facebook.com/test/posts/456');
+  assert.equal(get('post-url').value, 'https://facebook.com/test/posts/456');
+});
+
 test('historical publications show readable events and retain their metrics', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

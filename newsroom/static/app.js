@@ -268,6 +268,7 @@ async function openDraft(draft) {
   view('drafts');
 }
 async function setDraft(draft) {
+  resetLegacyPublicationConfirmation();
   if (app.draft?.id !== draft.id || draft.status === 'published') $('legacy-claim-conflict').hidden = true;
   bindPublicationFields(app.draft, draft, $('post-url'), $('published-link'));
   app.draft = structuredClone(draft);
@@ -1290,14 +1291,34 @@ listen($('copy-dialog'), 'click', () => copy($('dialog-text').value));
 listen($('download-export'), 'click', () => {
   if (app.exportId !== null) window.location.assign(`/api/drafts/${app.exportId}/export`);
 });
-listen($('mark-published'), 'click', async () => {
+let legacyPublishConfirmation = null;
+function resetLegacyPublicationConfirmation() {
+  legacyPublishConfirmation = null;
+  $('legacy-publish-confirmation').hidden = true;
+}
+listen($('post-url'), 'input', resetLegacyPublicationConfirmation);
+listen($('legacy-edit-published'), 'click', resetLegacyPublicationConfirmation);
+listen($('mark-published'), 'click', () => {
   const url = $('post-url').value.trim();
   if (!url) throw new Error('Hãy nhập liên kết bài Facebook đã đăng.');
-  if (!window.confirm(`Ghi nhận bài “${app.draft.title}” đã đăng trên Page “${app.draft.page_name}”?\n\nLiên kết: ${url}\n\nỨng dụng không kiểm tra Facebook.`)) return;
+  legacyPublishConfirmation = {id: app.draft.id, revision: app.draft.revision,
+    title: app.draft.title, page: app.draft.page_name, url};
+  $('legacy-publish-summary').textContent = `Ghi nhận bài “${app.draft.title}” đã đăng trên Page “${app.draft.page_name}”? Liên kết: ${url}`;
+  $('legacy-publish-confirmation').hidden = false;
+});
+listen($('legacy-confirm-published'), 'click', async () => {
+  const confirmed = legacyPublishConfirmation;
+  if (!confirmed || !app.draft || app.draft.status !== 'approved' ||
+      confirmed.id !== app.draft.id || confirmed.revision !== app.draft.revision ||
+      confirmed.title !== app.draft.title || confirmed.page !== app.draft.page_name ||
+      confirmed.url !== $('post-url').value.trim()) {
+    resetLegacyPublicationConfirmation();
+    throw new Error('Thông tin đã thay đổi. Hãy kiểm tra và xác nhận lại.');
+  }
   await mutation(async () => {
     let draft;
     try { draft = await api(`/api/drafts/${app.draft.id}/published`, {
-      revision: app.draft.revision, post_url: url}); }
+      revision: confirmed.revision, post_url: confirmed.url}); }
     catch (error) { showClaimConflict($('legacy-claim-conflict'), error); return; }
     await setDraft(draft);
     await loadState();
