@@ -111,7 +111,7 @@ class PublicationMixin:
     def _check_url_claim(self, conn, url, platform):
         from .service import Conflict
         identity = _post_identity(platform, url)
-        for row in conn.execute('''SELECT p.url, v.platform FROM publications p
+        for row in conn.execute('''SELECT p.id, p.url, p.position, v.id AS variant_id, v.bulletin_id, v.platform FROM publications p
                                    JOIN content_variants v ON v.id=p.variant_id WHERE p.active=1'''):
             if row['platform'] != platform:
                 continue
@@ -120,7 +120,9 @@ class PublicationMixin:
             except ValueError:
                 continue
             if _post_identity(platform, existing_url) == identity:
-                raise Conflict('Liên kết đã được ghi nhận cho một đoạn khác. Hãy kiểm tra nhật ký.')
+                target = {'kind': 'publication', 'bulletin_id': row['bulletin_id'],
+                          'variant_id': row['variant_id'], 'publication_id': row['id'], 'position': row['position']}
+                raise Conflict(f"Liên kết đã thuộc bản tin #{row['bulletin_id']}, phiên bản #{row['variant_id']}, đoạn {row['position'] + 1} (ghi nhận #{row['id']}).", target)
         if platform != 'facebook':
             return
         for row in conn.execute('SELECT id,post_url FROM drafts WHERE post_url IS NOT NULL'):
@@ -129,7 +131,8 @@ class PublicationMixin:
             except ValueError:
                 continue
             if _post_identity('facebook', old) == identity:
-                raise Conflict(f"Liên kết đã thuộc bài cũ #{row['id']}. Hãy kiểm tra nhật ký.")
+                raise Conflict(f"Liên kết đã thuộc bài cũ #{row['id']}. Hãy kiểm tra nhật ký.",
+                               {'kind': 'legacy_draft', 'draft_id': row['id']})
 
     def _publication_progress(self, conn, variant_id, approval_id):
         variant = self._variant(conn, variant_id)

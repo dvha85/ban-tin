@@ -98,7 +98,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
         self.wfile.flush()
 
-    def json_error(self, status, message):
+    def json_error(self, status, message, target=None):
         # Windows can reset a socket with unread request bytes, hiding the
         # intended 4xx response. Drain only a small declared body, with a short
         # timeout; never trust an unbounded Content-Length or chunked request.
@@ -113,7 +113,10 @@ class Handler(BaseHTTPRequestHandler):
             finally:
                 self._body_consumed = True
                 self.connection.settimeout(15)
-        self.respond(status, {'error': message})
+        result = {'error': message}
+        if target is not None:
+            result['target'] = target
+        self.respond(status, result)
 
     def authorize(self, mutation=False):
         if self.headers.get('Host') not in self.server.hosts:
@@ -363,7 +366,7 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self.json_error(404, 'Không tìm thấy chức năng.')
         except Conflict as exc:
-            self.json_error(409, str(exc))
+            self.json_error(409, str(exc), exc.target)
         except UnicodeError:
             self.json_error(400, 'Nội dung chứa ký tự Unicode không hợp lệ. Hãy nhập lại đoạn văn bản.')
         except (ValidationError, ValueError) as exc:

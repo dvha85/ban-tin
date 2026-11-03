@@ -85,18 +85,21 @@ class VariantTests(unittest.TestCase):
     def test_legacy_and_variant_cannot_claim_same_facebook_post_in_either_order(self):
         legacy = self.make_approved_legacy()
         variant = self.make_approved('facebook')
-        self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
+        recorded = self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
             'url': 'https://www.facebook.com/page/posts/100', 'idempotency_key': 'cross_claim_100'})
-        with self.assertRaises(Conflict):
+        with self.assertRaises(Conflict) as caught:
             self.room.mark_published(legacy['id'], legacy['revision'], 'https://m.facebook.com/page/posts/100?ref=share')
+        self.assertEqual(caught.exception.target, {'kind': 'publication', 'bulletin_id': self.bulletin['id'],
+            'variant_id': variant['id'], 'publication_id': recorded['id'], 'position': 0})
         self.assertEqual(self.room.draft(legacy['id'])['status'], 'approved')
 
         legacy = self.make_approved_legacy()
         self.room.mark_published(legacy['id'], legacy['revision'], 'https://facebook.com/page/posts/200')
         another = self.make_approved('facebook')
-        with self.assertRaises(Conflict):
+        with self.assertRaises(Conflict) as caught:
             self.room.record_publication(another['id'], {'revision': another['revision'], 'position': 0,
                 'url': 'https://m.facebook.com/page/posts/200?ref=share', 'idempotency_key': 'cross_claim_200'})
+        self.assertEqual(caught.exception.target, {'kind': 'legacy_draft', 'draft_id': legacy['id']})
         self.assertEqual(self.room.variant(another['id'])['status'], 'approved')
 
     def test_two_legacy_drafts_cannot_claim_same_facebook_post(self):
@@ -401,9 +404,11 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(current['status'], 'partially_recorded')
         stats = self.room.bulletin_stats()
         self.assertEqual((stats['bulletins'], stats['variants'], stats['recorded_bulletins'], stats['recorded_posts']), (1, 1, 1, 1))
-        with self.assertRaises(Conflict):
+        with self.assertRaises(Conflict) as caught:
             self.room.record_publication(variant['id'], {'revision': current['revision'], 'position': 1,
                 'url': 'https://twitter.com/another_name/status/123?s=20', 'idempotency_key': 'alias_key_123'})
+        self.assertEqual(caught.exception.target, {'kind': 'publication', 'bulletin_id': self.bulletin['id'],
+            'variant_id': variant['id'], 'publication_id': first['id'], 'position': 0})
         with self.assertRaises(ValidationError):
             self.room.correct_publication(first['id'], {'revision': current['revision'],
                 'reason': 'Thử alias cùng bài', 'url': 'https://x.com/renamed/status/123?s=20'})
@@ -413,6 +418,14 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(second['url'], 'https://x.com/test/status/456')
         current = self.room.variant(variant['id'])
         self.assertEqual(current['status'], 'recorded')
+        before = self.room.publications(variant['id'])
+        with self.assertRaises(Conflict) as caught:
+            self.room.correct_publication(first['id'], {'revision': current['revision'],
+                'reason': 'Nhập nhầm liên kết', 'url': 'https://x.com/renamed/status/456'})
+        self.assertEqual(caught.exception.target, {'kind': 'publication', 'bulletin_id': self.bulletin['id'],
+            'variant_id': variant['id'], 'publication_id': second['id'], 'position': 1})
+        self.assertEqual(self.room.publications(variant['id']), before)
+        self.assertEqual(self.room.variant(variant['id']), current)
         self.assertEqual(self.room.bulletin_stats()['recorded_posts'], 2)
         with self.assertRaises(Conflict):
             self.room.save_variant(variant['id'], {'revision': current['revision']})

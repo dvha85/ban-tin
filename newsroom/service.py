@@ -24,7 +24,9 @@ class ValidationError(ValueError):
 
 
 class Conflict(ValidationError):
-    pass
+    def __init__(self, message, target=None):
+        super().__init__(message)
+        self.target = target
 
 
 def now_iso():

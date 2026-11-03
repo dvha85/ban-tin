@@ -229,6 +229,13 @@ class ServerTests(unittest.TestCase):
         self.assertNotIn('events', reported)
         current = get(path)
         self.assertEqual(current['status'], 'partially_recorded')
+        status, _, body = self.request('POST', path + '/publications', {'revision': current['revision'],
+            'position': 1, 'url': 'https://twitter.com/another/status/1001',
+            'idempotency_key': 'http_duplicate_1001'}, headers)
+        self.assertEqual(status, 409)
+        self.assertEqual(json.loads(body)['target'], {'kind': 'publication', 'bulletin_id': bulletin['id'],
+            'variant_id': variant['id'], 'publication_id': reported['id'], 'position': 0})
+        self.assertEqual(len(get(path + '/publications')), 1)
         self.assertEqual(current['publication_progress'], {'active': 1, 'total': 2})
         self.assertIsNotNone(current['locked_at'])
         metric = post(f"/api/publications/{reported['id']}/metrics", {

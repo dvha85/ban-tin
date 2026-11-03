@@ -8,6 +8,7 @@ Tài liệu này mô tả API nội bộ của nhánh phát triển 0.4, chưa p
 - POST yêu cầu JSON object với `Content-Length` xác định, tối đa **128.000 byte** sau mã hóa UTF-8; không nhận `Transfer-Encoding`. Gói tư liệu có giới hạn riêng **65.536 byte** cho toàn bộ văn bản, bao gồm hướng dẫn.
 - Lỗi JSON có dạng `{"error":"..."}`. Các mã thường gặp: 400 dữ liệu/điều kiện nghiệp vụ không hợp lệ, 401 thiếu phiên, 403 phiên/CSRF/Origin/Host không hợp lệ, 404 route không tồn tại, 409 xung đột revision hoặc trạng thái, 413 kích thước không hợp lệ, 503 lỗi lưu/đọc. Không coi mọi mã 400 là lỗi trường riêng lẻ.
 - Sau mỗi mutation thành công, dùng revision trong phản hồi mới; nếu 409, giữ nội dung đang soạn và tải lại để người dùng đối chiếu. Không tự ghi đè dữ liệu mới.
+- Riêng 409 do URL đã được ghi nhận có thêm `target`: `{kind: "publication", bulletin_id, variant_id, publication_id, position}` (vị trí từ 0) hoặc `{kind: "legacy_draft", draft_id}`. Trường `error` vẫn có mô tả để client cũ sử dụng. Các 409 khác không nhất thiết có `target`; dữ liệu này chỉ xác định bản ghi nội bộ, không xác minh bài trên nền tảng.
 
 ## Bản tin và mục
 
