@@ -2,6 +2,7 @@
 
 ## Smoke test giao diện đa kênh 04/11/2026
 
+- Kiểm tra số liệu chưa lưu trên trình duyệt tích hợp: nhập 303 lượt xem vào biểu mẫu Threads rồi chọn Facebook; giao diện yêu cầu lưu trước khi đổi, giữ nguyên biểu mẫu và giá trị 303. Lưu thành công, chuyển sang Facebook rồi trở lại Threads: lịch sử hiển thị cả lượt 202/3 và lượt 303 với các chỉ số còn lại chưa biết. Đây là dữ liệu giả; chưa bao phủ các thao tác rời trang hoặc mất kết nối.
 - Trên kho fixture tạm, bản tin hai mục có ba phiên bản: ghi nhận URL giả Facebook và Threads qua vùng xác nhận; phiên bản X giữ một trong hai đoạn đã ghi nhận. Tổng quan hiển thị một bản tin, ba phiên bản và ba đoạn được ghi nhận.
 - Nhập và xem lại số liệu: Facebook 101 lượt xem, 0 lượt thích; Threads 202 lượt xem, 3 lượt thích. Các trường không nhập hiển thị chưa biết. Liên kết và số liệu của hai kênh được đối chiếu riêng trên giao diện.
 - Sau tải lại trang, tổng quan vẫn hiển thị ba đoạn; mở lại Threads thấy URL giả và số liệu 202/3. Lượt X trước đó đã thử đính chính, hủy và ghi lại cùng URL trên một trang, từ 0/2 → 1/2 → 0/2 → 1/2.
