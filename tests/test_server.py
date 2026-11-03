@@ -1,12 +1,13 @@
 import http.client
 import json
+import socket
 import tempfile
 import threading
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from newsroom.server import MAX_BODY, make_server
+from newsroom.server import MAX_BODY, Handler, make_server
 from newsroom.service import Newsroom
 
 
@@ -283,8 +284,24 @@ class ServerTests(unittest.TestCase):
         self.assertFalse(preview['needs_update'])
         self.assertEqual(get('/api/bulletin-stats')['recorded_posts'], 0)
 
-        reported = post(path + '/publications', {'revision': current['revision'], 'position': 0,
-            'url': 'https://x.com/fixture/status/1001', 'idempotency_key': 'http_contract_1001'})
+        publication_payload = {'revision': current['revision'], 'position': 0,
+            'url': 'https://x.com/fixture/status/1001', 'idempotency_key': 'http_contract_1001'}
+        original_respond = Handler.respond
+        lost_paths = {path + '/publications'}
+
+        def drop_response_after_commit(handler, status, data, *args, **kwargs):
+            if handler.command == 'POST' and handler.path in lost_paths and status == 200:
+                lost_paths.remove(handler.path)
+                handler.connection.shutdown(socket.SHUT_RDWR)
+                handler.close_connection = True
+                return
+            return original_respond(handler, status, data, *args, **kwargs)
+
+        with patch.object(Handler, 'respond', drop_response_after_commit):
+            with self.assertRaises(http.client.RemoteDisconnected):
+                self.request('POST', path + '/publications', publication_payload, headers)
+        self.assertEqual(get('/api/bulletin-stats')['recorded_posts'], 1)
+        reported = post(path + '/publications', publication_payload)
         self.assertEqual(reported['active'], 1)
         self.assertIsNone(reported['reported_at'])
         self.assertNotIn('events', reported)
@@ -304,9 +321,16 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(metric['views'], 0)
         self.assertIsNone(metric['likes'])
         self.assertEqual(metric['observed_at'], '2026-11-03T03:00:00+00:00')
-        social_metric = post(f"/api/publications/{reported['id']}/metrics", {
+        metric_path = f"/api/publications/{reported['id']}/metrics"
+        metric_payload = {
             'observed_at': '2026-11-03T10:01:00+07:00', 'replies': 0, 'reposts': 3, 'quotes': None,
-            'idempotency_key': 'http_metric_1001'})
+            'idempotency_key': 'http_metric_1001'}
+        lost_paths.add(metric_path)
+        with patch.object(Handler, 'respond', drop_response_after_commit):
+            with self.assertRaises(http.client.RemoteDisconnected):
+                self.request('POST', metric_path, metric_payload, headers)
+        social_metric = post(metric_path, metric_payload)
+        self.assertEqual(len(get(path + '/publications')[0]['metrics']), 2)
         self.assertEqual((social_metric['replies'], social_metric['reposts'], social_metric['quotes']), (0, 3, None))
         retry_payload = {'observed_at': '2026-11-03T10:01:00+07:00', 'replies': 0, 'reposts': 3,
                          'quotes': None, 'idempotency_key': 'http_metric_1001'}
