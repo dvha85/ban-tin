@@ -590,6 +590,38 @@ class VariantTests(unittest.TestCase):
             self.assertEqual(caught.exception.target['publication_id'], record['id'])
             self.assertEqual(self.room.publications(second['id']), [])
 
+    def test_threads_alias_correction_conflicts_and_release_preserve_history(self):
+        first = self.make_approved('threads')
+        second = self.make_approved('threads')
+        one = self.room.record_publication(first['id'], {'revision': first['revision'], 'position': 0,
+            'url': 'https://threads.com/t/First_123', 'idempotency_key': 'thread_correction_one'})
+        two = self.room.record_publication(second['id'], {'revision': second['revision'], 'position': 0,
+            'url': 'https://threads.com/@other/post/Second_456', 'idempotency_key': 'thread_correction_two'})
+        current = self.room.variant(first['id'])
+        with self.assertRaises(ValidationError):
+            self.room.correct_publication(one['id'], {'revision': current['revision'], 'reason': 'Kiểm tra alias',
+                'url': 'https://threads.net/@another/post/First_123'})
+        with self.assertRaises(Conflict) as caught:
+            self.room.correct_publication(one['id'], {'revision': current['revision'], 'reason': 'Kiểm tra trùng',
+                'url': 'https://threads.net/t/Second_456'})
+        self.assertEqual(caught.exception.target['publication_id'], two['id'])
+        unchanged = self.room.publications(first['id'])
+        self.assertEqual(len(unchanged), 1)
+        self.assertEqual(unchanged[0]['active'], 1)
+        self.assertEqual([event['action'] for event in unchanged[0]['events']], ['reported'])
+        replacement = self.room.correct_publication(one['id'], {'revision': current['revision'], 'reason': 'Sửa URL nhầm',
+            'url': 'https://threads.com/t/Third_789'})
+        history = self.room.publications(first['id'])
+        self.assertEqual([record['active'] for record in history], [0, 1])
+        self.assertEqual([event['action'] for event in history[0]['events']], ['reported', 'corrected'])
+        current = self.room.variant(first['id'])
+        self.room.correct_publication(replacement['replacement_id'], {'revision': current['revision'], 'reason': 'Hủy ghi nhận'})
+        third = self.make_approved('threads')
+        reused = self.room.record_publication(third['id'], {'revision': third['revision'], 'position': 0,
+            'url': 'https://threads.net/@account/post/Third_789', 'idempotency_key': 'thread_correction_reuse'})
+        self.assertEqual(reused['active'], 1)
+        self.assertTrue(self.room.variant(first['id'])['locked_at'])
+
     def test_platform_metrics_keep_optional_values_and_validate_without_partial_writes(self):
         variant = self.make_approved('x')
         record = self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
