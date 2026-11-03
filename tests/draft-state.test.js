@@ -13,6 +13,19 @@ test('pending bulletin action blocks editor, list and navigation and restores th
   assert.deepEqual(targets.map(target => target.inert), [false, false, true]);
 });
 
+test('opening a bulletin keeps its editor and list inert until the response arrives', async () => {
+  const editor = {inert: false};
+  const list = {inert: false};
+  let finish;
+  const pending = withInertTargets([editor, list], () => new Promise(resolve => { finish = resolve; }));
+  assert.equal(editor.inert, true);
+  assert.equal(list.inert, true);
+  finish('loaded');
+  assert.equal(await pending, 'loaded');
+  assert.equal(editor.inert, false);
+  assert.equal(list.inert, false);
+});
+
 function fields() {
   return {input: {value: ''}, link: {href: '', removeAttribute(name) { if (name === 'href') this.href = ''; }}};
 }

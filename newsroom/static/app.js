@@ -494,7 +494,7 @@ async function loadBulletinList() {
     const button = node('button', `draft-card${app.bulletin?.id === entry.id ? ' selected' : ''}`);
     button.append(node('strong', '', entry.title || `Bản tin #${entry.id}`),
       node('small', '', `${entry.edition_date} · ${entry.item_count} mục · v${entry.revision}`));
-    listen(button, 'click', async () => {
+    bulletinAction(button, async () => {
       if (app.bulletinDirty && !window.confirm('Bản tin có thay đổi chưa lưu. Bỏ thay đổi và mở bản khác?')) return;
       app.bulletin = await api(`/api/bulletins/${entry.id}`);
       app.bulletinDirty = false;
