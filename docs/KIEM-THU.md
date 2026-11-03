@@ -2,6 +2,8 @@
 
 ## Smoke test giao diện đa kênh 04/11/2026
 
+- Hồi quy lại trên commit `d17d2ad`: `rtk proxy python -B -m unittest discover -s tests` đạt 165/165; `rtk proxy node --test tests/draft-state.test.js tests/source-warnings.test.js tests/request-size.test.js tests/inbox-utils.test.js tests/correction-ui.test.js` đạt 33/33. Các kiểm thử này không thay thế smoke UI; lần kết nối công cụ điều khiển trình duyệt gần nhất hết thời gian chờ.
+
 - QA-02 / phản hồi đồng thời khi đổi kho: test handler giả trì hoãn khôi phục phiên, sau đó phát hiện đổi thư mục trước khi phản hồi cũ tới; mã trước sửa ẩn cảnh báo và thay token. Sau sửa, phản hồi muộn bị từ chối, cảnh báo và token cũ được giữ. Test riêng trì hoãn cập nhật trạng thái xác nhận cũng không áp dụng dữ liệu muộn sau cảnh báo. Hồi quy trước sửa 165 Python / 31 JavaScript, sau sửa 165 Python / 33 JavaScript. Chưa smoke UI hoặc kiểm tra DB khác cùng đường dẫn; không hủy request đã gửi.
 
 - QA-02 / bảo vệ đổi kho: test handler tái hiện cập nhật trạng thái nền nhận thư mục khác và ghi đè thư mục/token cũ; sau sửa, giữ trạng thái và nội dung, hiện cảnh báo và chặn POST tiếp theo cho tới khi tải lại. Khôi phục phiên cũng chặn khi phát hiện thư mục khác. Trước sửa 165 Python / 30 JavaScript, sau sửa 165 Python / 31 JavaScript đạt. Chưa thử giao diện thật; không phát hiện được thay thế DB cùng đường dẫn hoặc dừng request đã gửi.
