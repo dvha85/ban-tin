@@ -37,6 +37,9 @@ def restore(backup, destination):
     if target_dir.exists():
         raise ValueError('Chỉ khôi phục sang thư mục MỚI chưa tồn tại; không ghi đè dữ liệu hiện tại.')
     with closing(sqlite3.connect(source_path.as_uri() + '?mode=ro', uri=True)) as source:
+        # Keep validation and the subsequent SQLite backup on one read snapshot.
+        # Otherwise another connection can replace the data after validation.
+        source.execute('BEGIN')
         if source.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
             raise ValueError('Tệp sao lưu lỗi toàn vẹn.')
         version = source.execute('PRAGMA user_version').fetchone()[0]

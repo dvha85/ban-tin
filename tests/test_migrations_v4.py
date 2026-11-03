@@ -242,6 +242,40 @@ class MigrationV4Tests(unittest.TestCase):
         self.assertFalse((target / 'bantin.sqlite3').exists())
         self.assertTrue(any('Không dọn được' in note for note in caught.exception.__notes__))
 
+    def test_restore_copies_the_same_snapshot_that_was_validated(self):
+        article = self.room.import_article({'title': 'Nguồn ban đầu',
+            'url': 'https://example.com/restore-race', 'summary': 'Dữ liệu giả để thử.'})
+        backup = self.room.backup()
+        with closing(sqlite3.connect(backup)) as conn:
+            conn.execute('PRAGMA journal_mode=WAL')
+        target = self.directory / 'restore-consistent'
+        real_connect = sqlite3.connect
+
+        class ConcurrentSource:
+            def __init__(self, connection):
+                self.connection = connection
+
+            def __getattr__(self, name):
+                return getattr(self.connection, name)
+
+            def backup(self, destination):
+                with closing(real_connect(backup)) as writer:
+                    writer.execute('UPDATE articles SET title=? WHERE id=?', ('Thay đổi đồng thời', article['id']))
+                    writer.execute('PRAGMA user_version=99')
+                    writer.commit()
+                return self.connection.backup(destination)
+
+        def connect(path, *args, **kwargs):
+            connection = real_connect(path, *args, **kwargs)
+            return ConcurrentSource(connection) if kwargs.get('uri') else connection
+
+        with patch('newsroom.__main__.sqlite3.connect', side_effect=connect):
+            restore(backup, target)
+        with closing(real_connect(target / 'bantin.sqlite3')) as conn:
+            self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 4)
+            self.assertEqual(conn.execute('SELECT title FROM articles WHERE id=?', (article['id'],)).fetchone()[0],
+                             'Nguồn ban đầu')
+
 
 if __name__ == '__main__':
     unittest.main()
