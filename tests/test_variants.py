@@ -570,6 +570,26 @@ class VariantTests(unittest.TestCase):
         self.assertIsNone(metric['views'])
         self.assertEqual(metric['likes'], 0)
 
+    def test_threads_shorthand_and_permalink_share_post_identity(self):
+        self.assertEqual(normalize_post_url('threads', 'https://threads.net/t/AbC_12-3/?ref=test'),
+                         'https://www.threads.com/t/AbC_12-3')
+        for invalid in ('https://threads.com/t/', 'https://threads.com/t/abc/extra',
+                        'https://threads.com.evil.example/t/abc', 'https://threads.com/t/a%2Fb'):
+            with self.subTest(url=invalid), self.assertRaises(ValidationError):
+                normalize_post_url('threads', invalid)
+        for index, (first_path, second_path) in enumerate((
+            ('/t/AbC_12-3', '/@example/post/AbC_12-3'),
+            ('/@example/post/XyZ_456', '/t/XyZ_456'))):
+            first = self.make_approved('threads')
+            second = self.make_approved('threads')
+            record = self.room.record_publication(first['id'], {'revision': first['revision'], 'position': 0,
+                'url': 'https://threads.com' + first_path, 'idempotency_key': f'thread_first_{index}'})
+            with self.assertRaises(Conflict) as caught:
+                self.room.record_publication(second['id'], {'revision': second['revision'], 'position': 0,
+                    'url': 'https://threads.net' + second_path, 'idempotency_key': f'thread_second_{index}'})
+            self.assertEqual(caught.exception.target['publication_id'], record['id'])
+            self.assertEqual(self.room.publications(second['id']), [])
+
     def test_platform_metrics_keep_optional_values_and_validate_without_partial_writes(self):
         variant = self.make_approved('x')
         record = self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,

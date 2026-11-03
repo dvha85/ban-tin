@@ -69,14 +69,14 @@ Số liệu có thể gửi thêm `idempotency_key` gồm 8–100 ký tự ASCII
 | Kênh | Host và đường dẫn được mã hiện tại chấp nhận | Chuẩn hóa và so trùng |
 | --- | --- | --- |
 | Facebook | `facebook.com`, `www.facebook.com`, `m.facebook.com`; đường dẫn dạng `/page/posts/123`, `/share/p/abc`, hoặc `/permalink.php`, `/story.php` có `story_fbid` khác rỗng. | Host về `www.facebook.com`; bỏ query trừ `story_fbid` và `id` của hai đường dẫn PHP. So trùng theo đường dẫn không phân biệt hoa thường và query còn lại. |
-| Threads | `threads.net`, `www.threads.net`, `threads.com`, `www.threads.com`; dạng `/@user/post/abc`. | Host về `www.threads.com`, bỏ query; so trùng theo mã đoạn cuối. |
+| Threads | `threads.net`, `www.threads.net`, `threads.com`, `www.threads.com`; dạng `/@user/post/abc` hoặc `/t/abc` (mã rút gọn gồm chữ ASCII, số, `_`, `-`). | Host về `www.threads.com`, bỏ query; so trùng theo mã đoạn cuối giữa cả hai dạng. |
 | X | `x.com`, `www.x.com`, `twitter.com`, `www.twitter.com`; dạng `/user/status/123`, tên gồm 1–15 chữ ASCII, số hoặc `_`, mã bài là số. | Host về `x.com`, bỏ query; so trùng theo mã bài, kể cả khi tên tài khoản trong URL khác nhau. |
 
 Kiểm tra trùng bao gồm ghi nhận đa kênh đang hiệu lực và URL Facebook legacy mà validator nhận diện được. Hai URL Facebook khác dạng, chẳng hạn `/share/p/...` và `/page/posts/...`, có thể cùng dẫn đến một bài nhưng không được suy ra là trùng; URL legacy ngoài tập mẫu cũng không được đối chiếu. Không tự sửa dữ liệu cũ để xử lý các trường hợp này. Trước khi dùng cần đối soát thủ công, thu thập ví dụ được phép và xác minh alias trên nền tảng; không coi URL hợp lệ theo cú pháp là bằng chứng bài tồn tại hoặc đã đăng.
 
 Danh sách đối soát legacy riêng còn nhóm các URL ngoài validator khi host Facebook được nhận diện và đường dẫn/query giống nhau sau chuẩn hóa; không đồng nghĩa cơ chế chặn ghi nhận mới đã nhận diện các dạng này. URL không hợp lệ hoặc khác host được bỏ qua. Các alias khác dạng, query có ý nghĩa chưa rõ hoặc liên kết rút gọn có thể không được phát hiện.
 
-[Hướng dẫn X về URL bài đăng](https://help.x.com/en/using-x/post-and-moment-url) mô tả cách sao chép liên kết bài; [tài liệu X về Media Studio](https://help.x.com/en/using-x/media-studio-faqs) minh họa dạng `x.com/USERNAME/STATUS/postID`. Các nguồn này chưa xác nhận toàn bộ mẫu, alias hoặc phép so trùng ở trên. Chưa có bằng chứng chính thức đầy đủ cho Facebook và Threads trong lần rà soát này; BASE-03 vẫn mở.
+[Hướng dẫn X về URL bài đăng](https://help.x.com/en/using-x/post-and-moment-url) mô tả cách sao chép liên kết bài; [tài liệu X về Media Studio](https://help.x.com/en/using-x/media-studio-faqs) minh họa dạng `x.com/USERNAME/STATUS/postID`. [Meta Embeds](https://github.com/meta/meta-embeds-for-wordpress/blob/main/README.md) liệt kê hai dạng Threads `/@user/post/{shortcode}` và `/t/{shortcode}`, hỗ trợ hai tên miền và minh họa Facebook `/{user}/posts/{id}`; [Meta Newsroom](https://about.fb.com/news/2025/04/new-features-threads-web-experience/) mô tả việc chuyển Threads.net sang Threads.com. Đây là tài liệu về định dạng cho nhúng và tên miền, chưa chứng minh mọi URL hợp lệ, tính duy nhất của shortcode trên mọi ngữ cảnh hoặc bài có tồn tại; quy tắc so trùng theo shortcode là cách đối chiếu nội bộ. Chưa có bằng chứng đầy đủ cho mọi dạng Facebook/Threads; BASE-03 vẫn mở.
 
 ## Cấu trúc phản hồi thường dùng
 

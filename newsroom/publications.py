@@ -26,7 +26,8 @@ def normalize_post_url(platform, value):
         target_host = 'www.facebook.com'
     elif platform == 'threads':
         valid_host = host in ('threads.net', 'www.threads.net', 'threads.com', 'www.threads.com')
-        valid_path = bool(re.fullmatch(r'/@[^/]+/post/[^/]+', path))
+        valid_path = (bool(re.fullmatch(r'/@[^/]+/post/[^/]+', path)) or
+                      bool(re.fullmatch(r'/t/[A-Za-z0-9_-]+', path)))
         target_host = 'www.threads.com'
     elif platform == 'x':
         valid_host = host in ('x.com', 'www.x.com', 'twitter.com', 'www.twitter.com')
