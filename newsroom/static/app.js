@@ -460,6 +460,24 @@ function updateBulletinSelection() {
   $('create-bulletin').textContent = `Tạo bản tin từ tin đã chọn (${app.selectedArticles.size}/10)`;
   $('create-bulletin').disabled = app.selectedArticles.size === 0;
 }
+function bulletinAction(button, action) {
+  listen(button, 'click', async () => {
+    if (app.busy) throw new Error('Đang xử lý thao tác trước. Vui lòng chờ.');
+    app.busy = true;
+    const editor = $('bulletin-editor');
+    const nav = document.querySelector('.sidebar nav');
+    editor.inert = true;
+    nav.inert = true;
+    $('create-bulletin').disabled = true;
+    try { return await action(); }
+    finally {
+      app.busy = false;
+      editor.inert = false;
+      nav.inert = false;
+      updateBulletinSelection();
+    }
+  });
+}
 async function loadBulletinList() {
   const entries = await api('/api/bulletins');
   const list = $('bulletin-list');
@@ -506,7 +524,7 @@ function renderBulletin() {
   const intro = bulletinField('Lời mở', bulletin.introduction, true);
   const conclusion = bulletinField('Lời kết', bulletin.conclusion, true);
   const save = node('button', 'button primary', 'Lưu thông tin bản tin');
-  listen(save, 'click', async () => {
+  bulletinAction(save, async () => {
     if (hasPendingBulletinUrl() || (app.bulletinDirty && [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el.dataset.dirty === 'true')))
       throw new Error('Hãy lưu hoặc bỏ thay đổi ở mục tin trước.');
     app.bulletin = await api(`/api/bulletins/${bulletin.id}/save`, {revision: bulletin.revision,
@@ -536,7 +554,7 @@ function renderBulletin() {
     section.addEventListener('change', () => { app.bulletinDirty = true; section.dataset.dirty = 'true'; });
     const actions = node('div', 'action-row');
     const saveItem = node('button', 'button secondary', 'Lưu mục');
-    listen(saveItem, 'click', async () => {
+    bulletinAction(saveItem, async () => {
       if (hasPendingBulletinUrl() || top.dataset.dirty === 'true' || [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el !== section && el.dataset.dirty === 'true'))
         throw new Error('Hãy lưu hoặc bỏ thay đổi ở các phần khác trước.');
       const data = {bulletin_revision: bulletin.revision, revision: item.revision, verified: verified.checked};
@@ -547,7 +565,7 @@ function renderBulletin() {
     actions.append(saveItem);
     const addSource = node('button', 'button secondary', 'Bổ sung nguồn');
     addSource.disabled = item.sources.length >= 3;
-    listen(addSource, 'click', async () => {
+    bulletinAction(addSource, async () => {
       if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi bổ sung nguồn.');
       const url = window.prompt('Liên kết nguồn HTTPS:'); if (url === null) return;
       const title = window.prompt('Tiêu đề nguồn:', ''); if (title === null) return;
@@ -559,7 +577,7 @@ function renderBulletin() {
     actions.append(addSource);
     const remove = node('button', 'button secondary', 'Bỏ mục khỏi bản tin');
     remove.disabled = bulletin.items.length <= 1;
-    listen(remove, 'click', async () => {
+    bulletinAction(remove, async () => {
       if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi bỏ mục.');
       if (!window.confirm(`Bỏ mục “${item.title}” khỏi bản tin này?`)) return;
       app.bulletin = await api(`/api/bulletins/${bulletin.id}/items`, {revision: bulletin.revision, remove_item_id: item.id});
@@ -568,7 +586,7 @@ function renderBulletin() {
     actions.append(remove);
     for (const [label, delta] of [['↑', -1], ['↓', 1]]) {
       const move = node('button', 'button secondary', label); move.disabled = position + delta < 0 || position + delta >= bulletin.items.length;
-      listen(move, 'click', async () => {
+      bulletinAction(move, async () => {
         if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi đổi thứ tự.');
         const ids = bulletin.items.map(row => row.id);
         [ids[position], ids[position + delta]] = [ids[position + delta], ids[position]];
@@ -593,7 +611,7 @@ function renderBulletin() {
       const option = node('option', '', article.title); option.value = article.id; select.append(option);
     }
     const addItem = node('button', 'button secondary', 'Thêm tin vào bản tin');
-    listen(addItem, 'click', async () => {
+    bulletinAction(addItem, async () => {
       if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi thêm mục.');
       const article = candidates.find(row => row.id === Number(select.value));
       const chosen = chooseBulletinSources(article);
@@ -626,7 +644,7 @@ async function renderVariants(container, bulletin) {
   }
   const create = node('button', 'button secondary', 'Tạo phiên bản');
   const area = node('div', 'variant-editor');
-  listen(create, 'click', async () => {
+  bulletinAction(create, async () => {
     if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi tạo phiên bản.');
     const variant = await api(`/api/bulletins/${bulletin.id}/variants`, {platform: platform.value,
       account_label: '', bulletin_revision: bulletin.revision});
@@ -700,7 +718,7 @@ async function renderVariants(container, bulletin) {
   const collect = () => [...segmentList.children].map(block => block.collect());
   const actions = node('div', 'action-row');
   const save = node('button', 'button secondary', 'Lưu phiên bản'); save.disabled = locked;
-  listen(save, 'click', async () => {
+  bulletinAction(save, async () => {
     if (hasPendingBulletinUrl() || container.previousElementSibling?.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
       throw new Error('Hãy lưu các phần bản tin khác trước.');
     const saved = await api(`/api/variants/${variant.id}/save`, {revision: variant.revision, account_label: account.input.value,
@@ -727,7 +745,7 @@ async function renderVariants(container, bulletin) {
     } finally { area.inert = false; }
   });
   const approve = node('button', 'button primary', 'Duyệt phiên bản'); approve.disabled = locked;
-  listen(approve, 'click', async () => {
+  bulletinAction(approve, async () => {
     if (app.bulletinDirty) throw new Error('Hãy lưu phiên bản và xác nhận 5 mục trước khi duyệt.');
     await api(`/api/variants/${variant.id}/approve`, {revision: variant.revision}); renderBulletin();
     toast('Đã duyệt phiên bản; ứng dụng chưa đăng bài.');
@@ -744,7 +762,7 @@ async function renderVariants(container, bulletin) {
       `Lịch sử theo policy ${result.policy_version}; không xem là bản sẵn sàng đăng khi quy tắc hiện hành đã thay đổi.`, null, false);
   });
   const clone = node('button', 'button secondary', 'Tạo bản sao');
-  listen(clone, 'click', async () => {
+  bulletinAction(clone, async () => {
     if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi tạo bản sao.');
     const result = await api(`/api/variants/${variant.id}/clone`, {revision: variant.revision}); app.variantId = result.id; renderBulletin();
   });
@@ -790,7 +808,7 @@ async function renderVariantPublication(area, variant) {
         block.append(details);
       }
       const addMetrics = node('button', 'button secondary', 'Nhập số liệu');
-      listen(addMetrics, 'click', async () => {
+      bulletinAction(addMetrics, async () => {
         if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi nhập số liệu.');
         const values = window.prompt('Nhập 6 số nguyên cách nhau bằng dấu phẩy theo thứ tự: lượt xem, thích, lưu, chia sẻ, theo dõi mới, phút chuẩn bị. Để trống giá trị chưa biết.', ',,,,,');
         if (values === null) return;
@@ -808,7 +826,7 @@ async function renderVariantPublication(area, variant) {
         renderBulletin(); toast('Đã lưu số liệu do bạn nhập.');
       });
       const correct = node('button', 'button secondary', 'Đính chính liên kết');
-      listen(correct, 'click', async () => {
+      bulletinAction(correct, async () => {
         if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi đính chính.');
         const reason = window.prompt('Lý do đính chính (ít nhất 5 ký tự):'); if (reason === null) return;
         const url = window.prompt('Liên kết thay thế. Để trống để hủy ghi nhận:', existing.url); if (url === null) return;
@@ -820,7 +838,7 @@ async function renderVariantPublication(area, variant) {
     } else {
       const url = node('input'); url.type = 'url'; url.placeholder = 'Liên kết bài đã tự đăng'; url.dataset.publicationUrl = 'true';
       const report = node('button', 'button secondary', 'Ghi nhận đã đăng');
-      listen(report, 'click', async () => {
+      bulletinAction(report, async () => {
         if (hasPendingBulletinUrl(url) || area.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
           throw new Error('Hãy lưu các thay đổi khác trước khi ghi nhận.');
         const value = url.value.trim(); if (!value) throw new Error('Hãy nhập liên kết bài đã đăng.');
@@ -860,7 +878,7 @@ function chooseBulletinSources(article) {
     throw new Error('Hãy chọn 1–3 số nguồn khác nhau.');
   return indexes.map(value => article.sources[Number(value) - 1].url);
 }
-listen($('create-bulletin'), 'click', async () => {
+bulletinAction($('create-bulletin'), async () => {
   if (!app.selectedArticles.size) return;
   if (app.bulletinDirty && !window.confirm('Bản tin đang mở có thay đổi chưa lưu. Bỏ thay đổi và tạo bản mới?')) return;
   const sourceSelection = {};
