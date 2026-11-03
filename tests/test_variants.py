@@ -87,6 +87,52 @@ class VariantTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             self.room.export_variant(variant['id'])
 
+    def test_clone_preserves_all_text_when_parent_loses_an_item(self):
+        variant = self.make_approved('x', two=True)
+        record = self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
+            'url': 'https://x.com/test/status/789', 'idempotency_key': 'clone_test_789'})
+        current = self.room.variant(variant['id'])
+        changed = self.room.change_bulletin_items(self.bulletin['id'], {'revision': self.bulletin['revision'],
+            'remove_item_id': self.bulletin['items'][1]['id']})
+        clone = self.room.clone_variant(variant['id'], {'revision': current['revision']})
+        self.assertEqual([s['text'] for s in clone['segments']], [s['text'] for s in variant['segments']])
+        self.assertEqual(clone['segments'][1]['item_ids'], [])
+        self.assertTrue(clone['attribution_review_required'])
+        with self.assertRaises(ValidationError):
+            self.room.approve_variant(clone['id'], {'revision': clone['revision']})
+        with self.assertRaisesRegex(ValidationError, 'kiểm tra lại'):
+            self.room.save_variant(clone['id'], {'revision': clone['revision']})
+        item = changed['items'][0]
+        reassigned = [{**segment, 'item_ids': [item['id']],
+                       'source_ids': [item['sources'][0]['source_id']]} for segment in clone['segments']]
+        saved = self.room.save_variant(clone['id'], {'revision': clone['revision'], 'segments': reassigned,
+                                                      'attribution_reviewed': True})
+        self.assertFalse(saved.get('attribution_review_required', False))
+        self.assertEqual([s['text'] for s in saved['segments']], [s['text'] for s in variant['segments']])
+        self.assertEqual(self.room.publications(variant['id'])[0]['id'], record['id'])
+
+    def test_clone_requires_review_when_a_selected_source_was_removed(self):
+        item = self.bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(self.bulletin['id'], item['id'], {
+            'bulletin_revision': self.bulletin['revision'], 'revision': item['revision'],
+            'add_source': {'url': 'https://example.org/second', 'title': 'Nguồn thứ hai', 'summary': 'Ghi chú'}})
+        item = bulletin['items'][0]
+        source_id = item['sources'][1]['source_id']
+        variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+            'platform': 'facebook', 'account_label': 'Trang thử'})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+            'segments': [{'text': 'Giữ nguyên đoạn này.', 'item_ids': [item['id']], 'source_ids': [source_id]}]})
+        self.room.save_bulletin_item(bulletin['id'], item['id'], {'bulletin_revision': bulletin['revision'],
+            'revision': item['revision'], 'remove_source_id': source_id})
+        current = self.room.variant(variant['id'])
+        clone = self.room.clone_variant(variant['id'], {'revision': current['revision']})
+        self.assertTrue(clone['attribution_review_required'])
+        self.assertEqual(clone['segments'][0]['text'], 'Giữ nguyên đoạn này.')
+        self.assertEqual(clone['segments'][0]['item_ids'], [item['id']])
+        self.assertEqual(clone['segments'][0]['source_ids'], [])
+        with self.assertRaises(ValidationError):
+            self.room.save_variant(clone['id'], {'revision': clone['revision'], 'attribution_reviewed': True})
+
     def test_noop_saves_do_not_revoke_approval(self):
         variant = self.make_approved('threads')
         same_bulletin = self.room.save_bulletin(self.bulletin['id'], {'revision': self.bulletin['revision']})

@@ -69,13 +69,28 @@ class VariantMixin:
             original = self._locked_variant(conn, variant_id, data.get('revision'))
             bulletin = self._bulletin(conn, original['bulletin_id'])
             account = _text(data.get('account_label', original['account_label']), 'Tên tài khoản / Page', 120)
-            # A clone may refer to items removed since publication; require the editor
-            # to choose current items rather than silently attributing old sources.
-            item_ids = {item['id'] for item in bulletin['items']}
-            segments = original['segments']
-            if any(any(item_id not in item_ids for item_id in segment['item_ids']) for segment in segments):
-                segments = [{'text': '', 'item_ids': [item['id'] for item in bulletin['items']]}]
-            payload = {'segments': segments, 'checks': {key: False for key in CHECKS}}
+            # Preserve every segment's text. A parent edit may have removed an item
+            # or source; never silently substitute another attribution for it.
+            items = {item['id']: item for item in bulletin['items']}
+            parent_changed = original['bulletin_revision'] != bulletin['revision']
+            review = bool(original.get('attribution_review_required'))
+            segments = []
+            for old in original['segments']:
+                retained = [item_id for item_id in old['item_ids'] if item_id in items]
+                available = list(dict.fromkeys(source['source_id'] for item_id in retained
+                                               for source in items[item_id]['sources']))
+                old_sources = old.get('source_ids')
+                if old_sources is None:
+                    # Implicit "all sources" can mean something different after an edit.
+                    sources = [] if parent_changed else available
+                    review |= parent_changed
+                else:
+                    sources = [source_id for source_id in old_sources if source_id in available]
+                    review |= len(sources) != len(old_sources)
+                review |= len(retained) != len(old['item_ids'])
+                segments.append({**old, 'item_ids': retained, 'source_ids': sources})
+            payload = {'segments': segments, 'checks': {key: False for key in CHECKS},
+                       'attribution_review_required': review}
             at = _now()
             new_id = conn.execute('''INSERT INTO content_variants
                 (bulletin_id,platform,account_label,revision,bulletin_revision,status,payload,created_at,updated_at)
@@ -95,12 +110,15 @@ class VariantMixin:
             bulletin = self._bulletin(conn, current['bulletin_id'])
             if current['needs_update'] and data.get('adopt_bulletin_revision') is not True:
                 raise Conflict('Bản tin gốc đã đổi. Hãy kiểm tra lại và xác nhận cập nhật phiên bản này.')
+            if current.get('attribution_review_required') and data.get('attribution_reviewed') is not True:
+                raise ValidationError('Hãy kiểm tra lại các mục và nguồn của bản sao rồi xác nhận trước khi lưu.')
             account = _text(data.get('account_label', current['account_label']), 'Tên tài khoản / Page', 120)
             segments = data.get('segments', current['segments'])
             # Validate structure and attribution; text can remain empty while editing.
             render_segments(current['platform'], segments, bulletin)
             checks = current['checks']
-            changed = account != current['account_label'] or segments != current['segments'] or current['needs_update']
+            changed = (account != current['account_label'] or segments != current['segments'] or
+                       current['needs_update'] or current.get('attribution_review_required', False))
             if changed:
                 checks = {key: False for key in CHECKS}
             elif 'checks' in data:
@@ -145,6 +163,8 @@ class VariantMixin:
             variant = self._locked_variant(conn, variant_id, data.get('revision'))
             if variant['locked_at'] is not None or variant['needs_update']:
                 raise Conflict('Phiên bản đã khóa hoặc bản tin gốc đã thay đổi.')
+            if variant.get('attribution_review_required'):
+                raise ValidationError('Bản sao cần được kiểm tra lại mục và nguồn trước khi duyệt.')
             bulletin = self._bulletin(conn, variant['bulletin_id'])
             rendered = render_segments(variant['platform'], variant['segments'], bulletin)
             if not variant['account_label'] or not rendered['valid']:

@@ -434,6 +434,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | DIG-01/02 | Đang làm | Cảnh báo tin đã dùng, cho phép chọn lại; test backend và smoke tạo/thêm trên kho thử | Kiểm tra các tiêu chí chọn lọc, đồng thời và nguồn còn lại |
 | 03/11/2026 | NEWS-06 | Đang làm | Bổ sung kiểm tra 128.000 byte UTF-8 ở UI trước gửi; test JSON đúng ngưỡng/vượt một byte và Unicode | Smoke lỗi request qua giao diện |
 | 03/11/2026 | NEWS-02/05/06 | Đang làm | Thêm xóa lựa chọn, đếm tin đã chọn đang ẩn, lọc số ngày tùy chọn và nhãn loại ngày; smoke trên kho thử. Packet tính cả hướng dẫn trong 64 KiB và chỉ ra mục lớn, test biên Unicode | Bổ sung kiểm tra UI ngày tương lai/unknown và smoke lỗi packet |
+| 03/11/2026 | FMT-01/APR-02 | Đang làm | Sửa mất nội dung khi clone bản có mục đã bị bỏ: giữ các đoạn, không tự gán nguồn thay thế, yêu cầu kiểm tra; test mất mục/nguồn và smoke trên kho thử | Tiếp tục kiểm tra các trường hợp thay đổi policy và đối chiếu nguồn |
 | 03/11/2026 | QA/DOC/PILOT/REL | Đang làm | 114/114 Python, 2/2 JS; Edge tải `.txt` một đoạn và đối chiếu nội dung/nguồn; đã cập nhật tài liệu cho nhánh phát triển | Clipboard thật, QA còn lại, ba pilot và quyết định kho vận hành vẫn chưa có |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.

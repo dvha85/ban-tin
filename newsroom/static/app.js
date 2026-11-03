@@ -749,6 +749,11 @@ async function renderVariants(container, bulletin) {
   if (variant.needs_update) {
     const row = node('label', 'bulletin-check'); row.append(adopt, document.createTextNode(' Tôi đã kiểm tra lại theo bản tin mới')); area.append(row);
   }
+  const attributionReview = node('input'); attributionReview.type = 'checkbox'; attributionReview.disabled = locked;
+  if (variant.attribution_review_required) {
+    area.append(node('p', 'notice warning', 'Bản sao giữ nguyên nội dung, nhưng một số mục hoặc nguồn đã thay đổi. Hãy chọn và đối chiếu lại nguồn cho từng đoạn.'));
+    const row = node('label', 'bulletin-check'); row.append(attributionReview, document.createTextNode(' Tôi đã kiểm tra lại các mục và nguồn của bản sao')); area.append(row);
+  }
   area.addEventListener('input', event => { if (!event.target.dataset.publicationUrl) { app.bulletinDirty = true; area.dataset.dirty = 'true'; } });
   area.addEventListener('change', event => { if (!event.target.dataset.publicationUrl) { app.bulletinDirty = true; area.dataset.dirty = 'true'; } });
   const collect = () => [...segmentList.children].map(block => block.collect());
@@ -759,7 +764,7 @@ async function renderVariants(container, bulletin) {
       throw new Error('Hãy lưu các phần bản tin khác trước.');
     const saved = await api(`/api/variants/${variant.id}/save`, {revision: variant.revision, account_label: account.input.value,
       segments: collect(), checks: Object.fromEntries(Object.entries(checks).map(([key, value]) => [key, value.checked])),
-      adopt_bulletin_revision: adopt.checked});
+      adopt_bulletin_revision: adopt.checked, attribution_reviewed: attributionReview.checked});
     app.variantId = saved.id; app.bulletinDirty = false; renderBulletin();
     toast('Đã lưu. Nếu vừa sửa nội dung, hãy xác nhận lại 5 mục kiểm tra và lưu lần nữa.');
   });
