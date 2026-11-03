@@ -116,6 +116,8 @@ class PublicationMixin:
         snapshot = self._approved_variant(conn, variant, archive=True)
         count = conn.execute('SELECT COUNT(*) FROM publications WHERE variant_id=? AND approval_id=? AND active=1',
                              (variant_id, approval_id)).fetchone()[0]
+        if count == 0:
+            return 'approved'
         return 'recorded' if count == len(snapshot['rendered']['posts']) else 'partially_recorded'
 
     def record_publication(self, variant_id, data):

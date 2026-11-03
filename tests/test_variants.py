@@ -371,6 +371,52 @@ class VariantTests(unittest.TestCase):
         with self.assertRaises(Conflict):
             self.room.save_variant(variant['id'], {'revision': current['revision']})
 
+    def test_cancel_all_preserves_lock_and_history_and_can_record_again(self):
+        variant = self.make_approved('x', two=True)
+        records = []
+        for position in range(2):
+            current = self.room.variant(variant['id'])
+            records.append(self.room.record_publication(variant['id'], {'revision': current['revision'],
+                'position': position, 'url': f'https://x.com/test/status/{100 + position}',
+                'idempotency_key': f'cancel_test_{position}'}))
+        locked_at = self.room.variant(variant['id'])['locked_at']
+        for position, record in enumerate(records):
+            current = self.room.variant(variant['id'])
+            self.room.correct_publication(record['id'], {'revision': current['revision'], 'reason': 'Nhập nhầm liên kết'})
+            current = self.room.variant(variant['id'])
+            self.assertEqual(current['status'], 'partially_recorded' if position == 0 else 'approved')
+            self.assertEqual(current['publication_progress'], {'active': 1 - position, 'total': 2})
+            self.assertEqual(current['locked_at'], locked_at)
+        with self.assertRaises(Conflict):
+            self.room.save_variant(variant['id'], {'revision': current['revision']})
+        history = self.room.publications(variant['id'])
+        self.assertEqual([event['action'] for event in history[0]['events']], ['reported', 'cancelled'])
+        with self.room.connection() as conn:
+            conn.execute("UPDATE content_variants SET status='partially_recorded' WHERE id=?", (variant['id'],))
+        restarted = Newsroom(Path(self.temp.name))
+        current = restarted.variant(variant['id'])
+        self.assertEqual(current['publication_progress'], {'active': 0, 'total': 2})
+        replacement = restarted.record_publication(variant['id'], {'revision': current['revision'], 'position': 0,
+            'url': 'https://x.com/test/status/100', 'idempotency_key': 'cancel_test_retry'})
+        self.assertNotEqual(replacement['id'], records[0]['id'])
+        self.assertEqual(restarted.variant(variant['id'])['publication_progress'], {'active': 1, 'total': 2})
+
+    def test_policy_change_after_partial_recording_preserves_snapshot(self):
+        variant = self.make_approved('x', two=True)
+        archive = self.room.export_variant(variant['id'], archive=True)
+        self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
+            'url': 'https://x.com/test/status/301', 'idempotency_key': 'policy_partial_1'})
+        self.room.save_bulletin(self.bulletin['id'], {'revision': self.bulletin['revision'], 'title': 'Bản sửa'})
+        with patch('newsroom.variants.POLICY_VERSION', 'future-policy'):
+            current = self.room.variant(variant['id'])
+            with self.assertRaises(ValidationError):
+                self.room.export_variant(variant['id'])
+            self.assertEqual(self.room.export_variant(variant['id'], archive=True), archive)
+            self.room.record_publication(variant['id'], {'revision': current['revision'], 'position': 1,
+                'url': 'https://x.com/test/status/302', 'idempotency_key': 'policy_partial_2'})
+            self.assertEqual(self.room.variant(variant['id'])['status'], 'recorded')
+            self.assertEqual(self.room.export_variant(variant['id'], archive=True), archive)
+
     def test_social_url_validation_and_manual_metrics(self):
         for url in ('https://x.com/', 'https://x.com/person', 'https://x.com.evil.example/person/status/123',
                     'https://user:pass@x.com/a/status/123', 'http://x.com/a/status/123'):

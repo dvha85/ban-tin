@@ -703,13 +703,22 @@ function renderBulletin() {
   editor.append(variants);
   renderVariants(variants, bulletin).catch(error => toast(error.message, true));
 }
+function variantStatus(variant) {
+  const progress = variant.publication_progress;
+  if (progress) {
+    const label = progress.active === 0 ? 'Chưa có đoạn ghi nhận hiệu lực' :
+      progress.active === progress.total ? 'Đã ghi nhận đủ' : 'Đã ghi nhận một phần';
+    return `${label} (${progress.active}/${progress.total})`;
+  }
+  return variant.status === 'draft' ? 'Bản nháp' : variant.status;
+}
 async function renderVariants(container, bulletin) {
   const variants = await api(`/api/bulletins/${bulletin.id}/variants`);
   if (!container.isConnected) return;
   const selector = node('select');
   const placeholder = node('option', '', 'Chọn phiên bản'); placeholder.value = ''; selector.append(placeholder);
   variants.forEach(variant => {
-    const option = node('option', '', `${variant.platform.toUpperCase()} · ${variant.account_label || '(chưa đặt tên)'} · ${variant.status}`);
+    const option = node('option', '', `${variant.platform.toUpperCase()} · ${variant.account_label || '(chưa đặt tên)'} · ${variantStatus(variant)}`);
     option.value = variant.id; selector.append(option);
   });
   selector.value = variants.some(variant => variant.id === app.variantId) ? String(app.variantId) : '';
@@ -743,7 +752,7 @@ async function renderVariants(container, bulletin) {
   const displaySegments = locked ? history.rendered_posts.map(post => ({text: post.body, item_ids: post.item_ids, source_ids: post.source_ids})) : variant.segments;
   const account = bulletinField('Tên tài khoản / Page', locked ? history.account_label : variant.account_label);
   account.input.disabled = locked;
-  area.append(node('p', 'small-note', `Trạng thái: ${variant.status}${variant.needs_update ? ' · Bản tin gốc đã đổi, cần kiểm tra lại' : ''}${locked ? ` · Mục và nguồn theo bản duyệt lịch sử (${history.policy_version})` : ''}`), account.wrapper);
+  area.append(node('p', 'small-note', `Trạng thái: ${variantStatus(variant)}${variant.needs_update ? ' · Bản tin gốc đã đổi, cần kiểm tra lại' : ''}${locked ? ` · Đã khóa do từng ghi nhận · Mục và nguồn theo bản duyệt lịch sử (${history.policy_version})` : ''}`), account.wrapper);
   if (variant.policy_stale && !locked)
     area.append(node('p', 'notice warning', 'Quy tắc đầu ra đã đổi. Hãy lưu phiên bản để bỏ các xác nhận cũ, sau đó kiểm tra và xác nhận lại trước khi duyệt.'));
   const segmentList = node('div');

@@ -25,6 +25,7 @@ class VariantMixin:
         parent = conn.execute('SELECT revision FROM bulletins WHERE id=?', (result['bulletin_id'],)).fetchone()
         result['needs_update'] = result['locked_at'] is None and result['bulletin_revision'] != parent['revision']
         result['policy_stale'] = False
+        result['publication_progress'] = None
         if result['approval_id'] is not None:
             approval = conn.execute('SELECT snapshot FROM variant_approvals WHERE id=? AND variant_id=?',
                                     (result['approval_id'], variant_id)).fetchone()
@@ -32,6 +33,13 @@ class VariantMixin:
                 snapshot = json.loads(approval['snapshot'])
                 result['policy_stale'] = (snapshot.get('policy_version') != POLICY_VERSION or
                                           snapshot.get('renderer_version') != RENDERER_VERSION)
+                active = conn.execute('''SELECT COUNT(*) FROM publications
+                    WHERE variant_id=? AND approval_id=? AND active=1''',
+                    (variant_id, result['approval_id'])).fetchone()[0]
+                result['publication_progress'] = {'active': active, 'total': len(snapshot['rendered']['posts'])}
+                # Older databases can retain partial status after the last cancellation.
+                if result['locked_at'] and active == 0 and result['status'] == 'partially_recorded':
+                    result['status'] = 'approved'
         return result
 
     def variant(self, variant_id):
