@@ -460,6 +460,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | APR-03 / QA-02 | Đang làm | Smoke bản X hợp lệ sau sửa: nút copy báo thành công | Công cụ báo clipboard ảo không có dữ liệu khi thử dán; chưa xác nhận nội dung clipboard thực tế hoặc fallback từ chối quyền |
 | 03/11/2026 | BASE-02 / NEWS-01 | Đang làm | Test kho giả xác nhận 10/11 mục, 3/4 nguồn mỗi mục và 20/21 URL khác nhau; URL dùng chung không tăng số URL, trường hợp bị từ chối không lưu dở, mở lại kho giữ dữ liệu | Chưa nghiệm thu mọi giới hạn qua giao diện hoặc hoàn tất hợp đồng API |
 | 03/11/2026 | DIG-01 / QA-02 | Đang làm | Chụp danh sách ID một lần cho toàn lượt tạo bản tin; khóa thêm Hộp tin khi thao tác đang chờ và chỉ bỏ lựa chọn thuộc lượt tạo thành công. Smoke Edge trên kho tạm, service tạo chậm 35 giây: chọn tin B, thử chọn A trong lúc chờ, bản tin kết quả chỉ có B | Test helper và hồi quy đạt; chưa thử mọi đường lỗi và thao tác bàn phím trong lúc chờ |
+| 03/11/2026 | NEWS-06 / BASE-02 | Đang làm | Test HTTP tạo bản tin bằng JSON UTF-8 đúng 128.000 byte trả 201; vượt một byte trả 413, không tạo thêm hoặc sửa bản tin. Bộ hồi quy 145/145 Python và 10/10 JS đạt | Đệm bằng trường không sử dụng; chưa smoke yêu cầu quá ngưỡng qua UI hoặc hoàn tất hợp đồng API |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 

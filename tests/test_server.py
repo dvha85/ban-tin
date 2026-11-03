@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from newsroom.server import make_server
+from newsroom.server import MAX_BODY, make_server
 from newsroom.service import Newsroom
 
 
@@ -80,6 +80,39 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.request('POST', '/api/articles/import', {'summary': 'x' * 130_000}, headers)[0], 413)
         unicode_token = dict(headers, **{'X-CSRF-Token': '\u00e9'})
         self.assertEqual(self.request('POST', '/api/backup', {}, unicode_token)[0], 403)
+
+    def test_bulletin_request_utf8_size_boundary_over_http(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin kiểm tra giới hạn',
+            'url': 'https://example.com/byte-boundary', 'summary': 'Nguồn thử.'})
+        payload = {'article_ids': [article['id']], 'title': 'Bản tin tiếng Việt 😀', 'padding': 'é'}
+        encode = lambda value: json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+        payload['padding'] += 'x' * (MAX_BODY - len(encode(payload)))
+        exact = encode(payload)
+        self.assertEqual(len(exact), MAX_BODY)
+
+        def post(body):
+            conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=5)
+            try:
+                conn.request('POST', '/api/bulletins', body, headers)
+                response = conn.getresponse()
+                return response.status, response.read()
+            finally:
+                conn.close()
+
+        status, body = post(exact)
+        self.assertEqual(status, 201)
+        created = json.loads(body)
+        self.assertEqual(created['title'], payload['title'])
+        self.assertEqual([item['article_id'] for item in created['items']], [article['id']])
+        payload['padding'] += 'x'
+        over = encode(payload)
+        self.assertEqual(len(over), MAX_BODY + 1)
+        status, _ = post(over)
+        self.assertEqual(status, 413)
+        self.assertEqual(self.room.bulletin(created['id']), created)
+        with self.room.connection() as conn:
+            self.assertEqual(conn.execute('SELECT COUNT(*) FROM bulletins').fetchone()[0], 1)
 
     def test_json_rejects_unpaired_surrogates_without_saving_and_accepts_emoji(self):
         headers = self.session()
