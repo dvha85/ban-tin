@@ -718,6 +718,10 @@ class VariantTests(unittest.TestCase):
     def test_threads_shorthand_and_permalink_share_post_identity(self):
         self.assertEqual(normalize_post_url('threads', 'https://threads.net/t/AbC_12-3/?ref=test'),
                          'https://www.threads.com/t/AbC_12-3')
+        # Characterization: the full permalink has a broader pattern than /t/.
+        # Acceptance here does not establish that Meta recognizes the URL.
+        self.assertEqual(normalize_post_url('threads', 'https://threads.net/@user/post/a%2Fb'),
+                         'https://www.threads.com/@user/post/a%2Fb')
         for invalid in ('https://threads.com/t/', 'https://threads.com/t/abc/extra',
                         'https://threads.com.evil.example/t/abc', 'https://threads.com/t/a%2Fb'):
             with self.subTest(url=invalid), self.assertRaises(ValidationError):

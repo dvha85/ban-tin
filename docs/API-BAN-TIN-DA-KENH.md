@@ -72,10 +72,12 @@ Số liệu có thể gửi thêm `idempotency_key` gồm 8–100 ký tự ASCII
 | Kênh | Host và đường dẫn được mã hiện tại chấp nhận | Chuẩn hóa và so trùng |
 | --- | --- | --- |
 | Facebook | `facebook.com`, `www.facebook.com`, `m.facebook.com`; đường dẫn dạng `/page/posts/123`, `/share/p/abc`, hoặc `/permalink.php`, `/story.php` có `story_fbid` khác rỗng. | Host về `www.facebook.com`; bỏ query trừ `story_fbid` và `id` của hai đường dẫn PHP. So trùng theo đường dẫn không phân biệt hoa thường và query còn lại. |
-| Threads | `threads.net`, `www.threads.net`, `threads.com`, `www.threads.com`; dạng `/@user/post/abc` hoặc `/t/abc` (mã rút gọn gồm chữ ASCII, số, `_`, `-`). | Host về `www.threads.com`, bỏ query; so trùng theo mã đoạn cuối giữa cả hai dạng. |
+| Threads | `threads.net`, `www.threads.net`, `threads.com`, `www.threads.com`; dạng `/@user/post/abc` hoặc `/t/abc`. Với `/t/`, đoạn mã chỉ gồm chữ ASCII, số, `_`, `-`; dạng `/@user/post/...` hiện chấp nhận mọi đoạn không rỗng không chứa dấu `/` trực tiếp, kể cả chuỗi mã hóa phần trăm như `a%2Fb`. | Host về `www.threads.com`, bỏ query; so trùng theo chuỗi đoạn cuối nguyên dạng giữa cả hai dạng, không giải mã phần trăm. Không suy ra các cách mã hóa khác nhau là cùng bài. |
 | X | `x.com`, `www.x.com`, `twitter.com`, `www.twitter.com`; dạng `/user/status/123`, tên gồm 1–15 chữ ASCII, số hoặc `_`, mã bài là số. | Host về `x.com`, bỏ query; so trùng theo mã bài, kể cả khi tên tài khoản trong URL khác nhau. |
 
 Kiểm tra trùng bao gồm ghi nhận đa kênh đang hiệu lực và URL Facebook legacy mà validator nhận diện được. Hai URL Facebook khác dạng, chẳng hạn `/share/p/...` và `/page/posts/...`, có thể cùng dẫn đến một bài nhưng không được suy ra là trùng; URL legacy ngoài tập mẫu cũng không được đối chiếu. Không tự sửa dữ liệu cũ để xử lý các trường hợp này. Trước khi dùng cần đối soát thủ công, thu thập ví dụ được phép và xác minh alias trên nền tảng; không coi URL hợp lệ theo cú pháp là bằng chứng bài tồn tại hoặc đã đăng.
+
+Đặc biệt, mẫu Threads đầy đủ hiện rộng hơn mẫu `/t/`; một URL được chấp nhận có thể không phải URL bài hợp lệ trên Meta, và các cách biểu diễn phần trăm có thể không được nhận là trùng. Cần kiểm tra thủ công trên nền tảng. Không tự siết mẫu hoặc viết lại bản ghi cũ khi chưa xác minh tác động tới URL đã lưu.
 
 Danh sách đối soát legacy riêng còn nhóm các URL ngoài validator khi host Facebook được nhận diện và đường dẫn/query giống nhau sau chuẩn hóa; không đồng nghĩa cơ chế chặn ghi nhận mới đã nhận diện các dạng này. URL không hợp lệ hoặc khác host được bỏ qua. Các alias khác dạng, query có ý nghĩa chưa rõ hoặc liên kết rút gọn có thể không được phát hiện.
 
