@@ -501,6 +501,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | MIG-04 / QA-03 | Đang làm | Thêm kiểm tra bảng/cột legacy cần thiết trong backup schema 4; test restore từ fixture schema 3 và schema 1/2 mô phỏng đã nâng cấp giữ xuất legacy; Python 161/161, JS 20/20 | Không kiểm tra toàn bộ ràng buộc/payload legacy; chưa thử bản sao vận hành được phép |
 | 03/11/2026 | BASE-03 / PUB-01/02 | Đang làm | Đối chiếu Meta Embeds và hỗ trợ Threads `/t/{shortcode}` cùng so trùng hai chiều với dạng đầy đủ; Python 162/162, JS 20/20 | Nguồn là tài liệu định dạng nhúng; chưa xác minh mọi alias hoặc tính duy nhất shortcode trên nền tảng thật |
 | 03/11/2026 | POST-05 / BASE-03 | Đang làm | Test đính chính Threads giữa hai dạng URL: trùng cùng bài/bài khác, rollback, sửa, hủy và ghi lại; Python 163/163, JS 20/20 | Fixture service, chưa kiểm chứng shortcode thực tế hay luồng giao diện |
+| 03/11/2026 | QA-02 / POST-04/06 | Đang làm | Trình duyệt tích hợp, kho fixture: URL giả chưa lưu của đoạn hai được giữ khi thử nhập số liệu đoạn một; ứng dụng chặn và hiện thông báo xử lý thay đổi trước | Chưa kiểm tra lưu số liệu qua hộp thoại, đổi kênh hoặc rời trang trong lượt này; QA-02 vẫn mở |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
