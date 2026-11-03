@@ -99,6 +99,8 @@ class PublicationMixin:
 
     def publications(self, variant_id):
         with self.connection() as conn:
+            # Keep each record, its events and metrics on one read snapshot.
+            conn.execute('BEGIN')
             self._variant(conn, variant_id)
             records = [dict(row) for row in conn.execute(
                 'SELECT * FROM publications WHERE variant_id=? ORDER BY id', (variant_id,))]

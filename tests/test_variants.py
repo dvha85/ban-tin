@@ -390,6 +390,38 @@ class VariantTests(unittest.TestCase):
         self.assertEqual((stats['recorded_posts'], stats['recorded_bulletins']), (0, 0))
         self.assertEqual(self.room.bulletin_stats()['recorded_posts'], 1)
 
+    def test_publication_list_is_consistent_during_correction(self):
+        variant = self.make_approved('x')
+        publication = self.room.record_publication(variant['id'], {
+            'revision': variant['revision'], 'position': 0,
+            'url': 'https://x.com/test/status/123456', 'idempotency_key': 'list_race_123'})
+        current = self.room.variant(variant['id'])
+        original_connection = self.room.connection
+        corrected = []
+        errors = []
+
+        @contextmanager
+        def intercepted_connection():
+            with original_connection() as conn:
+                def before_statement(sql):
+                    if 'SELECT * FROM publication_events WHERE publication_id=' in sql and not corrected:
+                        corrected.append(True)
+                        try:
+                            self.room.correct_publication(publication['id'], {
+                                'revision': current['revision'], 'reason': 'Hủy liên kết thử', 'url': ''})
+                        except Exception as exc:
+                            errors.append(exc)
+                conn.set_trace_callback(before_statement)
+                yield conn
+
+        with patch.object(self.room, 'connection', side_effect=intercepted_connection):
+            records = self.room.publications(variant['id'])
+        self.assertEqual(errors, [])
+        self.assertEqual(corrected, [True])
+        self.assertEqual(records[0]['active'], 1)
+        self.assertEqual([event['action'] for event in records[0]['events']], ['reported'])
+        self.assertEqual(self.room.publications(variant['id'])[0]['active'], 0)
+
     def test_preview_reads_variant_and_parent_in_one_snapshot(self):
         variant = self.make_approved('threads')
         with self.room.connection() as conn:
