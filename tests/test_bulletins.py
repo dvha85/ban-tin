@@ -298,6 +298,29 @@ class BulletinTests(unittest.TestCase):
             self.room.change_bulletin_items(bulletin['id'], {'revision': bulletin['revision'],
                                                             'remove_item_id': first['id']})
 
+    def test_removing_item_preserves_shared_source_on_remaining_item(self):
+        bulletin = self.room.create_bulletin({'article_ids': [article['id'] for article in self.articles[:2]]})
+        shared_url = 'https://example.org/shared-source'
+        for index in range(2):
+            item = bulletin['items'][index]
+            bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'add_source': {'url': shared_url, 'title': f'Nguồn chung {index}', 'summary': f'Ghi chú {index}'}})
+        first, second = bulletin['items']
+        self.assertNotEqual(first['sources'][1]['source_id'], second['sources'][1]['source_id'])
+        retained = second['sources'][1]
+        bulletin = self.room.change_bulletin_items(bulletin['id'], {'revision': bulletin['revision'],
+                                                                    'remove_item_id': first['id']})
+        restarted = Newsroom(Path(self.temp.name))
+        saved = restarted.bulletin(bulletin['id'])
+        self.assertEqual(saved['items'][0]['id'], second['id'])
+        self.assertEqual(saved['items'][0]['sources'][1], retained)
+        self.assertIn(shared_url, restarted.bulletin_packet(bulletin['id']))
+        from newsroom.social_formats import render_segments
+        preview = render_segments('x', [{'text': 'Nội dung thử.', 'item_ids': [second['id']],
+                                         'source_ids': [retained['source_id']]}], saved)
+        self.assertEqual(preview['posts'][0]['urls'], [shared_url])
+
     def test_copy_legacy_is_unapproved_and_preserves_long_text_without_mutating_original(self):
         draft = self.room.create_draft(self.articles[0]['id'])
         draft = self.room.save_draft(draft['id'], {'revision': draft['revision'], 'title': 'Bài cũ',

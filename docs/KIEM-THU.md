@@ -2,6 +2,7 @@
 
 ## Phần 0.4 đang phát triển (03/11/2026)
 
+- NEWS-04: hai mục có cùng URL nguồn nhưng ID snapshot riêng; bỏ mục thứ nhất, mở lại kho fixture rồi đối chiếu ID và toàn bộ nguồn của mục còn lại, gói tư liệu và URL trong preview X. Test bulletin 15/15, toàn bộ Python 159/159 và JS 20/20 đạt. Chưa thao tác trên giao diện hoặc thử mọi đường sửa nguồn.
 - SOURCE-01/02: khi cùng URL được cập nhật bằng dữ liệu không kèm dấu vết thu thập, bỏ evidence cũ khỏi bản nguồn hiện hành thay vì gắn hash cũ vào trích đoạn mới. Test fixture tái hiện cập nhật API → RSS, kiểm tra bản tin đã tạo giữ nguyên snapshot và bản tin tạo sau không nhận hash cũ; baseline bulletin 13/13, sau sửa Python 158/158, JS 20/20. Không quét hoặc tự sửa evidence đã lưu trước đó; chưa thử với nguồn thật hoặc kho vận hành.
 - FMT-03 / TEXT-04: sửa đề xuất chia đoạn làm mất các dòng trống liên tiếp nằm bên trong đoạn. Test fixture kiểm tra cả trường hợp không cần chia và trường hợp chia thành hai đoạn với nhiều dòng trống bên trong mỗi đoạn; khoảng trắng ở ranh giới đoạn vẫn được cắt bởi `.strip()` như trước. Baseline variants 31/31; sau sửa Python 157/157, JS 20/20. Chưa smoke qua trình duyệt.
 - PUB-01/04: thời gian ghi nhận và quan sát mới chuẩn hóa UTC; test service so sánh hai offset cùng thời điểm, retry bản ghi cũ giữ offset và hash cũ, từ chối thời gian khác và giá trị vượt phạm vi UTC; test HTTP đối chiếu thời điểm trả về. Baseline variants 30/30; sau sửa toàn bộ Python 156/156, JS 20/20. Kho fixture, không sửa lịch sử cũ hoặc dữ liệu vận hành; chưa smoke giao diện.
