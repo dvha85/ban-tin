@@ -513,9 +513,18 @@ function bulletinField(label, value, multiline = false) {
   const input = node(multiline ? 'textarea' : 'input');
   if (multiline) input.rows = 4;
   input.value = value || '';
-  listen(input, 'input', () => { app.bulletinDirty = true; });
   wrapper.append(input);
   return {wrapper, input};
+}
+function trackBulletinSection(section, fields) {
+  const original = fields.map(field => field.type === 'checkbox' ? field.checked : field.value);
+  const update = () => {
+    section.dataset.dirty = String(sectionDiffers(fields, original));
+    const editor = $('bulletin-editor');
+    app.bulletinDirty = Boolean(editor.querySelector('[data-dirty="true"]')) || hasPendingBulletinUrl();
+  };
+  section.addEventListener('input', update);
+  section.addEventListener('change', update);
 }
 function hasPendingBulletinUrl(except = null) {
   return [...$('bulletin-editor').querySelectorAll('[data-publication-url]')]
@@ -542,7 +551,7 @@ function renderBulletin() {
       title: title.input.value, edition_date: edition.input.value, introduction: intro.input.value, conclusion: conclusion.input.value});
     app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã lưu bản tin.');
   });
-  top.addEventListener('input', () => { top.dataset.dirty = 'true'; });
+  trackBulletinSection(top, [title.input, edition.input, intro.input, conclusion.input]);
   top.append(title.wrapper, edition.wrapper, intro.wrapper, conclusion.wrapper, save);
   editor.append(top);
   bulletin.items.forEach((item, position) => {
@@ -574,8 +583,7 @@ function renderBulletin() {
     const verified = node('input'); verified.type = 'checkbox'; verified.checked = item.verified;
     checkLabel.append(verified, document.createTextNode(' Tôi đã đọc nguồn và kiểm chứng mục này'));
     section.append(checkLabel, node('p', 'small-note', 'Khi sửa nội dung, xác nhận kiểm chứng sẽ được bỏ; lưu lại rồi xác nhận ở lần lưu tiếp theo.'));
-    section.addEventListener('input', () => { app.bulletinDirty = true; section.dataset.dirty = 'true'; });
-    section.addEventListener('change', () => { app.bulletinDirty = true; section.dataset.dirty = 'true'; });
+    trackBulletinSection(section, [...Object.values(fields).map(field => field.input), verified]);
     const actions = node('div', 'action-row');
     const saveItem = node('button', 'button secondary', 'Lưu mục');
     bulletinAction(saveItem, async () => {

@@ -13,6 +13,11 @@ function hasPendingPublicationUrl(draft, input) {
   return Boolean(draft && draft.status === 'approved' && input.value.trim());
 }
 
+function sectionDiffers(fields, original) {
+  return fields.some((field, index) =>
+    (field.type === 'checkbox' ? field.checked : field.value) !== original[index]);
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {bindPublicationFields, hasPendingPublicationUrl};
+  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers};
 }

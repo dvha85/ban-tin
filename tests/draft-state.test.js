@@ -1,7 +1,7 @@
 'use strict';
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {bindPublicationFields, hasPendingPublicationUrl} = require('../newsroom/static/draft-state.js');
+const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers} = require('../newsroom/static/draft-state.js');
 
 function fields() {
   return {input: {value: ''}, link: {href: '', removeAttribute(name) { if (name === 'href') this.href = ''; }}};
@@ -35,4 +35,17 @@ test('unsubmitted URL is preserved on refresh of same draft, cleared on switch',
   bindPublicationFields(first, {id: 2, status: 'approved'}, input, link);
   assert.equal(input.value, '');
   assert.equal(hasPendingPublicationUrl({id: 2, status: 'approved'}, input), false);
+});
+
+test('restoring all original values clears a section dirty flag', () => {
+  const fields = [{value: 'Ban đầu'}, {value: '2026-11-03'}, {type: 'checkbox', checked: false}];
+  const original = ['Ban đầu', '2026-11-03', false];
+  assert.equal(sectionDiffers(fields, original), false);
+  fields[0].value = 'Đã sửa';
+  assert.equal(sectionDiffers(fields, original), true);
+  fields[0].value = 'Ban đầu';
+  fields[2].checked = true;
+  assert.equal(sectionDiffers(fields, original), true);
+  fields[2].checked = false;
+  assert.equal(sectionDiffers(fields, original), false);
 });
