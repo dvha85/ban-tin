@@ -109,6 +109,12 @@ class VariantTests(unittest.TestCase):
             self.room.record_publication(variant['id'], {**data, 'url': 'https://x.com/test/status/456'})
         current = self.room.variant(variant['id'])
         self.assertEqual(current['status'], 'partially_recorded')
+        with self.assertRaises(Conflict):
+            self.room.record_publication(variant['id'], {'revision': current['revision'], 'position': 1,
+                'url': 'https://twitter.com/another_name/status/123?s=20', 'idempotency_key': 'alias_key_123'})
+        with self.assertRaises(ValidationError):
+            self.room.correct_publication(first['id'], {'revision': current['revision'],
+                'reason': 'Thử alias cùng bài', 'url': 'https://x.com/renamed/status/123?s=20'})
         self.room.save_bulletin(self.bulletin['id'], {'revision': self.bulletin['revision'], 'title': 'Bản sửa'})
         second = self.room.record_publication(variant['id'], {'revision': current['revision'], 'position': 1,
             'url': 'https://twitter.com/test/status/456', 'idempotency_key': 'test_key_456'})
@@ -131,6 +137,8 @@ class VariantTests(unittest.TestCase):
                 normalize_post_url('x', url)
         self.assertEqual(normalize_post_url('threads', 'https://threads.net/@user/post/abc'),
                          'https://www.threads.com/@user/post/abc')
+        self.assertEqual(normalize_post_url('x', 'https://twitter.com/user/status/123?s=20'),
+                         'https://x.com/user/status/123')
         variant = self.make_approved('facebook')
         record = self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
             'url': 'https://www.facebook.com/page/posts/100', 'idempotency_key': 'facebook_100'})

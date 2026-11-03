@@ -3,7 +3,7 @@ import hashlib
 import json
 import re
 from datetime import datetime
-from urllib.parse import parse_qs, urlsplit, urlunsplit
+from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 
 from .bulletins import _json, _now, _text
 from .feeds import canonical_url
@@ -36,7 +36,21 @@ def normalize_post_url(platform, value):
         raise ValidationError('Nền tảng không hợp lệ.')
     if not valid_host or not valid_path:
         raise ValidationError('Hãy nhập URL HTTPS của bài đăng đúng nền tảng, không phải URL hồ sơ hoặc trang chủ.')
-    return urlunsplit(('https', target_host, path, parts.query, ''))
+    # Sharing parameters do not distinguish the post. For Facebook's PHP
+    # permalink retain the identifiers required to locate the story/Page.
+    query = ''
+    if platform == 'facebook' and path in ('/permalink.php', '/story.php'):
+        query = urlencode([(key, value) for key in ('story_fbid', 'id') for value in parse_qs(parts.query).get(key, [])])
+    return urlunsplit(('https', target_host, path, query, ''))
+
+
+def _post_identity(platform, url):
+    parts = urlsplit(url)
+    if platform == 'x':
+        return ('x', parts.path.rsplit('/', 1)[-1])
+    if platform == 'threads':
+        return ('threads', parts.path.rsplit('/', 1)[-1])
+    return ('facebook', parts.path.casefold(), parts.query)
 
 
 def _reported_time(value):
@@ -74,10 +88,19 @@ class PublicationMixin:
                     'SELECT * FROM publication_metrics WHERE publication_id=? ORDER BY id', (record['id'],))]
             return records
 
-    def _check_url_claim(self, conn, url):
+    def _check_url_claim(self, conn, url, platform):
         from .service import Conflict
-        if conn.execute('SELECT id FROM publications WHERE url=? AND active=1', (url,)).fetchone():
-            raise Conflict('Liên kết đã được ghi nhận cho một đoạn khác. Hãy kiểm tra nhật ký.')
+        identity = _post_identity(platform, url)
+        for row in conn.execute('''SELECT p.url, v.platform FROM publications p
+                                   JOIN content_variants v ON v.id=p.variant_id WHERE p.active=1'''):
+            if row['platform'] != platform:
+                continue
+            try:
+                existing_url = normalize_post_url(platform, row['url'])
+            except ValueError:
+                continue
+            if _post_identity(platform, existing_url) == identity:
+                raise Conflict('Liên kết đã được ghi nhận cho một đoạn khác. Hãy kiểm tra nhật ký.')
         for row in conn.execute('SELECT id,post_url FROM drafts WHERE post_url IS NOT NULL'):
             try:
                 old = normalize_post_url('facebook', row['post_url'])
@@ -122,7 +145,7 @@ class PublicationMixin:
             if conn.execute('SELECT id FROM publications WHERE variant_id=? AND position=? AND active=1',
                             (variant_id, position)).fetchone():
                 raise Conflict('Đoạn này đã có liên kết được ghi nhận.')
-            self._check_url_claim(conn, url)
+            self._check_url_claim(conn, url, variant['platform'])
             at = _now()
             publication_id = conn.execute('''INSERT INTO publications
                 (variant_id,approval_id,position,url,reported_at,recorded_at,idempotency_key,request_hash)
@@ -153,7 +176,8 @@ class PublicationMixin:
                 raise Conflict('Lượt ghi nhận này đã được đính chính hoặc hủy.')
             replacement = data.get('url', '')
             new_url = normalize_post_url(variant['platform'], replacement) if replacement else None
-            if new_url == publication['url']:
+            if new_url and _post_identity(variant['platform'], new_url) == _post_identity(
+                    variant['platform'], normalize_post_url(variant['platform'], publication['url'])):
                 raise ValidationError('Liên kết mới giống liên kết cũ.')
             conn.execute('UPDATE publications SET active=0 WHERE id=?', (publication_id,))
             at = _now()
@@ -162,7 +186,7 @@ class PublicationMixin:
                           _json({'reason': reason, 'replacement_url': new_url}), at))
             replacement_id = None
             if new_url:
-                self._check_url_claim(conn, new_url)
+                self._check_url_claim(conn, new_url, variant['platform'])
                 key = 'correction_' + str(publication_id) + '_' + str(variant['revision'])
                 request_hash = hashlib.sha256(_json({'url': new_url, 'reason': reason}).encode()).hexdigest()
                 replacement_id = conn.execute('''INSERT INTO publications
