@@ -955,6 +955,7 @@ async function renderVariantPublication(area, variant) {
       const metrics = metricFields(variant.platform);
       const emptyMetrics = () => ({values: ','.repeat(metrics.length - 1), observed: null, note: ''});
       let pendingMetrics = emptyMetrics();
+      let metricFingerprint = null, metricKey = null;
       const showPendingMetrics = message => {
         metricNotice.replaceChildren(node('p', '', message || 'Số liệu chưa được gửi.'),
           node('p', 'small-note', `Theo thứ tự ${metrics.map(([, label]) => label).join(', ')}: ${pendingMetrics.values}`),
@@ -966,6 +967,7 @@ async function renderVariantPublication(area, variant) {
         listen(discard, 'click', () => {
           delete metricNotice.dataset.dirty; delete metricNotice.dataset.pendingPublicationEdit;
           metricNotice.hidden = true; metricNotice.replaceChildren(); pendingMetrics = emptyMetrics();
+          metricFingerprint = null; metricKey = null;
           app.bulletinDirty = hasOtherPendingChanges($('bulletin-editor'), null, hasPendingBulletinUrl());
         });
         metricNotice.append(discard);
@@ -989,6 +991,11 @@ async function renderVariantPublication(area, variant) {
         metrics.forEach(([key], index) => {
           payload[key] = fields[index] === '' ? null : Number(fields[index]);
         });
+        const fingerprint = JSON.stringify(payload);
+        if (metricFingerprint !== fingerprint) {
+          metricFingerprint = fingerprint; metricKey = crypto.randomUUID();
+        }
+        payload.idempotency_key = metricKey;
         try { await api(`/api/publications/${existing.id}/metrics`, payload); }
         catch (error) { showPendingMetrics(error.message); return; }
         app.bulletinDirty = false; renderBulletin(); toast('Đã lưu số liệu do bạn nhập.');

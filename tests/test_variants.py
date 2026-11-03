@@ -548,6 +548,22 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(json.loads(metrics[0]['payload'])['shares'], 3)
         self.assertEqual(json.loads(metrics[1]['payload'])['reposts'], 8)
 
+    def test_metric_retry_key_is_idempotent_and_rejects_changed_payload(self):
+        variant = self.make_approved('x')
+        record = self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
+            'url': 'https://x.com/test/status/901', 'idempotency_key': 'metrics_post_901'})
+        payload = {'observed_at': '2026-11-03T10:00:00+07:00', 'views': 0,
+                   'reposts': 2, 'idempotency_key': 'metrics_retry_901'}
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(lambda _: self.room.save_publication_metrics(record['id'], payload), range(2)))
+        self.assertEqual(results[0], results[1])
+        self.assertEqual(len(self.room.publications(variant['id'])[0]['metrics']), 1)
+        with self.assertRaises(Conflict):
+            self.room.save_publication_metrics(record['id'], {**payload, 'reposts': 3})
+        self.assertEqual(len(self.room.publications(variant['id'])[0]['metrics']), 1)
+        with self.assertRaises(ValidationError):
+            self.room.save_publication_metrics(record['id'], {**payload, 'idempotency_key': 'bad'})
+
     def test_policy_change_keeps_archive_but_blocks_ready_export(self):
         variant = self.make_approved('x')
         with patch('newsroom.variants.POLICY_VERSION', 'future-policy'):

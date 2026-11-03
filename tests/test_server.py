@@ -275,14 +275,22 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(metric['views'], 0)
         self.assertIsNone(metric['likes'])
         social_metric = post(f"/api/publications/{reported['id']}/metrics", {
-            'observed_at': '2026-11-03T10:01:00+07:00', 'replies': 0, 'reposts': 3, 'quotes': None})
+            'observed_at': '2026-11-03T10:01:00+07:00', 'replies': 0, 'reposts': 3, 'quotes': None,
+            'idempotency_key': 'http_metric_1001'})
         self.assertEqual((social_metric['replies'], social_metric['reposts'], social_metric['quotes']), (0, 3, None))
+        retry_payload = {'observed_at': '2026-11-03T10:01:00+07:00', 'replies': 0, 'reposts': 3,
+                         'quotes': None, 'idempotency_key': 'http_metric_1001'}
+        self.assertEqual(post(f"/api/publications/{reported['id']}/metrics", retry_payload), social_metric)
+        status, _, _ = self.request('POST', f"/api/publications/{reported['id']}/metrics",
+                                    {**retry_payload, 'reposts': 4}, headers)
+        self.assertEqual(status, 409)
         status, _, _ = self.request('POST', f"/api/publications/{reported['id']}/metrics", {
             'observed_at': '2026-11-03T10:02:00+07:00', 'reposts': -1}, headers)
         self.assertEqual(status, 400)
         correction = post(f"/api/publications/{reported['id']}/corrections", {
             'revision': current['revision'], 'reason': 'Hủy ghi nhận giả lập', 'url': ''})
         self.assertEqual(correction['status'], 'approved')
+        self.assertEqual(post(f"/api/publications/{reported['id']}/metrics", retry_payload), social_metric)
         self.assertIsNone(correction['replacement_id'])
         records = get(path + '/publications')
         self.assertEqual(len(records), 1)

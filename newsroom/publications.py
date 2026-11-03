@@ -231,7 +231,10 @@ class PublicationMixin:
         return result
 
     def save_publication_metrics(self, publication_id, data):
-        from .service import ValidationError
+        from .service import Conflict, ValidationError
+        key = data.get('idempotency_key')
+        if key is not None and (not isinstance(key, str) or not re.fullmatch(r'[A-Za-z0-9_-]{8,100}', key)):
+            raise ValidationError('Mã chống ghi trùng số liệu không hợp lệ.')
         observed_at = _reported_time(data.get('observed_at'))
         if observed_at is None:
             raise ValidationError('Cần thời điểm quan sát số liệu.')
@@ -247,9 +250,23 @@ class PublicationMixin:
         with self.connection() as conn:
             conn.execute('BEGIN IMMEDIATE')
             publication = self._publication(conn, publication_id)
+            if key is not None:
+                for row in conn.execute('SELECT * FROM publication_metrics WHERE publication_id=?', (publication_id,)):
+                    try:
+                        stored = json.loads(row['payload'])
+                        if not isinstance(stored, dict):
+                            raise ValueError('Invalid metric payload')
+                    except (ValueError, TypeError):
+                        raise ValidationError('Không thể kiểm tra số liệu đã lưu do dữ liệu không hợp lệ.')
+                    if stored.get('_idempotency_key') == key:
+                        stored.pop('_idempotency_key')
+                        if row['observed_at'] != observed_at or stored != values:
+                            raise Conflict('Mã số liệu đã được dùng cho dữ liệu khác.')
+                        return {'id': row['id'], 'publication_id': publication_id, 'observed_at': observed_at, **stored}
             if not publication['active']:
                 raise ValidationError('Không nhập số liệu cho lượt ghi nhận đã hủy.')
+            stored_values = {**values, '_idempotency_key': key} if key is not None else values
             metric_id = conn.execute('''INSERT INTO publication_metrics
                 (publication_id,observed_at,payload,created_at) VALUES (?,?,?,?)''',
-                (publication_id, observed_at, _json(values), _now())).lastrowid
+                (publication_id, observed_at, _json(stored_values), _now())).lastrowid
         return {'id': metric_id, 'publication_id': publication_id, 'observed_at': observed_at, **values}
