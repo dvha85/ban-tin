@@ -71,6 +71,10 @@ function claimConflictDetails(error, correction = null) {
   return {message: error.message, href, correction};
 }
 
+function hasOtherPendingChanges(editor, except, pendingUrl) {
+  return Boolean(pendingUrl || [...editor.querySelectorAll('[data-dirty="true"]')].some(section => section !== except));
+}
+
 function parseConflictTarget(search) {
   const params = new URLSearchParams(search);
   const kind = params.get('kind');
@@ -83,5 +87,5 @@ function parseConflictTarget(search) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails};
+  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails, hasOtherPendingChanges};
 }

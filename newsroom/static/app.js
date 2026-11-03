@@ -554,6 +554,9 @@ function hasPendingBulletinUrl(except = null) {
   return [...$('bulletin-editor').querySelectorAll('[data-publication-url]')]
     .some(input => input !== except && input.value.trim());
 }
+function hasPendingCorrection() {
+  return Boolean($('bulletin-editor').querySelector('[data-pending-correction="true"]'));
+}
 function renderBulletin() {
   const bulletin = app.bulletin;
   const editor = $('bulletin-editor');
@@ -569,7 +572,7 @@ function renderBulletin() {
   const conclusion = bulletinField('Lời kết', bulletin.conclusion, true);
   const save = node('button', 'button primary', 'Lưu thông tin bản tin');
   bulletinAction(save, async () => {
-    if (hasPendingBulletinUrl() || (app.bulletinDirty && [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el.dataset.dirty === 'true')))
+    if (hasPendingBulletinUrl() || hasPendingCorrection() || (app.bulletinDirty && [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el.dataset.dirty === 'true')))
       throw new Error('Hãy lưu hoặc bỏ thay đổi ở mục tin trước.');
     app.bulletin = await api(`/api/bulletins/${bulletin.id}/save`, {revision: bulletin.revision,
       title: title.input.value, edition_date: edition.input.value, introduction: intro.input.value, conclusion: conclusion.input.value});
@@ -642,7 +645,7 @@ function renderBulletin() {
     const actions = node('div', 'action-row');
     const saveItem = node('button', 'button secondary', 'Lưu mục');
     bulletinAction(saveItem, async () => {
-      if (hasPendingBulletinUrl() || top.dataset.dirty === 'true' || [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el !== section && el.dataset.dirty === 'true'))
+      if (hasPendingBulletinUrl() || hasPendingCorrection() || top.dataset.dirty === 'true' || [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el !== section && el.dataset.dirty === 'true'))
         throw new Error('Hãy lưu hoặc bỏ thay đổi ở các phần khác trước.');
       const data = {bulletin_revision: bulletin.revision, revision: item.revision, verified: verified.checked,
         claims: collectClaims()};
@@ -851,7 +854,7 @@ async function renderVariants(container, bulletin) {
   const actions = node('div', 'action-row');
   const save = node('button', 'button secondary', 'Lưu phiên bản'); save.disabled = locked;
   bulletinAction(save, async () => {
-    if (hasPendingBulletinUrl() || container.previousElementSibling?.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
+    if (hasPendingBulletinUrl() || hasPendingCorrection() || container.previousElementSibling?.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
       throw new Error('Hãy lưu các phần bản tin khác trước.');
     const saved = await api(`/api/variants/${variant.id}/save`, {revision: variant.revision, account_label: account.input.value,
       segments: collect(), checks: Object.fromEntries(Object.entries(checks).map(([key, value]) => [key, value.checked])),
@@ -969,16 +972,30 @@ async function renderVariantPublication(area, variant) {
       const correct = node('button', 'button secondary', 'Đính chính liên kết');
       const conflict = node('div'); conflict.hidden = true;
       let pendingCorrection = {reason: '', url: existing.url};
+      const showPendingCorrection = error => {
+        showClaimConflict(conflict, error || new Error('Đính chính chưa được gửi.'), pendingCorrection);
+        conflict.dataset.dirty = 'true'; conflict.dataset.pendingCorrection = 'true'; app.bulletinDirty = true;
+        const discard = node('button', 'button secondary', 'Bỏ đính chính chưa lưu');
+        listen(discard, 'click', () => {
+          delete conflict.dataset.dirty; delete conflict.dataset.pendingCorrection;
+          conflict.hidden = true; conflict.replaceChildren(); pendingCorrection = {reason: '', url: existing.url};
+          app.bulletinDirty = hasOtherPendingChanges($('bulletin-editor'), null, hasPendingBulletinUrl());
+        });
+        conflict.append(discard);
+      };
       bulletinAction(correct, async () => {
-        if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi đính chính.');
+        if (hasOtherPendingChanges($('bulletin-editor'), conflict, hasPendingBulletinUrl()))
+          throw new Error('Hãy lưu các thay đổi khác trước khi đính chính.');
         const reason = window.prompt('Lý do đính chính (ít nhất 5 ký tự):', pendingCorrection.reason); if (reason === null) return;
         pendingCorrection.reason = reason;
+        showPendingCorrection();
         const url = window.prompt('Liên kết thay thế. Để trống để hủy ghi nhận:', pendingCorrection.url); if (url === null) return;
         pendingCorrection.url = url;
+        showPendingCorrection();
         if (!window.confirm('Ghi nhận đính chính này? Lịch sử cũ vẫn được giữ.')) return;
         try { await api(`/api/publications/${existing.id}/corrections`, {revision: variant.revision, reason, url}); }
-        catch (error) { showClaimConflict(conflict, error, {reason, url}); return; }
-        renderBulletin(); await loadBulletinList(); toast('Đã lưu đính chính.');
+        catch (error) { showPendingCorrection(error); return; }
+        app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã lưu đính chính.');
       });
       block.append(addMetrics, correct, conflict);
     } else {
@@ -986,7 +1003,7 @@ async function renderVariantPublication(area, variant) {
       const report = node('button', 'button secondary', 'Ghi nhận đã đăng');
       const conflict = node('div'); conflict.hidden = true;
       bulletinAction(report, async () => {
-        if (hasPendingBulletinUrl(url) || area.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
+        if (hasPendingBulletinUrl(url) || hasPendingCorrection() || area.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
           throw new Error('Hãy lưu các thay đổi khác trước khi ghi nhận.');
         const value = url.value.trim(); if (!value) throw new Error('Hãy nhập liên kết bài đã đăng.');
         if (!window.confirm(`Ghi nhận đoạn ${position + 1} đã đăng trên ${variant.platform.toUpperCase()} · ${variant.account_label}?\n\n${value}\n\nỨng dụng không kiểm tra bài đăng.`)) return;

@@ -1,7 +1,16 @@
 'use strict';
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails} = require('../newsroom/static/draft-state.js');
+const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails, hasOtherPendingChanges} = require('../newsroom/static/draft-state.js');
+
+test('retry or discard of a correction respects other unsaved sections and URLs', () => {
+  const own = {}, other = {};
+  const editor = {querySelectorAll: () => [own]};
+  assert.equal(hasOtherPendingChanges(editor, own, false), false);
+  assert.equal(hasOtherPendingChanges(editor, own, true), true);
+  editor.querySelectorAll = () => [own, other];
+  assert.equal(hasOtherPendingChanges(editor, own, false), true);
+});
 
 test('correction failures retain the entered reason and URL, including non-conflict errors', () => {
   const correction = {reason: 'Sửa liên kết', url: 'https://x.com/test/status/12'};
