@@ -1,7 +1,17 @@
 'use strict';
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers} = require('../newsroom/static/draft-state.js');
+const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets} = require('../newsroom/static/draft-state.js');
+
+test('pending bulletin action blocks editor, list and navigation and restores them on failure', async () => {
+  const targets = [{inert: false}, {inert: false}, {inert: true}];
+  let release;
+  const pending = withInertTargets(targets, () => new Promise((resolve, reject) => { release = reject; }));
+  assert.deepEqual(targets.map(target => target.inert), [true, true, true]);
+  release(new Error('thử lỗi'));
+  await assert.rejects(pending, /thử lỗi/);
+  assert.deepEqual(targets.map(target => target.inert), [false, false, true]);
+});
 
 function fields() {
   return {input: {value: ''}, link: {href: '', removeAttribute(name) { if (name === 'href') this.href = ''; }}};

@@ -18,6 +18,13 @@ function sectionDiffers(fields, original) {
     (field.type === 'checkbox' ? field.checked : field.value) !== original[index]);
 }
 
+async function withInertTargets(targets, action) {
+  const previous = targets.map(target => target.inert);
+  targets.forEach(target => { target.inert = true; });
+  try { return await action(); }
+  finally { targets.forEach((target, index) => { target.inert = previous[index]; }); }
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers};
+  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets};
 }

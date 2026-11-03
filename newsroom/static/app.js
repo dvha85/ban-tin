@@ -473,17 +473,13 @@ function bulletinAction(button, action) {
   listen(button, 'click', async () => {
     if (app.busy) throw new Error('Đang xử lý thao tác trước. Vui lòng chờ.');
     app.busy = true;
-    const editor = $('bulletin-editor');
-    const nav = document.querySelector('.sidebar nav');
-    editor.inert = true;
-    nav.inert = true;
     $('create-bulletin').disabled = true;
     $('clear-bulletin-selection').disabled = true;
-    try { return await action(); }
+    try {
+      return await withInertTargets([$('bulletin-editor'), $('bulletin-list'), document.querySelector('.sidebar nav')], action);
+    }
     finally {
       app.busy = false;
-      editor.inert = false;
-      nav.inert = false;
       updateBulletinSelection();
     }
   });
@@ -835,14 +831,11 @@ async function renderVariants(container, bulletin) {
   });
   const split = node('button', 'button secondary', 'Đề xuất chia đoạn');
   split.disabled = locked || variant.platform === 'facebook';
-  listen(split, 'click', async () => {
-    area.inert = true;
-    try {
-      const result = await api(`/api/variants/${variant.id}/split`, {revision: variant.revision, segments: collect()});
-      segmentList.replaceChildren(); result.segments.forEach(addSegment);
-      app.bulletinDirty = true; area.dataset.dirty = 'true';
-      toast('Đã chia theo ranh giới câu/đoạn. Hãy đọc lại, lưu và kiểm tra trước khi duyệt.');
-    } finally { area.inert = false; }
+  bulletinAction(split, async () => {
+    const result = await api(`/api/variants/${variant.id}/split`, {revision: variant.revision, segments: collect()});
+    segmentList.replaceChildren(); result.segments.forEach(addSegment);
+    app.bulletinDirty = true; area.dataset.dirty = 'true';
+    toast('Đã chia theo ranh giới câu/đoạn. Hãy đọc lại, lưu và kiểm tra trước khi duyệt.');
   });
   const approve = node('button', 'button primary', 'Duyệt phiên bản'); approve.disabled = locked;
   bulletinAction(approve, async () => {
