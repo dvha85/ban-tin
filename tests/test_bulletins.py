@@ -76,6 +76,40 @@ class BulletinTests(unittest.TestCase):
             self.room.change_bulletin_items(bulletin['id'], {'revision': bulletin['revision'],
                                                             'remove_item_id': first['id']})
 
+    def test_copy_legacy_is_unapproved_and_preserves_long_text_without_mutating_original(self):
+        draft = self.room.create_draft(self.articles[0]['id'])
+        draft = self.room.save_draft(draft['id'], {'revision': draft['revision'], 'title': 'Bài cũ',
+            'body': 'a' * 5000, 'page_name': 'Trang thử'})
+        with self.assertRaises(Conflict):
+            self.room.copy_legacy_draft(draft['id'], {'revision': draft['revision'] - 1})
+        copied = self.room.copy_legacy_draft(draft['id'], {'revision': draft['revision']})
+        self.assertEqual(self.room.draft(draft['id']), draft)
+        item = copied['bulletin']['items'][0]
+        self.assertFalse(item['verified'])
+        self.assertEqual(item['body'], '')
+        self.assertIn('4.000', item['verification_note'])
+        variant = self.room.variant(copied['variant_id'])
+        self.assertEqual(variant['segments'][0]['text'], 'a' * 5000)
+        self.assertEqual(variant['status'], 'draft')
+        self.assertFalse(any(variant['checks'].values()))
+        with self.assertRaises(ValidationError):
+            self.room.export_variant(variant['id'])
+
+    def test_copy_legacy_requires_explicit_source_choice_when_more_than_three(self):
+        draft = self.room.create_draft(self.articles[0]['id'])
+        sources = draft['sources'] + [{'url': f'https://other.example/source-{i}', 'title': '',
+            'summary': '', 'source_name': 'Nguồn thử', 'retrieved_at': '', 'date_kind': 'unknown'} for i in range(3)]
+        draft = self.room.save_draft(draft['id'], {'revision': draft['revision'], 'sources': sources})
+        with self.assertRaises(ValidationError):
+            self.room.copy_legacy_draft(draft['id'], {'revision': draft['revision']})
+        with self.assertRaises(ValidationError):
+            self.room.copy_legacy_draft(draft['id'], {'revision': draft['revision'],
+                                                       'source_selection': ['https://not-in-draft.example/']})
+        self.assertEqual(self.room.bulletins(), [])
+        chosen = [source['url'] for source in sources[-2:]]
+        result = self.room.copy_legacy_draft(draft['id'], {'revision': draft['revision'], 'source_selection': chosen})
+        self.assertEqual([source['url'] for source in result['bulletin']['items'][0]['sources']], chosen)
+
 
 if __name__ == '__main__':
     unittest.main()

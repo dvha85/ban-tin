@@ -1041,6 +1041,21 @@ listen($('history-button'), 'click', async () => {
   }).join('\n\n──────────────────\n\n');
   showText('Lịch sử các phiên bản đã lưu', text, 'Chỉ hiển thị các lần đã lưu; không tự khôi phục hoặc ghi đè bản hiện tại.');
 });
+listen($('copy-legacy-bulletin'), 'click', async () => {
+  if (app.dirty || app.reviewDirty || hasPendingPublicationUrl(app.draft, $('post-url')))
+    throw new Error('Hãy lưu nội dung và xử lý liên kết đang nhập trước khi tạo bản sao.');
+  if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi ở bản tin đang mở trước khi tạo bản sao.');
+  const chosen = chooseBulletinSources(app.draft);
+  if (chosen === null) return;
+  await mutation(async () => {
+    const data = {revision: app.draft.revision};
+    if (chosen !== undefined) data.source_selection = chosen;
+    const result = await api(`/api/drafts/${app.draft.id}/copy-bulletin`, data);
+    app.bulletin = result.bulletin; app.variantId = result.variant_id; app.bulletinDirty = false;
+    renderBulletin(); view('bulletins');
+    toast('Đã tạo bản sao chưa duyệt; bản nháp cũ được giữ nguyên.');
+  });
+});
 listen($('backup-button'), 'click', () => mutation(async () => {
   const result = await api('/api/backup', {});
   showText('Đã tạo bản sao lưu', result.path,

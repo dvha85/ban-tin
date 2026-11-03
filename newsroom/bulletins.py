@@ -27,6 +27,52 @@ def _text(value, label, limit):
 
 
 class BulletinMixin:
+    def copy_legacy_draft(self, draft_id, data):
+        """Create a new unapproved bulletin and Facebook variant from a legacy draft."""
+        from .service import ValidationError
+        from .variants import CHECKS
+        with self.connection() as conn:
+            draft = self._locked_draft(conn, draft_id, data.get('revision'))
+            sources = draft['sources']
+            selections = data.get('source_selection')
+            if selections is not None:
+                if (not isinstance(selections, list) or not all(isinstance(url, str) for url in selections)
+                        or len(set(selections)) != len(selections)):
+                    raise ValidationError('Danh sách nguồn đã chọn không hợp lệ.')
+                by_url = {source['url']: source for source in sources}
+                if any(url not in by_url for url in selections):
+                    raise ValidationError('Nguồn đã chọn không thuộc bản nháp cũ.')
+                sources = [by_url[url] for url in selections]
+            if not 1 <= len(sources) <= MAX_SOURCES_PER_ITEM:
+                raise ValidationError('Chọn rõ từ 1 đến 3 nguồn từ bản nháp cũ.')
+            title = _text(draft['title'], 'Tiêu đề', 180)
+            body = _text(draft['body'], 'Nội dung', 12000)
+            angle = _text(draft['angle'], 'Góc nhìn', 1000)
+            account = _text(draft['page_name'], 'Tên Page', 120)
+            at = _now()
+            today = datetime.now(timezone(timedelta(hours=7))).date().isoformat()
+            bulletin_id = conn.execute('''INSERT INTO bulletins
+                (revision,title,introduction,conclusion,edition_date,created_at,updated_at)
+                VALUES (1,?,'','',?,?,?)''', (title, today, at, at)).lastrowid
+            item = {'title': title, 'body': body if len(body) <= 4000 else '', 'angle': angle,
+                    'verification_note': ('Bản cũ dài hơn 4.000 ký tự; toàn bộ nội dung nằm ở phiên bản Facebook. '
+                                          'Hãy biên tập lại nội dung mục.' if len(body) > 4000 else ''),
+                    'verified': False, 'sources': [self._source_snapshot(source) for source in sources]}
+            item_id = conn.execute('''INSERT INTO bulletin_items (bulletin_id,article_id,position,revision,payload)
+                VALUES (?,?,0,1,?)''', (bulletin_id, draft['article_id'], _json(item))).lastrowid
+            payload = {'segments': [{'text': body, 'item_ids': [item_id]}],
+                       'checks': {key: False for key in CHECKS}}
+            variant_id = conn.execute('''INSERT INTO content_variants
+                (bulletin_id,platform,account_label,revision,bulletin_revision,status,payload,created_at,updated_at)
+                VALUES (?,'facebook',?,1,1,'draft',?,?,?)''',
+                (bulletin_id, account, _json(payload), at, at)).lastrowid
+            bulletin = self._bulletin(conn, bulletin_id)
+            self._bulletin_history(conn, bulletin_id, 'bulletin', bulletin_id, 1, 'copied_legacy',
+                                   {'draft_id': draft_id, 'draft_revision': draft['revision'], 'bulletin': bulletin})
+            self._bulletin_history(conn, bulletin_id, 'variant', variant_id, 1, 'copied_legacy',
+                                   self._variant(conn, variant_id))
+        return {'bulletin': bulletin, 'variant_id': variant_id}
+
     def _bulletin(self, conn, bulletin_id):
         from .service import ValidationError
         row = conn.execute('SELECT * FROM bulletins WHERE id=?', (bulletin_id,)).fetchone()

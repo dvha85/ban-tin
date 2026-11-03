@@ -348,6 +348,8 @@ class Handler(BaseHTTPRequestHandler):
                     result = room.mark_published(draft_id, data.get('revision'), data.get('post_url', ''))
                 elif action == 'metrics':
                     result = room.save_metrics(draft_id, data)
+                elif action == 'copy-bulletin':
+                    result = room.copy_legacy_draft(draft_id, data)
                 else:
                     self.json_error(404, 'Không tìm thấy chức năng.')
                     return

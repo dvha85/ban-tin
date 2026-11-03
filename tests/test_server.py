@@ -116,6 +116,21 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.request('POST', path + '/publications', {'revision': 1,
             'position': 0, 'url': 'https://x.com/test/status/123', 'idempotency_key': 'test_key_123'}, headers)[0], 400)
 
+    def test_copy_legacy_endpoint_requires_csrf_and_revision(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin gốc', 'url': 'https://example.com/legacy', 'summary': ''})
+        draft = self.room.create_draft(article['id'])
+        path = f"/api/drafts/{draft['id']}/copy-bulletin"
+        no_token = dict(headers)
+        no_token.pop('X-CSRF-Token')
+        self.assertEqual(self.request('POST', path, {'revision': draft['revision']}, no_token)[0], 403)
+        self.assertEqual(self.request('POST', path, {'revision': 0}, headers)[0], 409)
+        status, _, body = self.request('POST', path, {'revision': draft['revision']}, headers)
+        self.assertEqual(status, 200)
+        result = json.loads(body)
+        self.assertEqual(self.room.variant(result['variant_id'])['status'], 'draft')
+        self.assertEqual(self.room.draft(draft['id']), draft)
+
     def test_collection_endpoints_require_session_csrf_and_confirmation(self):
         path = '/api/collection/sources/typesafe'
         self.assertEqual(self.request('POST', path, {'enabled': True, 'confirmed': True})[0], 401)

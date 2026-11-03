@@ -2,8 +2,8 @@
 
 ## Phần 0.4 đang phát triển (03/11/2026)
 
-- Lần chạy 03/11/2026: `python -B -m unittest discover -s tests` đạt 103/103; `node --test tests/draft-state.test.js` đạt 2/2; `node --check newsroom/static/app.js` đạt. Có test lỗi rollback/restore, snapshot duyệt, URL, số liệu `null`/`0`, HTTP/CSRF và chia đoạn 9 → 10, giữ nguồn, từ chối câu quá dài.
-- Kiểm tra thủ công trên ứng dụng qua trình duyệt trong máy, với kho fixture nằm tại thư mục tạm tách khỏi kho vận hành: chọn ba tin, tạo bản tin, lưu và xác nhận một mục, tạo và duyệt một phiên bản X, ghi nhận URL X giả và tải lại trang. Không có bài đăng thật.
+- Lần chạy 03/11/2026: `python -B -m unittest discover -s tests` đạt 106/106; `node --test tests/draft-state.test.js` đạt 2/2; `node --check newsroom/static/app.js` đạt. Có test lỗi rollback/restore, snapshot duyệt, sao chép bài cũ, URL, số liệu `null`/`0`, HTTP/CSRF và chia đoạn 9 → 10, giữ nguồn, từ chối câu quá dài.
+- Kiểm tra thủ công trên ứng dụng qua trình duyệt trong máy, với kho fixture nằm tại thư mục tạm tách khỏi kho vận hành: chọn ba tin, tạo bản tin, lưu và xác nhận một mục, tạo và duyệt một phiên bản X, ghi nhận URL X giả, khởi động lại, và tạo bản sao từ một bài cũ trống. Không có bài đăng thật.
 - Nút sao chép hiển thị thành công nhưng lần đọc clipboard trong trình duyệt kiểm thử trả về rỗng; **chưa xác nhận nội dung clipboard thực tế**. Chưa kiểm tra đầy đủ bàn phím, fallback clipboard, file tải, restart tiến trình, ba pilot, mọi chính sách ký tự hoặc kho vận hành.
 - Để chạy: `python -B -m unittest discover -s tests -v` và `node --test tests/draft-state.test.js`. Kết quả cụ thể cần ghi lại sau lần chạy cuối trước phát hành.
 
