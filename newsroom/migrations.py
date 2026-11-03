@@ -98,6 +98,7 @@ def migrate(conn, data_dir):
         raise RuntimeError('Dữ liệu thuộc phiên bản mới hơn. Không tự hạ cấp.')
     if version == CURRENT_SCHEMA:
         return
+    original_data_version = conn.execute('PRAGMA data_version').fetchone()[0]
     has_user_tables = conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' LIMIT 1").fetchone() is not None
     if version in (1, 2, 3) or (version == 0 and has_user_tables):
         folder = data_dir / 'backups'
@@ -113,6 +114,8 @@ def migrate(conn, data_dir):
         # Recheck under the write lock so another process cannot migrate in parallel.
         if conn.execute('PRAGMA user_version').fetchone()[0] != version:
             raise RuntimeError('Dữ liệu vừa được nâng cấp bởi tiến trình khác; hãy mở lại ứng dụng.')
+        if conn.execute('PRAGMA data_version').fetchone()[0] != original_data_version:
+            raise RuntimeError('Dữ liệu vừa thay đổi trong lúc sao lưu; hãy dừng ứng dụng khác và thử lại.')
         for statement in SCHEMA:
             conn.execute(statement)
         conn.execute(f'PRAGMA user_version={CURRENT_SCHEMA}')

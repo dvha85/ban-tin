@@ -80,6 +80,31 @@ class MigrationV4Tests(unittest.TestCase):
             self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
             self.assertEqual(conn.execute('SELECT COUNT(*) FROM drafts').fetchone()[0], 3)
 
+    def test_upgrade_reduced_schema_1_and_2_preserves_legacy_exports(self):
+        fixture_dir = Path(__file__).parent / 'fixtures'
+        expected = json.loads((fixture_dir / 'legacy-v3-expected.json').read_text(encoding='utf-8'))
+        for version in (1, 2):
+            with self.subTest(version=version):
+                target = self.directory / f'synthetic-v{version}'
+                target.mkdir()
+                with closing(sqlite3.connect(target / 'bantin.sqlite3')) as conn:
+                    conn.executescript((fixture_dir / 'legacy-v3.sql').read_text(encoding='utf-8'))
+                    conn.execute("DELETE FROM collection_settings WHERE source_id='custom-fixture'")
+                    conn.execute('DROP TABLE custom_sources')
+                    if version == 1:
+                        for name in ('collection_attempts', 'collection_evidence', 'collection_jobs', 'collection_settings'):
+                            conn.execute('DROP TABLE ' + name)
+                    conn.execute(f'PRAGMA user_version={version}')
+                    conn.commit()
+                upgraded = Newsroom(target)
+                for draft_id, expected_export in expected['exports'].items():
+                    self.assertEqual(upgraded.export(int(draft_id)), expected_export)
+                with upgraded.connection() as conn:
+                    self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 4)
+                    for table in ('drafts', 'history', 'metrics'):
+                        self.assertEqual([dict(row) for row in conn.execute(f'SELECT * FROM {table} ORDER BY rowid')], expected[table])
+                self.assertEqual(len(list((target / 'backups').glob(f'pre-v0{version + 1}-*.sqlite3'))), 1)
+
     def test_failed_migration_rolls_back_all_tables_and_version(self):
         destination = self.directory / 'fault.sqlite3'
         with closing(sqlite3.connect(destination)) as conn:
@@ -121,6 +146,26 @@ class MigrationV4Tests(unittest.TestCase):
                     migrate(conn, self.directory)
             self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
             self.assertEqual(conn.execute('SELECT value FROM sentinel').fetchone()[0], 'untouched')
+            self.assertIsNone(conn.execute("SELECT name FROM sqlite_master WHERE name='bulletins'").fetchone())
+
+    def test_concurrent_write_during_backup_aborts_migration(self):
+        destination = self.directory / 'concurrent.sqlite3'
+        with closing(sqlite3.connect(destination)) as conn:
+            conn.execute('CREATE TABLE sentinel (value TEXT)')
+            conn.execute('PRAGMA user_version=3')
+            conn.commit()
+
+            def other_writer(_):
+                with closing(sqlite3.connect(destination)) as other:
+                    other.execute("INSERT INTO sentinel VALUES ('concurrent')")
+                    other.commit()
+                return 'fixture'
+
+            with patch('newsroom.migrations.secrets.token_hex', side_effect=other_writer):
+                with self.assertRaisesRegex(RuntimeError, 'vừa thay đổi'):
+                    migrate(conn, self.directory)
+            self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
+            self.assertEqual(conn.execute('SELECT value FROM sentinel').fetchone()[0], 'concurrent')
             self.assertIsNone(conn.execute("SELECT name FROM sqlite_master WHERE name='bulletins'").fetchone())
 
     def test_newer_version_fails_closed_and_restore_v4(self):
