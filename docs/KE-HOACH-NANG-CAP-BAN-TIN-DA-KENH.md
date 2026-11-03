@@ -443,6 +443,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | APR-02 / TEXT-06 | Đang làm | Sửa checklist chưa đăng không bị xóa khi bản tin gốc đổi; chặn tái duyệt bằng checklist cũ khi policy/renderer đổi, thêm cảnh báo UI. Test service giữ nguyên bản đã ghi nhận | Smoke UI khi đổi policy và các tổ hợp nguồn/thứ tự còn lại |
 | 03/11/2026 | DIG-03 / APR-01 | Đang làm | Thêm checklist tối đa 10 khẳng định/mục, ghi nguồn hoặc lý do và xác nhận riêng; chặn duyệt nếu thiếu/bỏ kiểm tra. Test lưu/restart, sửa nội dung/nguồn và smoke nhập/lưu trên demo | Kiểm tra toàn luồng duyệt đa kênh và chuyển đổi bản đã duyệt policy cũ trên giao diện |
 | 03/11/2026 | QA/DOC/PILOT/REL | Đang làm | Lần chạy gần nhất 132/132 Python, 7/7 JS; Edge tải `.txt` một đoạn và đối chiếu nội dung/nguồn; đã cập nhật tài liệu cho nhánh phát triển | Clipboard thật, QA còn lại, ba pilot và quyết định kho vận hành vẫn chưa có |
+| 03/11/2026 | APR-01 / QA-02 | Đang làm | Edge tạo và duyệt Facebook từ mục có checklist khẳng định trên kho demo, dùng server thử khởi động theo policy v1; dữ liệu và xác nhận là giả | Cần thử với server policy v2 và các kênh khác; nút copy báo thành công nhưng clipboard của trình điều khiển rỗng, chưa chứng minh dán thực tế |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
