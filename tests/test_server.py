@@ -274,6 +274,12 @@ class ServerTests(unittest.TestCase):
             'observed_at': '2026-11-03T10:00:00+07:00', 'views': 0})
         self.assertEqual(metric['views'], 0)
         self.assertIsNone(metric['likes'])
+        social_metric = post(f"/api/publications/{reported['id']}/metrics", {
+            'observed_at': '2026-11-03T10:01:00+07:00', 'replies': 0, 'reposts': 3, 'quotes': None})
+        self.assertEqual((social_metric['replies'], social_metric['reposts'], social_metric['quotes']), (0, 3, None))
+        status, _, _ = self.request('POST', f"/api/publications/{reported['id']}/metrics", {
+            'observed_at': '2026-11-03T10:02:00+07:00', 'reposts': -1}, headers)
+        self.assertEqual(status, 400)
         correction = post(f"/api/publications/{reported['id']}/corrections", {
             'revision': current['revision'], 'reason': 'Hủy ghi nhận giả lập', 'url': ''})
         self.assertEqual(correction['status'], 'approved')
@@ -284,6 +290,8 @@ class ServerTests(unittest.TestCase):
         self.assertEqual([event['action'] for event in records[0]['events']], ['reported', 'cancelled'])
         self.assertEqual(json.loads(records[0]['events'][1]['payload'])['reason'], 'Hủy ghi nhận giả lập')
         self.assertEqual(json.loads(records[0]['metrics'][0]['payload'])['views'], 0)
+        self.assertEqual(len(records[0]['metrics']), 2)
+        self.assertEqual(json.loads(records[0]['metrics'][1]['payload'])['reposts'], 3)
         current = get(path)
         self.assertEqual(current['publication_progress'], {'active': 0, 'total': 2})
         self.assertIsNotNone(current['locked_at'])

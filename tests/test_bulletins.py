@@ -130,7 +130,8 @@ class BulletinTests(unittest.TestCase):
         publication = self.room.record_publication(x['id'], {'revision': x['revision'], 'position': 0,
             'url': 'https://x.com/fixture/status/12345', 'idempotency_key': 'restore_three_channels'})
         self.room.save_publication_metrics(publication['id'], {'observed_at': '2026-11-03T12:00:00+07:00',
-                                                               'views': 0, 'likes': None})
+                                                               'views': 0, 'likes': None,
+                                                               'replies': 0, 'reposts': 4, 'quotes': None})
         before_bulletin = self.room.bulletin(bulletin['id'])
         before_variants = {platform: self.room.variant(variant['id']) for platform, variant in variants.items()}
         before_exports = {platform: self.room.export_variant(variant['id']) for platform, variant in variants.items()}
@@ -151,6 +152,7 @@ class BulletinTests(unittest.TestCase):
         metric = json.loads(restored.publications(x['id'])[0]['metrics'][0]['payload'])
         self.assertEqual(metric['views'], 0)
         self.assertIsNone(metric['likes'])
+        self.assertEqual((metric['replies'], metric['reposts'], metric['quotes']), (0, 4, None))
         self.assertEqual(restored.variant(x['id'])['publication_progress'], {'active': 1, 'total': 3})
         for platform, variant in variants.items():
             self.assertEqual(restored.variant(variant['id']), before_variants[platform])

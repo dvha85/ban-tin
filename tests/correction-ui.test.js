@@ -78,3 +78,35 @@ test('pending correction remains dirty until explicitly discarded', async () => 
   assert.equal(vm.runInContext('app.bulletinDirty', context), false);
   assert.equal(notice.hidden, true);
 });
+
+test('X metrics handler keeps the order, zero and unknown values, and displays legacy shares', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const prompts = ['10,0,,3,4,5,,15', '2026-11-03T10:00:00+07:00', 'Ghi chú thử'];
+  const calls = [];
+  const old = JSON.stringify({views: 7, likes: null, saves: null, shares: 0, followers: null, minutes: null, note: ''});
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+    setTimeout, clearTimeout, calls, old, crypto: {randomUUID: () => 'test-key'},
+    fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, prompt: () => prompts.shift(), addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context, {filename: 'app.js'});
+  vm.runInContext(`api = async (path, body) => {
+    if (path.endsWith('/metrics')) { calls.push({path, body}); return {}; }
+    if (path.endsWith('/publications')) return [{id: 11, position: 0, active: true,
+      url: 'https://x.com/a/status/123', metrics: [{observed_at: '2026-11-03T10:00:00+07:00', payload: old}]}];
+    return {posts: ['test']};
+  }; renderBulletin = () => {}; toast = () => {};`, context);
+  const area = new Element(); get('bulletin-editor').append(area); context.area = area;
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  const walk = element => [element, ...element.children.filter(child => child instanceof Element).flatMap(walk)];
+  assert.ok(walk(area).some(el => el.textContent.includes('Lượt chia sẻ: 0')));
+  walk(area).find(el => el.tagName === 'button' && el.textContent === 'Nhập số liệu').listeners.click[0]({});
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].path, '/api/publications/11/metrics');
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[0].body)), {observed_at: '2026-11-03T10:00:00+07:00',
+    note: 'Ghi chú thử', views: 10, likes: 0, replies: null, reposts: 3, quotes: 4, saves: 5, followers: null, minutes: 15});
+});
