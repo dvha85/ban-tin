@@ -14,6 +14,33 @@ def snapshot_hash(snapshot):
     return hashlib.sha256(_json(snapshot).encode('utf-8')).hexdigest()
 
 
+def approval_snapshot(row):
+    from .service import ValidationError
+    message = 'Bản duyệt không hợp lệ hoặc không khớp nội dung đã lưu. Hãy kiểm tra bản sao lưu.'
+    if not row:
+        raise ValidationError(message)
+    try:
+        snapshot = json.loads(row['snapshot'])
+        if not isinstance(snapshot, dict) or snapshot_hash(snapshot) != row['approved_hash']:
+            raise ValueError()
+        rendered = snapshot['rendered']
+        posts = rendered['posts']
+        bulletin = snapshot['bulletin']
+        if (not isinstance(snapshot['policy_version'], str) or not isinstance(snapshot['renderer_version'], str)
+                or not isinstance(snapshot['platform'], str) or not isinstance(snapshot['account_label'], str)
+                or not isinstance(snapshot['checks'], dict) or not isinstance(bulletin['items'], list)
+                or not isinstance(posts, list) or not posts
+                or any(not isinstance(post, dict) or not isinstance(post.get('text'), str) for post in posts)
+                or any(not isinstance(item, dict) or 'id' not in item or 'title' not in item
+                       or not isinstance(item.get('sources'), list)
+                       or any(not isinstance(source, dict) or 'source_id' not in source or 'url' not in source
+                              for source in item['sources']) for item in bulletin['items'])):
+            raise ValueError()
+    except (ValueError, TypeError, KeyError, UnicodeError, AttributeError, OverflowError):
+        raise ValidationError(message) from None
+    return snapshot
+
+
 class VariantMixin:
     def _variant(self, conn, variant_id):
         from .service import ValidationError
@@ -27,19 +54,18 @@ class VariantMixin:
         result['policy_stale'] = False
         result['publication_progress'] = None
         if result['approval_id'] is not None:
-            approval = conn.execute('SELECT snapshot FROM variant_approvals WHERE id=? AND variant_id=?',
+            approval = conn.execute('SELECT snapshot,approved_hash FROM variant_approvals WHERE id=? AND variant_id=?',
                                     (result['approval_id'], variant_id)).fetchone()
-            if approval:
-                snapshot = json.loads(approval['snapshot'])
-                result['policy_stale'] = (snapshot.get('policy_version') != POLICY_VERSION or
-                                          snapshot.get('renderer_version') != RENDERER_VERSION)
-                active = conn.execute('''SELECT COUNT(*) FROM publications
-                    WHERE variant_id=? AND approval_id=? AND active=1''',
-                    (variant_id, result['approval_id'])).fetchone()[0]
-                result['publication_progress'] = {'active': active, 'total': len(snapshot['rendered']['posts'])}
-                # Older databases can retain partial status after the last cancellation.
-                if result['locked_at'] and active == 0 and result['status'] == 'partially_recorded':
-                    result['status'] = 'approved'
+            snapshot = approval_snapshot(approval)
+            result['policy_stale'] = (snapshot.get('policy_version') != POLICY_VERSION or
+                                      snapshot.get('renderer_version') != RENDERER_VERSION)
+            active = conn.execute('''SELECT COUNT(*) FROM publications
+                WHERE variant_id=? AND approval_id=? AND active=1''',
+                (variant_id, result['approval_id'])).fetchone()[0]
+            result['publication_progress'] = {'active': active, 'total': len(snapshot['rendered']['posts'])}
+            # Older databases can retain partial status after the last cancellation.
+            if result['locked_at'] and active == 0 and result['status'] == 'partially_recorded':
+                result['status'] = 'approved'
         return result
 
     def variant(self, variant_id):
@@ -229,9 +255,7 @@ class VariantMixin:
                            (variant['approval_id'], variant['id'])).fetchone()
         if not row or variant['status'] not in ('approved', 'partially_recorded', 'recorded'):
             raise ValidationError('Chỉ xuất được phiên bản đã duyệt.')
-        snapshot = json.loads(row['snapshot'])
-        if snapshot_hash(snapshot) != row['approved_hash']:
-            raise ValidationError('Bản duyệt không khớp nội dung đã lưu.')
+        snapshot = approval_snapshot(row)
         if not archive:
             if variant['locked_at'] is None and variant['needs_update']:
                 raise ValidationError('Bản tin gốc đã thay đổi; cần kiểm tra và duyệt lại.')

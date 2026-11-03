@@ -290,6 +290,12 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(get('/api/bulletin-stats')['recorded_posts'], 0)
         history = get(f"/api/bulletins/{bulletin['id']}/history")
         self.assertIsInstance(json.loads(history[0]['snapshot']), dict)
+        with self.room.connection() as conn:
+            conn.execute('UPDATE variant_approvals SET snapshot=? WHERE id=?', ('{', variant['approval_id']))
+        for bad_path in (path, path + '/export', path + '/archive', f"/api/bulletins/{bulletin['id']}/variants"):
+            status, _, body = self.request('GET', bad_path, headers=headers)
+            self.assertEqual(status, 400)
+            self.assertIn('Bản duyệt', json.loads(body)['error'])
 
     def test_bulletin_and_variant_routes_enforce_session_and_support_preview_split(self):
         headers = self.session()

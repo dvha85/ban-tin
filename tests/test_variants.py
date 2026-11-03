@@ -1,3 +1,4 @@
+import json
 import tempfile
 import threading
 import unittest
@@ -8,7 +9,7 @@ from unittest.mock import patch
 from newsroom.publications import normalize_post_url
 from newsroom.service import Conflict, Newsroom, ValidationError
 from newsroom.social_formats import count_text, render_segments, split_segments
-from newsroom.variants import CHECKS
+from newsroom.variants import CHECKS, snapshot_hash
 
 
 class VariantTests(unittest.TestCase):
@@ -210,6 +211,35 @@ class VariantTests(unittest.TestCase):
         self.assertTrue(self.room.variant(variant['id'])['needs_update'])
         with self.assertRaises(ValidationError):
             self.room.export_variant(variant['id'])
+
+    def test_corrupt_approval_fails_closed_before_read_export_or_record(self):
+        variant = self.make_approved('x')
+        with self.room.connection() as conn:
+            original = dict(conn.execute('SELECT * FROM variant_approvals WHERE id=?', (variant['approval_id'],)).fetchone())
+        malformed_shape = {'policy_version': 'bad', 'rendered': {}}
+        corrupt = [('{', original['approved_hash']), ('{}', original['approved_hash']),
+                   (json.dumps(malformed_shape), snapshot_hash(malformed_shape))]
+        for payload, digest in corrupt:
+            with self.subTest(payload=payload), self.room.connection() as conn:
+                conn.execute('UPDATE variant_approvals SET snapshot=?,approved_hash=? WHERE id=?',
+                             (payload, digest, variant['approval_id']))
+            for operation in (lambda: self.room.variant(variant['id']),
+                              lambda: self.room.variants(self.bulletin['id']),
+                              lambda: self.room.export_variant(variant['id']),
+                              lambda: self.room.export_variant(variant['id'], archive=True),
+                              lambda: self.room.record_publication(variant['id'], {'revision': variant['revision'],
+                                  'position': 0, 'url': 'https://x.com/test/status/999', 'idempotency_key': 'corrupt_999'})):
+                with self.assertRaisesRegex(ValidationError, 'Bản duyệt'):
+                    operation()
+            with self.room.connection() as conn:
+                self.assertEqual(conn.execute('SELECT COUNT(*) FROM publications').fetchone()[0], 0)
+                row = conn.execute('SELECT snapshot,approved_hash FROM variant_approvals WHERE id=?',
+                                   (variant['approval_id'],)).fetchone()
+                self.assertEqual(tuple(row), (payload, digest))
+        with self.room.connection() as conn:
+            conn.execute('UPDATE variant_approvals SET snapshot=?,approved_hash=? WHERE id=?',
+                         (original['snapshot'], original['approved_hash'], variant['approval_id']))
+        self.assertTrue(self.room.export_variant(variant['id'])['posts'])
 
     def test_parent_edit_resets_checks_of_unlocked_variants_only(self):
         unlocked = self.make_approved('threads')

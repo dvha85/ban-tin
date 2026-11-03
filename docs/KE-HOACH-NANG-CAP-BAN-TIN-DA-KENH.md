@@ -478,6 +478,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | FMT-03 / FMT-04 | Đang làm | Cảnh báo cạnh từng đoạn chọn nhiều mục, tự ẩn/hiện theo lựa chọn; thông báo chia đoạn nói rõ giữ mục và nguồn gốc. Kiểm tra trên kho giả và test đơn vị | Không suy đoán nguồn nào liên quan đến câu; người biên tập vẫn phải đối chiếu từng đoạn, QA bộ đếm và nền tảng còn mở |
 | 03/11/2026 | SAFE-01 / QA-01 | Đang làm | Ma trận HTTP kiểm tra 14 route POST đa kênh với cookie, CSRF, Origin và Host sai/thiếu; xác nhận chặn trước handler và header hợp lệ đi đúng handler. Python 151/151, JS 12/12 | Route kiểm thử được liệt kê tường minh; phải bổ sung khi có route mới. Không thay thế QA giao diện và nghiệm thu vận hành |
 | 03/11/2026 | FMT-02 / BASE-03 | Đang làm | Đặt cảnh báo giới hạn trực tiếp ở vùng phiên bản; thử hiển thị Threads trên kho giả và đối chiếu tài liệu Meta/X. Python 151/151, JS 13/13 | Threads vẫn là ước lượng; chưa xác minh mọi emoji hoặc tình trạng/tính năng tài khoản thực tế |
+| 03/11/2026 | APR-03 / APPROVE-03 | Đang làm | Kiểm tra hash và cấu trúc snapshot trước khi dùng, lỗi rõ ràng khi JSON hỏng; test service/HTTP không ghi nhận hoặc xuất bản duyệt hỏng. Python 152/152, JS 13/13 | Cần QA giao diện và phục hồi trên bản sao vận hành được phép; không suy rộng cho mọi lỗi database |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
