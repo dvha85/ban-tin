@@ -2,6 +2,8 @@
 
 ## Smoke test giao diện đa kênh 04/11/2026
 
+- PUB-03/BASE-02: test service tái hiện `url: null` trong yêu cầu đính chính bị hiểu là hủy ghi nhận. Sau sửa, `null`, boolean, số, mảng và object bị từ chối; test service và HTTP xác nhận bản ghi, lịch sử và revision không đổi, còn chuỗi rỗng vẫn hủy theo hợp đồng. Hồi quy 175/175 Python, 33/33 JavaScript đạt; dữ liệu giả trên kho tạm.
+
 - BASE-02 / legacy: ID tin ngoài phạm vi SQLite gửi vào API tạo draft cũ trước sửa làm ngắt kết nối; sau sửa trả 400, không tạo draft. Hồi quy 174/174 Python và 33/33 JavaScript đạt. Kiểm thử dùng kho tạm.
 
 - BASE-02: kiểm thử HTTP ID đường dẫn vượt giới hạn SQLite và chuỗi 5.000 chữ số trên các nhóm route bản tin, mục, phiên bản, ghi nhận, bản nháp và tác vụ thu thập. Trước sửa có route ngắt kết nối hoặc trả thông báo kỹ thuật; sau sửa từ chối trước handler với 404, riêng tác vụ trả 400. Hồi quy 173/173 Python và 33/33 JavaScript đạt. Không suy rộng sang mọi trường ID trong payload.

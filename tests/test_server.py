@@ -404,6 +404,12 @@ class ServerTests(unittest.TestCase):
         status, _, _ = self.request('POST', f"/api/publications/{reported['id']}/metrics", {
             'observed_at': '2026-11-03T10:02:00+07:00', 'reposts': -1}, headers)
         self.assertEqual(status, 400)
+        for invalid_url in (None, False, 0, [], {}):
+            status, _, body = self.request('POST', f"/api/publications/{reported['id']}/corrections", {
+                'revision': current['revision'], 'reason': 'Hủy ghi nhận giả lập', 'url': invalid_url}, headers)
+            self.assertEqual(status, 400, body)
+            self.assertEqual(get(path + '/publications')[0]['active'], 1)
+            self.assertEqual(get(path)['revision'], current['revision'])
         correction = post(f"/api/publications/{reported['id']}/corrections", {
             'revision': current['revision'], 'reason': 'Hủy ghi nhận giả lập', 'url': ''})
         self.assertEqual(correction['status'], 'approved')

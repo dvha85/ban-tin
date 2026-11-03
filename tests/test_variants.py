@@ -422,6 +422,20 @@ class VariantTests(unittest.TestCase):
         self.assertEqual([event['action'] for event in records[0]['events']], ['reported'])
         self.assertEqual(self.room.publications(variant['id'])[0]['active'], 0)
 
+    def test_correction_rejects_non_string_url_without_cancelling_publication(self):
+        variant = self.make_approved('x')
+        publication = self.room.record_publication(variant['id'], {
+            'revision': variant['revision'], 'position': 0,
+            'url': 'https://x.com/test/status/123456', 'idempotency_key': 'invalid_correction_123'})
+        current = self.room.variant(variant['id'])
+        before = self.room.publications(variant['id'])
+        for invalid in (None, False, 0, [], {}):
+            with self.subTest(url=invalid), self.assertRaises(ValidationError):
+                self.room.correct_publication(publication['id'], {
+                    'revision': current['revision'], 'reason': 'Kiểm tra URL', 'url': invalid})
+            self.assertEqual(self.room.publications(variant['id']), before)
+            self.assertEqual(self.room.variant(variant['id']), current)
+
     def test_preview_reads_variant_and_parent_in_one_snapshot(self):
         variant = self.make_approved('threads')
         with self.room.connection() as conn:

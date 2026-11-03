@@ -203,13 +203,15 @@ class PublicationMixin:
         reason = _text(data.get('reason', ''), 'Lý do đính chính', 1000)
         if len(reason) < 5:
             raise ValidationError('Hãy ghi lý do đính chính ít nhất 5 ký tự.')
+        replacement = data.get('url', '')
+        if not isinstance(replacement, str):
+            raise ValidationError('Liên kết thay thế phải là chuỗi hoặc để trống để hủy.')
         with self.connection() as conn:
             conn.execute('BEGIN IMMEDIATE')
             publication = self._publication(conn, publication_id)
             variant = self._locked_variant(conn, publication['variant_id'], data.get('revision'))
             if not publication['active']:
                 raise Conflict('Lượt ghi nhận này đã được đính chính hoặc hủy.')
-            replacement = data.get('url', '')
             new_url = normalize_post_url(variant['platform'], replacement) if replacement else None
             if new_url and _post_identity(variant['platform'], new_url) == _post_identity(
                     variant['platform'], normalize_post_url(variant['platform'], publication['url'])):
