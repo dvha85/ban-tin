@@ -31,6 +31,44 @@ class BulletinTests(unittest.TestCase):
                 self.room.create_bulletin({'article_ids': ids})
         self.assertEqual(self.room.bulletins(), [])
 
+    def test_item_and_source_limits_at_boundaries_are_atomic(self):
+        for index in range(3, 11):
+            self.articles.append(self.room.import_article({'title': f'Tin giới hạn {index}',
+                'url': f'https://example.com/limit-{index}', 'summary': 'Nguồn giả để kiểm thử.'}))
+        ids = [article['id'] for article in self.articles]
+        bulletin = self.room.create_bulletin({'article_ids': ids[:10]})
+        self.assertEqual(len(bulletin['items']), 10)
+        with self.assertRaises(ValidationError):
+            self.room.create_bulletin({'article_ids': ids})
+        self.assertEqual(len(self.room.bulletins()), 1)
+
+        # One extra unique source per item reaches the global limit of 20.
+        for position in range(10):
+            item = bulletin['items'][position]
+            bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'add_source': {'url': f'https://example.org/extra-{position}', 'title': 'Nguồn', 'summary': 'Thử'}})
+        self.assertEqual(len({s['url'] for i in bulletin['items'] for s in i['sources']}), 20)
+        item = bulletin['items'][0]
+        with self.assertRaises(ValidationError):
+            self.room.save_bulletin_item(bulletin['id'], item['id'], {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'add_source': {'url': 'https://example.org/extra-unique', 'title': 'Nguồn', 'summary': 'Thử'}})
+        self.assertEqual(self.room.bulletin(bulletin['id']), bulletin)
+
+        # A URL already used by another item does not increase the unique count.
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'add_source': {'url': 'https://example.org/extra-1', 'title': 'Nguồn chung', 'summary': 'Thử'}})
+        item = bulletin['items'][0]
+        self.assertEqual(len(item['sources']), 3)
+        with self.assertRaises(ValidationError):
+            self.room.save_bulletin_item(bulletin['id'], item['id'], {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'add_source': {'url': 'https://example.org/extra-2', 'title': 'Nguồn thứ tư', 'summary': 'Thử'}})
+        self.assertEqual(self.room.bulletin(bulletin['id']), bulletin)
+        self.assertEqual(Newsroom(Path(self.temp.name)).bulletin(bulletin['id']), bulletin)
+
     def test_reuse_counts_track_current_bulletins_without_preventing_reuse(self):
         first, second = (article['id'] for article in self.articles[:2])
         self.assertEqual(self.room.state()['bulletin_usage'], {})
