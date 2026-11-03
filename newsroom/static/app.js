@@ -881,7 +881,11 @@ async function renderVariantPublication(area, variant) {
     const block = node('div', 'bulletin-block');
     const field = node('textarea'); field.rows = 5; field.readOnly = true; field.value = text;
     const copyButton = node('button', 'button secondary', `Sao chép đoạn ${position + 1}`);
-    listen(copyButton, 'click', () => copy(text));
+    bulletinAction(copyButton, async () => {
+      if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi sao chép bản đã duyệt.');
+      const current = await api(`/api/variants/${variant.id}/export`);
+      await copy(verifiedCopyText(output, current, position));
+    });
     block.append(node('h4', '', `Đoạn ${position + 1}`), field);
     if (ready) block.append(copyButton);
     const existing = publications.find(record => record.position === position && record.active);

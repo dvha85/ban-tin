@@ -1,7 +1,17 @@
 'use strict';
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets} = require('../newsroom/static/draft-state.js');
+const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText} = require('../newsroom/static/draft-state.js');
+
+test('copy requires the same currently valid approval and the same segment', () => {
+  const shown = {approval_id: 4, posts: ['đoạn cũ', 'nguồn']};
+  assert.equal(verifiedCopyText(shown, {approval_id: 4, posts: ['đoạn cũ', 'nguồn']}, 0), 'đoạn cũ');
+  for (const current of [{approval_id: 5, posts: shown.posts},
+                         {approval_id: 4, posts: ['đoạn khác']},
+                         {approval_id: 4, posts: []}, {posts: shown.posts}]) {
+    assert.throws(() => verifiedCopyText(shown, current, 0), /thay đổi/);
+  }
+});
 
 test('pending bulletin action blocks editor, list and navigation and restores them on failure', async () => {
   const targets = [{inert: false}, {inert: false}, {inert: true}];

@@ -25,6 +25,14 @@ async function withInertTargets(targets, action) {
   finally { targets.forEach((target, index) => { target.inert = previous[index]; }); }
 }
 
+function verifiedCopyText(shown, current, position) {
+  if (!Number.isInteger(shown.approval_id) || current.approval_id !== shown.approval_id ||
+      typeof shown.posts[position] !== 'string' || current.posts?.[position] !== shown.posts[position]) {
+    throw new Error('Bản duyệt đã thay đổi. Hãy giữ phần đang sửa và tải lại trước khi sao chép.');
+  }
+  return current.posts[position];
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets};
+  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText};
 }

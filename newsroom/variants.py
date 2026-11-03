@@ -246,7 +246,7 @@ class VariantMixin:
             conn.execute('BEGIN')
             variant = self._variant(conn, variant_id)
             snapshot = self._approved_variant(conn, variant, archive=archive)
-            result = {'platform': snapshot['platform'], 'account_label': snapshot['account_label'],
+            result = {'approval_id': variant['approval_id'], 'platform': snapshot['platform'], 'account_label': snapshot['account_label'],
                       'policy_version': snapshot['policy_version'], 'archive': archive,
                       'posts': [post['text'] for post in snapshot['rendered']['posts']]}
             if archive:
