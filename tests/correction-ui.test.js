@@ -91,10 +91,42 @@ test('publication retry reuses its key but a later new recording gets a new key'
   const tick = () => new Promise(resolve => setImmediate(resolve));
   url.value = 'https://x.com/a/status/123';
   report.listeners.click[0]({}); await tick();
-  report.listeners.click[0]({}); await tick();
+  const confirm = () => walk(area).find(el => el.tagName === 'button' && el.textContent === 'Xác nhận ghi nhận');
+  confirm().listeners.click[0]({}); await tick();
+  confirm().listeners.click[0]({}); await tick();
   assert.equal(calls[0].idempotency_key, calls[1].idempotency_key);
-  report.listeners.click[0]({}); await tick();
+  confirm().listeners.click[0]({}); await tick();
   assert.notEqual(calls[1].idempotency_key, calls[2].idempotency_key);
+});
+
+test('publication confirmation identifies destination and invalidates when URL changes', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout, calls,
+    fetch: () => new Promise(() => {}), crypto: {randomUUID: () => 'key-1'},
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`api = async (path, body) => path.endsWith('/publications') ? (body ? (calls.push(body), {}) : []) : {posts: ['test']};
+    renderBulletin = () => {}; loadBulletinList = async () => {}; toast = () => {};`, context);
+  const area = new Element(); get('bulletin-editor').append(area); context.area = area;
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Kênh thử'})", context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const button = name => walk(area).find(el => el.tagName === 'button' && el.textContent === name);
+  const url = walk(area).find(el => el.dataset.publicationUrl);
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  url.value = 'https://x.com/a/status/123'; button('Ghi nhận đã đăng').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 0);
+  assert.ok(walk(area).some(el => el.textContent.includes('đoạn 1') && el.textContent.includes('Kênh thử')));
+  assert.ok(walk(area).some(el => el.textContent.includes('https://x.com/a/status/123')));
+  const confirm = button('Xác nhận ghi nhận'); assert.ok(confirm);
+  url.value = 'https://x.com/a/status/456'; url.listeners.input[0]({});
+  confirm.listeners.click[0]({}); await tick(); assert.equal(calls.length, 0);
+  button('Ghi nhận đã đăng').listeners.click[0]({}); await tick();
+  button('Xác nhận ghi nhận').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 1); assert.equal(calls[0].url, 'https://x.com/a/status/456');
 });
 
 test('historical publications show readable events and retain their metrics', async () => {

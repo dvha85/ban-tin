@@ -1069,24 +1069,40 @@ async function renderVariantPublication(area, variant) {
       url.setAttribute('aria-label', `Liên kết bài đã đăng cho đoạn ${position + 1}`);
       const report = node('button', 'button secondary', 'Ghi nhận đã đăng');
       const conflict = node('div'); conflict.hidden = true;
-      bulletinAction(report, async () => {
+      const confirmation = node('div', 'notice'); confirmation.hidden = true;
+      let confirmedUrl = null;
+      const checkOtherChanges = () => {
         if (hasPendingBulletinUrl(url) || hasPendingPublicationEdit() || area.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
           throw new Error('Hãy lưu các thay đổi khác trước khi ghi nhận.');
+      };
+      bulletinAction(report, async () => {
+        checkOtherChanges();
         const value = url.value.trim(); if (!value) throw new Error('Hãy nhập liên kết bài đã đăng.');
-        if (!window.confirm(`Ghi nhận đoạn ${position + 1} đã đăng trên ${variant.platform.toUpperCase()} · ${variant.account_label}?\n\n${value}\n\nỨng dụng không kiểm tra bài đăng.`)) return;
-        const key = `${variant.id}:${position}:${value}`;
-        if (!app.publicationKeys.has(key)) app.publicationKeys.set(key, crypto.randomUUID());
-        try { await api(`/api/variants/${variant.id}/publications`, {revision: variant.revision, position, url: value,
-          idempotency_key: app.publicationKeys.get(key)}); }
-        catch (error) { showClaimConflict(conflict, error); return; }
-        app.publicationKeys.delete(key);
-        app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã ghi nhận thông tin do bạn nhập.');
+        confirmedUrl = value;
+        confirmation.replaceChildren(node('p', '', `Xác nhận đoạn ${position + 1} đã đăng trên ${variant.platform.toUpperCase()} · ${variant.account_label}`),
+          node('p', '', value), node('p', 'small-note', 'Ứng dụng không kiểm tra bài đăng trên mạng xã hội.'));
+        const confirm = node('button', 'button secondary', 'Xác nhận ghi nhận');
+        const back = node('button', 'button secondary', 'Quay lại chỉnh URL');
+        bulletinAction(confirm, async () => {
+          checkOtherChanges();
+          if (confirmation.hidden || confirmedUrl !== url.value.trim()) return;
+          const key = `${variant.id}:${position}:${value}`;
+          if (!app.publicationKeys.has(key)) app.publicationKeys.set(key, crypto.randomUUID());
+          try { await api(`/api/variants/${variant.id}/publications`, {revision: variant.revision, position, url: value,
+            idempotency_key: app.publicationKeys.get(key)}); }
+          catch (error) { showClaimConflict(conflict, error); return; }
+          app.publicationKeys.delete(key);
+          app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã ghi nhận thông tin do bạn nhập.');
+        });
+        listen(back, 'click', () => { confirmedUrl = null; confirmation.hidden = true; url.focus(); });
+        confirmation.append(confirm, back); confirmation.hidden = false;
       });
       url.addEventListener('input', () => {
+        confirmedUrl = null; confirmation.hidden = true;
         app.bulletinDirty = [...$('bulletin-editor').querySelectorAll('[data-dirty="true"]')].length > 0 ||
           [...$('bulletin-editor').querySelectorAll('[data-publication-url]')].some(input => input.value.trim());
       });
-      block.append(url, report, conflict);
+      block.append(url, report, confirmation, conflict);
     }
     section.append(block);
   });

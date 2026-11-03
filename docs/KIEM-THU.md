@@ -2,6 +2,8 @@
 
 ## Phần 0.4 đang phát triển (03/11/2026)
 
+- 04/11/2026, PUB-02 / POST-03/05: thay hộp xác nhận ghi nhận đa kênh bằng vùng xác nhận nêu đoạn, kênh và URL; sửa URL làm vô hiệu xác nhận. Trên cùng trang của kho fixture X, ghi URL giả → hủy → ghi lại cùng URL: 0/2 → 1/2 → 0/2 → 1/2, URL hiển thị đúng đoạn. Test handler kiểm tra phải xác nhận, thay URL, retry giữ key và lượt mới dùng key mới. Chưa thử mất mạng thật, mọi kênh hoặc toàn bộ thao tác bàn phím.
+
 - 04/11/2026, PUB-02 / POST-03/05: phát hiện khóa ghi nhận theo URL còn được giữ sau phản hồi thành công trong cùng trang. Đã xóa khóa sau thành công và giữ khóa khi lỗi để thử lại; test handler giả kiểm tra lỗi → thử lại dùng cùng khóa → lần ghi mới cùng URL dùng khóa khác. Backend vẫn kiểm tra idempotency và URL hiệu lực; chưa tái hiện chuỗi ghi nhận → hủy → ghi lại qua hộp xác nhận trên trình duyệt hoặc mất mạng thật.
 
 - 04/11/2026, PUB-03/04: phần lịch sử hiển thị tên sự kiện, lý do và liên kết thay thế; số liệu của lượt đã đính chính hoặc hủy vẫn xem được tại lượt đó. Kho fixture trên trình duyệt hiển thị các sự kiện và 10 lượt xem, 0 lượt thích của lượt cũ. Test DOM kiểm tra các giá trị này và giữ thông tin thô khi gặp sự kiện lạ hoặc payload lỗi. Hồi quy Python 163/163, JavaScript 26/26. Chưa thử mọi loại dữ liệu hỏng hay trình đọc màn hình.

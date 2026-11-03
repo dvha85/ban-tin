@@ -10,6 +10,8 @@
 
 Để ghi số liệu, chọn **Nhập số liệu** ở đúng đoạn đã ghi nhận. Điền từng ô bằng số nguyên không âm; để trống khi chưa biết, vì `0` là giá trị đã biết. Kiểm tra thời điểm quan sát có múi giờ và thêm ghi chú nếu cần, rồi chọn **Lưu số liệu**. Giá trị đang nhập được giữ khi có lỗi; có thể sửa và thử lại hoặc chọn **Bỏ số liệu chưa lưu**. Nếu mất kết nối và chưa rõ kết quả, kiểm tra mục **Số liệu đã lưu** trước khi thử lại, nhất là sau khi tải lại trang.
 
+Khi ghi nhận URL, kiểm tra đoạn, kênh và URL trong vùng xác nhận rồi chọn **Xác nhận ghi nhận**. Có thể quay lại chỉnh URL; sửa URL sẽ đóng xác nhận cũ. Nếu kết nối bị gián đoạn, kiểm tra trạng thái và lịch sử trước khi thử lại.
+
 Để sửa một liên kết đã ghi nhận, chọn **Đính chính liên kết** tại đoạn đó, nhập lý do và URL thay thế. Để trống URL nếu muốn hủy ghi nhận trong ứng dụng. Đọc nội dung, đánh dấu xác nhận rồi chọn **Lưu đính chính**; chỉnh lý do hoặc URL sau khi xác nhận sẽ yêu cầu xác nhận lại. Lịch sử ghi nhận cũ được giữ, và thao tác này không sửa hay xóa bài trên mạng xã hội. Khi có lỗi, dữ liệu đang nhập được giữ để sửa hoặc bỏ.
 
 Mở **Lịch sử ghi nhận đã đính chính** để xem URL cũ, lý do, liên kết thay thế và số liệu từng ghi cho lượt cũ. Số liệu thuộc lượt ghi nhận cũ, không tự chuyển sang lượt thay thế.
