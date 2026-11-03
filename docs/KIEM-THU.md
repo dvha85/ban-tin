@@ -121,6 +121,13 @@
 - Cú pháp Python/JavaScript đã kiểm tra. Trình cài đã thực hiện các bước tương đương bằng lệnh: tạo venv riêng, pip install hai phiên bản ghim, tải Chromium thành công. Chưa bấm chạy toàn bộ `.cmd` từ Explorer hoặc xác nhận ánh xạ thư mục giữa Explorer/Codex.
 - **Chưa khởi động lại/nâng cấp DB chính của người dùng trong lần này**. Người dùng cần lưu phần đang sửa, dừng cửa sổ cũ rồi mở lại để nạp xử lý v0.2; chỉ reload trang không đủ. Migration được kiểm tra trên fixture, không được ghi là đã áp dụng DB chính.
 
+## Bổ sung ngày 04/11/2026 — hồi quy và giao diện fixture
+
+- Trước thay đổi chức năng: `python -B -m unittest discover -s tests` đạt 163/163; `node --test tests/draft-state.test.js tests/source-warnings.test.js tests/request-size.test.js tests/inbox-utils.test.js tests/correction-ui.test.js` đạt 20/20. Các bài restore chạy trên thư mục tạm và fixture.
+- Edge mở server fixture tạm có hai mục, phiên bản X hai đoạn và một liên kết giả đã ghi nhận bằng service. Trang hiển thị trạng thái 1/2, nguồn, liên kết và nút nhập số liệu/đính chính. Chưa kiểm thử luồng tạo dữ liệu từ đầu trong lượt này.
+- Chọn nhập số liệu và gửi dãy `1,2,3,4,5,6,7,8` vào hộp đầu; công cụ điều khiển không tiếp tục được khi chuyển hộp. Không xác nhận lưu hay đính chính thành công; không xem lỗi điều khiển là lỗi ứng dụng. Chưa có đủ quan sát để quyết định thay hộp thoại bằng biểu mẫu. Server fixture đã dừng.
+- Người dùng xác nhận chưa có dữ liệu SQLite cũ, nên không áp dụng bước thử migration/restore trên bản sao dữ liệu cũ trong đợt này. Không có kiểm thử dữ liệu vận hành.
+
 ## Không được suy ra từ kết quả trên
 
 - Không có bài nào được gửi tới Facebook, không thử tài khoản, điều kiện kiếm tiền hoặc doanh thu.
