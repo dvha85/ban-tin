@@ -53,6 +53,35 @@ class ServerTests(unittest.TestCase):
         headers['Origin'] = 'https://evil.example'
         self.assertEqual(self.request('POST', '/api/articles/import', {}, headers)[0], 403)
 
+    def test_session_reacquisition_after_server_restart_preserves_revision_guards(self):
+        old = self.session()
+        article = self.room.import_article({'title': 'Tin giả kiểm tra phiên',
+            'url': 'https://example.com/session-recovery', 'summary': 'Dữ liệu giả.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        path = f"/api/bulletins/{bulletin['id']}/save"
+        payload = {'revision': bulletin['revision'], 'title': 'Tiêu đề chưa lưu'}
+        self.server.shutdown()
+        self.server.server_close()
+        self.thread.join()
+        self.server = make_server(self.room, port=0)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        previous_port, self.port = self.port, self.server.server_address[1]
+        old['Cookie'] = old['Cookie'].replace(f'bantin_{previous_port}=', f'bantin_{self.port}=')
+        old['Origin'] = f'http://127.0.0.1:{self.port}'
+        self.assertEqual(self.request('POST', path, payload, old)[0], 401)
+        fresh = self.session()
+        old_token = dict(fresh, **{'X-CSRF-Token': old['X-CSRF-Token']})
+        self.assertEqual(self.request('POST', path, payload, old_token)[0], 403)
+        self.assertEqual(self.room.bulletin(bulletin['id'])['revision'], bulletin['revision'])
+        status, _, body = self.request('POST', path, payload, fresh)
+        self.assertEqual(status, 200, body)
+        saved = json.loads(body)
+        self.assertEqual(saved['title'], payload['title'])
+        self.assertEqual(saved['revision'], bulletin['revision'] + 1)
+        status, _, _ = self.request('POST', path, payload, fresh)
+        self.assertEqual(status, 409)
+
     def test_every_multichannel_post_route_requires_session_csrf_and_origin_before_dispatch(self):
         headers = self.session()
         routes = [

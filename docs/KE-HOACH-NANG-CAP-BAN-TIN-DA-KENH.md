@@ -12,6 +12,8 @@
 
 > Bổ sung: đã thêm nút khôi phục phiên không tải lại và không tự gửi lại thao tác; kiểm tra thư mục dữ liệu và yêu cầu người dùng đối chiếu trước khi lưu lại. Test handler giả đạt; chưa smoke giao diện thật sau sửa, chưa thử trường hợp ghi thành công nhưng mất phản hồi. Đường dẫn giống nhau không chứng minh nội dung kho không bị thay thế.
 
+> Kiểm thử HTTP bổ sung: server mới cùng kho tạm từ chối cookie/CSRF cũ, chấp nhận phiên mới, lưu revision hiện tại và từ chối gửi lại revision cũ. Đây là bằng chứng server, chưa thay thế smoke trình duyệt hoặc thử mất phản hồi.
+
 > Bổ sung PUB-02/03: tách namespace khóa đính chính nội bộ khỏi khóa client để tránh lỗi trùng khóa; kiểm thử tái hiện lỗi cũ và đối chiếu lịch sử, retry trên kho tạm. Xem `KIEM-THU.md`.
 
 > Bổ sung FIX-03: trên nhánh 0.4, giao diện chặn URL bài cũ để trống và giữ trạng thái đã duyệt; test service kiểm tra thêm URL sai miền và trang chủ. Hồi quy gần nhất 164 Python, 28 JavaScript đạt. Chưa kiểm tra các URL sai này qua UI hoặc xác nhận bản 0.3.1 phát hành độc lập.
