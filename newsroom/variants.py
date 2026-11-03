@@ -107,6 +107,8 @@ class VariantMixin:
                 if not isinstance(data['checks'], dict):
                     raise ValidationError('Danh sách kiểm tra không hợp lệ.')
                 checks = {key: data['checks'].get(key) is True for key in CHECKS}
+            if not changed and checks == current['checks']:
+                return current
             payload = {'segments': segments, 'checks': checks}
             conn.execute('''UPDATE content_variants SET account_label=?,revision=revision+1,bulletin_revision=?,
                 status='draft',approval_id=NULL,payload=?,updated_at=? WHERE id=?''',

@@ -85,6 +85,20 @@ class VariantTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             self.room.export_variant(variant['id'])
 
+    def test_noop_saves_do_not_revoke_approval(self):
+        variant = self.make_approved('threads')
+        same_bulletin = self.room.save_bulletin(self.bulletin['id'], {'revision': self.bulletin['revision']})
+        self.assertEqual(same_bulletin['revision'], self.bulletin['revision'])
+        item = same_bulletin['items'][0]
+        same_item = self.room.save_bulletin_item(same_bulletin['id'], item['id'], {
+            'bulletin_revision': same_bulletin['revision'], 'revision': item['revision'], 'verified': item['verified']})
+        self.assertEqual(same_item['revision'], same_bulletin['revision'])
+        same_variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+            'segments': variant['segments'], 'checks': variant['checks']})
+        self.assertEqual(same_variant['revision'], variant['revision'])
+        self.assertEqual(same_variant['status'], 'approved')
+        self.assertTrue(self.room.export_variant(variant['id'])['posts'])
+
     def test_record_separate_segments_retry_and_immutable_after_correction(self):
         variant = self.make_approved('x', two=True)
         data = {'revision': variant['revision'], 'position': 0, 'url': 'https://x.com/test/status/123',

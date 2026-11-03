@@ -544,6 +544,16 @@ function renderBulletin() {
     item.sources.forEach(source => {
       sources.append(link(source.url, source.title || source.source_name || source.url));
       sources.append(node('p', 'small-note', `Ngày nguồn: ${formatDate(source.published_at)} · Thu thập: ${formatDate(source.retrieved_at)} · Tư liệu là trích đoạn hoặc ghi chú, cần mở nguồn gốc.`));
+      const removeSource = node('button', 'text-button', 'Bỏ nguồn này');
+      removeSource.disabled = item.sources.length <= 1;
+      bulletinAction(removeSource, async () => {
+        if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi bỏ nguồn.');
+        if (!window.confirm(`Bỏ nguồn ${source.url} khỏi mục này?`)) return;
+        app.bulletin = await api(`/api/bulletins/${bulletin.id}/items/${item.id}/save`,
+          {bulletin_revision: bulletin.revision, revision: item.revision, remove_source_id: source.source_id});
+        renderBulletin(); await loadBulletinList(); toast('Đã bỏ nguồn; cần kiểm chứng lại mục.');
+      });
+      sources.append(removeSource);
     });
     section.append(node('p', 'small-note', 'Nguồn đã lưu cho mục:'), sources);
     const checkLabel = node('label', 'bulletin-check');
@@ -603,6 +613,14 @@ function renderBulletin() {
     const result = await api(`/api/bulletins/${bulletin.id}/packet`); await copy(result.text);
   });
   editor.append(packet);
+  const history = node('button', 'button secondary', 'Xem lịch sử bản tin');
+  listen(history, 'click', async () => {
+    const entries = await api(`/api/bulletins/${bulletin.id}/history`);
+    showText('Lịch sử bản tin', entries.map(entry =>
+      `${formatDate(entry.at)} · ${entry.entity_type} #${entry.entity_id} · v${entry.revision} · ${entry.action}\n${entry.snapshot}`
+    ).join('\n\n────────────\n\n'), 'Tối đa 100 sự kiện mới nhất; dữ liệu được lưu trên máy này.', null, false);
+  });
+  editor.append(history);
   const candidates = app.state.articles.filter(article => !bulletin.items.some(item => item.article_id === article.id));
   if (candidates.length && bulletin.items.length < 10) {
     const addSection = node('section', 'bulletin-block');

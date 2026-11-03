@@ -428,7 +428,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | Review hiện trạng | Hoàn tất | Commit nền `a180354`; 88/88 test; probe RSS chỉ đọc; tái hiện URL bằng DOM giả | Giữ làm baseline, không coi là nghiệm thu 0.4 |
 | 03/11/2026 | Lập kế hoạch nâng cấp | Hoàn tất | Tài liệu này; chưa triển khai chức năng | Xem/chốt phạm vi rồi bắt đầu G0 |
 | 03/11/2026 | FIX-01…03 | Đang làm | `tests/draft-state.test.js` 2/2 và 88/88 Python đạt; chưa thử trình duyệt thực | Smoke trình duyệt trên kho thử |
-| 03/11/2026 | BASE/DB | Đang làm | Migration schema 4 và kiểm thử rollback/restore đã được bổ sung; 106 test Python đạt trên kho thử | Mở rộng fixture và kiểm thử nâng cấp thực tế |
+| 03/11/2026 | BASE/DB | Đang làm | Migration schema 4, rollback/restore và lỗi sao lưu; 109 test Python đạt trên kho thử | Mở rộng fixture và kiểm thử nâng cấp thực tế |
 | 03/11/2026 | DIG/FMT/APR/PUB | Đang làm | Có lõi, giao diện, test chia đoạn 9→10 và test HTTP CSRF; đã smoke một bản tin/phiên bản X với URL giả trên kho thử | Kiểm chứng bộ đếm, QA toàn luồng, clipboard, file tải, restart và thêm pilot |
 | — | QA/DOC/PILOT/REL | Chưa bắt đầu | — | Chỉ đóng khi đủ bằng chứng mục 10 |
 

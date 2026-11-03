@@ -169,6 +169,8 @@ class Handler(BaseHTTPRequestHandler):
                     self.respond(200, {'text': self.server.room.bulletin_packet(bulletin_id)})
                 elif parts[4] == 'variants':
                     self.respond(200, self.server.room.variants(bulletin_id))
+                elif parts[4] == 'history':
+                    self.respond(200, self.server.room.bulletin_history(bulletin_id))
                 else:
                     self.json_error(404, 'Không tìm thấy chức năng.')
             elif path.startswith('/api/variants/'):

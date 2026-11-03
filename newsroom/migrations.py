@@ -98,10 +98,11 @@ def migrate(conn, data_dir):
         raise RuntimeError('Dữ liệu thuộc phiên bản mới hơn. Không tự hạ cấp.')
     if version == CURRENT_SCHEMA:
         return
-    if version in (1, 2, 3):
+    has_user_tables = conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' LIMIT 1").fetchone() is not None
+    if version in (1, 2, 3) or (version == 0 and has_user_tables):
         folder = data_dir / 'backups'
         folder.mkdir(exist_ok=True)
-        label = {1: 'pre-v02', 2: 'pre-v03', 3: 'pre-v04'}[version]
+        label = {0: 'pre-unversioned', 1: 'pre-v02', 2: 'pre-v03', 3: 'pre-v04'}[version]
         backup_path = folder / f'{label}-{secrets.token_hex(4)}.sqlite3'
         with closing(sqlite3.connect(backup_path)) as backup:
             conn.backup(backup)

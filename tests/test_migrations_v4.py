@@ -70,6 +70,34 @@ class MigrationV4Tests(unittest.TestCase):
             self.assertEqual(conn.execute('SELECT value FROM sentinel').fetchone()[0], 'unchanged')
             self.assertIsNone(conn.execute("SELECT name FROM sqlite_master WHERE name='new_table'").fetchone())
 
+    def test_unversioned_nonempty_database_is_backed_up_before_migration(self):
+        destination = self.directory / 'unversioned.sqlite3'
+        with closing(sqlite3.connect(destination)) as conn:
+            conn.execute('CREATE TABLE sentinel (value TEXT)')
+            conn.execute("INSERT INTO sentinel VALUES ('keep')")
+            conn.commit()
+            migrate(conn, self.directory)
+            self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 4)
+        backups = list((self.directory / 'backups').glob('pre-unversioned-*.sqlite3'))
+        self.assertEqual(len(backups), 1)
+        with closing(sqlite3.connect(backups[0])) as backup:
+            self.assertEqual(backup.execute('PRAGMA user_version').fetchone()[0], 0)
+            self.assertEqual(backup.execute('SELECT value FROM sentinel').fetchone()[0], 'keep')
+
+    def test_backup_failure_leaves_old_version_and_schema_untouched(self):
+        destination = self.directory / 'backup-failure.sqlite3'
+        with closing(sqlite3.connect(destination)) as conn:
+            conn.execute('CREATE TABLE sentinel (value TEXT)')
+            conn.execute("INSERT INTO sentinel VALUES ('untouched')")
+            conn.execute('PRAGMA user_version=3')
+            conn.commit()
+            with patch('newsroom.migrations.sqlite3.connect', side_effect=OSError('backup unavailable')):
+                with self.assertRaises(OSError):
+                    migrate(conn, self.directory)
+            self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
+            self.assertEqual(conn.execute('SELECT value FROM sentinel').fetchone()[0], 'untouched')
+            self.assertIsNone(conn.execute("SELECT name FROM sqlite_master WHERE name='bulletins'").fetchone())
+
     def test_newer_version_fails_closed_and_restore_v4(self):
         backup = self.room.backup()
         target = self.directory / 'restored'

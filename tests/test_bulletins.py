@@ -72,6 +72,18 @@ class BulletinTests(unittest.TestCase):
                                                                     'remove_item_id': second['id']})
         self.assertEqual(len(bulletin['items']), 1)
         self.assertEqual(len(bulletin['items'][0]['sources']), 2)
+        item = bulletin['items'][0]
+        remove_id = item['sources'][1]['source_id']
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'remove_source_id': remove_id})
+        self.assertEqual(len(bulletin['items'][0]['sources']), 1)
+        self.assertFalse(bulletin['items'][0]['verified'])
+        self.assertEqual(self.room.bulletin_history(bulletin['id'])[0]['action'], 'saved')
+        item = bulletin['items'][0]
+        with self.assertRaises(ValidationError):
+            self.room.save_bulletin_item(bulletin['id'], item['id'], {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'remove_source_id': item['sources'][0]['source_id']})
         with self.assertRaises(ValidationError):
             self.room.change_bulletin_items(bulletin['id'], {'revision': bulletin['revision'],
                                                             'remove_item_id': first['id']})

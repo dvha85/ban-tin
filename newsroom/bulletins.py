@@ -96,6 +96,12 @@ class BulletinMixin:
                 (SELECT COUNT(*) FROM bulletin_items WHERE bulletin_id=bulletins.id) AS item_count
                 FROM bulletins ORDER BY updated_at DESC,id DESC''')]
 
+    def bulletin_history(self, bulletin_id):
+        with self.connection() as conn:
+            self._bulletin(conn, bulletin_id)
+            return [dict(row) for row in conn.execute('''SELECT id,entity_type,entity_id,revision,action,snapshot,at
+                FROM bulletin_history WHERE bulletin_id=? ORDER BY id DESC LIMIT 100''', (bulletin_id,))]
+
     def _bulletin_history(self, conn, bulletin_id, entity_type, entity_id, revision, action, snapshot):
         conn.execute('''INSERT INTO bulletin_history
             (bulletin_id,entity_type,entity_id,revision,action,snapshot,at) VALUES (?,?,?,?,?,?,?)''',
@@ -200,6 +206,9 @@ class BulletinMixin:
             if (not isinstance(order, list) or any(type(i) is not int for i in order)
                     or len(order) != len(previous_ids) or set(order) != set(previous_ids)):
                 raise ValidationError('Thứ tự mục phải bao gồm mỗi mục đúng một lần.')
+            if (title, introduction, conclusion, edition_date, order) == (
+                    current['title'], current['introduction'], current['conclusion'], current['edition_date'], previous_ids):
+                return current
             for item_id in previous_ids:
                 conn.execute('UPDATE bulletin_items SET position=? WHERE id=?', (-item_id, item_id))
             for position, item_id in enumerate(order):
@@ -249,7 +258,17 @@ class BulletinMixin:
                     'published_at': None, 'date_kind': 'unknown', 'retrieved_at': _now(),
                     'scope': 'excerpt', 'note_kind': 'manual_note'}]
                 payload['verified'] = False
+            if 'remove_source_id' in data:
+                source_id = data['remove_source_id']
+                if not isinstance(source_id, str) or not any(source['source_id'] == source_id for source in payload['sources']):
+                    raise ValidationError('Không tìm thấy nguồn cần bỏ.')
+                if len(payload['sources']) <= 1:
+                    raise ValidationError('Mỗi mục phải giữ ít nhất một nguồn.')
+                payload['sources'] = [source for source in payload['sources'] if source['source_id'] != source_id]
+                payload['verified'] = False
             self._validate_total_sources([payload if existing['id'] == item_id else existing for existing in bulletin['items']])
+            if all(payload[key] == item[key] for key in payload):
+                return bulletin
             conn.execute('UPDATE bulletin_items SET payload=?,revision=revision+1 WHERE id=?', (_json(payload), item_id))
             conn.execute('UPDATE bulletins SET revision=revision+1,updated_at=? WHERE id=?', (_now(), bulletin_id))
             self._invalidate_variants(conn, bulletin_id)
