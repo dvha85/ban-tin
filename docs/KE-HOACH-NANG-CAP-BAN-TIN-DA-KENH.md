@@ -32,6 +32,8 @@
 
 > Bổ sung BASE-02: các route dùng ID số kiểm tra giới hạn trước chuyển đổi và truy cập SQLite; test HTTP với ID quá lớn và chuỗi rất dài đạt. Các trường ID khác trong payload vẫn cần đối chiếu riêng.
 
+> Bổ sung BASE-02 / legacy: API tạo draft cũ cũng từ chối ID tin vượt phạm vi SQLite bằng HTTP 400; test HTTP và hồi quy đạt. Xem `KIEM-THU.md`.
+
 > Bổ sung PUB-02/03: tách namespace khóa đính chính nội bộ khỏi khóa client để tránh lỗi trùng khóa; kiểm thử tái hiện lỗi cũ và đối chiếu lịch sử, retry trên kho tạm. Xem `KIEM-THU.md`.
 
 > Bổ sung FIX-03: trên nhánh 0.4, giao diện chặn URL bài cũ để trống và giữ trạng thái đã duyệt; test service kiểm tra thêm URL sai miền và trang chủ. Hồi quy gần nhất 164 Python, 28 JavaScript đạt. Chưa kiểm tra các URL sai này qua UI hoặc xác nhận bản 0.3.1 phát hành độc lập.

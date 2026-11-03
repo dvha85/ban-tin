@@ -143,6 +143,8 @@ class Newsroom(PublicationMixin, VariantMixin, BulletinMixin, CollectionMixin):
         return item
 
     def article(self, article_id):
+        if type(article_id) is not int or not -(2**63) <= article_id < 2**63:
+            raise ValidationError('ID tin không hợp lệ.')
         with self.connection() as conn:
             row = conn.execute('SELECT * FROM articles WHERE id=?', (article_id,)).fetchone()
             if not row:

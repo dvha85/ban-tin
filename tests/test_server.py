@@ -85,6 +85,16 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(self.room.bulletin(bulletin['id']), before)
                 self.assertEqual(len(self.room.bulletins()), 1)
 
+    def test_legacy_draft_rejects_article_ids_outside_sqlite_range(self):
+        headers = self.session()
+        before = self.room.state()
+        for value in (2**63, -(2**63)-1):
+            with self.subTest(article_id=value):
+                status, _, body = self.request('POST', '/api/drafts', {'article_id': value}, headers)
+                self.assertEqual(status, 400, body)
+                self.assertIn('error', json.loads(body))
+        self.assertEqual(self.room.state()['drafts'], before['drafts'])
+
     def test_path_ids_outside_sqlite_range_are_rejected_before_dispatch(self):
         headers = self.session()
         bad_ids = (str(2**63), '9' * 5000)
