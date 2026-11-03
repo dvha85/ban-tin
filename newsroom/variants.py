@@ -171,6 +171,8 @@ class VariantMixin:
     def split_variant(self, variant_id, data):
         from .service import Conflict
         with self.connection() as conn:
+            # Keep the revision check and source material on the same snapshot.
+            conn.execute('BEGIN')
             variant = self._locked_variant(conn, variant_id, data.get('revision'))
             if variant['locked_at'] is not None or variant['needs_update']:
                 raise Conflict('Phiên bản đã khóa hoặc bản tin gốc đã thay đổi; hãy kiểm tra trước khi chia.')

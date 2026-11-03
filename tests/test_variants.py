@@ -237,6 +237,28 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(preview['posts'][0]['item_ids'], [item['id'] for item in self.bulletin['items']])
         self.assertEqual(len(self.room.bulletin(self.bulletin['id'])['items']), 1)
 
+    def test_split_reads_variant_and_parent_in_one_snapshot(self):
+        variant = self.make_approved('threads')
+        with self.room.connection() as conn:
+            conn.execute('PRAGMA journal_mode=WAL')
+        original = self.room._locked_variant
+        observed = []
+
+        def concurrent_remove(conn, variant_id, revision):
+            selected = original(conn, variant_id, revision)
+            observed.append(conn.in_transaction)
+            self.room.change_bulletin_items(self.bulletin['id'], {
+                'revision': self.bulletin['revision'], 'remove_item_id': self.bulletin['items'][1]['id']})
+            return selected
+
+        with patch.object(self.room, '_locked_variant', side_effect=concurrent_remove):
+            result = self.room.split_variant(variant['id'], {'revision': variant['revision']})
+        self.assertEqual(observed, [True])
+        self.assertTrue(result['preview']['valid'])
+        self.assertEqual(result['preview']['posts'][0]['item_ids'], [item['id'] for item in self.bulletin['items']])
+        with self.assertRaises(Conflict):
+            self.room.save_variant(variant['id'], {'revision': variant['revision'], 'segments': result['segments']})
+
     def test_clone_preserves_all_text_when_parent_loses_an_item(self):
         variant = self.make_approved('x', two=True)
         record = self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
