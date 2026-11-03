@@ -2,6 +2,8 @@
 
 ## Smoke test giao diện đa kênh 04/11/2026
 
+- BASE-02: kiểm thử HTTP ID đường dẫn vượt giới hạn SQLite và chuỗi 5.000 chữ số trên các nhóm route bản tin, mục, phiên bản, ghi nhận, bản nháp và tác vụ thu thập. Trước sửa có route ngắt kết nối hoặc trả thông báo kỹ thuật; sau sửa từ chối trước handler với 404, riêng tác vụ trả 400. Hồi quy 173/173 Python và 33/33 JavaScript đạt. Không suy rộng sang mọi trường ID trong payload.
+
 - BASE-02 / NEWS-01: ID tin nằm ngoài phạm vi số nguyên 64-bit của SQLite trước sửa làm HTTP ngắt kết nối khi tạo bản tin; sau sửa, tạo bản tin và thêm mục đều trả 400, không thay đổi bản tin hoặc tạo bản mới. Hồi quy 172/172 Python, 33/33 JavaScript đạt. Chưa khẳng định mọi ID trên mọi route đã được kiểm tra biên.
 
 - BASE-02: test HTTP tạo phiên bản với `platform` là mảng/object tái hiện `TypeError` và kết nối bị đóng trước sửa. Sau sửa, mảng, object, null, boolean, số và tên không hỗ trợ trả 400 JSON và không tạo phiên bản; hồi quy 171/171 Python và 33/33 JavaScript đạt. Chưa bao phủ mọi trường và tổ hợp kiểu dữ liệu của API.

@@ -85,6 +85,28 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(self.room.bulletin(bulletin['id']), before)
                 self.assertEqual(len(self.room.bulletins()), 1)
 
+    def test_path_ids_outside_sqlite_range_are_rejected_before_dispatch(self):
+        headers = self.session()
+        bad_ids = (str(2**63), '9' * 5000)
+        routes = [
+            ('GET', '/api/bulletins/{id}'), ('GET', '/api/bulletins/{id}/packet'),
+            ('GET', '/api/variants/{id}'), ('GET', '/api/variants/{id}/publications'),
+            ('GET', '/api/drafts/{id}/history'), ('POST', '/api/bulletins/{id}/save'),
+            ('POST', '/api/bulletins/1/items/{id}/save'), ('POST', '/api/variants/{id}/save'),
+            ('POST', '/api/publications/{id}/metrics'), ('POST', '/api/drafts/{id}/copy-bulletin'),
+        ]
+        for bad_id in bad_ids:
+            for method, route in routes:
+                with self.subTest(method=method, route=route, length=len(bad_id)):
+                    status, _, body = self.request(method, route.format(id=bad_id),
+                        {} if method == 'POST' else None, headers)
+                    self.assertEqual(status, 404, body)
+                    self.assertIn('error', json.loads(body))
+            status, _, body = self.request('POST', f'/api/collection/jobs/{bad_id}/run', {}, headers)
+            self.assertEqual(status, 400, body)
+            self.assertIn('error', json.loads(body))
+        self.assertEqual(self.room.bulletins(), [])
+
     def test_session_reacquisition_after_server_restart_preserves_revision_guards(self):
         old = self.session()
         article = self.room.import_article({'title': 'Tin giả kiểm tra phiên',

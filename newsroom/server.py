@@ -15,6 +15,12 @@ STATIC = Path(__file__).parent / 'static'
 MAX_BODY = 128_000
 
 
+def valid_path_id(value):
+    """Accept bounded ASCII decimal identifiers before converting for SQLite."""
+    return (bool(value) and len(value) <= 19 and value.isascii() and value.isdecimal()
+            and int(value) <= 2**63 - 1)
+
+
 class LocalServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = False
@@ -166,7 +172,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.respond(200, self.server.room.legacy_publication_duplicates())
             elif path.startswith('/api/bulletins/'):
                 parts = path.split('/')
-                if len(parts) not in (4, 5) or not parts[3].isdigit():
+                if len(parts) not in (4, 5) or not valid_path_id(parts[3]):
                     self.json_error(404, 'Không tìm thấy bản tin.')
                     return
                 bulletin_id = int(parts[3])
@@ -182,7 +188,7 @@ class Handler(BaseHTTPRequestHandler):
                     self.json_error(404, 'Không tìm thấy chức năng.')
             elif path.startswith('/api/variants/'):
                 parts = path.split('/')
-                if len(parts) not in (4, 5) or not parts[3].isdigit():
+                if len(parts) not in (4, 5) or not valid_path_id(parts[3]):
                     self.json_error(404, 'Không tìm thấy phiên bản.')
                     return
                 variant_id = int(parts[3])
@@ -202,7 +208,7 @@ class Handler(BaseHTTPRequestHandler):
                     self.json_error(404, 'Không tìm thấy chức năng.')
             elif path.startswith('/api/drafts/'):
                 parts = path.split('/')
-                if len(parts) != 5 or not parts[3].isdigit():
+                if len(parts) != 5 or not valid_path_id(parts[3]):
                     self.json_error(404, 'Không tìm thấy chức năng.')
                     return
                 draft_id = int(parts[3])
@@ -268,7 +274,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.respond(200, room.configure_source(source_id, data))
             elif path.startswith('/api/collection/jobs/'):
                 parts = path.split('/')
-                if len(parts) != 6 or not parts[4].isdigit():
+                if len(parts) != 6 or not valid_path_id(parts[4]):
                     raise ValidationError('Tác vụ không hợp lệ.')
                 job_id, action = int(parts[4]), parts[5]
                 if action == 'cancel':
@@ -289,7 +295,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.respond(201, room.create_bulletin(data))
             elif path.startswith('/api/bulletins/'):
                 parts = path.split('/')
-                if len(parts) < 5 or not parts[3].isdigit():
+                if len(parts) < 5 or not valid_path_id(parts[3]):
                     self.json_error(404, 'Không tìm thấy chức năng.')
                     return
                 bulletin_id = int(parts[3])
@@ -299,7 +305,7 @@ class Handler(BaseHTTPRequestHandler):
                     result = room.change_bulletin_items(bulletin_id, data)
                 elif len(parts) == 5 and parts[4] == 'variants':
                     result = room.create_variant(bulletin_id, data)
-                elif len(parts) == 7 and parts[4] == 'items' and parts[5].isdigit() and parts[6] == 'save':
+                elif len(parts) == 7 and parts[4] == 'items' and valid_path_id(parts[5]) and parts[6] == 'save':
                     result = room.save_bulletin_item(bulletin_id, int(parts[5]), data)
                 else:
                     self.json_error(404, 'Không tìm thấy chức năng.')
@@ -307,7 +313,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.respond(200, result)
             elif path.startswith('/api/variants/'):
                 parts = path.split('/')
-                if len(parts) != 5 or not parts[3].isdigit():
+                if len(parts) != 5 or not valid_path_id(parts[3]):
                     self.json_error(404, 'Không tìm thấy chức năng.')
                     return
                 variant_id, action = int(parts[3]), parts[4]
@@ -329,7 +335,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.respond(200, result)
             elif path.startswith('/api/publications/'):
                 parts = path.split('/')
-                if len(parts) != 5 or not parts[3].isdigit():
+                if len(parts) != 5 or not valid_path_id(parts[3]):
                     self.json_error(404, 'Không tìm thấy chức năng.')
                     return
                 publication_id, action = int(parts[3]), parts[4]
@@ -345,7 +351,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.respond(200, {'path': room.backup()})
             elif path.startswith('/api/drafts/'):
                 parts = path.split('/')
-                if len(parts) != 5 or not parts[3].isdigit():
+                if len(parts) != 5 or not valid_path_id(parts[3]):
                     self.json_error(404, 'Không tìm thấy chức năng.')
                     return
                 draft_id, action = int(parts[3]), parts[4]
