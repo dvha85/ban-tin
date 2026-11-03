@@ -29,6 +29,17 @@ class BulletinTests(unittest.TestCase):
                 self.room.create_bulletin({'article_ids': ids})
         self.assertEqual(self.room.bulletins(), [])
 
+    def test_reuse_counts_track_current_bulletins_without_preventing_reuse(self):
+        first, second = (article['id'] for article in self.articles[:2])
+        self.assertEqual(self.room.state()['bulletin_usage'], {})
+        a = self.room.create_bulletin({'article_ids': [first]})
+        b = self.room.create_bulletin({'article_ids': [first, second]})
+        self.assertEqual(self.room.state()['bulletin_usage'], {first: 2, second: 1})
+        self.room.change_bulletin_items(b['id'], {'revision': b['revision'],
+                                                 'remove_item_id': b['items'][0]['id']})
+        self.assertEqual(self.room.state()['bulletin_usage'], {first: 1, second: 1})
+        self.assertEqual(self.room.bulletin(a['id'])['items'][0]['article_id'], first)
+
     def test_reorder_and_packet_preserve_snapshots_after_refresh_restart(self):
         bulletin = self.create()
         ids = [item['id'] for item in bulletin['items']]

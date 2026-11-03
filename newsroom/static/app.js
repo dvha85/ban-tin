@@ -26,12 +26,13 @@ function toast(message, error = false) {
   toastTimer = setTimeout(() => { $('toast').hidden = true; }, error ? 12000 : 6500);
 }
 async function api(path, body) {
+  const payload = body === undefined ? undefined : requestJson(body);
   let response;
   try {
     response = await fetch(path, {credentials: 'same-origin', cache: 'no-store',
       method: body === undefined ? 'GET' : 'POST',
       headers: body === undefined ? {} : {'Content-Type': 'application/json', 'X-CSRF-Token': app.csrf},
-      body: body === undefined ? undefined : JSON.stringify(body)});
+      body: payload});
   } catch (_) {
     throw new Error('Mất kết nối với Bàn tin. Giữ nội dung chưa lưu; kiểm tra cửa sổ chạy ứng dụng.');
   }
@@ -154,6 +155,8 @@ function renderStories() {
     const bottom = node('div', 'story-bottom');
     bottom.append(node('span', `badge ${item.category}`, labelCategory(item.category)), node('span', '', `Ưu tiên ${item.score}/95`));
     card.append(meta, node('h3', '', item.title), node('p', 'excerpt', item.summary || 'Nguồn chưa có trích đoạn. Cần đọc nguồn gốc.'), bottom);
+    const used = (app.state.bulletin_usage || {})[item.id] || 0;
+    if (used) card.append(node('p', 'small-note', `Đã dùng trong ${used} bản tin. Có thể chọn lại để cập nhật.`));
     listen(card, 'click', () => { app.articleId = item.id; renderStories(); });
     const wrapper = node('div', 'bulletin-story');
     const selection = node('label', 'bulletin-select');
@@ -630,18 +633,22 @@ function renderBulletin() {
     const addSection = node('section', 'bulletin-block');
     const select = node('select'); select.setAttribute('aria-label', 'Tin muốn thêm vào bản tin');
     for (const article of candidates) {
-      const option = node('option', '', article.title); option.value = article.id; select.append(option);
+      const used = (app.state.bulletin_usage || {})[article.id] || 0;
+      const option = node('option', '', `${article.title}${used ? ` · đã dùng trong ${used} bản tin` : ''}`); option.value = article.id; select.append(option);
     }
     const addItem = node('button', 'button secondary', 'Thêm tin vào bản tin');
     bulletinAction(addItem, async () => {
       if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi thêm mục.');
       const article = candidates.find(row => row.id === Number(select.value));
+      await loadState();
+      const used = (app.state.bulletin_usage || {})[article.id] || 0;
+      if (used && !window.confirm(`Tin “${article.title}” đã dùng trong ${used} bản tin khác. Vẫn thêm để cập nhật?`)) return;
       const chosen = chooseBulletinSources(article);
       if (chosen === null) return;
       const data = {revision: bulletin.revision, article_id: article.id};
       if (chosen !== undefined) data.source_selection = chosen;
       app.bulletin = await api(`/api/bulletins/${bulletin.id}/items`, data);
-      renderBulletin(); await loadBulletinList(); toast('Đã thêm tin vào bản tin.');
+      await loadState(); renderBulletin(); await loadBulletinList(); toast('Đã thêm tin vào bản tin.');
     });
     addSection.append(select, addItem); editor.append(addSection);
   }
@@ -903,6 +910,13 @@ function chooseBulletinSources(article) {
 bulletinAction($('create-bulletin'), async () => {
   if (!app.selectedArticles.size) return;
   if (app.bulletinDirty && !window.confirm('Bản tin đang mở có thay đổi chưa lưu. Bỏ thay đổi và tạo bản mới?')) return;
+  await loadState();
+  const reused = [...app.selectedArticles].map(id => {
+    const article = app.state.articles.find(row => row.id === id);
+    const count = (app.state.bulletin_usage || {})[id] || 0;
+    return article && count ? `• ${article.title} (${count} bản tin)` : null;
+  }).filter(Boolean);
+  if (reused.length && !window.confirm(`Các tin sau đã dùng trong bản tin khác:\n${reused.join('\n')}\n\nVẫn tạo bản tin mới?`)) return;
   const sourceSelection = {};
   for (const id of app.selectedArticles) {
     const article = app.state.articles.find(row => row.id === id);
@@ -912,7 +926,7 @@ bulletinAction($('create-bulletin'), async () => {
     if (chosen !== undefined) sourceSelection[String(id)] = chosen;
   }
   app.bulletin = await api('/api/bulletins', {article_ids: [...app.selectedArticles], title: '', source_selection: sourceSelection});
-  app.selectedArticles.clear(); app.bulletinDirty = false; renderStories(); renderBulletin(); view('bulletins');
+  app.selectedArticles.clear(); app.bulletinDirty = false; await loadState(); renderBulletin(); view('bulletins');
   toast('Đã tạo bản tin. Hãy bổ sung và kiểm chứng từng mục.');
 });
 

@@ -431,10 +431,13 @@ Chỉ phần TIÊU ĐỀ và BÀI ĐĂNG được chuyển vào ô bài đăng; 
             sources = [dict(source, health=health.get(source['id'])) for source in self.collection_sources()]
             total = conn.execute('SELECT COUNT(*) FROM articles').fetchone()[0]
             metrics = {row['draft_id']: dict(row) for row in conn.execute('SELECT * FROM metrics')}
+            bulletin_usage = {row['article_id']: row['uses'] for row in conn.execute('''
+                SELECT article_id, COUNT(DISTINCT bulletin_id) AS uses FROM bulletin_items
+                WHERE article_id IS NOT NULL GROUP BY article_id''')}
         drafts = self.drafts()
         recent = [draft for draft in drafts if draft['published_at'] and
                   (datetime.now(timezone.utc) - datetime.fromisoformat(draft['published_at'])).days < 30]
-        return {'articles': self.articles(), 'drafts': drafts, 'sources': sources,
+        return {'articles': self.articles(), 'drafts': drafts, 'sources': sources, 'bulletin_usage': bulletin_usage,
                 'features': {'custom_sources': True},
                 'checks': self.CHECKS, 'metrics': metrics, 'busy': self.refresh_lock.locked(),
                 'data_dir': str(self.data_dir), 'demo': self.demo,
