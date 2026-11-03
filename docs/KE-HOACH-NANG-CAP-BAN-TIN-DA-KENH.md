@@ -4,6 +4,8 @@
 
 > Bổ sung QA-02: biểu mẫu số liệu Threads giữ giá trị 303 và chặn chuyển sang Facebook khi chưa lưu; sau khi lưu có thể chuyển kênh và xem lại cả hai lượt số liệu. Các tình huống rời trang và mất kết nối vẫn cần kiểm tra riêng.
 
+> Bổ sung PUB-02/03: tách namespace khóa đính chính nội bộ khỏi khóa client để tránh lỗi trùng khóa; kiểm thử tái hiện lỗi cũ và đối chiếu lịch sử, retry trên kho tạm. Xem `KIEM-THU.md`.
+
 - Ngày lập / cập nhật: **03/11/2026**, giờ Việt Nam.
 - Repository: [dvha85/ban-tin](https://github.com/dvha85/ban-tin).
 - Mốc mã nguồn được review: **`a180354e52e98a678d093609f9e8f2d37e6cd0a3`**, nhánh `main`, phiên bản ứng dụng `0.3.0`, dữ liệu schema `3`.

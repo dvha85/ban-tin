@@ -2,6 +2,8 @@
 
 ## Smoke test giao diện đa kênh 04/11/2026
 
+- PUB-02/03: test service tái hiện client dùng khóa `correction_<publication_id>_<revision>` cho một đoạn khác; trước sửa, đính chính thất bại vì ràng buộc khóa duy nhất. Khóa thay thế mới dùng namespace nội bộ chứa `:`, vốn bị API từ chối trong khóa client; test kiểm tra đính chính thành công, lịch sử và số đoạn hiệu lực, retry khóa client cũ và từ chối gửi khóa nội bộ. Không sửa các khóa lịch sử; thử nghiệm dùng cơ sở dữ liệu tạm.
+- Hồi quy trước sửa: 163/163 Python, 28/28 JavaScript. Sau sửa: 164/164 Python, 28/28 JavaScript. Test mới thất bại trên mã cũ với `UNIQUE constraint failed` và đạt sau sửa; chưa thử lỗi trùng khóa này qua trình duyệt hay trên kho vận hành.
 - Kiểm tra số liệu chưa lưu trên trình duyệt tích hợp: nhập 303 lượt xem vào biểu mẫu Threads rồi chọn Facebook; giao diện yêu cầu lưu trước khi đổi, giữ nguyên biểu mẫu và giá trị 303. Lưu thành công, chuyển sang Facebook rồi trở lại Threads: lịch sử hiển thị cả lượt 202/3 và lượt 303 với các chỉ số còn lại chưa biết. Đây là dữ liệu giả; chưa bao phủ các thao tác rời trang hoặc mất kết nối.
 - Trên kho fixture tạm, bản tin hai mục có ba phiên bản: ghi nhận URL giả Facebook và Threads qua vùng xác nhận; phiên bản X giữ một trong hai đoạn đã ghi nhận. Tổng quan hiển thị một bản tin, ba phiên bản và ba đoạn được ghi nhận.
 - Nhập và xem lại số liệu: Facebook 101 lượt xem, 0 lượt thích; Threads 202 lượt xem, 3 lượt thích. Các trường không nhập hiển thị chưa biết. Liên kết và số liệu của hai kênh được đối chiếu riêng trên giao diện.

@@ -220,7 +220,9 @@ class PublicationMixin:
             replacement_id = None
             if new_url:
                 self._check_url_claim(conn, new_url, variant['platform'])
-                key = 'correction_' + str(publication_id) + '_' + str(variant['revision'])
+                # Client keys cannot contain ':', so a caller cannot occupy the
+                # namespace used for internally generated correction records.
+                key = f'correction:{publication_id}:{variant["revision"]}'
                 request_hash = hashlib.sha256(_json({'url': new_url, 'reason': reason}).encode()).hexdigest()
                 replacement_id = conn.execute('''INSERT INTO publications
                     (variant_id,approval_id,position,url,reported_at,recorded_at,idempotency_key,request_hash)

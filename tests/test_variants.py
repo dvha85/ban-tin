@@ -507,6 +507,35 @@ class VariantTests(unittest.TestCase):
         with self.assertRaises(Conflict):
             self.room.save_variant(variant['id'], {'revision': current['revision']})
 
+    def test_correction_key_cannot_collide_with_client_recording_key(self):
+        variant = self.make_approved('x', two=True)
+        first = self.room.record_publication(variant['id'], {
+            'revision': variant['revision'], 'position': 0,
+            'url': 'https://x.com/test/status/101', 'idempotency_key': 'first_record_101'})
+        current = self.room.variant(variant['id'])
+        client_key = f"correction_{first['id']}_{current['revision'] + 1}"
+        second = self.room.record_publication(variant['id'], {
+            'revision': current['revision'], 'position': 1,
+            'url': 'https://x.com/test/status/102', 'idempotency_key': client_key})
+        current = self.room.variant(variant['id'])
+        result = self.room.correct_publication(first['id'], {
+            'revision': current['revision'], 'reason': 'Sửa liên kết đã nhập nhầm',
+            'url': 'https://x.com/test/status/103'})
+        records = self.room.publications(variant['id'])
+        self.assertEqual([row['id'] for row in records if row['active']],
+                         [second['id'], result['replacement_id']])
+        self.assertEqual(self.room.bulletin_stats()['recorded_posts'], 2)
+        self.assertEqual(records[0]['events'][-1]['action'], 'corrected')
+        self.assertEqual(records[-1]['idempotency_key'], f"correction:{first['id']}:{current['revision']}")
+        retried = self.room.record_publication(variant['id'], {
+            'revision': current['revision'], 'position': 1,
+            'url': 'https://x.com/test/status/102', 'idempotency_key': client_key})
+        self.assertEqual(retried['id'], second['id'])
+        with self.assertRaises(ValidationError):
+            self.room.record_publication(variant['id'], {
+                'revision': current['revision'], 'position': 1,
+                'url': 'https://x.com/test/status/104', 'idempotency_key': records[-1]['idempotency_key']})
+
     def test_cancel_all_preserves_lock_and_history_and_can_record_again(self):
         variant = self.make_approved('x', two=True)
         records = []
