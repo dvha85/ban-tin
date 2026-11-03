@@ -2,6 +2,8 @@
 
 ## Smoke test giao diện đa kênh 04/11/2026
 
+- APR-01 / thông báo: khi trường biên tập của mục được dùng còn dấu chưa xác minh, lỗi duyệt nêu thứ tự mục và tên trường thay vì chỉ yêu cầu kiểm tra chung. Test service kiểm tra bốn trường, test HTTP kiểm tra ghi chú; hồi quy 178/178 Python và 33/33 JavaScript đạt, test bốn trường chạy lại sau mở rộng đạt. Chưa smoke hiển thị thông báo trên UI.
+
 - APR-01 / policy v4 qua HTTP: kho giả với ghi chú `[CHƯA XÁC MINH]` được xác nhận vẫn nhận 400 khi duyệt, revision phiên bản không đổi và xuất bị chặn; sửa ghi chú, xác nhận lại mục và phiên bản thì duyệt/xuất thành công. Fixture ban đầu chuẩn bị bằng service. Hồi quy 178/178 Python, 33/33 JavaScript đạt. Windows Computer Use liệt kê được Edge nhưng hai lần kích hoạt trả `GetCursorPos failed: Access is denied`; chưa smoke UI v4.
 
 - APR-01 / SOURCE-03: test tái hiện mục có dấu `[CẦN KIỂM TRA]` trong tiêu đề, góc nhìn hoặc ghi chú kiểm chứng vẫn được duyệt. Sau sửa, mục được dùng bị chặn khi các trường biên tập này còn dấu chưa kiểm chứng; bỏ dấu và xác nhận lại thì duyệt được. Policy `2026-11-04-v4` yêu cầu kiểm tra lại bản duyệt cũ, trong khi archive vẫn đọc snapshot. Hồi quy 177/177 Python, 33/33 JavaScript đạt; chưa smoke giao diện policy v4.

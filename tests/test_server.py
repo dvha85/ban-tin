@@ -92,6 +92,7 @@ class ServerTests(unittest.TestCase):
         path = f"/api/variants/{variant['id']}"
         status, _, body = self.request('POST', path + '/approve', {'revision': variant['revision']}, headers)
         self.assertEqual(status, 400, body)
+        self.assertIn('ghi chú kiểm chứng của mục 1', json.loads(body)['error'])
         self.assertEqual(self.room.variant(variant['id']), variant)
         self.assertEqual(self.request('GET', path + '/export', headers=headers)[0], 400)
 

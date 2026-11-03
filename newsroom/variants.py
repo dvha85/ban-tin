@@ -238,11 +238,14 @@ class VariantMixin:
                         if actual_hash != source['excerpt_hash']:
                             raise ValidationError(f'Mã hash không khớp trích đoạn tại mục {item_number}, nguồn {source_number}. '
                                                   'Hãy đối chiếu, bổ sung nguồn đúng và bỏ nguồn sai trước khi duyệt.')
-                if item['id'] in used_ids and (not item['body'] or not item['verified']
-                        or len(item['verification_note']) < 20 or any(
-                            UNRESOLVED.search(item[field])
-                            for field in ('title', 'body', 'angle', 'verification_note'))):
-                    raise ValidationError('Mỗi mục được dùng cần nội dung, ghi chú kiểm chứng và xác nhận đã kiểm tra.')
+                if item['id'] in used_ids:
+                    for field, label in (('title', 'tiêu đề'), ('body', 'nội dung'),
+                                         ('angle', 'góc nhìn'), ('verification_note', 'ghi chú kiểm chứng')):
+                        if UNRESOLVED.search(item[field]):
+                            raise ValidationError(f'Dấu chưa xác minh còn trong {label} của mục {item_number}. '
+                                                  'Hãy kiểm tra và sửa trước khi duyệt.')
+                    if not item['body'] or not item['verified'] or len(item['verification_note']) < 20:
+                        raise ValidationError('Mỗi mục được dùng cần nội dung, ghi chú kiểm chứng và xác nhận đã kiểm tra.')
                 if item['id'] in used_ids and (not item.get('claims') or any(
                         not claim.get('checked') or not claim.get('evidence', '').strip()
                         or UNRESOLVED.search(claim.get('text', '')) or UNRESOLVED.search(claim.get('evidence', ''))

@@ -163,7 +163,7 @@ class VariantTests(unittest.TestCase):
             self.make_approved('threads')
 
     def test_approval_rejects_unresolved_markers_in_editorial_item_fields(self):
-        for field in ('title', 'angle', 'verification_note'):
+        for field in ('title', 'body', 'angle', 'verification_note'):
             with self.subTest(field=field):
                 item = self.bulletin['items'][0]
                 edited = self.room.save_bulletin_item(self.bulletin['id'], item['id'], {
@@ -173,8 +173,12 @@ class VariantTests(unittest.TestCase):
                 self.bulletin = self.room.save_bulletin_item(edited['id'], item['id'], {
                     'bulletin_revision': edited['revision'], 'revision': item['revision'], 'verified': True,
                     'claims': [{**item['claims'][0], 'checked': True}]})
-                with self.assertRaises(ValidationError):
+                with self.assertRaises(ValidationError) as caught:
                     self.make_approved('facebook')
+                label = {'title': 'tiêu đề', 'body': 'nội dung', 'angle': 'góc nhìn',
+                         'verification_note': 'ghi chú kiểm chứng'}[field]
+                self.assertIn('mục 1', str(caught.exception))
+                self.assertIn(label, str(caught.exception))
                 item = self.bulletin['items'][0]
                 edited = self.room.save_bulletin_item(self.bulletin['id'], item['id'], {
                     'bulletin_revision': self.bulletin['revision'], 'revision': item['revision'],
