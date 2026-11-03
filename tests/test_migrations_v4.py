@@ -1,3 +1,4 @@
+import json
 import sqlite3
 import tempfile
 import unittest
@@ -54,6 +55,30 @@ class MigrationV4Tests(unittest.TestCase):
             self.assertEqual(conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
         Newsroom(self.directory)
         self.assertEqual(len(list((self.directory / 'backups').glob('pre-v04-*.sqlite3'))), 1)
+
+    def test_real_v3_fixture_preserves_all_legacy_rows_and_approved_exports(self):
+        fixture_dir = Path(__file__).parent / 'fixtures'
+        expected = json.loads((fixture_dir / 'legacy-v3-expected.json').read_text(encoding='utf-8'))
+        target = self.directory / 'actual-v3'
+        target.mkdir()
+        with closing(sqlite3.connect(target / 'bantin.sqlite3')) as conn:
+            conn.executescript((fixture_dir / 'legacy-v3.sql').read_text(encoding='utf-8'))
+            self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
+        upgraded = Newsroom(target)
+        with upgraded.connection() as conn:
+            for table in ('articles', 'article_sources', 'drafts', 'history', 'metrics', 'custom_sources', 'collection_settings'):
+                with self.subTest(table=table):
+                    actual = [dict(row) for row in conn.execute(f'SELECT * FROM {table} ORDER BY rowid')]
+                    self.assertEqual(actual, expected[table])
+        for draft_id, expected_export in expected['exports'].items():
+            self.assertEqual(upgraded.export(int(draft_id)), expected_export)
+        self.assertEqual([draft['status'] for draft in sorted(upgraded.drafts(), key=lambda draft: draft['id'])],
+                         ['draft', 'approved', 'published'])
+        backup = list((target / 'backups').glob('pre-v04-*.sqlite3'))
+        self.assertEqual(len(backup), 1)
+        with closing(sqlite3.connect(backup[0])) as conn:
+            self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
+            self.assertEqual(conn.execute('SELECT COUNT(*) FROM drafts').fetchone()[0], 3)
 
     def test_failed_migration_rolls_back_all_tables_and_version(self):
         destination = self.directory / 'fault.sqlite3'

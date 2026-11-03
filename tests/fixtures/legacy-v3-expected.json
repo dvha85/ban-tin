@@ -1,0 +1,227 @@
+{
+  "article_sources": [
+    {
+      "article_id": 1,
+      "date_kind": "unknown",
+      "id": 1,
+      "published_at": null,
+      "retrieved_at": "2026-11-03T02:46:56.951070+00:00",
+      "source_name": "Nhập thủ công",
+      "summary": "Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.",
+      "title": "Tin giả lập 0",
+      "url": "https://example.com/legacy-0"
+    },
+    {
+      "article_id": 2,
+      "date_kind": "unknown",
+      "id": 2,
+      "published_at": null,
+      "retrieved_at": "2026-11-03T02:46:56.976489+00:00",
+      "source_name": "Nhập thủ công",
+      "summary": "Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.",
+      "title": "Tin giả lập 1",
+      "url": "https://example.com/legacy-1"
+    },
+    {
+      "article_id": 3,
+      "date_kind": "unknown",
+      "id": 3,
+      "published_at": null,
+      "retrieved_at": "2026-11-03T02:46:57.016825+00:00",
+      "source_name": "Nhập thủ công",
+      "summary": "Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.",
+      "title": "Tin giả lập 2",
+      "url": "https://example.com/legacy-2"
+    }
+  ],
+  "articles": [
+    {
+      "date_kind": "unknown",
+      "fetched_at": "2026-11-03T02:46:56.951070+00:00",
+      "id": 1,
+      "published_at": null,
+      "source_name": "Nhập thủ công",
+      "summary": "Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.",
+      "title": "Tin giả lập 0",
+      "title_key": "824b1a20878fce4af98228df1eef7c81eb8d0a3f05b9e5efdb83743226348f57",
+      "url": "https://example.com/legacy-0"
+    },
+    {
+      "date_kind": "unknown",
+      "fetched_at": "2026-11-03T02:46:56.976489+00:00",
+      "id": 2,
+      "published_at": null,
+      "source_name": "Nhập thủ công",
+      "summary": "Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.",
+      "title": "Tin giả lập 1",
+      "title_key": "a814ce6fc4d8e57c1f8afc04e70a5e88e388edc70ea385d106dd8c72365e0808",
+      "url": "https://example.com/legacy-1"
+    },
+    {
+      "date_kind": "unknown",
+      "fetched_at": "2026-11-03T02:46:57.016825+00:00",
+      "id": 3,
+      "published_at": null,
+      "source_name": "Nhập thủ công",
+      "summary": "Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.",
+      "title": "Tin giả lập 2",
+      "title_key": "390e9a57d7a9ed6cfaefeefe5bb33212b8f4269f08fbdd96a5d18026d9f24cb6",
+      "url": "https://example.com/legacy-2"
+    }
+  ],
+  "collection_settings": [
+    {
+      "confirmed_at": "2026-11-03T00:00:00+00:00",
+      "enabled": 1,
+      "source_id": "custom-fixture"
+    }
+  ],
+  "custom_sources": [
+    {
+      "created_at": "2026-11-03T00:00:00+00:00",
+      "id": "custom-fixture",
+      "input_url": "https://example.com/feed",
+      "kind": "rss",
+      "name": "Nguồn fixture",
+      "prefix": "/",
+      "site": "https://example.com",
+      "url": "https://example.com/feed",
+      "url_key": "https://example.com/feed"
+    }
+  ],
+  "drafts": [
+    {
+      "approved_at": null,
+      "approved_hash": null,
+      "article_id": 1,
+      "created_at": "2026-11-03T02:46:56.959728+00:00",
+      "id": 1,
+      "payload": "{\"title\": \"Tiêu đề bản thử nghiệm 0\", \"body\": \"Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\", \"angle\": \"Giải thích giới hạn của dữ liệu thử.\", \"category\": \"tools\", \"page_name\": \"Page fixture\", \"sources\": [{\"url\": \"https://example.com/legacy-0\", \"title\": \"Tin giả lập 0\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:56.951070+00:00\"}], \"checks\": {\"sources\": false, \"facts\": false, \"original\": false, \"rights\": false, \"claims\": false}}",
+      "post_url": null,
+      "published_at": null,
+      "revision": 2,
+      "status": "draft",
+      "updated_at": "2026-11-03T02:46:56.968854+00:00"
+    },
+    {
+      "approved_at": "2026-11-03T02:46:57.009218+00:00",
+      "approved_hash": "9f6235f034ceec7a0c444a8ea74f6bd6c3b26e04a8a2af67a2ac7e8be508714e",
+      "article_id": 2,
+      "created_at": "2026-11-03T02:46:56.984790+00:00",
+      "id": 2,
+      "payload": "{\"title\": \"Tiêu đề bản thử nghiệm 1\", \"body\": \"Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\", \"angle\": \"Giải thích giới hạn của dữ liệu thử.\", \"category\": \"tools\", \"page_name\": \"Page fixture\", \"sources\": [{\"url\": \"https://example.com/legacy-1\", \"title\": \"Tin giả lập 1\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:56.976489+00:00\"}], \"checks\": {\"sources\": true, \"facts\": true, \"original\": true, \"rights\": true, \"claims\": true}}",
+      "post_url": null,
+      "published_at": null,
+      "revision": 4,
+      "status": "approved",
+      "updated_at": "2026-11-03T02:46:57.009229+00:00"
+    },
+    {
+      "approved_at": "2026-11-03T02:46:57.049684+00:00",
+      "approved_hash": "06f91c93b30f7b4b46329b72fdeaaccdbbd749658bd1c105a6e8c99f6cfc51ac",
+      "article_id": 3,
+      "created_at": "2026-11-03T02:46:57.025346+00:00",
+      "id": 3,
+      "payload": "{\"title\": \"Tiêu đề bản thử nghiệm 2\", \"body\": \"Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\", \"angle\": \"Giải thích giới hạn của dữ liệu thử.\", \"category\": \"tools\", \"page_name\": \"Page fixture\", \"sources\": [{\"url\": \"https://example.com/legacy-2\", \"title\": \"Tin giả lập 2\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:57.016825+00:00\"}], \"checks\": {\"sources\": true, \"facts\": true, \"original\": true, \"rights\": true, \"claims\": true}}",
+      "post_url": "https://www.facebook.com/fixture/posts/12345",
+      "published_at": "2026-11-03T02:46:57.057258+00:00",
+      "revision": 5,
+      "status": "published",
+      "updated_at": "2026-11-03T02:46:57.057258+00:00"
+    }
+  ],
+  "exports": {
+    "2": "Tiêu đề bản thử nghiệm 1\n\nNội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\n\nNguồn tham khảo:\n- https://example.com/legacy-1\n",
+    "3": "Tiêu đề bản thử nghiệm 2\n\nNội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\n\nNguồn tham khảo:\n- https://example.com/legacy-2\n"
+  },
+  "generator_commit": "a180354e52e98a678d093609f9e8f2d37e6cd0a3",
+  "history": [
+    {
+      "action": "created",
+      "at": "2026-11-03T02:46:56.961463+00:00",
+      "draft_id": 1,
+      "id": 1,
+      "snapshot": "{\"id\": 1, \"article_id\": 1, \"revision\": 1, \"status\": \"draft\", \"approved_hash\": null, \"approved_at\": null, \"post_url\": null, \"published_at\": null, \"created_at\": \"2026-11-03T02:46:56.959728+00:00\", \"updated_at\": \"2026-11-03T02:46:56.959728+00:00\", \"title\": \"\", \"body\": \"\", \"angle\": \"\", \"page_name\": \"\", \"category\": \"tools\", \"sources\": [{\"url\": \"https://example.com/legacy-0\", \"title\": \"Tin giả lập 0\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:56.951070+00:00\"}], \"checks\": {\"sources\": false, \"facts\": false, \"original\": false, \"rights\": false, \"claims\": false}}"
+    },
+    {
+      "action": "saved",
+      "at": "2026-11-03T02:46:56.968961+00:00",
+      "draft_id": 1,
+      "id": 2,
+      "snapshot": "{\"id\": 1, \"article_id\": 1, \"revision\": 2, \"status\": \"draft\", \"approved_hash\": null, \"approved_at\": null, \"post_url\": null, \"published_at\": null, \"created_at\": \"2026-11-03T02:46:56.959728+00:00\", \"updated_at\": \"2026-11-03T02:46:56.968854+00:00\", \"title\": \"Tiêu đề bản thử nghiệm 0\", \"body\": \"Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\", \"angle\": \"Giải thích giới hạn của dữ liệu thử.\", \"category\": \"tools\", \"page_name\": \"Page fixture\", \"sources\": [{\"url\": \"https://example.com/legacy-0\", \"title\": \"Tin giả lập 0\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:56.951070+00:00\"}], \"checks\": {\"sources\": false, \"facts\": false, \"original\": false, \"rights\": false, \"claims\": false}}"
+    },
+    {
+      "action": "created",
+      "at": "2026-11-03T02:46:56.986552+00:00",
+      "draft_id": 2,
+      "id": 3,
+      "snapshot": "{\"id\": 2, \"article_id\": 2, \"revision\": 1, \"status\": \"draft\", \"approved_hash\": null, \"approved_at\": null, \"post_url\": null, \"published_at\": null, \"created_at\": \"2026-11-03T02:46:56.984790+00:00\", \"updated_at\": \"2026-11-03T02:46:56.984790+00:00\", \"title\": \"\", \"body\": \"\", \"angle\": \"\", \"page_name\": \"\", \"category\": \"tools\", \"sources\": [{\"url\": \"https://example.com/legacy-1\", \"title\": \"Tin giả lập 1\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:56.976489+00:00\"}], \"checks\": {\"sources\": false, \"facts\": false, \"original\": false, \"rights\": false, \"claims\": false}}"
+    },
+    {
+      "action": "saved",
+      "at": "2026-11-03T02:46:56.993972+00:00",
+      "draft_id": 2,
+      "id": 4,
+      "snapshot": "{\"id\": 2, \"article_id\": 2, \"revision\": 2, \"status\": \"draft\", \"approved_hash\": null, \"approved_at\": null, \"post_url\": null, \"published_at\": null, \"created_at\": \"2026-11-03T02:46:56.984790+00:00\", \"updated_at\": \"2026-11-03T02:46:56.993819+00:00\", \"title\": \"Tiêu đề bản thử nghiệm 1\", \"body\": \"Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\", \"angle\": \"Giải thích giới hạn của dữ liệu thử.\", \"category\": \"tools\", \"page_name\": \"Page fixture\", \"sources\": [{\"url\": \"https://example.com/legacy-1\", \"title\": \"Tin giả lập 1\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:56.976489+00:00\"}], \"checks\": {\"sources\": false, \"facts\": false, \"original\": false, \"rights\": false, \"claims\": false}}"
+    },
+    {
+      "action": "saved",
+      "at": "2026-11-03T02:46:57.001412+00:00",
+      "draft_id": 2,
+      "id": 5,
+      "snapshot": "{\"id\": 2, \"article_id\": 2, \"revision\": 3, \"status\": \"draft\", \"approved_hash\": null, \"approved_at\": null, \"post_url\": null, \"published_at\": null, \"created_at\": \"2026-11-03T02:46:56.984790+00:00\", \"updated_at\": \"2026-11-03T02:46:57.001298+00:00\", \"title\": \"Tiêu đề bản thử nghiệm 1\", \"body\": \"Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\", \"angle\": \"Giải thích giới hạn của dữ liệu thử.\", \"category\": \"tools\", \"page_name\": \"Page fixture\", \"sources\": [{\"url\": \"https://example.com/legacy-1\", \"title\": \"Tin giả lập 1\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:56.976489+00:00\"}], \"checks\": {\"sources\": true, \"facts\": true, \"original\": true, \"rights\": true, \"claims\": true}}"
+    },
+    {
+      "action": "approved",
+      "at": "2026-11-03T02:46:57.009330+00:00",
+      "draft_id": 2,
+      "id": 6,
+      "snapshot": "{\"id\": 2, \"article_id\": 2, \"revision\": 4, \"status\": \"approved\", \"approved_hash\": \"9f6235f034ceec7a0c444a8ea74f6bd6c3b26e04a8a2af67a2ac7e8be508714e\", \"approved_at\": \"2026-11-03T02:46:57.009218+00:00\", \"post_url\": null, \"published_at\": null, \"created_at\": \"2026-11-03T02:46:56.984790+00:00\", \"updated_at\": \"2026-11-03T02:46:57.009229+00:00\", \"title\": \"Tiêu đề bản thử nghiệm 1\", \"body\": \"Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\", \"angle\": \"Giải thích giới hạn của dữ liệu thử.\", \"category\": \"tools\", \"page_name\": \"Page fixture\", \"sources\": [{\"url\": \"https://example.com/legacy-1\", \"title\": \"Tin giả lập 1\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:56.976489+00:00\"}], \"checks\": {\"sources\": true, \"facts\": true, \"original\": true, \"rights\": true, \"claims\": true}}"
+    },
+    {
+      "action": "created",
+      "at": "2026-11-03T02:46:57.027152+00:00",
+      "draft_id": 3,
+      "id": 7,
+      "snapshot": "{\"id\": 3, \"article_id\": 3, \"revision\": 1, \"status\": \"draft\", \"approved_hash\": null, \"approved_at\": null, \"post_url\": null, \"published_at\": null, \"created_at\": \"2026-11-03T02:46:57.025346+00:00\", \"updated_at\": \"2026-11-03T02:46:57.025346+00:00\", \"title\": \"\", \"body\": \"\", \"angle\": \"\", \"page_name\": \"\", \"category\": \"tools\", \"sources\": [{\"url\": \"https://example.com/legacy-2\", \"title\": \"Tin giả lập 2\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:57.016825+00:00\"}], \"checks\": {\"sources\": false, \"facts\": false, \"original\": false, \"rights\": false, \"claims\": false}}"
+    },
+    {
+      "action": "saved",
+      "at": "2026-11-03T02:46:57.034586+00:00",
+      "draft_id": 3,
+      "id": 8,
+      "snapshot": "{\"id\": 3, \"article_id\": 3, \"revision\": 2, \"status\": \"draft\", \"approved_hash\": null, \"approved_at\": null, \"post_url\": null, \"published_at\": null, \"created_at\": \"2026-11-03T02:46:57.025346+00:00\", \"updated_at\": \"2026-11-03T02:46:57.034483+00:00\", \"title\": \"Tiêu đề bản thử nghiệm 2\", \"body\": \"Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\", \"angle\": \"Giải thích giới hạn của dữ liệu thử.\", \"category\": \"tools\", \"page_name\": \"Page fixture\", \"sources\": [{\"url\": \"https://example.com/legacy-2\", \"title\": \"Tin giả lập 2\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:57.016825+00:00\"}], \"checks\": {\"sources\": false, \"facts\": false, \"original\": false, \"rights\": false, \"claims\": false}}"
+    },
+    {
+      "action": "saved",
+      "at": "2026-11-03T02:46:57.042193+00:00",
+      "draft_id": 3,
+      "id": 9,
+      "snapshot": "{\"id\": 3, \"article_id\": 3, \"revision\": 3, \"status\": \"draft\", \"approved_hash\": null, \"approved_at\": null, \"post_url\": null, \"published_at\": null, \"created_at\": \"2026-11-03T02:46:57.025346+00:00\", \"updated_at\": \"2026-11-03T02:46:57.042087+00:00\", \"title\": \"Tiêu đề bản thử nghiệm 2\", \"body\": \"Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\", \"angle\": \"Giải thích giới hạn của dữ liệu thử.\", \"category\": \"tools\", \"page_name\": \"Page fixture\", \"sources\": [{\"url\": \"https://example.com/legacy-2\", \"title\": \"Tin giả lập 2\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:57.016825+00:00\"}], \"checks\": {\"sources\": true, \"facts\": true, \"original\": true, \"rights\": true, \"claims\": true}}"
+    },
+    {
+      "action": "approved",
+      "at": "2026-11-03T02:46:57.049788+00:00",
+      "draft_id": 3,
+      "id": 10,
+      "snapshot": "{\"id\": 3, \"article_id\": 3, \"revision\": 4, \"status\": \"approved\", \"approved_hash\": \"06f91c93b30f7b4b46329b72fdeaaccdbbd749658bd1c105a6e8c99f6cfc51ac\", \"approved_at\": \"2026-11-03T02:46:57.049684+00:00\", \"post_url\": null, \"published_at\": null, \"created_at\": \"2026-11-03T02:46:57.025346+00:00\", \"updated_at\": \"2026-11-03T02:46:57.049694+00:00\", \"title\": \"Tiêu đề bản thử nghiệm 2\", \"body\": \"Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\", \"angle\": \"Giải thích giới hạn của dữ liệu thử.\", \"category\": \"tools\", \"page_name\": \"Page fixture\", \"sources\": [{\"url\": \"https://example.com/legacy-2\", \"title\": \"Tin giả lập 2\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:57.016825+00:00\"}], \"checks\": {\"sources\": true, \"facts\": true, \"original\": true, \"rights\": true, \"claims\": true}}"
+    },
+    {
+      "action": "user_reported_manual_publication",
+      "at": "2026-11-03T02:46:57.057356+00:00",
+      "draft_id": 3,
+      "id": 11,
+      "snapshot": "{\"id\": 3, \"article_id\": 3, \"revision\": 5, \"status\": \"published\", \"approved_hash\": \"06f91c93b30f7b4b46329b72fdeaaccdbbd749658bd1c105a6e8c99f6cfc51ac\", \"approved_at\": \"2026-11-03T02:46:57.049684+00:00\", \"post_url\": \"https://www.facebook.com/fixture/posts/12345\", \"published_at\": \"2026-11-03T02:46:57.057258+00:00\", \"created_at\": \"2026-11-03T02:46:57.025346+00:00\", \"updated_at\": \"2026-11-03T02:46:57.057258+00:00\", \"title\": \"Tiêu đề bản thử nghiệm 2\", \"body\": \"Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật. Nội dung thử nghiệm, không phải tin thật.\", \"angle\": \"Giải thích giới hạn của dữ liệu thử.\", \"category\": \"tools\", \"page_name\": \"Page fixture\", \"sources\": [{\"url\": \"https://example.com/legacy-2\", \"title\": \"Tin giả lập 2\", \"summary\": \"Đây là ghi chú giả lập đủ dài để kiểm tra việc giữ nguồn.\", \"source_name\": \"Nhập thủ công\", \"published_at\": null, \"date_kind\": \"unknown\", \"retrieved_at\": \"2026-11-03T02:46:57.016825+00:00\"}], \"checks\": {\"sources\": true, \"facts\": true, \"original\": true, \"rights\": true, \"claims\": true}}"
+    }
+  ],
+  "metrics": [
+    {
+      "draft_id": 3,
+      "followers": 0,
+      "minutes": 30,
+      "note": "Số liệu giả lập",
+      "saves": 7,
+      "shares": 2
+    }
+  ]
+}

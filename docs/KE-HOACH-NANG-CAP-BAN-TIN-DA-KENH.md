@@ -271,7 +271,7 @@ Gate: URL-01…04 tại mục 8 đạt, không migration, bản xuất legacy kh
 
 ### G1 — Hợp đồng và nền dữ liệu
 
-- [ ] **BASE-01 / P0:** Chụp fixture legacy gồm draft/approved/published, history, metrics và nguồn tùy chỉnh; lưu expected hash/export để đối chiếu.
+- [x] **BASE-01 / P0:** Chụp fixture legacy gồm draft/approved/published, history, metrics và nguồn tùy chỉnh; lưu expected hash/export để đối chiếu. Fixture tổng hợp được tạo bằng mã schema 3 tại commit nền `a180354`; test so sánh từng hàng và bản xuất sau nâng cấp.
 - [ ] **BASE-02 / P1:** Chốt D02/D03, kiểu dữ liệu, trạng thái, hợp đồng API và giới hạn request/packet; ghi quyết định tại mục 12.
 - [ ] **BASE-03 / P1:** Khảo sát bộ đếm X/Threads và URL từng nền tảng; chọn triển khai/licensing/dependency, lưu fixture có version.
 - [ ] **DB-01 / P0:** Tách migration runner, bỏ quyền ghi schema version khỏi mixin; thêm schema 4 và ràng buộc.
@@ -428,7 +428,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | Review hiện trạng | Hoàn tất | Commit nền `a180354`; 88/88 test; probe RSS chỉ đọc; tái hiện URL bằng DOM giả | Giữ làm baseline, không coi là nghiệm thu 0.4 |
 | 03/11/2026 | Lập kế hoạch nâng cấp | Hoàn tất | Tài liệu này; chưa triển khai chức năng | Xem/chốt phạm vi rồi bắt đầu G0 |
 | 03/11/2026 | FIX-01…03 | Đang làm | `tests/draft-state.test.js` 2/2 và 88/88 Python đạt; chưa thử trình duyệt thực | Smoke trình duyệt trên kho thử |
-| 03/11/2026 | BASE/DB | Đang làm | Migration schema 4, rollback/restore và lỗi sao lưu; 109 test Python đạt trên kho thử | Mở rộng fixture và kiểm thử nâng cấp thực tế |
+| 03/11/2026 | BASE/DB | Đang làm | Migration schema 4, rollback/restore và lỗi sao lưu; fixture tổng hợp từ mã schema 3 gồm ba trạng thái, history, metrics, custom source và bản xuất được đối chiếu | Kiểm thử thêm schema 1/2, backup/restore đầu cuối và trên bản sao được phép |
 | 03/11/2026 | DIG/FMT/APR/PUB | Đang làm | Có lõi, giao diện, test chia đoạn 9→10 và test HTTP CSRF; đã smoke một bản tin/phiên bản X với URL giả trên kho thử | Kiểm chứng bộ đếm, QA toàn luồng, clipboard, file tải, restart và thêm pilot |
 | — | QA/DOC/PILOT/REL | Chưa bắt đầu | — | Chỉ đóng khi đủ bằng chứng mục 10 |
 
