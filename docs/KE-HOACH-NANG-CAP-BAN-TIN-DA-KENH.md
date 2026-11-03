@@ -34,6 +34,8 @@
 
 > Đối chiếu BASE-03 ngày 04/11: tài liệu cấu hình twitter-text mô tả trọng số emoji ghép và độ dài URL mặc định 23; Meta trả HTTP 429 khi tra tài liệu Threads API. Chưa có căn cứ đóng gate hoặc thay đổi policy; xem `DOI-CHIEU-NGHIEM-THU-0.4.md`.
 
+> Bổ sung SAFE-02: test service trên kho mới giả lập chặn hai API kết nối socket thường dùng và thực hiện từ tạo kho, nhập tin, soạn, duyệt, xuất đến ghi nhận URL giả. Đây là bằng chứng cho đường thực thi đã thử, không chứng minh toàn bộ ứng dụng hay tiến trình bên ngoài không kết nối mạng.
+
 > Bổ sung BASE-02: tạo phiên bản từ chối kiểu `platform` sai bằng HTTP 400 thay vì đóng kết nối; test HTTP xác nhận không tạo bản ghi. Hợp đồng API tổng thể vẫn cần tiếp tục đối chiếu; xem `KIEM-THU.md`.
 
 > Bổ sung BASE-02/NEWS-01: ID tin ngoài phạm vi số nguyên 64-bit SQLite bị từ chối khi tạo bản tin hoặc thêm mục, không làm thay đổi kho; test HTTP và hồi quy đạt. Chưa xác nhận biên ID của mọi route.

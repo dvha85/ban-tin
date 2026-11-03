@@ -37,6 +37,40 @@ class VariantTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_multichannel_workflow_does_not_make_network_connections(self):
+        # Exercise real service methods on a temporary SQLite store while
+        # refusing outgoing connections, including the migration of a new store.
+        with patch('socket.create_connection', side_effect=AssertionError('Unexpected network')), \
+             patch('socket.socket.connect', side_effect=AssertionError('Unexpected network')), \
+             tempfile.TemporaryDirectory() as directory:
+            fresh = Newsroom(Path(directory))
+            article = fresh.import_article({'title': 'Tin giả lập',
+                'url': 'https://example.com/offline', 'summary': 'Nguồn giả lập.'})
+            bulletin = fresh.create_bulletin({'article_ids': [article['id']]})
+            item = bulletin['items'][0]
+            bulletin = fresh.save_bulletin_item(bulletin['id'], item['id'], {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'body': 'Nội dung giả lập.', 'verification_note': 'Đã đối chiếu nguồn giả lập trong kho thử.',
+                'claims': [{'text': 'Khẳng định giả', 'evidence': 'Nguồn giả', 'checked': True}]})
+            item = bulletin['items'][0]
+            bulletin = fresh.save_bulletin_item(bulletin['id'], item['id'], {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'verified': True, 'claims': [{**item['claims'][0], 'checked': True}]})
+            self.assertIn('https://example.com/offline', fresh.bulletin_packet(bulletin['id']))
+            variant = fresh.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+                'platform': 'x', 'account_label': 'Kênh giả'})
+            variant = fresh.save_variant(variant['id'], {'revision': variant['revision'],
+                'segments': [{'text': 'Bản tin giả.', 'item_ids': [item['id']]}]})
+            preview = fresh.preview_variant(variant['id'])
+            variant = fresh.save_variant(variant['id'], {'revision': variant['revision'],
+                'checks': {key: True for key in CHECKS}})
+            variant = fresh.approve_variant(variant['id'], {'revision': variant['revision']})
+            exported = fresh.export_variant(variant['id'])
+            self.assertEqual(exported['posts'], [post['text'] for post in preview['posts']])
+            fresh.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
+                'url': 'https://x.com/test/status/123', 'idempotency_key': 'offline_test_123'})
+            self.assertEqual(fresh.variant(variant['id'])['publication_progress']['active'], 1)
+
     def make_approved(self, platform='x', two=False):
         variant = self.room.create_variant(self.bulletin['id'], {'platform': platform, 'account_label': 'Kênh thử',
                                                'bulletin_revision': self.bulletin['revision']})

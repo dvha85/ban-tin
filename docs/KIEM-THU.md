@@ -258,3 +258,9 @@ python -m newsroom --collect
 - Test HTTP trên kho tạm gửi từng token `NaN`, `Infinity`, `-Infinity` trong mảng thuộc trường phụ: trước sửa cả ba đều trả 201 và tạo bản tin; sau sửa trả 400, không tạo bản tin. Chuỗi văn bản chứa các chữ này vẫn tạo bản tin hợp lệ.
 - Test bổ sung `1e999` và `-1e999`: trước sửa parser chuyển thành vô cực và route tạo bản tin; sau sửa trả 400, không tạo bản tin. `1.25e2` vẫn được chấp nhận. Các test dùng một route, chưa bao phủ mọi tổ hợp schema.
 - Sau sửa: 181/181 Python và 34/34 JavaScript đạt trên kho/DOM thử.
+
+### 04/11/2026 — Quy trình service không kết nối mạng (SAFE-02)
+
+- Test `test_multichannel_workflow_does_not_make_network_connections` dùng kho SQLite tạm mới, chặn `socket.create_connection` và `socket.socket.connect`, rồi nhập tin giả, tạo bản tin, soạn và xác nhận, tạo gói tư liệu, xem trước, duyệt, xuất và ghi nhận URL X giả. Nội dung export khớp preview và số ghi nhận là một.
+- Đây là đường service được chọn trên kho thử, không phải kiểm thử toàn bộ ứng dụng, trình duyệt, tiến trình ngoài hoặc mọi cách kết nối mạng. Không xác nhận nguồn hay đăng bài trên nền tảng.
+- Hồi quy sau khi thêm test: 182/182 Python và 34/34 JavaScript đạt.
