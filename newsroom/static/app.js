@@ -65,6 +65,7 @@ async function recoverSession() {
     if (!response.ok) throw new Error('Không lấy được phiên mới.');
   } catch (_) { throw new Error('Chưa khôi phục được kết nối. Giữ nội dung đang nhập và thử lại.'); }
   const state = await response.json();
+  if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
   if (state.data_dir !== app.state.data_dir) {
     markStoreChanged();
     throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
@@ -157,6 +158,7 @@ function renderState() {
 async function loadState() {
   const wasBusy = app.state && app.state.busy;
   const state = await api('/api/state');
+  if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
   if (app.state && state.data_dir !== app.state.data_dir) {
     markStoreChanged();
     throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');

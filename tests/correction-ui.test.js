@@ -90,6 +90,49 @@ test('periodic refresh cannot silently switch the open editor to another data di
   assert.equal(calls.filter(row => row[1] === 'POST').length, 0);
 });
 
+test('late session recovery cannot clear a concurrently detected data directory change', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  let release;
+  const delayed = new Promise(resolve => { release = resolve; });
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.delayed = delayed;
+  vm.runInContext(`app.state = {data_dir: 'original'}; app.csrf = 'old';
+    fetch = async url => url === '/' ? {ok: true} : {ok: true, json: () => delayed};`, context);
+  const recovery = vm.runInContext('recoverSession()', context);
+  vm.runInContext('markStoreChanged()', context);
+  release({data_dir: 'original', csrf_token: 'late-token'});
+  await assert.rejects(recovery, /kho dữ liệu/i);
+  assert.equal(vm.runInContext('app.csrf', context), 'old');
+  assert.equal(get('session-recovery').hidden, false);
+  assert.equal(get('store-changed-warning').hidden, false);
+  assert.equal(get('recover-session').hidden, true);
+});
+
+test('late state refresh cannot replace the editor state after a directory change', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  let release;
+  const delayed = new Promise(resolve => { release = resolve; });
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.delayed = delayed;
+  vm.runInContext(`app.state = {data_dir: 'original'}; app.csrf = 'old'; api = async () => delayed;`, context);
+  const refresh = vm.runInContext('loadState()', context);
+  vm.runInContext('markStoreChanged()', context);
+  release({data_dir: 'original', csrf_token: 'late-token'});
+  await assert.rejects(refresh, /kho dữ liệu/i);
+  assert.equal(vm.runInContext('app.csrf', context), 'old');
+  assert.equal(get('session-recovery').hidden, false);
+});
+
 test('variant dirty tracking ignores publication and metric fields but tracks edits', () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
