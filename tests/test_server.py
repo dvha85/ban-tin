@@ -74,6 +74,19 @@ class ServerTests(unittest.TestCase):
         self.assertTrue(json.loads(body)['id'])
         self.assertEqual(self.request('GET', '/api/state', headers=headers)[0], 200)
 
+    def test_home_retains_editor_and_safe_external_link(self):
+        status, headers, body = self.request('GET', '/')
+        self.assertEqual(status, 200)
+        self.assertIn('Content-Security-Policy', headers)
+        self.assertIn(b'id="view-bulletins"', body)
+        self.assertIn(b'id="copy-packet"', body)
+        self.assertIn(b'href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer"', body)
+        page = body.decode('utf-8')
+        self.assertIn('Bản 0.4 đang phát triển', page)
+        self.assertIn('Bạn có thể tự viết hoặc chuyển gói tư liệu sang công cụ AI', page)
+        self.assertIn('Facebook, Threads hoặc X', page)
+        self.assertIn('Ứng dụng không kết nối tài khoản hay tự đăng.', page)
+
     def test_malformed_and_oversize_requests(self):
         headers = self.session()
         self.assertEqual(self.request('POST', '/api/articles/import', [], headers)[0], 400)
