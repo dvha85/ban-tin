@@ -2,6 +2,8 @@
 
 ## Phần 0.4 đang phát triển (03/11/2026)
 
+- 04/11/2026, PUB-03 / QA-02: trên trình duyệt tích hợp, kho fixture X hai đoạn, biểu mẫu đính chính chặn lưu khi chưa xác nhận; URL trùng đoạn khác hiện thông báo và liên kết đối soát. Sửa URL làm bỏ xác nhận, sau xác nhận lại đã lưu URL giả mới cho đoạn 1, đoạn 2 giữ nguyên; lịch sử hiển thị URL cũ và lý do. Test handler kiểm tra giữ dữ liệu khi lỗi, bảo vệ chưa lưu, yêu cầu xác nhận và xác nhận lại sau sửa. Chưa thử đính chính mọi kênh, hủy ghi nhận qua UI hoặc mất mạng thật.
+
 - 04/11/2026, PUB-04 / QA-02: thay chuỗi prompt bằng biểu mẫu số liệu có nhãn, nút lưu và bỏ. Trên trình duyệt tích hợp với kho fixture, phát hiện sự kiện nhập làm vùng phiên bản bị đánh dấu sửa và chặn lưu; sau sửa, nhập 10 lượt xem, 0 lượt thích, các trường còn lại để trống và lưu thành công. Mục số liệu hiển thị 10, 0 và “chưa biết” đúng trường. Test handler giả kiểm tra giữ dữ liệu khi lỗi, key thử lại, bỏ thay đổi và phân biệt sự kiện số liệu với sửa phiên bản. Chưa thử mất mạng thật, mọi kênh hoặc toàn bộ QA giao diện.
 
 - QA-02 / POST-04/06: trình duyệt tích hợp trên kho fixture riêng có phiên bản X hai đoạn, đoạn đầu được chuẩn bị sẵn là đã ghi nhận. Nhập URL giả vào đoạn hai rồi bấm nhập số liệu đoạn một: giao diện giữ URL đang nhập và báo “Hãy lưu các thay đổi khác trước khi nhập số liệu.” Không ghi nhận hay đăng bài thật. Chưa kiểm tra lưu số liệu qua các hộp thoại, đổi kênh hoặc rời trang ở lượt này; QA-02 vẫn mở.

@@ -558,7 +558,7 @@ function hasPendingPublicationEdit() {
   return Boolean($('bulletin-editor').querySelector('[data-pending-publication-edit="true"]'));
 }
 function markVariantDirty(area, event) {
-  if (!event.target.dataset.publicationUrl && !event.target.dataset.metricField) {
+  if (!event.target.dataset.publicationUrl && !event.target.dataset.metricField && !event.target.dataset.correctionField) {
     app.bulletinDirty = true; area.dataset.dirty = 'true';
   }
 }
@@ -1005,31 +1005,45 @@ async function renderVariantPublication(area, variant) {
       });
       const correct = node('button', 'button secondary', 'Đính chính liên kết');
       const conflict = node('div'); conflict.hidden = true;
-      let pendingCorrection = {reason: '', url: existing.url};
-      const showPendingCorrection = error => {
-        showClaimConflict(conflict, error || new Error('Đính chính chưa được gửi.'), pendingCorrection);
-        conflict.dataset.dirty = 'true'; conflict.dataset.pendingCorrection = 'true'; conflict.dataset.pendingPublicationEdit = 'true'; app.bulletinDirty = true;
-        const discard = node('button', 'button secondary', 'Bỏ đính chính chưa lưu');
-        listen(discard, 'click', () => {
-          delete conflict.dataset.dirty; delete conflict.dataset.pendingCorrection; delete conflict.dataset.pendingPublicationEdit;
-          conflict.hidden = true; conflict.replaceChildren(); pendingCorrection = {reason: '', url: existing.url};
-          app.bulletinDirty = hasOtherPendingChanges($('bulletin-editor'), null, hasPendingBulletinUrl());
-        });
-        conflict.append(discard);
-      };
       bulletinAction(correct, async () => {
         if (hasOtherPendingChanges($('bulletin-editor'), conflict, hasPendingBulletinUrl()))
           throw new Error('Hãy lưu các thay đổi khác trước khi đính chính.');
-        const reason = window.prompt('Lý do đính chính (ít nhất 5 ký tự):', pendingCorrection.reason); if (reason === null) return;
-        pendingCorrection.reason = reason;
-        showPendingCorrection();
-        const url = window.prompt('Liên kết thay thế. Để trống để hủy ghi nhận:', pendingCorrection.url); if (url === null) return;
-        pendingCorrection.url = url;
-        showPendingCorrection();
-        if (!window.confirm('Ghi nhận đính chính này? Lịch sử cũ vẫn được giữ.')) return;
-        try { await api(`/api/publications/${existing.id}/corrections`, {revision: variant.revision, reason, url}); }
-        catch (error) { showPendingCorrection(error); return; }
-        app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã lưu đính chính.');
+        if (!conflict.hidden) return;
+        conflict.hidden = false; conflict.className = 'notice';
+        const errors = node('div'); errors.hidden = true;
+        const reasonLabel = node('label', '', 'Lý do đính chính (ít nhất 5 ký tự)');
+        const reason = node('input'); reason.type = 'text'; reason.dataset.correctionField = 'reason'; reasonLabel.append(reason);
+        const urlLabel = node('label', '', 'Liên kết thay thế (để trống để hủy ghi nhận)');
+        const url = node('input'); url.type = 'url'; url.value = existing.url; url.dataset.correctionField = 'url'; urlLabel.append(url);
+        const confirmLabel = node('label', 'bulletin-check'); const confirm = node('input');
+        confirm.type = 'checkbox'; confirm.dataset.correctionField = 'confirm';
+        confirmLabel.append(confirm, document.createTextNode(' Tôi xác nhận ghi đính chính; lịch sử cũ vẫn được giữ.'));
+        const markPending = () => {
+          conflict.dataset.dirty = 'true'; conflict.dataset.pendingCorrection = 'true';
+          conflict.dataset.pendingPublicationEdit = 'true'; app.bulletinDirty = true;
+        };
+        for (const input of [reason, url]) listen(input, 'input', () => { confirm.checked = false; markPending(); });
+        listen(confirm, 'change', markPending);
+        const saveCorrection = node('button', 'button secondary', 'Lưu đính chính');
+        bulletinAction(saveCorrection, async () => {
+          if (hasOtherPendingChanges($('bulletin-editor'), conflict, hasPendingBulletinUrl()))
+            throw new Error('Hãy lưu các thay đổi khác trước khi đính chính.');
+          markPending();
+          if (!confirm.checked) {
+            errors.replaceChildren(node('p', '', 'Hãy xác nhận trước khi lưu đính chính.'));
+            errors.className = 'notice warning'; errors.hidden = false; return;
+          }
+          try { await api(`/api/publications/${existing.id}/corrections`, {revision: variant.revision, reason: reason.value, url: url.value}); }
+          catch (error) { showClaimConflict(errors, error, {reason: reason.value, url: url.value}); return; }
+          app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã lưu đính chính.');
+        });
+        const discard = node('button', 'button secondary', 'Bỏ đính chính chưa lưu');
+        listen(discard, 'click', () => {
+          delete conflict.dataset.dirty; delete conflict.dataset.pendingCorrection; delete conflict.dataset.pendingPublicationEdit;
+          conflict.hidden = true; conflict.replaceChildren();
+          app.bulletinDirty = hasOtherPendingChanges($('bulletin-editor'), null, hasPendingBulletinUrl());
+        });
+        conflict.append(reasonLabel, urlLabel, confirmLabel, errors, saveCorrection, discard);
       });
       block.append(addMetrics, metricNotice, correct, conflict);
     } else {

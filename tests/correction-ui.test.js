@@ -44,6 +44,7 @@ test('variant dirty tracking ignores publication and metric fields but tracks ed
   context.area = new Element();
   vm.runInContext("markVariantDirty(area, {target: {dataset: {metricField: 'views'}}})", context);
   vm.runInContext("markVariantDirty(area, {target: {dataset: {publicationUrl: 'true'}}})", context);
+  vm.runInContext("markVariantDirty(area, {target: {dataset: {correctionField: 'reason'}}})", context);
   assert.notEqual(context.area.dataset.dirty, 'true');
   vm.runInContext('markVariantDirty(area, {target: {dataset: {}}})', context);
   assert.equal(context.area.dataset.dirty, 'true');
@@ -84,16 +85,53 @@ test('metric form retains edits on error and retries the same payload idempotent
   assert.equal(vm.runInContext('app.bulletinDirty', context), false);
 });
 
+test('correction form preserves inputs and requires confirmation before submitting', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout, calls,
+    crypto: {randomUUID: () => 'test-key'}, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`api = async (path, body) => path.endsWith('/corrections') ? (calls.push(body), Promise.reject(new Error('Liên kết không hợp lệ'))) : path.endsWith('/publications') ?
+    [{id: 11, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : {posts: ['test']};`, context);
+  const area = new Element(); get('bulletin-editor').append(area); context.area = area;
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const button = name => walk(area).find(el => el.tagName === 'button' && el.textContent === name);
+  const field = name => walk(area).find(el => el.dataset.correctionField === name);
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  button('Đính chính liên kết').listeners.click[0]({}); await tick();
+  assert.ok(field('reason')); assert.ok(field('url')); assert.ok(field('confirm'));
+  field('reason').value = 'Lý do sửa thử'; field('url').value = 'https://wrong.example/post';
+  field('reason').listeners.input[0]({}); await tick();
+  button('Lưu đính chính').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 0);
+  field('confirm').checked = true; field('confirm').listeners.change[0]({}); await tick();
+  button('Lưu đính chính').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 1); assert.equal(calls[0].reason, 'Lý do sửa thử');
+  assert.equal(field('url').value, 'https://wrong.example/post');
+  assert.ok(walk(area).some(el => el.textContent.includes('Liên kết không hợp lệ')));
+  field('url').value = 'https://x.com/a/status/456'; field('url').listeners.input[0]({}); await tick();
+  assert.equal(field('confirm').checked, false);
+  button('Lưu đính chính').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 1);
+  assert.equal(vm.runInContext('app.bulletinDirty', context), true);
+  button('Bỏ đính chính chưa lưu').listeners.click[0]({}); await tick();
+  assert.equal(vm.runInContext('app.bulletinDirty', context), false);
+});
+
 test('pending correction remains dirty until explicitly discarded', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
   const windowListeners = {};
-  const prompts = ['Lý do sửa thử', null];
   let confirm = false;
   const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
     setTimeout, clearTimeout, crypto: {randomUUID: () => 'test-key'},
     fetch: () => new Promise(() => {}),
-    window: {location: {search: ''}, prompt: () => prompts.shift(), confirm: () => confirm,
+    window: {location: {search: ''}, confirm: () => confirm,
       addEventListener: (type, handler) => { windowListeners[type] = handler; }},
     document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
       createElement: tag => new Element(tag), createTextNode: text => text},
@@ -111,21 +149,27 @@ test('pending correction remains dirty until explicitly discarded', async () => 
   const button = text => walk(area).find(el => el.tagName === 'button' && el.textContent === text);
   button('Đính chính liên kết').listeners.click[0]({});
   await new Promise(resolve => setImmediate(resolve));
+  const field = name => walk(area).find(el => el.dataset.correctionField === name);
+  field('reason').value = 'Lý do sửa thử'; field('reason').listeners.input[0]({});
+  await new Promise(resolve => setImmediate(resolve));
   const notice = walk(area).find(el => el.dataset.pendingCorrection === 'true');
   assert.ok(notice);
   assert.equal(vm.runInContext('app.bulletinDirty', context), true);
   let prevented = false;
   windowListeners.beforeunload({preventDefault() { prevented = true; }});
   assert.equal(prevented, true);
-  assert.ok(walk(notice).some(el => el.textContent.includes('Lý do sửa thử')));
+  assert.equal(field('reason').value, 'Lý do sửa thử');
   assert.equal(vm.runInContext('hasPendingPublicationEdit()', context), true);
   vm.runInContext("app.view = 'bulletins'; view('inbox')", context);
   assert.equal(vm.runInContext('app.view', context), 'bulletins');
-  prompts.push('Lý do sửa thử', 'https://wrong.example/post'); confirm = true;
-  button('Đính chính liên kết').listeners.click[0]({});
+  field('url').value = 'https://wrong.example/post'; field('url').listeners.input[0]({});
+  await new Promise(resolve => setImmediate(resolve));
+  field('confirm').checked = true; field('confirm').listeners.change[0]({});
+  await new Promise(resolve => setImmediate(resolve));
+  button('Lưu đính chính').listeners.click[0]({});
   await new Promise(resolve => setImmediate(resolve));
   assert.ok(walk(notice).some(el => el.textContent.includes('Liên kết không hợp lệ')));
-  assert.ok(walk(notice).some(el => el.textContent.includes('https://wrong.example/post')));
+  assert.equal(field('url').value, 'https://wrong.example/post');
   button('Bỏ đính chính chưa lưu').listeners.click[0]({});
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(vm.runInContext('app.bulletinDirty', context), false);
