@@ -176,10 +176,16 @@ class MigrationV4Tests(unittest.TestCase):
         with restored.connection() as conn:
             self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 4)
             conn.execute('PRAGMA user_version=99')
+        with closing(sqlite3.connect(target / 'bantin.sqlite3')) as conn:
+            conn.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+            previous_mode = conn.execute('PRAGMA journal_mode').fetchone()[0]
+        before = (target / 'bantin.sqlite3').read_bytes()
         with self.assertRaises(RuntimeError):
             Newsroom(target)
+        self.assertEqual((target / 'bantin.sqlite3').read_bytes(), before)
         with closing(sqlite3.connect(target / 'bantin.sqlite3')) as conn:
             self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 99)
+            self.assertEqual(conn.execute('PRAGMA journal_mode').fetchone()[0], previous_mode)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,7 @@
 import tempfile
+import threading
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
 
@@ -98,6 +100,38 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(same_variant['revision'], variant['revision'])
         self.assertEqual(same_variant['status'], 'approved')
         self.assertTrue(self.room.export_variant(variant['id'])['posts'])
+
+    def test_competing_edit_and_approval_have_exactly_one_winner(self):
+        variant = self.room.create_variant(self.bulletin['id'], {'platform': 'facebook',
+            'account_label': 'Trang thử', 'bulletin_revision': self.bulletin['revision']})
+        segment = {'text': 'Nội dung đã biên tập.', 'item_ids': [self.bulletin['items'][0]['id']]}
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'segments': [segment]})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                                                          'checks': {key: True for key in CHECKS}})
+        barrier = threading.Barrier(2)
+
+        def attempt(operation):
+            barrier.wait(timeout=5)
+            try:
+                if operation == 'approve':
+                    self.room.approve_variant(variant['id'], {'revision': variant['revision']})
+                else:
+                    self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                        'segments': [{**segment, 'text': 'Nội dung đã thay đổi.'}]})
+                return operation
+            except Conflict:
+                return 'conflict'
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            outcomes = list(pool.map(attempt, ('approve', 'edit')))
+        self.assertEqual(outcomes.count('conflict'), 1)
+        current = self.room.variant(variant['id'])
+        if current['status'] == 'approved':
+            self.assertIn('Nội dung đã biên tập.', self.room.export_variant(variant['id'])['posts'][0])
+        else:
+            self.assertEqual(current['segments'][0]['text'], 'Nội dung đã thay đổi.')
+            with self.assertRaises(ValidationError):
+                self.room.export_variant(variant['id'])
 
     def test_record_separate_segments_retry_and_immutable_after_correction(self):
         variant = self.make_approved('x', two=True)
