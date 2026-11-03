@@ -263,6 +263,22 @@ class ServerTests(unittest.TestCase):
         unicode_token = dict(headers, **{'X-CSRF-Token': '\u00e9'})
         self.assertEqual(self.request('POST', '/api/backup', {}, unicode_token)[0], 403)
 
+    def test_deeply_nested_json_is_rejected_without_writing(self):
+        headers = self.session()
+        body = b'{"article_ids":' + b'[' * 20000 + b'0' + b']' * 20000 + b'}'
+        self.assertLess(len(body), MAX_BODY)
+        conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=5)
+        try:
+            conn.request('POST', '/api/bulletins', body, headers)
+            response = conn.getresponse()
+            self.assertEqual(response.status, 400)
+            self.assertIn('error', json.loads(response.read()))
+        finally:
+            conn.close()
+        with self.room.connection() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM bulletins').fetchone()[0], 0)
+        self.assertEqual(self.request('GET', '/api/state', headers=headers)[0], 200)
+
     def test_bulletin_request_utf8_size_boundary_over_http(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin kiểm tra giới hạn',

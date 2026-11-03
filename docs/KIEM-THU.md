@@ -235,3 +235,10 @@ python -m newsroom --collect
 - Test handler thực thi app.js với DOM/API giả: lỗi duyệt chỉ rõ mục được giữ trong vùng phiên bản có role alert; nội dung đang nhập và revision gửi đi được giữ, có thể thử lại. Test mới thất bại trước sửa vì chưa có alert.
 - Hồi quy: 178/178 Python unittest discover và 34/34 Node test đạt. Đây là mô phỏng, chưa xác nhận hiển thị, trình đọc màn hình hoặc mất mạng trên trình duyệt thật.
 - Trình duyệt tích hợp lần thử lại hết thời gian chờ tại Emulation.setFocusEmulationEnabled; QA-02 vẫn mở. Kết quả lưu không rõ sau mất mạng vẫn cần đối chiếu trước khi thử lại.
+
+
+### 04/11/2026 — JSON lồng sâu qua HTTP (BASE-02)
+
+- Trên server và kho tạm, gửi JSON lồng 20.000 cấp dưới MAX_BODY: trước sửa kết nối bị đóng do RecursionError; sau sửa trả 400 dạng JSON, không tạo bản tin, request trạng thái tiếp theo thành công. Độ sâu lỗi phụ thuộc Python/runtime.
+- Test kiểm tra một đường POST và một payload; không chứng minh mọi schema hoặc mọi trường hợp lỗi của API.
+- Hồi quy: python -B -m unittest discover -s tests đạt 179/179; bộ Node test của dự án đạt 34/34.

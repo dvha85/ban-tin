@@ -248,7 +248,7 @@ class Handler(BaseHTTPRequestHandler):
             data = json.loads(raw)
             if not isinstance(data, dict):
                 raise ValueError()
-        except (ValueError, UnicodeError, TimeoutError, OSError):
+        except (ValueError, UnicodeError, RecursionError, TimeoutError, OSError):
             self.json_error(400, 'Dữ liệu JSON không hợp lệ.')
             return
         path = urlsplit(self.path).path
