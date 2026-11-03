@@ -69,6 +69,49 @@ class ServerTests(unittest.TestCase):
                 self.assertIn('error', json.loads(body))
                 self.assertEqual(self.room.variants(bulletin['id']), [])
 
+    def test_http_approval_blocks_unresolved_item_note_until_reviewed(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin kiểm tra duyệt',
+            'url': 'https://example.com/policy-v4', 'summary': 'Nguồn giả.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'body': 'Bản tin giả đã biên tập.', 'verification_note': 'Nguồn [CHƯA XÁC MINH] cần kiểm tra.',
+            'claims': [{'text': 'Khẳng định thử', 'evidence': 'Nguồn giả', 'checked': False}]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'verified': True,
+            'claims': [{**item['claims'][0], 'checked': True}]})
+        variant = self.room.create_variant(bulletin['id'], {
+            'bulletin_revision': bulletin['revision'], 'platform': 'facebook', 'account_label': 'Trang thử'})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+            'segments': [{'text': 'Nội dung giả.', 'item_ids': [item['id']]}]})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+            'checks': {key: True for key in ('sources', 'facts', 'original', 'rights', 'claims')}})
+        path = f"/api/variants/{variant['id']}"
+        status, _, body = self.request('POST', path + '/approve', {'revision': variant['revision']}, headers)
+        self.assertEqual(status, 400, body)
+        self.assertEqual(self.room.variant(variant['id']), variant)
+        self.assertEqual(self.request('GET', path + '/export', headers=headers)[0], 400)
+
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'verification_note': 'Đã kiểm tra nguồn giả phù hợp.'})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'verified': True,
+            'claims': [{**item['claims'][0], 'checked': True}]})
+        variant = self.room.variant(variant['id'])
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'adopt_bulletin_revision': True})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+            'checks': {key: True for key in ('sources', 'facts', 'original', 'rights', 'claims')}})
+        status, _, body = self.request('POST', path + '/approve', {'revision': variant['revision']}, headers)
+        self.assertEqual(status, 200, body)
+        self.assertEqual(json.loads(body)['status'], 'approved')
+        self.assertEqual(self.request('GET', path + '/export', headers=headers)[0], 200)
+
     def test_bulletin_rejects_article_ids_outside_sqlite_range(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử giới hạn ID',
