@@ -2,6 +2,8 @@
 
 > Cập nhật kiểm thử 04/11/2026: Trên fixture, đã ghi nhận URL giả Facebook và Threads, đối chiếu số liệu riêng 101/0 và 202/3, rồi tải lại và xác nhận số liệu Threads còn lưu. Tổng quan có ba đoạn ghi nhận trên ba phiên bản, trong đó X mới có 1/2 đoạn. QA-02 và BASE-03 vẫn mở; chi tiết tại `KIEM-THU.md`.
 
+> Bổ sung DIG-01/02: trên Edge, chọn ba tin giả bằng bàn phím, lọc còn một tin và tạo bản tin vẫn gồm cả ba; đổi thứ tự rồi tải lại giữ đúng thứ tự và URL từng mục. Chưa thử restart server ở lượt UI này; chi tiết tại `KIEM-THU.md`.
+
 > Bổ sung QA-02: biểu mẫu số liệu Threads giữ giá trị 303 và chặn chuyển sang Facebook khi chưa lưu; sau khi lưu có thể chuyển kênh và xem lại cả hai lượt số liệu. Các tình huống rời trang và mất kết nối vẫn cần kiểm tra riêng.
 
 > Bổ sung PUB-02/03: tách namespace khóa đính chính nội bộ khỏi khóa client để tránh lỗi trùng khóa; kiểm thử tái hiện lỗi cũ và đối chiếu lịch sử, retry trên kho tạm. Xem `KIEM-THU.md`.
