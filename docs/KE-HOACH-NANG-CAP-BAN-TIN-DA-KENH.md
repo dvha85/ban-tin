@@ -432,7 +432,8 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | DIG/FMT/APR/PUB | Đang làm | Có lõi, giao diện, test chia đoạn 9→10 và test HTTP CSRF; đã smoke một bản tin/phiên bản X với URL giả trên kho thử | Kiểm chứng bộ đếm, QA toàn luồng, clipboard, file tải, restart và thêm pilot |
 | 03/11/2026 | DIG-03 | Đang làm | Thêm cảnh báo nguồn thiếu/ngắn và ngày không rõ/tương lai/quá 7 ngày, kèm test ngưỡng JS | Smoke giao diện và đối chiếu các tiêu chí nguồn còn lại |
 | 03/11/2026 | DIG-01/02 | Đang làm | Cảnh báo tin đã dùng, cho phép chọn lại; test backend và smoke tạo/thêm trên kho thử | Kiểm tra các tiêu chí chọn lọc, đồng thời và nguồn còn lại |
-| 03/11/2026 | NEWS-06 | Đang làm | Bổ sung kiểm tra 128.000 byte UTF-8 ở UI trước gửi; test JSON đúng ngưỡng/vượt một byte và Unicode | Kiểm thử giới hạn packet và smoke lỗi qua giao diện |
+| 03/11/2026 | NEWS-06 | Đang làm | Bổ sung kiểm tra 128.000 byte UTF-8 ở UI trước gửi; test JSON đúng ngưỡng/vượt một byte và Unicode | Smoke lỗi request qua giao diện |
+| 03/11/2026 | NEWS-02/05/06 | Đang làm | Thêm xóa lựa chọn, đếm tin đã chọn đang ẩn, lọc số ngày tùy chọn và nhãn loại ngày; smoke trên kho thử. Packet tính cả hướng dẫn trong 64 KiB và chỉ ra mục lớn, test biên Unicode | Bổ sung kiểm tra UI ngày tương lai/unknown và smoke lỗi packet |
 | 03/11/2026 | QA/DOC/PILOT/REL | Đang làm | 114/114 Python, 2/2 JS; Edge tải `.txt` một đoạn và đối chiếu nội dung/nguồn; đã cập nhật tài liệu cho nhánh phát triển | Clipboard thật, QA còn lại, ba pilot và quyết định kho vận hành vẫn chưa có |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.

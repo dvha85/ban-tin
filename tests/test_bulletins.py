@@ -1,7 +1,9 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
+from newsroom.bulletins import MAX_PACKET_BYTES, PACKET_PREFIX, PACKET_SUFFIX, _json
 from newsroom.service import Conflict, Newsroom, ValidationError
 
 
@@ -55,6 +57,17 @@ class BulletinTests(unittest.TestCase):
         packet = restarted.bulletin_packet(bulletin['id'])
         self.assertIn('DỮ LIỆU NGUỒN', packet)
         self.assertLess(packet.index('story-2'), packet.index('story-0'))
+
+    def test_packet_limit_counts_complete_utf8_output_and_identifies_large_items(self):
+        bulletin = {'items': [{'body': ''}], 'title': 'Tin thử'}
+        framing = len((PACKET_PREFIX + _json(bulletin) + PACKET_SUFFIX).encode('utf-8'))
+        bulletin['items'][0]['body'] = 'a' * (MAX_PACKET_BYTES - framing)
+        with patch.object(self.room, 'bulletin', return_value=bulletin):
+            packet = self.room.bulletin_packet(1)
+            self.assertEqual(len(packet.encode('utf-8')), MAX_PACKET_BYTES)
+            bulletin['items'][0]['body'] += 'ệ'
+            with self.assertRaisesRegex(ValidationError, r'65539 byte.*mục 1:'):
+                self.room.bulletin_packet(1)
 
     def test_edits_reset_check_and_revision_conflict(self):
         bulletin = self.create()

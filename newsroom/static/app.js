@@ -58,7 +58,7 @@ function formatDate(value) {
 function shortDate(value) {
   if (!value || Number.isNaN(Date.parse(value))) return 'Chưa rõ ngày';
   const hours = (Date.now() - Date.parse(value)) / 3600000;
-  if (hours < -2.4) return 'Ngày nguồn ở tương lai';
+  if (hours < 0) return 'Ngày nguồn ở tương lai';
   if (hours < 1) return 'Trong giờ qua';
   if (hours < 24) return `${Math.floor(hours)} giờ trước`;
   if (hours < 8 * 24) return `${Math.floor(hours / 24)} ngày trước`;
@@ -133,11 +133,13 @@ function empty(title, text) {
 }
 function renderStories() {
   const search = $('search-input').value.trim().toLocaleLowerCase();
-  const days = $('age-filter').value;
+  const days = $('age-filter').value === 'custom' ? $('custom-age').value : $('age-filter').value;
+  const customInvalid = $('age-filter').value === 'custom' && (!$('custom-age').validity.valid || !$('custom-age').value);
+  $('custom-age-label').hidden = $('age-filter').value !== 'custom';
+  const now = Date.now();
   const items = app.state.articles.filter(item => {
-    const age = item.published_at ? (Date.now() - Date.parse(item.published_at)) / 86400000 : null;
     return (app.category === 'all' || item.category === app.category) &&
-      (days === 'all' || (age !== null && Number.isFinite(age) && age >= 0 && age <= Number(days))) &&
+      !customInvalid && matchesAge(item.published_at, days, now) &&
       `${item.title} ${item.summary} ${item.source_name}`.toLocaleLowerCase().includes(search);
   });
   const list = $('story-list');
@@ -150,8 +152,9 @@ function renderStories() {
     card.type = 'button';
     card.setAttribute('aria-pressed', String(item.id === app.articleId));
     const meta = node('div', 'story-meta');
+    const dateKind = item.date_kind === 'published' ? 'Xuất bản' : item.date_kind === 'updated' ? 'Cập nhật' : 'Ngày chưa rõ loại';
     meta.append(node('span', 'source-mark', item.source_name.charAt(0)), node('span', '', item.source_name),
-      node('span', '', '·'), node('span', '', shortDate(item.published_at)));
+      node('span', '', '·'), node('span', '', `${dateKind}: ${shortDate(item.published_at)}`));
     const bottom = node('div', 'story-bottom');
     bottom.append(node('span', `badge ${item.category}`, labelCategory(item.category)), node('span', '', `Ưu tiên ${item.score}/95`));
     card.append(meta, node('h3', '', item.title), node('p', 'excerpt', item.summary || 'Nguồn chưa có trích đoạn. Cần đọc nguồn gốc.'), bottom);
@@ -176,7 +179,9 @@ function renderStories() {
     wrapper.append(selection, card);
     list.append(wrapper);
   }
-  $('list-footer').textContent = `${items.length}/${app.state.articles.length} tin hiển thị · tối đa 500 tin gần nhất. Tin chưa rõ ngày hoặc có ngày tương lai nằm trong bộ lọc Tất cả.`;
+  const hidden = hiddenSelectionCount(app.selectedArticles, items);
+  $('list-footer').textContent = customInvalid ? `Nhập số ngày nguyên từ 1 đến 3650. ${hidden} tin đã chọn đang ẩn.` :
+    `${items.length}/${app.state.articles.length} tin hiển thị · ${hidden} tin đã chọn đang ẩn · tối đa 500 tin gần nhất. Tin chưa rõ ngày hoặc có ngày tương lai nằm trong bộ lọc Tất cả.`;
   updateBulletinSelection();
   renderArticle();
 }
@@ -462,6 +467,7 @@ async function copy(text) {
 function updateBulletinSelection() {
   $('create-bulletin').textContent = `Tạo bản tin từ tin đã chọn (${app.selectedArticles.size}/10)`;
   $('create-bulletin').disabled = app.selectedArticles.size === 0;
+  $('clear-bulletin-selection').disabled = app.selectedArticles.size === 0 || app.busy;
 }
 function bulletinAction(button, action) {
   listen(button, 'click', async () => {
@@ -472,6 +478,7 @@ function bulletinAction(button, action) {
     editor.inert = true;
     nav.inert = true;
     $('create-bulletin').disabled = true;
+    $('clear-bulletin-selection').disabled = true;
     try { return await action(); }
     finally {
       app.busy = false;
@@ -940,6 +947,8 @@ document.querySelectorAll('[data-category]').forEach(button => listen(button, 'c
 }));
 listen($('search-input'), 'input', renderStories);
 listen($('age-filter'), 'change', renderStories);
+listen($('custom-age'), 'input', renderStories);
+listen($('clear-bulletin-selection'), 'click', () => { app.selectedArticles.clear(); renderStories(); });
 listen($('draft-filter'), 'change', renderDrafts);
 listen($('refresh-button'), 'click', async () => {
   await api('/api/refresh', {});

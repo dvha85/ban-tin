@@ -2,9 +2,9 @@
 
 ## Thử quy trình bản tin nhiều mục đang phát triển
 
-1. Trong **Hộp tin**, đánh dấu 1–10 tin rồi chọn **Tạo bản tin từ tin đã chọn**. Lựa chọn được giữ khi đổi bộ lọc trong cùng phiên. Tin đã có trong bản tin khác được ghi số lần sử dụng và yêu cầu xác nhận nếu chọn lại; bạn vẫn có thể dùng lại để cập nhật. Với tin có hơn ba nguồn, chọn rõ 1–3 nguồn theo hướng dẫn.
+1. Trong **Hộp tin**, đánh dấu 1–10 tin rồi chọn **Tạo bản tin từ tin đã chọn**. Lựa chọn được giữ khi đổi bộ lọc trong cùng phiên; số tin đang ẩn được hiển thị và có nút bỏ toàn bộ lựa chọn. Có thể lọc 24 giờ, 48 giờ, 7 ngày hoặc số ngày tùy chọn. Tin đã có trong bản tin khác được ghi số lần sử dụng và yêu cầu xác nhận nếu chọn lại; bạn vẫn có thể dùng lại để cập nhật. Với tin có hơn ba nguồn, chọn rõ 1–3 nguồn theo hướng dẫn.
 2. Mở **Bản tin**, lưu tiêu đề, ngày và lời mở/kết. Lưu từng mục, đọc nguồn, ghi nội dung và ghi chú kiểm chứng; sau đó xác nhận đã kiểm chứng và lưu lại. Sửa nội dung sẽ bỏ xác nhận cũ. Có thể thay thứ tự, bỏ mục hoặc thêm nguồn/mục trong giới hạn ứng dụng. Giao diện nhắc khi tư liệu thiếu, dưới 80 ký tự, ngày chưa rõ, ở tương lai hoặc quá 7 ngày; các ngưỡng này không đánh giá độ tin cậy.
-3. Dùng **Sao chép gói tư liệu** nếu muốn chuyển thủ công sang công cụ AI. Tự nhập và kiểm tra lại kết quả; trích đoạn không thay thế nguồn gốc.
+3. Dùng **Sao chép gói tư liệu** nếu muốn chuyển thủ công sang công cụ AI. Toàn bộ gói tối đa 64 KiB UTF-8; nếu vượt, ứng dụng cho biết các mục lớn để bạn rút gọn hoặc chia bản tin. Tự nhập và kiểm tra lại kết quả; trích đoạn không thay thế nguồn gốc.
 4. Tạo phiên bản cho từng kênh, nhập tên tài khoản, nội dung và chọn các mục cùng nguồn thực sự sử dụng. Xem trước bao gồm nguồn và bộ đếm. Threads/X có thể đề xuất chia theo câu hoặc đoạn; nếu câu quá dài, hãy tự sửa. Lưu nội dung, sau đó hoàn tất và lưu lại năm mục kiểm tra trước khi duyệt.
 5. Sao chép từng đoạn từ bản duyệt hoặc tải `.txt`. Tự đăng, sau đó ghi URL tương ứng cho từng đoạn. Có thể nhập số liệu thủ công, để trống nếu chưa biết, và đính chính liên kết với lý do. Phiên bản đã ghi nhận bị khóa; tạo bản sao nếu cần chỉnh sửa.
 

@@ -10,6 +10,7 @@
   <script src="/static/draft-state.js" defer></script>
   <script src="/static/source-warnings.js" defer></script>
   <script src="/static/request-size.js" defer></script>
+  <script src="/static/inbox-utils.js" defer></script>
   <script src="/static/app.js" defer></script>
 </head>
 <body>
@@ -52,8 +53,8 @@
       <div class="section-heading"><div><h2>Hộp tin của bạn <span class="badge subtle">NGUỒN QUỐC TẾ</span></h2><p>Chọn một tin có ích. Đọc nguồn trước khi viết.</p></div><span class="small-note">Ưu tiên biên tập ≠ mức độ thịnh hành</span></div>
       <div class="inbox-grid">
         <section class="panel story-panel" aria-label="Danh sách tin">
-          <div class="filter-row"><label class="search-label"><span>⌕</span><input id="search-input" type="search" placeholder="Tìm theo tiêu đề, nguồn…" aria-label="Tìm tin"></label><select id="age-filter" aria-label="Khoảng thời gian"><option value="7">7 ngày</option><option value="2">48 giờ</option><option value="1">24 giờ</option><option value="all">Tất cả</option></select></div>
-          <div class="action-row"><button id="create-bulletin" class="button secondary">Tạo bản tin từ tin đã chọn (0/10)</button></div>
+          <div class="filter-row"><label class="search-label"><span>⌕</span><input id="search-input" type="search" placeholder="Tìm theo tiêu đề, nguồn…" aria-label="Tìm tin"></label><select id="age-filter" aria-label="Khoảng thời gian"><option value="7">7 ngày</option><option value="2">48 giờ</option><option value="1">24 giờ</option><option value="custom">Tùy chọn</option><option value="all">Tất cả</option></select><label id="custom-age-label" hidden>Số ngày <input id="custom-age" type="number" min="1" max="3650" step="1" value="30"></label></div>
+          <div class="action-row"><button id="create-bulletin" class="button secondary">Tạo bản tin từ tin đã chọn (0/10)</button><button id="clear-bulletin-selection" class="button secondary" disabled>Bỏ tất cả lựa chọn</button></div>
           <div class="tabs category-tabs" aria-label="Lọc chủ đề"><button class="active" data-category="all">Tất cả</button><button data-category="ai">AI thực dụng</button><button data-category="tools">Thiết bị & phần mềm</button></div>
           <div id="story-list" class="story-list"></div>
           <div id="list-footer" class="list-footer">Tối đa 500 tin gần nhất.</div>
