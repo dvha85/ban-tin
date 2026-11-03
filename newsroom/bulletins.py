@@ -132,10 +132,18 @@ class BulletinMixin:
         return bulletin
 
     def _invalidate_variants(self, conn, bulletin_id):
+        from .variants import CHECKS
         # Recorded variants remain tied to their immutable approval snapshot.
-        conn.execute("""UPDATE content_variants SET status='draft',approval_id=NULL,
-            revision=revision+1,updated_at=? WHERE bulletin_id=? AND locked_at IS NULL""",
-            (_now(), bulletin_id))
+        # Clear stale confirmations immediately, while preserving all other
+        # editable payload including pending attribution-review requirements.
+        rows = conn.execute('SELECT id,payload FROM content_variants WHERE bulletin_id=? AND locked_at IS NULL',
+                            (bulletin_id,)).fetchall()
+        at = _now()
+        for row in rows:
+            payload = json.loads(row['payload'])
+            payload['checks'] = {key: False for key in CHECKS}
+            conn.execute("""UPDATE content_variants SET status='draft',approval_id=NULL,payload=?,
+                revision=revision+1,updated_at=? WHERE id=?""", (_json(payload), at, row['id']))
 
     def _source_snapshot(self, source):
         snapshot = dict(source)

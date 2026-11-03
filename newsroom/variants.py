@@ -24,6 +24,14 @@ class VariantMixin:
         result.update(json.loads(result.pop('payload')))
         parent = conn.execute('SELECT revision FROM bulletins WHERE id=?', (result['bulletin_id'],)).fetchone()
         result['needs_update'] = result['locked_at'] is None and result['bulletin_revision'] != parent['revision']
+        result['policy_stale'] = False
+        if result['approval_id'] is not None:
+            approval = conn.execute('SELECT snapshot FROM variant_approvals WHERE id=? AND variant_id=?',
+                                    (result['approval_id'], variant_id)).fetchone()
+            if approval:
+                snapshot = json.loads(approval['snapshot'])
+                result['policy_stale'] = (snapshot.get('policy_version') != POLICY_VERSION or
+                                          snapshot.get('renderer_version') != RENDERER_VERSION)
         return result
 
     def variant(self, variant_id):
@@ -118,7 +126,8 @@ class VariantMixin:
             render_segments(current['platform'], segments, bulletin)
             checks = current['checks']
             changed = (account != current['account_label'] or segments != current['segments'] or
-                       current['needs_update'] or current.get('attribution_review_required', False))
+                       current['needs_update'] or current['policy_stale'] or
+                       current.get('attribution_review_required', False))
             if changed:
                 checks = {key: False for key in CHECKS}
             elif 'checks' in data:
@@ -168,6 +177,8 @@ class VariantMixin:
             variant = self._locked_variant(conn, variant_id, data.get('revision'))
             if variant['locked_at'] is not None or variant['needs_update']:
                 raise Conflict('Phiên bản đã khóa hoặc bản tin gốc đã thay đổi.')
+            if variant['policy_stale']:
+                raise ValidationError('Quy tắc đầu ra đã đổi. Hãy lưu phiên bản, kiểm tra và xác nhận lại trước khi duyệt.')
             if variant.get('attribution_review_required'):
                 raise ValidationError('Bản sao cần được kiểm tra lại mục và nguồn trước khi duyệt.')
             bulletin = self._bulletin(conn, variant['bulletin_id'])

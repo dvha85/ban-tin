@@ -713,6 +713,8 @@ async function renderVariants(container, bulletin) {
   const account = bulletinField('Tên tài khoản / Page', locked ? history.account_label : variant.account_label);
   account.input.disabled = locked;
   area.append(node('p', 'small-note', `Trạng thái: ${variant.status}${variant.needs_update ? ' · Bản tin gốc đã đổi, cần kiểm tra lại' : ''}${locked ? ` · Mục và nguồn theo bản duyệt lịch sử (${history.policy_version})` : ''}`), account.wrapper);
+  if (variant.policy_stale && !locked)
+    area.append(node('p', 'notice warning', 'Quy tắc đầu ra đã đổi. Hãy lưu phiên bản để bỏ các xác nhận cũ, sau đó kiểm tra và xác nhận lại trước khi duyệt.'));
   const segmentList = node('div');
   function addSegment(segment) {
     const block = node('section', 'bulletin-block');

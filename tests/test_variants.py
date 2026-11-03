@@ -146,6 +146,24 @@ class VariantTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             self.room.export_variant(variant['id'])
 
+    def test_parent_edit_resets_checks_of_unlocked_variants_only(self):
+        unlocked = self.make_approved('threads')
+        locked = self.make_approved('x')
+        self.room.record_publication(locked['id'], {'revision': locked['revision'], 'position': 0,
+            'url': 'https://x.com/test/status/991', 'idempotency_key': 'parent_edit_991'})
+        before_locked = self.room.variant(locked['id'])
+        archived_before = self.room.export_variant(locked['id'], archive=True)
+        self.room.save_bulletin(self.bulletin['id'], {
+            'revision': self.bulletin['revision'], 'title': 'Bản tin đã chỉnh sửa'})
+        updated = self.room.variant(unlocked['id'])
+        self.assertEqual(updated['status'], 'draft')
+        self.assertTrue(updated['needs_update'])
+        self.assertFalse(any(updated['checks'].values()))
+        self.assertEqual(self.room.variant(locked['id']), before_locked)
+        self.assertEqual(self.room.export_variant(locked['id'], archive=True), archived_before)
+        with self.assertRaises(Conflict):
+            self.room.approve_variant(unlocked['id'], {'revision': updated['revision']})
+
     def test_export_reads_variant_and_approval_in_one_snapshot(self):
         variant = self.make_approved('threads')
         with self.room.connection() as conn:
@@ -345,6 +363,34 @@ class VariantTests(unittest.TestCase):
             with self.assertRaises(ValidationError):
                 self.room.export_variant(variant['id'])
             self.assertTrue(self.room.export_variant(variant['id'], archive=True)['archive'])
+
+    def test_policy_change_requires_new_checks_before_reapproval(self):
+        variant = self.make_approved('threads')
+        with patch('newsroom.variants.POLICY_VERSION', 'future-policy'):
+            stale = self.room.variant(variant['id'])
+            self.assertTrue(stale['policy_stale'])
+            with self.assertRaises(ValidationError):
+                self.room.approve_variant(stale['id'], {'revision': stale['revision']})
+            reset = self.room.save_variant(stale['id'], {'revision': stale['revision'],
+                                                          'checks': {key: True for key in CHECKS}})
+            self.assertFalse(reset['policy_stale'])
+            self.assertFalse(any(reset['checks'].values()))
+            with self.assertRaises(ValidationError):
+                self.room.approve_variant(reset['id'], {'revision': reset['revision']})
+            confirmed = self.room.save_variant(reset['id'], {'revision': reset['revision'],
+                                                             'checks': {key: True for key in CHECKS}})
+            approved = self.room.approve_variant(confirmed['id'], {'revision': confirmed['revision']})
+            self.assertEqual(approved['status'], 'approved')
+
+    def test_renderer_change_also_requires_review_before_reapproval(self):
+        variant = self.make_approved('x')
+        with patch('newsroom.variants.RENDERER_VERSION', 'future-renderer'):
+            stale = self.room.variant(variant['id'])
+            self.assertTrue(stale['policy_stale'])
+            with self.assertRaises(ValidationError):
+                self.room.approve_variant(stale['id'], {'revision': stale['revision']})
+            reset = self.room.save_variant(stale['id'], {'revision': stale['revision']})
+            self.assertFalse(any(reset['checks'].values()))
 
 
 if __name__ == '__main__':
