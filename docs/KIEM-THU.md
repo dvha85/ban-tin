@@ -242,3 +242,8 @@ python -m newsroom --collect
 - Trên server và kho tạm, gửi JSON lồng 20.000 cấp dưới MAX_BODY: trước sửa kết nối bị đóng do RecursionError; sau sửa trả 400 dạng JSON, không tạo bản tin, request trạng thái tiếp theo thành công. Độ sâu lỗi phụ thuộc Python/runtime.
 - Test kiểm tra một đường POST và một payload; không chứng minh mọi schema hoặc mọi trường hợp lỗi của API.
 - Hồi quy: python -B -m unittest discover -s tests đạt 179/179; bộ Node test của dự án đạt 34/34.
+
+### 04/11/2026 — Mẫu đầu ra để người dùng xem (REL-01)
+
+- Tạo ba bản tin bằng service trên kho tạm với dữ liệu, xác nhận và URL giả lập; lưu và duyệt từng phiên bản, rồi ghi nguyên các chuỗi từ export vào [mẫu đầu ra](MAU-DAU-RA-GIA-LAP-0.4.md): Facebook và Threads một đoạn, X hai đoạn.
+- Đây là mẫu mới, không phải tệp của ba pilot đo thời gian trước; không chứng minh thao tác giao diện, nguồn thật hay bài đăng. Người dùng vẫn cần đánh giá quy trình và quyết định triển khai.

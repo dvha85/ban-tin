@@ -6,11 +6,9 @@
 
 > Bổ sung restart: từ kho fixture đó tạo backup qua UI, khôi phục sang thư mục riêng, dừng và chạy lại server của bản khôi phục. Edge mở bản tin #2 vẫn thấy đúng thứ tự Alpha → Charlie → Bravo và ba URL nguồn. Không suy rộng sang mất điện hay dữ liệu vận hành.
 
-> QA-02 còn lỗi phục hồi phiên: dữ liệu nhập được giữ sau lỗi kết nối, nhưng lưu lại sau restart bị từ chối và yêu cầu tải lại; thao tác tải lại có thể mất nội dung chưa lưu. Cần xử lý và thử lại; chi tiết tại `KIEM-THU.md`.
+> QA-02: lỗi phục hồi phiên sau restart đã được xử lý bằng nút khôi phục không tải trang; không tự gửi lại thao tác và có so sánh thư mục kho. Test handler giả và test HTTP phiên cũ/mới đạt. Chưa xác minh giao diện thật sau sửa hoặc tình huống kết quả lưu không rõ trên trình duyệt; đường dẫn trùng không chứng minh kho chưa bị thay thế. Chi tiết tại `KIEM-THU.md`.
 
-> Bổ sung: đã thêm khôi phục phiên không tải trang, không tự gửi lại thao tác và so sánh thư mục kho; test handler giả đạt. Chưa xác minh giao diện thật sau sửa hoặc tình huống kết quả lưu không rõ; đường dẫn trùng không chứng minh kho chưa bị thay thế.
-
-Ngày rà soát: 03/11/2026. Đối chiếu mục 10 của [kế hoạch nâng cấp](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) với mã và bằng chứng được ghi trong [nhật ký kiểm thử](KIEM-THU.md). Đây là trạng thái kiểm chứng, không phải chấp thuận triển khai. Các lệnh và kết quả chi tiết, dữ liệu sử dụng và giới hạn được ghi tại nhật ký đó.
+Ngày cập nhật bằng chứng: 04/11/2026. Đối chiếu mục 10 của [kế hoạch nâng cấp](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) với mã và bằng chứng được ghi trong [nhật ký kiểm thử](KIEM-THU.md). Đây là trạng thái kiểm chứng, không phải chấp thuận triển khai. Các lệnh và kết quả chi tiết, dữ liệu sử dụng và giới hạn được ghi tại nhật ký đó.
 
 | Điều kiện mục 10 | Bằng chứng hiện có | Phần còn thiếu để kết luận |
 | --- | --- | --- |
@@ -21,9 +19,9 @@ Ngày rà soát: 03/11/2026. Đối chiếu mục 10 của [kế hoạch nâng c
 | Hủy duyệt đúng phạm vi; bản ghi nhận bất biến; ghi nhận một phần | Các test `test_parent_edit_resets_checks_of_unlocked_variants_only`, `test_cancel_all_preserves_lock_and_history_and_can_record_again`, `test_policy_change_after_partial_recording_preserves_snapshot`; smoke kho fixture X đã thử đính chính, hủy và ghi lại cùng URL, thấy tiến độ 0/2 → 1/2 → 0/2 → 1/2. | Chưa thử mọi kênh, toàn bộ luồng từ đầu hoặc thay policy qua giao diện; công cụ trình duyệt từng bị kẹt ở hộp xác nhận. |
 | URL và số liệu riêng theo kênh/đoạn, không giữ URL bài khác | Test binding trong `tests/draft-state.test.js`, test handler trong `tests/correction-ui.test.js`, test vòng đời HTTP trong `tests/test_server.py`; kho fixture đã ghi URL giả Facebook/Threads, lưu và xem lại số liệu riêng, chặn đổi kênh khi số liệu chưa lưu. | Còn QA rời trang, mất kết nối và các tổ hợp kênh/đoạn qua trình duyệt; chưa đối chiếu mọi dạng URL nền tảng hoặc số liệu tài khoản thật. |
 | Legacy giữ nội dung/hash/export/history; migration và restore vượt test lỗi | Fixture schema 3 từ mã cũ và fixture schema 1/2 mô phỏng trong `tests/test_migrations_v4.py`; test lỗi backup/migration/restore, cấu trúc schema 4 và restore liên thông ba kênh. | Không áp dụng thử trên bản sao SQLite cũ trong đợt này vì người dùng xác nhận chưa có dữ liệu cũ; fixture 1/2 không phải snapshot lịch sử. Chưa kiểm chứng mọi payload hoặc lỗi hệ thống tập tin. |
-| Test đạt và có QA trình duyệt/clipboard | Hồi quy ngày 04/11/2026 trên `d17d2ad`: 165/165 Python và 33/33 JavaScript đạt; đã có bằng chứng dán clipboard và fallback trên Edge với dữ liệu giả. | QA-02 chưa hoàn tất toàn bộ bàn phím, tab, trạng thái chưa lưu, restart và các luồng mới; công cụ điều khiển gần nhất hết thời gian chờ. Cần chạy lại hồi quy sau mỗi thay đổi chức năng. |
+| Test đạt và có QA trình duyệt/clipboard | Hồi quy ngày 04/11/2026 cho thay đổi tại `13c348f`: 179/179 Python và 34/34 JavaScript đạt; đã có bằng chứng dán clipboard và fallback trên Edge với dữ liệu giả. | QA-02 chưa hoàn tất toàn bộ bàn phím, tab, trạng thái chưa lưu và các luồng mới; công cụ điều khiển gần nhất hết thời gian chờ. Cần chạy lại hồi quy sau mỗi thay đổi chức năng. |
 | README, hướng dẫn, kiến trúc, kiểm thử cập nhật | `README.md`, `docs/HUONG-DAN-SU-DUNG.md`, `docs/KIEN-TRUC.md`, `docs/KIEM-THU.md` và `docs/API-BAN-TIN-DA-KENH.md` đã có nội dung cho 0.4. | Cần rà soát lại tính nhất quán theo trạng thái cuối trước phát hành, bao gồm policy và kết quả QA còn mở. |
-| Người dùng xem pilot và quyết định triển khai | Ba lượt pilot fixture đã ghi thời gian và vấn đề trong `KIEM-THU.md`. | Chưa có quyết định triển khai lên kho vận hành. Không tự thực hiện migration trên kho đó. |
+| Người dùng xem pilot và quyết định triển khai | Ba lượt pilot fixture đã ghi thời gian và vấn đề trong `KIEM-THU.md`. Có [mẫu đầu ra giả lập](MAU-DAU-RA-GIA-LAP-0.4.md) mới tạo từ service để người dùng xem ba kênh. | Mẫu mới không phải tệp của ba pilot cũ. Cần người dùng xem và cho ý kiến về quy trình; chưa có quyết định triển khai lên kho vận hành. |
 
 ## Các việc tiếp theo có phụ thuộc bên ngoài
 

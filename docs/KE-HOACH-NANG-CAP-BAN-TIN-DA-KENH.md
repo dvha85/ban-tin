@@ -28,6 +28,8 @@
 
 > Bổ sung BASE-02: JSON lồng vượt khả năng giải mã được trả lỗi 400 thay vì đóng kết nối; test HTTP kiểm tra không ghi dữ liệu. Hợp đồng API tổng thể vẫn mở.
 
+> Bổ sung REL-01: đã chuẩn bị [mẫu đầu ra giả lập](MAU-DAU-RA-GIA-LAP-0.4.md) mới từ service để xem ba kênh. Đây không phải tệp của ba pilot cũ; vẫn cần người dùng xem quy trình và quyết định triển khai.
+
 > Bổ sung BASE-02: tạo phiên bản từ chối kiểu `platform` sai bằng HTTP 400 thay vì đóng kết nối; test HTTP xác nhận không tạo bản ghi. Hợp đồng API tổng thể vẫn cần tiếp tục đối chiếu; xem `KIEM-THU.md`.
 
 > Bổ sung BASE-02/NEWS-01: ID tin ngoài phạm vi số nguyên 64-bit SQLite bị từ chối khi tạo bản tin hoặc thêm mục, không làm thay đổi kho; test HTTP và hồi quy đạt. Chưa xác nhận biên ID của mọi route.
