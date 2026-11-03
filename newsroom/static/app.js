@@ -46,11 +46,10 @@ async function api(path, body) {
   return result;
 }
 function showClaimConflict(container, error, correction = null) {
-  const href = conflictTargetUrl(error.target);
-  if (!href) throw error;
-  container.replaceChildren(node('p', '', error.message));
-  const target = link(href, 'Mở bản ghi để đối soát trong thẻ mới ↗');
-  container.append(target, node('p', 'small-note', 'Giữ thẻ này để tiếp tục nội dung và liên kết đang nhập. Bản ghi có thể đã thay đổi.'));
+  const {message, href} = claimConflictDetails(error, correction);
+  container.replaceChildren(node('p', '', message));
+  if (href) container.append(link(href, 'Mở bản ghi để đối soát trong thẻ mới ↗'));
+  container.append(node('p', 'small-note', 'Giữ thẻ này để tiếp tục nội dung và liên kết đang nhập. Bản ghi có thể đã thay đổi; hãy kiểm tra trước khi thử lại.'));
   if (correction) container.append(node('p', 'small-note', `Đính chính chưa lưu · Lý do: ${correction.reason} · Liên kết đề xuất: ${correction.url}`));
   container.className = 'notice warning'; container.hidden = false;
 }
@@ -969,10 +968,13 @@ async function renderVariantPublication(area, variant) {
       });
       const correct = node('button', 'button secondary', 'Đính chính liên kết');
       const conflict = node('div'); conflict.hidden = true;
+      let pendingCorrection = {reason: '', url: existing.url};
       bulletinAction(correct, async () => {
         if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi đính chính.');
-        const reason = window.prompt('Lý do đính chính (ít nhất 5 ký tự):'); if (reason === null) return;
-        const url = window.prompt('Liên kết thay thế. Để trống để hủy ghi nhận:', existing.url); if (url === null) return;
+        const reason = window.prompt('Lý do đính chính (ít nhất 5 ký tự):', pendingCorrection.reason); if (reason === null) return;
+        pendingCorrection.reason = reason;
+        const url = window.prompt('Liên kết thay thế. Để trống để hủy ghi nhận:', pendingCorrection.url); if (url === null) return;
+        pendingCorrection.url = url;
         if (!window.confirm('Ghi nhận đính chính này? Lịch sử cũ vẫn được giữ.')) return;
         try { await api(`/api/publications/${existing.id}/corrections`, {revision: variant.revision, reason, url}); }
         catch (error) { showClaimConflict(conflict, error, {reason, url}); return; }

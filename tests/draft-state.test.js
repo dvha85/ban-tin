@@ -1,7 +1,16 @@
 'use strict';
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem} = require('../newsroom/static/draft-state.js');
+const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails} = require('../newsroom/static/draft-state.js');
+
+test('correction failures retain the entered reason and URL, including non-conflict errors', () => {
+  const correction = {reason: 'Sửa liên kết', url: 'https://x.com/test/status/12'};
+  const invalid = new Error('Liên kết không hợp lệ');
+  assert.deepEqual(claimConflictDetails(invalid, correction), {message: invalid.message, href: null, correction});
+  const conflict = Object.assign(new Error('Liên kết đã dùng'), {target: {kind: 'legacy_draft', draft_id: 7}});
+  assert.deepEqual(claimConflictDetails(conflict, correction), {message: conflict.message, href: '/?kind=legacy_draft&draft_id=7', correction});
+  assert.throws(() => claimConflictDetails(invalid, null), /Liên kết không hợp lệ/);
+});
 
 test('reordering returns focus to the moved item and uses the other direction at an edge', () => {
   const calls = [];
