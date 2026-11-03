@@ -2,6 +2,8 @@
 
 ## Smoke test giao diện đa kênh 04/11/2026
 
+- APR-04 / đọc đồng thời: trên SQLite WAL tạm, chèn ghi nhận giữa lúc đọc approval và đếm publication; trước sửa, phản hồi trộn `status=approved` với số đã ghi nhận là 1. Hai API đọc phiên bản và danh sách phiên bản nay mở transaction đọc để các truy vấn dùng cùng snapshot. Test thứ hai sửa bản tin giữa lúc đọc bản tin và danh sách phiên bản. Hồi quy sau sửa 167/167 Python, 33/33 JavaScript đạt. Đây là thử đồng thời có tiêm tại service, chưa smoke giao diện hoặc HTTP trong tình huống này.
+
 - Hồi quy lại trên commit `d17d2ad`: `rtk proxy python -B -m unittest discover -s tests` đạt 165/165; `rtk proxy node --test tests/draft-state.test.js tests/source-warnings.test.js tests/request-size.test.js tests/inbox-utils.test.js tests/correction-ui.test.js` đạt 33/33. Các kiểm thử này không thay thế smoke UI; lần kết nối công cụ điều khiển trình duyệt gần nhất hết thời gian chờ.
 
 - QA-02 / phản hồi đồng thời khi đổi kho: test handler giả trì hoãn khôi phục phiên, sau đó phát hiện đổi thư mục trước khi phản hồi cũ tới; mã trước sửa ẩn cảnh báo và thay token. Sau sửa, phản hồi muộn bị từ chối, cảnh báo và token cũ được giữ. Test riêng trì hoãn cập nhật trạng thái xác nhận cũng không áp dụng dữ liệu muộn sau cảnh báo. Hồi quy trước sửa 165 Python / 31 JavaScript, sau sửa 165 Python / 33 JavaScript. Chưa smoke UI hoặc kiểm tra DB khác cùng đường dẫn; không hủy request đã gửi.

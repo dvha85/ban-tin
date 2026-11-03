@@ -320,6 +320,47 @@ class VariantTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             self.room.export_variant(variant['id'])
 
+    def test_variant_read_is_consistent_during_publication(self):
+        import newsroom.variants as variant_module
+        variant = self.make_approved('x')
+        original = variant_module.approval_snapshot
+        inserted = []
+
+        def publish_after_approval_read(row):
+            snapshot = original(row)
+            if not inserted:
+                inserted.append(True)
+                self.room.record_publication(variant['id'], {
+                    'revision': variant['revision'], 'position': 0,
+                    'url': 'https://x.com/test/status/123456', 'idempotency_key': 'read_race_123'})
+            return snapshot
+
+        with patch.object(variant_module, 'approval_snapshot', side_effect=publish_after_approval_read):
+            result = self.room.variant(variant['id'])
+        self.assertEqual(result['status'], 'approved')
+        self.assertEqual(result['publication_progress']['active'], 0)
+        self.assertEqual(self.room.variant(variant['id'])['publication_progress']['active'], 1)
+
+    def test_variant_list_reads_parent_and_variants_in_one_snapshot(self):
+        variant = self.make_approved('x')
+        original = self.room._bulletin
+        changed = []
+
+        def edit_after_parent_read(conn, bulletin_id):
+            bulletin = original(conn, bulletin_id)
+            if not changed:
+                changed.append(True)
+                self.room.save_bulletin(bulletin_id, {
+                    'revision': self.bulletin['revision'], 'title': 'Tiêu đề mới'})
+            return bulletin
+
+        with patch.object(self.room, '_bulletin', side_effect=edit_after_parent_read):
+            result = self.room.variants(self.bulletin['id'])
+        self.assertEqual(result[0]['id'], variant['id'])
+        self.assertEqual(result[0]['status'], 'approved')
+        self.assertFalse(result[0]['needs_update'])
+        self.assertTrue(self.room.variant(variant['id'])['needs_update'])
+
     def test_preview_reads_variant_and_parent_in_one_snapshot(self):
         variant = self.make_approved('threads')
         with self.room.connection() as conn:

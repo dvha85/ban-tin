@@ -70,10 +70,13 @@ class VariantMixin:
 
     def variant(self, variant_id):
         with self.connection() as conn:
+            # Status, approval and publication counts must describe one snapshot.
+            conn.execute('BEGIN')
             return self._variant(conn, variant_id)
 
     def variants(self, bulletin_id):
         with self.connection() as conn:
+            conn.execute('BEGIN')
             self._bulletin(conn, bulletin_id)
             return [self._variant(conn, row['id']) for row in conn.execute(
                 'SELECT id FROM content_variants WHERE bulletin_id=? ORDER BY id', (bulletin_id,))]
