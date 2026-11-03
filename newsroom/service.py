@@ -122,7 +122,9 @@ class Newsroom(PublicationMixin, VariantMixin, BulletinMixin, CollectionMixin):
                                  'collection_method=excluded.collection_method,content_hash=excluded.content_hash,'
                                  'excerpt_hash=excluded.excerpt_hash,scope=excluded.scope',
                                  (url, item['collection_method'], item['content_hash'], item['excerpt_hash'], item['scope']))
-                elif source.get('id') == 'manual':
+                else:
+                    # The current excerpt replaced the old one; its previous
+                    # collection hashes must not be attributed to the new text.
                     conn.execute('DELETE FROM collection_evidence WHERE url=?', (url,))
         return {'added': added, 'duplicate': duplicate}
 

@@ -99,6 +99,28 @@ class BulletinTests(unittest.TestCase):
         self.assertIn('DỮ LIỆU NGUỒN', packet)
         self.assertLess(packet.index('story-2'), packet.index('story-0'))
 
+    def test_refresh_without_evidence_does_not_attach_old_hash_to_new_excerpt(self):
+        url = 'https://example.com/evidence-refresh'
+        initial = {'title': 'Nguồn có dấu vết ban đầu', 'url': url, 'summary': 'Trích đoạn ban đầu',
+                   'published_at': None, 'date_kind': 'unknown', 'collection_method': 'api',
+                   'content_hash': 'a' * 64, 'excerpt_hash': 'b' * 64, 'scope': 'excerpt'}
+        self.room.ingest({'id': 'source-a', 'name': 'Nguồn A'}, [initial])
+        article = next(article for article in self.room.articles() if article['url'] == url)
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        original = bulletin['items'][0]['sources'][0]
+        self.assertEqual(original['excerpt_hash'], 'b' * 64)
+        updated = {'title': initial['title'], 'url': url, 'summary': 'Trích đoạn mới từ RSS',
+                   'published_at': None, 'date_kind': 'unknown'}
+        self.room.ingest({'id': 'source-rss', 'name': 'RSS'}, [updated])
+        current = self.room.article(article['id'])['sources'][0]
+        self.assertEqual(current['summary'], updated['summary'])
+        self.assertNotIn('excerpt_hash', current)
+        self.assertNotIn('content_hash', current)
+        self.assertNotIn('collection_method', current)
+        self.assertEqual(self.room.bulletin(bulletin['id'])['items'][0]['sources'][0], original)
+        later = self.room.create_bulletin({'article_ids': [article['id']]})
+        self.assertNotIn('excerpt_hash', later['items'][0]['sources'][0])
+
     def test_three_channel_bulletin_survives_backup_restore_with_partial_publication(self):
         bulletin = self.create()
         original_ids = [item['id'] for item in bulletin['items']]
