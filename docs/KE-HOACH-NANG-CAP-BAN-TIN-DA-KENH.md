@@ -4,6 +4,8 @@
 
 > Bổ sung DIG-01/02: trên Edge, chọn ba tin giả bằng bàn phím, lọc còn một tin và tạo bản tin vẫn gồm cả ba; đổi thứ tự rồi tải lại giữ đúng thứ tự và URL từng mục. Chưa thử restart server ở lượt UI này; chi tiết tại `KIEM-THU.md`.
 
+> Bổ sung restart: sao lưu kho fixture nói trên, khôi phục sang thư mục riêng, dừng và chạy lại server của bản khôi phục; Edge mở lại bản tin giữ thứ tự và ba URL nguồn. Xem phạm vi tại `KIEM-THU.md`.
+
 > Bổ sung QA-02: biểu mẫu số liệu Threads giữ giá trị 303 và chặn chuyển sang Facebook khi chưa lưu; sau khi lưu có thể chuyển kênh và xem lại cả hai lượt số liệu. Các tình huống rời trang và mất kết nối vẫn cần kiểm tra riêng.
 
 > Bổ sung PUB-02/03: tách namespace khóa đính chính nội bộ khỏi khóa client để tránh lỗi trùng khóa; kiểm thử tái hiện lỗi cũ và đối chiếu lịch sử, retry trên kho tạm. Xem `KIEM-THU.md`.
@@ -420,7 +422,7 @@ Các cải tiến để sau 0.4: tải lại nguồn web đã biết theo yêu c
 
 Đối chiếu từng điều kiện với bằng chứng và phần còn thiếu tại [DOI-CHIEU-NGHIEM-THU-0.4.md](DOI-CHIEU-NGHIEM-THU-0.4.md); các ô dưới đây chỉ được đánh dấu sau khi đủ bằng chứng tương ứng.
 
-- [ ] Tạo được bản tin từ ít nhất ba bài nguồn, giữ thứ tự và truy vết nguồn từng mục qua restart.
+- [x] Tạo được bản tin từ ít nhất ba bài nguồn, giữ thứ tự và truy vết nguồn từng mục qua restart. Đã kiểm tra với dữ liệu giả và bản sao khôi phục; xem `KIEM-THU.md`.
 - [ ] Biên tập được hoàn toàn thủ công hoặc qua gói tư liệu AI thủ công, không phát sinh model call.
 - [ ] Tạo được ba biến thể độc lập; có thể chỉ chọn một kênh để sử dụng.
 - [ ] Văn bản cuối, bộ đếm, preview, copy, `.txt` và approval khớp nhau; không mất nguồn khi chia chuỗi.

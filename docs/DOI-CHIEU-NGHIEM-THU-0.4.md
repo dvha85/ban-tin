@@ -4,11 +4,13 @@
 
 > Bổ sung 04/11: Edge trên fixture tạo bản tin từ ba tin giả, kể cả hai tin ẩn khi lọc; đổi thứ tự bằng bàn phím và tải lại giữ thứ tự cùng URL từng mục. Chưa restart server trong cùng lượt UI; bằng chứng restart service là kiểm thử riêng.
 
+> Bổ sung restart: từ kho fixture đó tạo backup qua UI, khôi phục sang thư mục riêng, dừng và chạy lại server của bản khôi phục. Edge mở bản tin #2 vẫn thấy đúng thứ tự Alpha → Charlie → Bravo và ba URL nguồn. Không suy rộng sang mất điện hay dữ liệu vận hành.
+
 Ngày rà soát: 03/11/2026. Đối chiếu mục 10 của [kế hoạch nâng cấp](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) với mã và bằng chứng được ghi trong [nhật ký kiểm thử](KIEM-THU.md). Đây là trạng thái kiểm chứng, không phải chấp thuận triển khai. Các lệnh và kết quả chi tiết, dữ liệu sử dụng và giới hạn được ghi tại nhật ký đó.
 
 | Điều kiện mục 10 | Bằng chứng hiện có | Phần còn thiếu để kết luận |
 | --- | --- | --- |
-| Ba bài nguồn, thứ tự và truy vết qua restart | `tests/test_bulletins.py`: `test_reorder_and_packet_preserve_snapshots_after_refresh_restart`, `test_three_channel_bulletin_survives_backup_restore_with_partial_publication`; thao tác bàn phím và tải lại trên kho demo. | Chưa hoàn tất toàn bộ QA Windows và kiểm thử restart server trong lượt thao tác bàn phím đó. |
+| Ba bài nguồn, thứ tự và truy vết qua restart | `tests/test_bulletins.py`: `test_reorder_and_packet_preserve_snapshots_after_refresh_restart`, `test_three_channel_bulletin_survives_backup_restore_with_partial_publication`; Edge tạo, đổi thứ tự và tải lại ba tin giả; backup, khôi phục và restart server bản sao rồi mở lại đúng thứ tự và nguồn. | Điều kiện này đạt trong phạm vi fixture; QA Windows tổng thể vẫn mở. |
 | Biên tập thủ công hoặc gói tư liệu, không phát sinh model call | Ba pilot fixture trong `KIEM-THU.md`; `test_no_publish_or_ai_integration_endpoint` trong `tests/test_server.py`; gói tư liệu được tạo trong `bulletins.py`. | Ba lượt là dữ liệu giả; cần người dùng xem kết quả pilot và xác nhận quy trình phù hợp với thực tế. |
 | Ba biến thể độc lập, có thể dùng một kênh | Test ba kênh qua backup/restore trong `tests/test_bulletins.py`; các lượt pilot Facebook, Threads và X trên kho demo. | Chưa kiểm chứng toàn bộ đường thao tác và chính sách của ba nền tảng trên tài khoản đích. |
 | Đầu ra, bộ đếm, preview, copy, file và approval khớp; giữ nguồn | `test_approved_export_matches_preview_and_changes_invalidate`, `test_split_rechecks_numbering_and_keeps_sources_and_text`; ba tệp pilot được đối chiếu; đã thử copy và fallback clipboard ở phạm vi ghi trong `KIEM-THU.md`. | BASE-03 còn mở: Threads là ước lượng, X chưa xác minh đầy đủ emoji và URL thực tế; chưa kiểm tra mọi luồng copy/chia trên trình duyệt. |
