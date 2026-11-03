@@ -18,6 +18,10 @@ function sectionDiffers(fields, original) {
     (field.type === 'checkbox' ? field.checked : field.value) !== original[index]);
 }
 
+function sourceRelevanceWarning(selectedItemCount) {
+  return selectedItemCount > 1 ? 'Đoạn này đang chọn nhiều mục. Ứng dụng không tự xác định nội dung nào tương ứng với từng mục và nguồn; hãy bỏ các mục hoặc nguồn không liên quan đến đoạn này.' : '';
+}
+
 async function withInertTargets(targets, action) {
   const previous = targets.map(target => target.inert);
   targets.forEach(target => { target.inert = true; });
@@ -55,5 +59,5 @@ function parseConflictTarget(search) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget};
+  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning};
 }

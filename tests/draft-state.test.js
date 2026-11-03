@@ -1,7 +1,14 @@
 'use strict';
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget} = require('../newsroom/static/draft-state.js');
+const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning} = require('../newsroom/static/draft-state.js');
+
+test('multiple selected items require source relevance review for each segment', () => {
+  assert.equal(sourceRelevanceWarning(0), '');
+  assert.equal(sourceRelevanceWarning(1), '');
+  assert.match(sourceRelevanceWarning(2), /không tự xác định/);
+  assert.match(sourceRelevanceWarning(3), /từng mục và nguồn/);
+});
 
 test('conflict links identify a local publication or legacy draft and reject malformed targets', () => {
   const publication = {kind: 'publication', bulletin_id: 2, variant_id: 3, publication_id: 4, position: 0};

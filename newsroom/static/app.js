@@ -784,6 +784,8 @@ async function renderVariants(container, bulletin) {
     const body = bulletinField('Nội dung đoạn', segment.text, true);
     body.input.disabled = locked;
     block.append(body.wrapper, node('p', 'small-note', 'Chọn mục và ít nhất một nguồn cho mỗi mục được nhắc đến.'));
+    const relevance = node('p', 'notice warning');
+    block.append(relevance);
     const rows = [];
     for (const item of displayItems) {
       const row = node('div', 'bulletin-source-row');
@@ -798,6 +800,12 @@ async function renderVariants(container, bulletin) {
       });
       rows.push({id: item.id, selected, sourceChecks}); block.append(row);
     }
+    const updateRelevance = () => {
+      relevance.textContent = sourceRelevanceWarning(rows.filter(row => row.selected.checked).length);
+      relevance.hidden = !relevance.textContent;
+    };
+    rows.forEach(row => row.selected.addEventListener('change', updateRelevance));
+    updateRelevance();
     const remove = node('button', 'button secondary', 'Bỏ đoạn'); remove.disabled = locked;
     listen(remove, 'click', () => {
       if (segmentList.children.length <= 1) return toast('Cần giữ ít nhất một đoạn.');
@@ -862,7 +870,7 @@ async function renderVariants(container, bulletin) {
     const result = await api(`/api/variants/${variant.id}/split`, {revision: variant.revision, segments: collect()});
     segmentList.replaceChildren(); result.segments.forEach(addSegment);
     app.bulletinDirty = true; area.dataset.dirty = 'true';
-    toast('Đã chia theo ranh giới câu/đoạn. Hãy đọc lại, lưu và kiểm tra trước khi duyệt.');
+    toast('Đã chia theo ranh giới câu/đoạn. Mục và nguồn được giữ từ đoạn gốc; hãy đối chiếu từng đoạn, bỏ phần không liên quan rồi lưu.');
   });
   const approve = node('button', 'button primary', 'Duyệt phiên bản'); approve.disabled = locked;
   bulletinAction(approve, async () => {
