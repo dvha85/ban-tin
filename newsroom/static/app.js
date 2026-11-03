@@ -39,12 +39,30 @@ async function api(path, body) {
   const json = (response.headers.get('Content-Type') || '').includes('application/json');
   const result = json ? await response.json() : await response.text();
   if (!response.ok) {
+    if ((response.status === 401 || response.status === 403) && app.state) $('session-recovery').hidden = false;
     const error = new Error(result.error || 'Chưa thực hiện được. Hãy giữ bản đang sửa và thử lại.');
     error.target = result.target;
     throw error;
   }
   return result;
 }
+async function recoverSession() {
+  if (!app.state || typeof app.state.data_dir !== 'string') throw new Error('Không xác định được kho dữ liệu ban đầu. Hãy sao chép nội dung trước khi tải lại.');
+  let page, response;
+  try {
+    page = await fetch('/', {method: 'GET', credentials: 'same-origin', cache: 'no-store'});
+    if (!page.ok) throw new Error('Không mở được trang ứng dụng.');
+    response = await fetch('/api/state', {method: 'GET', credentials: 'same-origin', cache: 'no-store'});
+    if (!response.ok) throw new Error('Không lấy được phiên mới.');
+  } catch (_) { throw new Error('Chưa khôi phục được kết nối. Giữ nội dung đang nhập và thử lại.'); }
+  const state = await response.json();
+  if (state.data_dir !== app.state.data_dir || typeof state.csrf_token !== 'string' || !state.csrf_token)
+    throw new Error('Kho dữ liệu hoặc phiên mới không khớp. Sao chép nội dung trước khi tải lại.');
+  app.csrf = state.csrf_token;
+  $('session-recovery').hidden = true;
+  toast('Đã khôi phục kết nối. Kiểm tra dữ liệu và lịch sử trước khi tự lưu lại.');
+}
+listen($('recover-session'), 'click', recoverSession);
 function showClaimConflict(container, error, correction = null) {
   const {message, href} = claimConflictDetails(error, correction);
   container.replaceChildren(node('p', '', message));

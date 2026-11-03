@@ -10,6 +10,8 @@
 
 > QA-02 / lỗi cần xử lý: khi server thử dừng trước lúc lưu, giá trị đang nhập được giữ và có thông báo mất kết nối. Sau restart, lần lưu lại trên trang cũ bị từ chối vì phiên thay đổi và thông báo yêu cầu tải lại, có nguy cơ mất nội dung chưa lưu. Cần cơ chế khôi phục an toàn và kiểm thử cả kết quả lưu không rõ; trước mắt sao chép nội dung trước khi tải lại. Xem `KIEM-THU.md`.
 
+> Bổ sung: đã thêm nút khôi phục phiên không tải lại và không tự gửi lại thao tác; kiểm tra thư mục dữ liệu và yêu cầu người dùng đối chiếu trước khi lưu lại. Test handler giả đạt; chưa smoke giao diện thật sau sửa, chưa thử trường hợp ghi thành công nhưng mất phản hồi. Đường dẫn giống nhau không chứng minh nội dung kho không bị thay thế.
+
 > Bổ sung PUB-02/03: tách namespace khóa đính chính nội bộ khỏi khóa client để tránh lỗi trùng khóa; kiểm thử tái hiện lỗi cũ và đối chiếu lịch sử, retry trên kho tạm. Xem `KIEM-THU.md`.
 
 > Bổ sung FIX-03: trên nhánh 0.4, giao diện chặn URL bài cũ để trống và giữ trạng thái đã duyệt; test service kiểm tra thêm URL sai miền và trang chủ. Hồi quy gần nhất 164 Python, 28 JavaScript đạt. Chưa kiểm tra các URL sai này qua UI hoặc xác nhận bản 0.3.1 phát hành độc lập.

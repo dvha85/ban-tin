@@ -32,6 +32,39 @@ class Element {
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
 }
 
+test('session recovery preserves the editor and never retries a mutation automatically', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.calls = calls;
+  vm.runInContext(`app.state = {data_dir: 'fixture'};
+    fetch = async () => ({ok: false, status: 401, headers: {get: () => 'application/json'},
+      json: async () => ({error: 'Phiên hết hạn'})});`, context);
+  get('session-recovery').hidden = true;
+  await assert.rejects(vm.runInContext("api('/api/state')", context), /Phiên hết hạn/);
+  assert.equal(get('session-recovery').hidden, false);
+  vm.runInContext(`app.state = {data_dir: 'fixture'}; app.csrf = 'old'; app.bulletinDirty = true;
+    fetch = async (url, options) => { calls.push([url, options.method]);
+      if (url === '/') return {ok: true};
+      return {ok: true, headers: {get: () => 'application/json'}, json: async () => ({data_dir: 'fixture', csrf_token: 'new'})}; };`, context);
+  get('field-title').value = 'Nội dung chưa lưu';
+  await vm.runInContext('recoverSession()', context);
+  assert.equal(get('field-title').value, 'Nội dung chưa lưu');
+  assert.equal(vm.runInContext('app.bulletinDirty', context), true);
+  assert.equal(vm.runInContext('app.csrf', context), 'new');
+  assert.deepEqual(calls.map(row => row[0]), ['/', '/api/state']);
+  assert.ok(calls.every(row => row[1] !== 'POST'));
+  vm.runInContext(`fetch = async url => url === '/' ? {ok: true} :
+    {ok: true, headers: {get: () => 'application/json'}, json: async () => ({data_dir: 'other', csrf_token: 'bad'})}`, context);
+  await assert.rejects(vm.runInContext('recoverSession()', context), /kho dữ liệu/i);
+  assert.equal(vm.runInContext('app.csrf', context), 'new');
+});
+
 test('variant dirty tracking ignores publication and metric fields but tracks edits', () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
