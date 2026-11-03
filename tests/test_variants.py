@@ -109,6 +109,8 @@ class VariantTests(unittest.TestCase):
             self.room.record_publication(variant['id'], {**data, 'url': 'https://x.com/test/status/456'})
         current = self.room.variant(variant['id'])
         self.assertEqual(current['status'], 'partially_recorded')
+        stats = self.room.bulletin_stats()
+        self.assertEqual((stats['bulletins'], stats['variants'], stats['recorded_bulletins'], stats['recorded_posts']), (1, 1, 1, 1))
         with self.assertRaises(Conflict):
             self.room.record_publication(variant['id'], {'revision': current['revision'], 'position': 1,
                 'url': 'https://twitter.com/another_name/status/123?s=20', 'idempotency_key': 'alias_key_123'})
@@ -121,11 +123,13 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(second['url'], 'https://x.com/test/status/456')
         current = self.room.variant(variant['id'])
         self.assertEqual(current['status'], 'recorded')
+        self.assertEqual(self.room.bulletin_stats()['recorded_posts'], 2)
         with self.assertRaises(Conflict):
             self.room.save_variant(variant['id'], {'revision': current['revision']})
         self.room.correct_publication(first['id'], {'revision': current['revision'], 'reason': 'Nhập nhầm liên kết'})
         current = self.room.variant(variant['id'])
         self.assertEqual(current['status'], 'partially_recorded')
+        self.assertEqual(self.room.bulletin_stats()['recorded_posts'], 1)
         self.assertIsNotNone(current['locked_at'])
         with self.assertRaises(Conflict):
             self.room.save_variant(variant['id'], {'revision': current['revision']})

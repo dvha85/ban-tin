@@ -157,6 +157,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.respond(200, result)
             elif path == '/api/bulletins':
                 self.respond(200, self.server.room.bulletins())
+            elif path == '/api/bulletin-stats':
+                self.respond(200, self.server.room.bulletin_stats())
             elif path.startswith('/api/bulletins/'):
                 parts = path.split('/')
                 if len(parts) not in (4, 5) or not parts[3].isdigit():

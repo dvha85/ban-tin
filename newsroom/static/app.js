@@ -479,7 +479,8 @@ function bulletinAction(button, action) {
   });
 }
 async function loadBulletinList() {
-  const entries = await api('/api/bulletins');
+  const [entries, stats] = await Promise.all([api('/api/bulletins'), api('/api/bulletin-stats')]);
+  $('bulletin-stats').textContent = `${stats.bulletins} bản tin · ${stats.variants} phiên bản kênh · ${stats.recorded_bulletins} bản tin có ghi nhận · ${stats.recorded_posts} đoạn đã ghi nhận. Không cộng với thống kê bài cũ ở trên.`;
   const list = $('bulletin-list');
   list.replaceChildren();
   if (!entries.length) list.append(empty('Chưa có bản tin.', 'Chọn tin trong Hộp tin để bắt đầu.'));
@@ -666,7 +667,7 @@ async function renderVariants(container, bulletin) {
     if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi tạo phiên bản.');
     const variant = await api(`/api/bulletins/${bulletin.id}/variants`, {platform: platform.value,
       account_label: '', bulletin_revision: bulletin.revision});
-    app.variantId = variant.id; renderBulletin();
+    app.variantId = variant.id; renderBulletin(); await loadBulletinList();
   });
   listen(selector, 'change', () => {
     if (app.bulletinDirty) {
@@ -782,7 +783,7 @@ async function renderVariants(container, bulletin) {
   const clone = node('button', 'button secondary', 'Tạo bản sao');
   bulletinAction(clone, async () => {
     if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi tạo bản sao.');
-    const result = await api(`/api/variants/${variant.id}/clone`, {revision: variant.revision}); app.variantId = result.id; renderBulletin();
+    const result = await api(`/api/variants/${variant.id}/clone`, {revision: variant.revision}); app.variantId = result.id; renderBulletin(); await loadBulletinList();
   });
   actions.append(save, preview, split, approve, exportButton, archive, clone); area.append(actions);
   if (variant.status !== 'draft') await renderVariantPublication(area, variant);
@@ -850,7 +851,7 @@ async function renderVariantPublication(area, variant) {
         const url = window.prompt('Liên kết thay thế. Để trống để hủy ghi nhận:', existing.url); if (url === null) return;
         if (!window.confirm('Ghi nhận đính chính này? Lịch sử cũ vẫn được giữ.')) return;
         await api(`/api/publications/${existing.id}/corrections`, {revision: variant.revision, reason, url});
-        renderBulletin(); toast('Đã lưu đính chính.');
+        renderBulletin(); await loadBulletinList(); toast('Đã lưu đính chính.');
       });
       block.append(addMetrics, correct);
     } else {
@@ -865,7 +866,7 @@ async function renderVariantPublication(area, variant) {
         if (!app.publicationKeys.has(key)) app.publicationKeys.set(key, crypto.randomUUID());
         await api(`/api/variants/${variant.id}/publications`, {revision: variant.revision, position, url: value,
           idempotency_key: app.publicationKeys.get(key)});
-        app.bulletinDirty = false; renderBulletin(); toast('Đã ghi nhận thông tin do bạn nhập.');
+        app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã ghi nhận thông tin do bạn nhập.');
       });
       url.addEventListener('input', () => {
         app.bulletinDirty = [...$('bulletin-editor').querySelectorAll('[data-dirty="true"]')].length > 0 ||

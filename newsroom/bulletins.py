@@ -102,6 +102,16 @@ class BulletinMixin:
             return [dict(row) for row in conn.execute('''SELECT id,entity_type,entity_id,revision,action,snapshot,at
                 FROM bulletin_history WHERE bulletin_id=? ORDER BY id DESC LIMIT 100''', (bulletin_id,))]
 
+    def bulletin_stats(self):
+        with self.connection() as conn:
+            return {
+                'bulletins': conn.execute('SELECT COUNT(*) FROM bulletins').fetchone()[0],
+                'variants': conn.execute('SELECT COUNT(*) FROM content_variants').fetchone()[0],
+                'recorded_posts': conn.execute('SELECT COUNT(*) FROM publications WHERE active=1').fetchone()[0],
+                'recorded_bulletins': conn.execute('''SELECT COUNT(DISTINCT v.bulletin_id)
+                    FROM content_variants v JOIN publications p ON p.variant_id=v.id WHERE p.active=1''').fetchone()[0],
+            }
+
     def _bulletin_history(self, conn, bulletin_id, entity_type, entity_id, revision, action, snapshot):
         conn.execute('''INSERT INTO bulletin_history
             (bulletin_id,entity_type,entity_id,revision,action,snapshot,at) VALUES (?,?,?,?,?,?,?)''',
