@@ -91,7 +91,7 @@ class VariantMixin:
     def create_variant(self, bulletin_id, data):
         from .service import ValidationError
         platform = data.get('platform')
-        if platform not in LIMITS:
+        if not isinstance(platform, str) or platform not in LIMITS:
             raise ValidationError('Hãy chọn Facebook, Threads hoặc X.')
         account = _text(data.get('account_label', ''), 'Tên tài khoản / Page', 120)
         with self.connection() as conn:

@@ -32,7 +32,7 @@ Các trường mục có thể gửi gồm `title`, `body`, `angle`, `verificati
 | Phương thức và đường dẫn | Đầu vào chính | Kết quả / lưu ý |
 | --- | --- | --- |
 | `GET /api/bulletins/{id}/variants` | — | Danh sách phiên bản của bản tin. |
-| `POST /api/bulletins/{id}/variants` | `bulletin_revision`, `platform` là `facebook`, `threads` hoặc `x`, `account_label` | Tạo phiên bản nháp riêng; không ghi đè phiên bản khác. |
+| `POST /api/bulletins/{id}/variants` | `bulletin_revision`, `platform` là chuỗi `facebook`, `threads` hoặc `x`, `account_label` | Tạo phiên bản nháp riêng; không ghi đè phiên bản khác. Kiểu hoặc tên nền tảng không hợp lệ trả 400 và không tạo bản ghi. |
 | `GET /api/variants/{id}` | — | Phiên bản, revision, trạng thái và cờ cần cập nhật. |
 | `POST /api/variants/{id}/save` | `revision`, tùy chọn `account_label`, `segments`, `checks` | Lưu và trả phiên bản; khi bản tin gốc đổi cần `adopt_bulletin_revision: true`; bản sao cần đối chiếu nguồn có thể yêu cầu `attribution_reviewed: true`. |
 | `POST /api/variants/{id}/preview` | Tùy chọn `segments` | Kết quả renderer và các mục bị lược; không lưu. Phiên bản đã khóa xem bằng bản duyệt lịch sử. |

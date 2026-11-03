@@ -54,6 +54,21 @@ class ServerTests(unittest.TestCase):
         headers['Origin'] = 'https://evil.example'
         self.assertEqual(self.request('POST', '/api/articles/import', {}, headers)[0], 403)
 
+    def test_variant_platform_wrong_json_types_are_rejected_without_writes(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử kiểu nền tảng',
+            'url': 'https://example.com/platform-type', 'summary': 'Dữ liệu giả.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        path = f"/api/bulletins/{bulletin['id']}/variants"
+        for value in ([], {}, None, True, 1, 'invalid'):
+            with self.subTest(platform=value):
+                status, _, body = self.request('POST', path, {
+                    'bulletin_revision': bulletin['revision'], 'platform': value,
+                    'account_label': 'Kênh thử'}, headers)
+                self.assertEqual(status, 400, body)
+                self.assertIn('error', json.loads(body))
+                self.assertEqual(self.room.variants(bulletin['id']), [])
+
     def test_session_reacquisition_after_server_restart_preserves_revision_guards(self):
         old = self.session()
         article = self.room.import_article({'title': 'Tin giả kiểm tra phiên',

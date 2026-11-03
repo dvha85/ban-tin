@@ -2,6 +2,8 @@
 
 ## Smoke test giao diện đa kênh 04/11/2026
 
+- BASE-02: test HTTP tạo phiên bản với `platform` là mảng/object tái hiện `TypeError` và kết nối bị đóng trước sửa. Sau sửa, mảng, object, null, boolean, số và tên không hỗ trợ trả 400 JSON và không tạo phiên bản; hồi quy 171/171 Python và 33/33 JavaScript đạt. Chưa bao phủ mọi trường và tổ hợp kiểu dữ liệu của API.
+
 - PUB-03/04, đọc đồng thời: test SQLite WAL tiêm hủy ghi nhận giữa lúc đọc danh sách và đọc sự kiện; trước sửa một bản ghi còn hiệu lực nhưng đã có sự kiện hủy trong cùng phản hồi. Sau sửa danh sách ghi nhận, sự kiện và số liệu thuộc cùng snapshot đọc. Hồi quy 170/170 Python, 33/33 JavaScript đạt; chưa smoke tình huống đồng thời qua HTTP/UI.
 
 - DIG-02 / PUB-04, đọc đồng thời: trên SQLite WAL tạm, tiêm xóa mục giữa hai câu đọc bản tin tái hiện revision cũ đi cùng danh sách mục mới; tiêm ghi nhận giữa các câu thống kê tái hiện 0 bài đăng nhưng 1 bản tin đã ghi nhận. Sau sửa, chi tiết bản tin (bao gồm gói tư liệu) và thống kê đọc từ cùng snapshot cho từng yêu cầu. Hồi quy 169/169 Python và 33/33 JavaScript đạt; đây là test service có tiêm thay đổi, chưa thử tình huống đồng thời qua UI/HTTP.
