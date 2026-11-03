@@ -1,7 +1,14 @@
 'use strict';
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning} = require('../newsroom/static/draft-state.js');
+const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice} = require('../newsroom/static/draft-state.js');
+
+test('channel editor explains limits and uncertainty before export', () => {
+  assert.match(platformLengthNotice('threads'), /ước lượng.*kiểm tra/i);
+  assert.match(platformLengthNotice('x'), /kiểm tra.*nền tảng/i);
+  assert.match(platformLengthNotice('facebook'), /nội bộ/i);
+  assert.equal(platformLengthNotice('invalid'), '');
+});
 
 test('multiple selected items require source relevance review for each segment', () => {
   assert.equal(sourceRelevanceWarning(0), '');

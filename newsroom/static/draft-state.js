@@ -22,6 +22,14 @@ function sourceRelevanceWarning(selectedItemCount) {
   return selectedItemCount > 1 ? 'Đoạn này đang chọn nhiều mục. Ứng dụng không tự xác định nội dung nào tương ứng với từng mục và nguồn; hãy bỏ các mục hoặc nguồn không liên quan đến đoạn này.' : '';
 }
 
+function platformLengthNotice(platform) {
+  return ({
+    threads: 'Bộ đếm Threads là ước lượng và có thể đếm thiếu. Hãy kiểm tra độ dài trên Threads trước khi đăng.',
+    x: 'Bộ đếm X hỗ trợ kiểm tra, nhưng có thể khác nền tảng, nhất là với emoji mới. Hãy kiểm tra trên X trước khi đăng.',
+    facebook: 'Giới hạn Facebook trong ứng dụng là giới hạn biên tập nội bộ, không phải giới hạn chính thức của nền tảng.'
+  })[platform] || '';
+}
+
 async function withInertTargets(targets, action) {
   const previous = targets.map(target => target.inert);
   targets.forEach(target => { target.inert = true; });
@@ -59,5 +67,5 @@ function parseConflictTarget(search) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning};
+  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice};
 }
