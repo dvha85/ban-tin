@@ -494,6 +494,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | SOURCE-01/02 | Đang làm | Cập nhật URL không kèm evidence sẽ bỏ hash cũ ở nguồn hiện hành; snapshot bản tin đã lưu giữ nguyên. Test fixture API → RSS; Python 158/158, JS 20/20 | Không tự phát hiện hay sửa evidence/snapshot đã lưu trước sửa; chưa thử nguồn thật hoặc kho vận hành |
 | 03/11/2026 | NEWS-04 | Đang làm | Test hai mục cùng URL: bỏ một mục, mở lại kho fixture, kiểm tra nguồn và ID mục còn lại trong dữ liệu, gói tư liệu và preview X; Python 159/159, JS 20/20 | Chưa thao tác qua giao diện hoặc thử mọi đường sửa nguồn |
 | 03/11/2026 | SOURCE-01/02 / APR-01 | Đang làm | Chặn duyệt mới nếu SHA-256 trích đoạn không khớp hash của nguồn được dùng; test sai/đúng và nguồn không dùng, Python 160/160, JS 20/20 | Không tự rà soát bản duyệt đã có; hash khớp không chứng minh nguồn thật; chưa smoke giao diện |
+| 03/11/2026 | SOURCE-02 | Đang làm | Thông báo hash không khớp chỉ rõ thứ tự mục và nguồn; bổ sung hướng dẫn đối chiếu và thay nguồn khi mục chỉ có một nguồn; Python 160/160, JS 20/20 | Chưa smoke thông báo qua giao diện |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 

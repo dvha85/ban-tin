@@ -216,7 +216,7 @@ class VariantTests(unittest.TestCase):
             {'text': 'Nội dung thử.', 'item_ids': [item['id']]}]})
         variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
                                                           'checks': {key: True for key in CHECKS}})
-        with self.assertRaisesRegex(ValidationError, 'hash.*trích đoạn'):
+        with self.assertRaisesRegex(ValidationError, 'hash.*trích đoạn.*mục 1.*nguồn 1'):
             self.room.approve_variant(variant['id'], {'revision': variant['revision']})
         self.assertEqual(self.room.variant(variant['id'])['status'], 'draft')
         payload['sources'][0]['excerpt_hash'] = hashlib.sha256(payload['sources'][0]['summary'].encode('utf-8')).hexdigest()

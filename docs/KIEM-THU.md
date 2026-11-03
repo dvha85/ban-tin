@@ -2,6 +2,7 @@
 
 ## Phần 0.4 đang phát triển (03/11/2026)
 
+- SOURCE-02: thông báo duyệt thất bại do hash trích đoạn nêu thứ tự mục và nguồn; hướng dẫn API mô tả cách thay nguồn khi mục chỉ còn một nguồn. Test service kiểm tra nội dung lỗi; baseline variants 33/33, sau sửa Python 160/160, JS 20/20. Chưa kiểm tra thông báo qua trình duyệt.
 - SOURCE-01/02 / APR-01: trước khi duyệt mới, đối chiếu SHA-256 trích đoạn với `excerpt_hash` của các nguồn được dùng; nếu sai, trả lỗi và không tạo duyệt. Test fixture giả lập hash sai, hash đúng và hash sai ở mục không dùng; baseline variants 32/32, sau sửa Python 160/160, JS 20/20 và variants 33/33 sau mở rộng. Không kiểm tra tính thật của nguồn, không thay đổi hay rà soát các bản duyệt đã có; chưa smoke lỗi qua giao diện.
 - NEWS-04: hai mục có cùng URL nguồn nhưng ID snapshot riêng; bỏ mục thứ nhất, mở lại kho fixture rồi đối chiếu ID và toàn bộ nguồn của mục còn lại, gói tư liệu và URL trong preview X. Test bulletin 15/15, toàn bộ Python 159/159 và JS 20/20 đạt. Chưa thao tác trên giao diện hoặc thử mọi đường sửa nguồn.
 - SOURCE-01/02: khi cùng URL được cập nhật bằng dữ liệu không kèm dấu vết thu thập, bỏ evidence cũ khỏi bản nguồn hiện hành thay vì gắn hash cũ vào trích đoạn mới. Test fixture tái hiện cập nhật API → RSS, kiểm tra bản tin đã tạo giữ nguyên snapshot và bản tin tạo sau không nhận hash cũ; baseline bulletin 13/13, sau sửa Python 158/158, JS 20/20. Không quét hoặc tự sửa evidence đã lưu trước đó; chưa thử với nguồn thật hoặc kho vận hành.
