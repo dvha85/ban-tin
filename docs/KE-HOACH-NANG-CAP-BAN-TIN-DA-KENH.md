@@ -30,6 +30,8 @@
 
 > Bổ sung REL-01: đã chuẩn bị [mẫu đầu ra giả lập](MAU-DAU-RA-GIA-LAP-0.4.md) mới từ service để xem ba kênh. Đây không phải tệp của ba pilot cũ; vẫn cần người dùng xem quy trình và quyết định triển khai.
 
+> Đối chiếu BASE-03 ngày 04/11: tài liệu cấu hình twitter-text mô tả trọng số emoji ghép và độ dài URL mặc định 23; Meta trả HTTP 429 khi tra tài liệu Threads API. Chưa có căn cứ đóng gate hoặc thay đổi policy; xem `DOI-CHIEU-NGHIEM-THU-0.4.md`.
+
 > Bổ sung BASE-02: tạo phiên bản từ chối kiểu `platform` sai bằng HTTP 400 thay vì đóng kết nối; test HTTP xác nhận không tạo bản ghi. Hợp đồng API tổng thể vẫn cần tiếp tục đối chiếu; xem `KIEM-THU.md`.
 
 > Bổ sung BASE-02/NEWS-01: ID tin ngoài phạm vi số nguyên 64-bit SQLite bị từ chối khi tạo bản tin hoặc thêm mục, không làm thay đổi kho; test HTTP và hồi quy đạt. Chưa xác nhận biên ID của mọi route.

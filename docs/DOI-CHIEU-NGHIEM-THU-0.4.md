@@ -32,6 +32,11 @@ Ngày cập nhật bằng chứng: 04/11/2026. Đối chiếu mục 10 của [k�
 
 Không suy ra bài đã đăng hoặc nguồn đã được xác minh từ URL, kiểm thử fixture hay bản duyệt nội bộ.
 
+## Đối chiếu bổ sung về bộ đếm ngày 04/11/2026
+
+- [Cấu hình twitter-text của X](https://github.com/twitter/twitter-text/blob/master/config/README.md) mô tả cấu hình có nhận diện emoji: cả cụm emoji, kể cả cụm nối bằng ZWJ, được tính theo trọng số mặc định; URL dùng độ dài chuyển đổi mặc định 23. Đây là tài liệu thư viện, không chứng minh composer X hiện tại dùng cùng phiên bản dữ liệu emoji. Bộ đếm trong repo dùng dữ liệu Unicode 15.1 được ghim và có fixture riêng; emoji mới hơn và hành vi thực tế vẫn chưa được nghiệm thu.
+- Khi thử truy cập [tài liệu tạo bài Threads của Meta](https://developers.facebook.com/documentation/threads/posts) và [tổng quan Threads API](https://developers.facebook.com/documentation/threads/overview), công cụ tra cứu trả HTTP 429. Vì chưa đọc được nội dung gốc trong lượt này, không coi thông tin từ nguồn thứ ba là xác nhận quy tắc emoji hay số liên kết, và không thay đổi policy dựa trên chúng. Việc đăng thủ công còn cần đối chiếu composer của người dùng; BASE-03 vẫn mở.
+
 ## Cập nhật ngày 04/11/2026
 
 - Hồi quy trước thay đổi: 163/163 Python và 20/20 JavaScript đạt. Các test restore sử dụng kho tạm/fixture.
