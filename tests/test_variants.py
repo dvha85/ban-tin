@@ -2,6 +2,7 @@ import json
 import tempfile
 import threading
 import unittest
+from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
@@ -360,6 +361,34 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(result[0]['status'], 'approved')
         self.assertFalse(result[0]['needs_update'])
         self.assertTrue(self.room.variant(variant['id'])['needs_update'])
+
+    def test_bulletin_stats_use_one_snapshot_during_publication(self):
+        variant = self.make_approved('x')
+        original_connection = self.room.connection
+        inserted = []
+        errors = []
+
+        @contextmanager
+        def intercepted_connection():
+            with original_connection() as conn:
+                def before_statement(sql):
+                    if 'SELECT COUNT(DISTINCT v.bulletin_id)' in sql and not inserted:
+                        inserted.append(True)
+                        try:
+                            self.room.record_publication(variant['id'], {
+                                'revision': variant['revision'], 'position': 0,
+                                'url': 'https://x.com/test/status/123456', 'idempotency_key': 'stats_race_123'})
+                        except Exception as exc:
+                            errors.append(exc)
+                conn.set_trace_callback(before_statement)
+                yield conn
+
+        with patch.object(self.room, 'connection', side_effect=intercepted_connection):
+            stats = self.room.bulletin_stats()
+        self.assertEqual(errors, [])
+        self.assertEqual(inserted, [True])
+        self.assertEqual((stats['recorded_posts'], stats['recorded_bulletins']), (0, 0))
+        self.assertEqual(self.room.bulletin_stats()['recorded_posts'], 1)
 
     def test_preview_reads_variant_and_parent_in_one_snapshot(self):
         variant = self.make_approved('threads')

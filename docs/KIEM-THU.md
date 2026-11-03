@@ -2,6 +2,8 @@
 
 ## Smoke test giao diện đa kênh 04/11/2026
 
+- DIG-02 / PUB-04, đọc đồng thời: trên SQLite WAL tạm, tiêm xóa mục giữa hai câu đọc bản tin tái hiện revision cũ đi cùng danh sách mục mới; tiêm ghi nhận giữa các câu thống kê tái hiện 0 bài đăng nhưng 1 bản tin đã ghi nhận. Sau sửa, chi tiết bản tin (bao gồm gói tư liệu) và thống kê đọc từ cùng snapshot cho từng yêu cầu. Hồi quy 169/169 Python và 33/33 JavaScript đạt; đây là test service có tiêm thay đổi, chưa thử tình huống đồng thời qua UI/HTTP.
+
 - APR-04 / đọc đồng thời: trên SQLite WAL tạm, chèn ghi nhận giữa lúc đọc approval và đếm publication; trước sửa, phản hồi trộn `status=approved` với số đã ghi nhận là 1. Hai API đọc phiên bản và danh sách phiên bản nay mở transaction đọc để các truy vấn dùng cùng snapshot. Test thứ hai sửa bản tin giữa lúc đọc bản tin và danh sách phiên bản. Hồi quy sau sửa 167/167 Python, 33/33 JavaScript đạt. Đây là thử đồng thời có tiêm tại service, chưa smoke giao diện hoặc HTTP trong tình huống này.
 
 - Hồi quy lại trên commit `d17d2ad`: `rtk proxy python -B -m unittest discover -s tests` đạt 165/165; `rtk proxy node --test tests/draft-state.test.js tests/source-warnings.test.js tests/request-size.test.js tests/inbox-utils.test.js tests/correction-ui.test.js` đạt 33/33. Các kiểm thử này không thay thế smoke UI; lần kết nối công cụ điều khiển trình duyệt gần nhất hết thời gian chờ.

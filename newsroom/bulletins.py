@@ -96,6 +96,8 @@ class BulletinMixin:
 
     def bulletin(self, bulletin_id):
         with self.connection() as conn:
+            # Keep the parent revision and its items on the same read snapshot.
+            conn.execute('BEGIN')
             return self._bulletin(conn, bulletin_id)
 
     def bulletins(self):
@@ -112,6 +114,7 @@ class BulletinMixin:
 
     def bulletin_stats(self):
         with self.connection() as conn:
+            conn.execute('BEGIN')
             return {
                 'bulletins': conn.execute('SELECT COUNT(*) FROM bulletins').fetchone()[0],
                 'variants': conn.execute('SELECT COUNT(*) FROM content_variants').fetchone()[0],
