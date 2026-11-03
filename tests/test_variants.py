@@ -146,6 +146,48 @@ class VariantTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             self.room.export_variant(variant['id'])
 
+    def test_export_reads_variant_and_approval_in_one_snapshot(self):
+        variant = self.make_approved('threads')
+        with self.room.connection() as conn:
+            conn.execute('PRAGMA journal_mode=WAL')
+        original = self.room._approved_variant
+        observed = []
+
+        def concurrent_edit(conn, selected, archive=False):
+            observed.append(conn.in_transaction)
+            self.room.save_bulletin(self.bulletin['id'], {
+                'revision': self.bulletin['revision'], 'title': 'Bản tin đã thay đổi'})
+            return original(conn, selected, archive=archive)
+
+        with patch.object(self.room, '_approved_variant', side_effect=concurrent_edit):
+            exported = self.room.export_variant(variant['id'])
+        self.assertEqual(observed, [True])
+        self.assertIn('Bản tin hữu ích', exported['posts'][0])
+        self.assertEqual(self.room.variant(variant['id'])['status'], 'draft')
+        with self.assertRaises(ValidationError):
+            self.room.export_variant(variant['id'])
+
+    def test_preview_reads_variant_and_parent_in_one_snapshot(self):
+        variant = self.make_approved('threads')
+        with self.room.connection() as conn:
+            conn.execute('PRAGMA journal_mode=WAL')
+        original = self.room._variant
+        observed = []
+
+        def concurrent_remove(conn, variant_id):
+            selected = original(conn, variant_id)
+            observed.append(conn.in_transaction)
+            self.room.change_bulletin_items(self.bulletin['id'], {
+                'revision': self.bulletin['revision'], 'remove_item_id': self.bulletin['items'][1]['id']})
+            return selected
+
+        with patch.object(self.room, '_variant', side_effect=concurrent_remove):
+            preview = self.room.preview_variant(variant['id'])
+        self.assertEqual(observed, [True])
+        self.assertTrue(preview['valid'])
+        self.assertEqual(preview['posts'][0]['item_ids'], [item['id'] for item in self.bulletin['items']])
+        self.assertEqual(len(self.room.bulletin(self.bulletin['id'])['items']), 1)
+
     def test_clone_preserves_all_text_when_parent_loses_an_item(self):
         variant = self.make_approved('x', two=True)
         record = self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,

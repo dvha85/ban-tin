@@ -439,7 +439,8 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | PUB-02 / POST-03 | Đang làm | Sửa kiểm tra trùng URL theo cả hai chiều legacy/đa kênh trong giao dịch; test alias và hai thao tác đồng thời cùng URL | URL legacy có dạng chưa được validator nhận diện vẫn chưa thể đối chiếu trùng; cần chốt policy URL |
 | 03/11/2026 | QA-02 / PILOT-01 | Đang làm | Kho thử hai mục tái hiện cờ chưa lưu không xóa khi hoàn nguyên; đã sửa và thử lại trên trình duyệt, test JS text/checkbox | Chưa hỗ trợ lưu đồng thời nhiều phần; lượt thử bị gián đoạn nên không tính pilot hoàn chỉnh |
 | 03/11/2026 | FMT/APR/QA/PILOT | Đang làm | Từ bản hai mục đã soạn sẵn, tạo và duyệt ba kênh; tải `.txt` X hai đoạn và đối chiếu nội dung, số thứ tự, nguồn. Thời gian phần tiếp tục 127,3 giây; URL giả ở hai đoạn được chặn ghi khi còn ô khác đang nhập | Không tính thời gian này là pilot đầu cuối; cần kiểm tra tiếp kết quả ghi nhận và ba pilot đầy đủ |
-| 03/11/2026 | QA/DOC/PILOT/REL | Đang làm | Lần chạy gần nhất 122/122 Python, 7/7 JS; Edge tải `.txt` một đoạn và đối chiếu nội dung/nguồn; đã cập nhật tài liệu cho nhánh phát triển | Clipboard thật, QA còn lại, ba pilot và quyết định kho vận hành vẫn chưa có |
+| 03/11/2026 | APR-04 / APPROVE-05 | Đang làm | Xem trước và xuất đọc phiên bản, bản tin, bản duyệt trong cùng snapshot SQLite; test WAL xen kẽ ghi cho thấy kết quả nhất quán theo thời điểm bắt đầu đọc | Cần bao phủ các tổ hợp race HTTP/copy/ghi nhận còn lại |
+| 03/11/2026 | QA/DOC/PILOT/REL | Đang làm | Lần chạy gần nhất 124/124 Python, 7/7 JS; Edge tải `.txt` một đoạn và đối chiếu nội dung/nguồn; đã cập nhật tài liệu cho nhánh phát triển | Clipboard thật, QA còn lại, ba pilot và quyết định kho vận hành vẫn chưa có |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 

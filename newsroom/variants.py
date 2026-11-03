@@ -138,6 +138,8 @@ class VariantMixin:
     def preview_variant(self, variant_id, data=None):
         from .service import Conflict
         with self.connection() as conn:
+            # Read the variant and its parent from the same SQLite snapshot.
+            conn.execute('BEGIN')
             variant = self._variant(conn, variant_id)
             if variant['locked_at'] is not None:
                 raise Conflict('Phiên bản đã ghi nhận được xem theo bản duyệt lịch sử, không dựng lại từ bản tin hiện tại.')
@@ -213,6 +215,9 @@ class VariantMixin:
 
     def export_variant(self, variant_id, archive=False):
         with self.connection() as conn:
+            # A concurrent edit can invalidate an approval between SELECTs.
+            # Pin the variant, parent revision, and approval to one snapshot.
+            conn.execute('BEGIN')
             variant = self._variant(conn, variant_id)
             snapshot = self._approved_variant(conn, variant, archive=archive)
             result = {'platform': snapshot['platform'], 'account_label': snapshot['account_label'],
