@@ -4,7 +4,7 @@
 
 Trên nhánh đang phát triển, Hộp tin cho chọn tối đa 10 tin để tạo bản tin. Mỗi mục giữ nguồn riêng; bạn có thể biên tập, kiểm chứng và tạo phiên bản Facebook, Threads hoặc X. Ứng dụng chỉ chuẩn bị văn bản và lưu nhật ký do bạn nhập; bạn tự đăng thủ công.
 
-Chức năng này chưa hoàn tất nghiệm thu 0.4. Bộ đếm X dùng dữ liệu emoji của thư viện năm 2019; bộ đếm Threads là ước lượng có thể đếm thiếu, chưa xác minh đầy đủ theo mọi emoji và ứng dụng. Kiểm tra lại văn bản trên nền tảng trước khi đăng. Xem [kế hoạch và các việc còn lại](docs/KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md).
+Chức năng này chưa hoàn tất nghiệm thu 0.4. Bộ đếm X dùng dữ liệu emoji Unicode 15.1; cách ứng dụng X hiện hành xử lý mọi chuỗi chưa được xác minh. Bộ đếm Threads là ước lượng có thể đếm thiếu. Kiểm tra lại văn bản trên nền tảng trước khi đăng. Xem [kế hoạch và các việc còn lại](docs/KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md).
 
 Trợ lý biên tập tiếng Việt cho hướng nội dung **“Công nghệ mới có ích gì cho người Việt?”**.
 

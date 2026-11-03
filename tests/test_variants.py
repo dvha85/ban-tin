@@ -395,14 +395,16 @@ class VariantTests(unittest.TestCase):
                 self.room.export_variant(variant['id'])
             self.assertTrue(self.room.export_variant(variant['id'], archive=True)['archive'])
 
-    def test_v1_approval_is_stale_under_v2_but_archive_remains_available(self):
-        with patch('newsroom.variants.POLICY_VERSION', '2026-11-03-v1'):
-            variant = self.make_approved('x')
-            archive = self.room.export_variant(variant['id'], archive=True)
-        self.assertTrue(self.room.variant(variant['id'])['policy_stale'])
-        with self.assertRaises(ValidationError):
-            self.room.export_variant(variant['id'])
-        self.assertEqual(self.room.export_variant(variant['id'], archive=True), archive)
+    def test_older_approval_is_stale_under_v3_but_archive_remains_available(self):
+        for version in ('2026-11-03-v1', '2026-11-03-v2'):
+            with self.subTest(version=version):
+                with patch('newsroom.variants.POLICY_VERSION', version):
+                    variant = self.make_approved('x')
+                    archive = self.room.export_variant(variant['id'], archive=True)
+                self.assertTrue(self.room.variant(variant['id'])['policy_stale'])
+                with self.assertRaises(ValidationError):
+                    self.room.export_variant(variant['id'])
+                self.assertEqual(self.room.export_variant(variant['id'], archive=True), archive)
 
     def test_policy_change_requires_new_checks_before_reapproval(self):
         variant = self.make_approved('threads')

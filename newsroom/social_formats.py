@@ -3,8 +3,9 @@ import re
 import unicodedata
 
 from ._vendor.twitter_text import parse_tweet, extract_emojis_with_indices
+from .emoji_x import extract_x_emojis
 
-POLICY_VERSION = '2026-11-03-v2'
+POLICY_VERSION = '2026-11-03-v3'
 RENDERER_VERSION = '1'
 LIMITS = {'facebook': 12000, 'threads': 500, 'x': 280}
 MAX_SEGMENTS = 20
@@ -22,7 +23,7 @@ def thread_length(text):
 
 def count_text(platform, text):
     if platform == 'x':
-        parsed = parse_tweet(text)
+        parsed = parse_tweet(text, emoji_extractor=extract_x_emojis)
         return parsed.weightedLength, parsed.valid
     if platform == 'threads':
         value = thread_length(text)

@@ -1,9 +1,11 @@
 """Pinned X twitter-text conformance cases; no network or YAML dependency."""
 import json
+import hashlib
 import unittest
 from pathlib import Path
 
 from newsroom.social_formats import count_text
+from newsroom._vendor.twitter_text import parse_tweet
 
 
 class TwitterTextConformance(unittest.TestCase):
@@ -24,7 +26,21 @@ class TwitterTextConformance(unittest.TestCase):
                  ('https://example.photography/a', 23), ('https://example.zip/a', 23)]
         for text, expected in cases:
             with self.subTest(text=text):
-                self.assertEqual(count_text('x', text), (expected, True))
+                result = parse_tweet(text)
+                self.assertEqual((result.weightedLength, result.valid), (expected, True))
+
+    def test_x_counts_unicode_151_emoji_sequences_as_one_weighted_emoji(self):
+        for text in ('🫱🏽‍🫲🏻', '🧑‍🦯‍➡️', '❤️‍🔥', '🏳️‍⚧️', '👨‍👩‍👧‍👦'):
+            with self.subTest(text=text):
+                self.assertEqual(count_text('x', text), (2, True))
+        self.assertEqual(count_text('x', '❤️‍🔥' * 140), (280, True))
+        self.assertEqual(count_text('x', '❤️‍🔥' * 141), (282, False))
+        self.assertEqual(count_text('x', '12 # test'), (9, True))
+
+    def test_unicode_emoji_source_is_pinned(self):
+        path = Path(__file__).parents[1] / 'newsroom' / 'data' / 'emoji-test-15.1.txt'
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),
+                         'd876ee249aa28eaa76cfa6dfaa702847a8d13b062aa488d465d0395ee8137ed9')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,2 @@
+# Preserve the byte-for-byte hash of the pinned upstream Unicode data file.
+newsroom/data/emoji-test-15.1.txt -text

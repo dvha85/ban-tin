@@ -12,7 +12,7 @@ Trong **Bàn biên tập**, nút **Tạo bản sao sang bản tin** sao chép b�
 
 Đây là chức năng chưa nghiệm thu. Đếm ký tự Threads và emoji X còn giới hạn; luôn kiểm tra lại khi dán lên nền tảng. Ứng dụng không đăng, không đo kết quả và không tự xác minh URL trên mạng xã hội.
 
-Chính sách duyệt đã nâng lên `2026-11-03-v2` để yêu cầu checklist khẳng định. Phiên bản chưa đăng được duyệt theo chính sách cũ cần bổ sung checklist cho các mục, lưu và kiểm tra lại trước khi duyệt. Phiên bản đã ghi nhận giữ bản lưu lịch sử; nếu cần thay đổi nội dung hoặc tiếp tục xuất theo chính sách mới, tạo bản sao và duyệt lại.
+Chính sách duyệt đã nâng lên `2026-11-03-v3` sau khi cập nhật nhận diện emoji X; v2 trước đó bổ sung checklist khẳng định. Phiên bản chưa đăng được duyệt theo chính sách cũ cần kiểm tra lại, bổ sung checklist nếu thiếu, lưu và xác nhận lại trước khi duyệt. Phiên bản đã ghi nhận giữ bản lưu lịch sử; nếu cần thay đổi nội dung hoặc tiếp tục xuất theo chính sách mới, tạo bản sao và duyệt lại. Vì policy hiện dùng chung, thay đổi này yêu cầu kiểm tra lại cả ba kênh.
 
 ## 1. Mở, dừng và mở lại
 

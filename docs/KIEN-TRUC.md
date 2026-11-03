@@ -5,7 +5,7 @@
 - `migrations.py` quản lý nâng cấp schema 4 và sao lưu SQLite trước migration. Các bảng cũ vẫn được giữ; cần tiếp tục kiểm tra fixture, rollback và khôi phục trước khi dùng với kho vận hành.
 - `bulletins.py` quản lý bản tin, mục, snapshot nguồn, revision và gói tư liệu. `variants.py` quản lý biến thể, xác nhận và snapshot duyệt; `social_formats.py` tạo văn bản cuối, đếm và đề xuất chia đoạn. `publications.py` lưu URL, sự kiện đính chính và số liệu do người dùng nhập.
 - Mỗi phiên bản duyệt có hash và policy/renderer version. Sau ghi nhận đoạn đầu, nội dung bị khóa; bản sao là đối tượng chỉnh sửa mới. Export thông thường và bản lưu lịch sử là hai đường riêng.
-- Không có kết nối xuất bản xã hội. Bộ đếm Threads hiện là ước lượng, còn thư viện X vendored có tập emoji Unicode 12; chưa đủ bằng chứng để bảo đảm mọi chuỗi hiện đại. Chưa coi kiến trúc đang phát triển là bản 0.4 đã nghiệm thu.
+- Không có kết nối xuất bản xã hội. Bộ đếm Threads hiện là ước lượng; bộ đếm X dùng `twitter-text` vendored với bộ nhận diện emoji Unicode 15.1 riêng. Chưa đủ bằng chứng để bảo đảm mọi chuỗi hoặc hành vi của nền tảng hiện hành. Chưa coi kiến trúc đang phát triển là bản 0.4 đã nghiệm thu.
 
 ## Phạm vi
 

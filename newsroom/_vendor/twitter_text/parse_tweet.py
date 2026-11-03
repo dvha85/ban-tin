@@ -29,7 +29,7 @@ def convert_line_ending(string, to="\n"):
     return re.sub(r'\r\n|\r|\n', to, string)
 
 
-def parse_tweet(text: str, options: dict = config['defaults']) -> ParsedResult:
+def parse_tweet(text: str, options: dict = config['defaults'], *, emoji_extractor=extract_emojis_with_indices) -> ParsedResult:
     """
     Parse a Twitter text according to https://developer.twitter.com/en/docs/developer-utilities/twitter-text
 
@@ -114,7 +114,7 @@ def parse_tweet(text: str, options: dict = config['defaults']) -> ParsedResult:
     normalized_text = convert_line_ending(unicodedata.normalize('NFC', text))
 
     url_entities_map = transform_entities_to_hash(extract_urls_with_indices(normalized_text))
-    emoji_entities_map = transform_entities_to_hash(extract_emojis_with_indices(normalized_text))
+    emoji_entities_map = transform_entities_to_hash(emoji_extractor(normalized_text))
 
     weighted_length = 0
     valid_display_index = 0
