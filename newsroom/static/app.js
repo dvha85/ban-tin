@@ -483,14 +483,16 @@ function updateBulletinSelection() {
   $('create-bulletin').disabled = app.selectedArticles.size === 0;
   $('clear-bulletin-selection').disabled = app.selectedArticles.size === 0 || app.busy;
 }
-function bulletinAction(button, action) {
+function bulletinAction(button, action, afterSuccess = null) {
   listen(button, 'click', async () => {
     if (app.busy) throw new Error('Đang xử lý thao tác trước. Vui lòng chờ.');
     app.busy = true;
     $('create-bulletin').disabled = true;
     $('clear-bulletin-selection').disabled = true;
     try {
-      return await withInertTargets([$('bulletin-editor'), $('bulletin-list'), $('view-inbox'), document.querySelector('.sidebar nav')], action);
+      const result = await withInertTargets([$('bulletin-editor'), $('bulletin-list'), $('view-inbox'), document.querySelector('.sidebar nav')], action);
+      if (afterSuccess) afterSuccess();
+      return result;
     }
     finally {
       app.busy = false;
@@ -579,6 +581,7 @@ function renderBulletin() {
   editor.append(top);
   bulletin.items.forEach((item, position) => {
     const section = node('section', 'bulletin-block bulletin-item');
+    section.dataset.itemId = String(item.id);
     section.append(node('h4', '', `Mục ${position + 1}`));
     const fields = Object.fromEntries([['title', 'Tiêu đề'], ['body', 'Nội dung'], ['angle', 'Góc nhìn'],
       ['verification_note', 'Ghi chú kiểm chứng']].map(([key, label]) => [key, bulletinField(label, item[key], key !== 'title')]));
@@ -672,13 +675,16 @@ function renderBulletin() {
     actions.append(remove);
     for (const [label, delta] of [['↑', -1], ['↓', 1]]) {
       const move = node('button', 'button secondary', label); move.disabled = position + delta < 0 || position + delta >= bulletin.items.length;
+      move.dataset.moveDirection = delta < 0 ? 'up' : 'down';
+      move.setAttribute('aria-label', `Di chuyển mục ${position + 1} ${item.title} ${delta < 0 ? 'lên' : 'xuống'}`);
       bulletinAction(move, async () => {
         if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi đổi thứ tự.');
         const ids = bulletin.items.map(row => row.id);
         [ids[position], ids[position + delta]] = [ids[position + delta], ids[position]];
         app.bulletin = await api(`/api/bulletins/${bulletin.id}/save`, {revision: bulletin.revision, item_ids: ids});
         renderBulletin(); await loadBulletinList();
-      });
+        toast(`Đã chuyển mục đến vị trí ${position + delta + 1}.`);
+      }, () => focusMovedItem(editor, item.id, delta));
       actions.append(move);
     }
     section.append(actions); editor.append(section);

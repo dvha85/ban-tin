@@ -1,7 +1,19 @@
 'use strict';
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice} = require('../newsroom/static/draft-state.js');
+const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem} = require('../newsroom/static/draft-state.js');
+
+test('reordering returns focus to the moved item and uses the other direction at an edge', () => {
+  const calls = [];
+  const buttons = {up: {disabled: false, focus: () => calls.push('up')}, down: {disabled: false, focus: () => calls.push('down')}};
+  const section = {dataset: {itemId: '42'}, querySelector: selector => buttons[selector.includes('up') ? 'up' : 'down']};
+  const editor = {querySelectorAll: () => [section]};
+  focusMovedItem(editor, 42, -1);
+  buttons.up.disabled = true;
+  focusMovedItem(editor, 42, -1);
+  focusMovedItem(editor, 99, 1);
+  assert.deepEqual(calls, ['up', 'down']);
+});
 
 test('channel editor explains limits and uncertainty before export', () => {
   assert.match(platformLengthNotice('threads'), /ước lượng.*kiểm tra/i);

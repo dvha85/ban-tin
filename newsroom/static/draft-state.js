@@ -37,6 +37,16 @@ async function withInertTargets(targets, action) {
   finally { targets.forEach((target, index) => { target.inert = previous[index]; }); }
 }
 
+function focusMovedItem(editor, itemId, delta) {
+  const section = [...editor.querySelectorAll('.bulletin-item')].find(row => row.dataset.itemId === String(itemId));
+  if (!section) return;
+  const direction = delta < 0 ? 'up' : 'down';
+  const preferred = section.querySelector(`[data-move-direction="${direction}"]`);
+  const alternative = section.querySelector(`[data-move-direction="${direction === 'up' ? 'down' : 'up'}"]`);
+  const target = preferred && !preferred.disabled ? preferred : alternative;
+  if (target && !target.disabled) target.focus();
+}
+
 function verifiedCopyText(shown, current, position) {
   if (!Number.isInteger(shown.approval_id) || current.approval_id !== shown.approval_id ||
       typeof shown.posts[position] !== 'string' || current.posts?.[position] !== shown.posts[position]) {
@@ -67,5 +77,5 @@ function parseConflictTarget(search) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice};
+  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem};
 }
