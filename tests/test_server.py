@@ -263,6 +263,55 @@ class ServerTests(unittest.TestCase):
         unicode_token = dict(headers, **{'X-CSRF-Token': '\u00e9'})
         self.assertEqual(self.request('POST', '/api/backup', {}, unicode_token)[0], 403)
 
+    def test_non_json_numeric_constants_are_rejected_before_mutation(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử JSON',
+            'url': 'https://example.com/json-constants', 'summary': 'Nguồn giả.'})
+        for constant in (b'NaN', b'Infinity', b'-Infinity'):
+            with self.subTest(constant=constant):
+                body = b'{"article_ids":[' + str(article['id']).encode() + b'],"extra":[' + constant + b']}'
+                conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=5)
+                try:
+                    conn.request('POST', '/api/bulletins', body, headers)
+                    response = conn.getresponse()
+                    self.assertEqual(response.status, 400)
+                    self.assertIn('error', json.loads(response.read()))
+                finally:
+                    conn.close()
+                with self.room.connection() as db:
+                    self.assertEqual(db.execute('SELECT COUNT(*) FROM bulletins').fetchone()[0], 0)
+        status, _, body = self.request('POST', '/api/bulletins',
+            {'article_ids': [article['id']], 'title': 'NaN và Infinity là chữ'}, headers)
+        self.assertEqual(status, 201)
+        self.assertEqual(json.loads(body)['title'], 'NaN và Infinity là chữ')
+
+    def test_overflowing_json_float_is_rejected_before_mutation(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử số mũ',
+            'url': 'https://example.com/json-overflow', 'summary': 'Nguồn giả.'})
+        for number in (b'1e999', b'-1e999'):
+            with self.subTest(number=number):
+                body = b'{"article_ids":[' + str(article['id']).encode() + b'],"extra":' + number + b'}'
+                conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=5)
+                try:
+                    conn.request('POST', '/api/bulletins', body, headers)
+                    response = conn.getresponse()
+                    self.assertEqual(response.status, 400)
+                    self.assertIn('error', json.loads(response.read()))
+                finally:
+                    conn.close()
+                with self.room.connection() as db:
+                    self.assertEqual(db.execute('SELECT COUNT(*) FROM bulletins').fetchone()[0], 0)
+        body = b'{"article_ids":[' + str(article['id']).encode() + b'],"extra":1.25e2}'
+        conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=5)
+        try:
+            conn.request('POST', '/api/bulletins', body, headers)
+            response = conn.getresponse()
+            self.assertEqual(response.status, 201)
+            response.read()
+        finally:
+            conn.close()
+
     def test_deeply_nested_json_is_rejected_without_writing(self):
         headers = self.session()
         body = b'{"article_ids":' + b'[' * 20000 + b'0' + b']' * 20000 + b'}'

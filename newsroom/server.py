@@ -1,6 +1,7 @@
 """Loopback-only personal application; never expose this server to the Internet."""
 import hmac
 import json
+import math
 import secrets
 import sqlite3
 import threading
@@ -13,6 +14,18 @@ from .service import Conflict, ValidationError
 
 STATIC = Path(__file__).parent / 'static'
 MAX_BODY = 128_000
+
+
+def reject_json_constant(value):
+    """Reject Python's non-standard NaN and Infinity JSON extensions."""
+    raise ValueError('Invalid JSON constant')
+
+
+def finite_json_float(value):
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError('JSON number out of range')
+    return number
 
 
 def valid_path_id(value):
@@ -245,7 +258,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             raw = self.rfile.read(size)
             self._body_consumed = True
-            data = json.loads(raw)
+            data = json.loads(raw, parse_constant=reject_json_constant, parse_float=finite_json_float)
             if not isinstance(data, dict):
                 raise ValueError()
         except (ValueError, UnicodeError, RecursionError, TimeoutError, OSError):

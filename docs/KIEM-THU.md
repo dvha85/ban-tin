@@ -252,3 +252,9 @@ python -m newsroom --collect
 
 - Đối chiếu hướng dẫn xử lý sự cố với `session-recovery` trong `index.html` và `recoverSession` trong `app.js`: dòng xử lý mất kết nối được bổ sung bước giữ trang và sao chép nội dung trước khi tải lại, rồi dẫn tới hướng dẫn khôi phục phiên đã có.
 - Chỉ sửa hướng dẫn; chưa kiểm chứng cơ chế khôi phục trên trình duyệt thật và không thay đổi kết luận QA-02.
+
+### 04/11/2026 — Từ chối hằng số ngoài JSON (BASE-02)
+
+- Test HTTP trên kho tạm gửi từng token `NaN`, `Infinity`, `-Infinity` trong mảng thuộc trường phụ: trước sửa cả ba đều trả 201 và tạo bản tin; sau sửa trả 400, không tạo bản tin. Chuỗi văn bản chứa các chữ này vẫn tạo bản tin hợp lệ.
+- Test bổ sung `1e999` và `-1e999`: trước sửa parser chuyển thành vô cực và route tạo bản tin; sau sửa trả 400, không tạo bản tin. `1.25e2` vẫn được chấp nhận. Các test dùng một route, chưa bao phủ mọi tổ hợp schema.
+- Sau sửa: 181/181 Python và 34/34 JavaScript đạt trên kho/DOM thử.
