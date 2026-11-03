@@ -1,7 +1,15 @@
 'use strict';
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails, hasOtherPendingChanges} = require('../newsroom/static/draft-state.js');
+const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails, hasOtherPendingChanges, metricFields, metricDisplayFields} = require('../newsroom/static/draft-state.js');
+
+test('platform metrics differ while recorded legacy values remain visible', () => {
+  assert.ok(metricFields('x').some(([key]) => key === 'reposts'));
+  assert.ok(metricFields('threads').some(([key]) => key === 'replies'));
+  assert.equal(metricFields('facebook').some(([key]) => key === 'reposts'), false);
+  assert.ok(metricDisplayFields('x', {shares: 0}).some(([key]) => key === 'shares'));
+  assert.equal(metricDisplayFields('x', {shares: null}).some(([key]) => key === 'shares'), false);
+});
 
 test('retry or discard of a correction respects other unsaved sections and URLs', () => {
   const own = {}, other = {};

@@ -52,7 +52,7 @@ Mỗi segment có `text` và `item_ids`; `source_ids` có thể chỉ định ng
 | `GET /api/variants/{id}/publications` | — | Các ghi nhận của phiên bản. |
 | `POST /api/variants/{id}/publications` | `revision`, `position` bắt đầu từ 0, `url`, `idempotency_key`, tùy chọn `reported_at` | Ghi nhận URL do người dùng cung cấp, không gọi nền tảng. Key gồm 8–100 ký tự chữ ASCII, số, `_` hoặc `-`; retry cùng key và payload hợp lệ trả bản ghi cũ, dùng lại key với payload khác trả 409. |
 | `POST /api/publications/{id}/corrections` | Revision của **phiên bản** trong `revision`, `reason`, `url` thay thế hoặc chuỗi rỗng để hủy | Ghi sự kiện và trả `corrected_id`, `replacement_id`, `status`; nội dung phiên bản vẫn khóa. |
-| `POST /api/publications/{id}/metrics` | `observed_at`, các trường `views`, `likes`, `saves`, `shares`, `followers`, `minutes`, `note` | Giá trị số là số nguyên không âm hoặc `null`; không có số liệu khác với 0. Chỉ ghi cho publication đang hiệu lực. |
+| `POST /api/publications/{id}/metrics` | `observed_at`, các trường `views`, `likes`, `saves`, `shares`, `followers`, `minutes`, `note`; thêm tùy chọn `replies`, `reposts`, `quotes` | Giá trị số là số nguyên từ 0 đến 1.000.000.000 hoặc `null`; không có số liệu khác với 0. Ba trường mới chỉ xuất hiện trong payload/phản hồi nếu được gửi; payload cũ giữ nguyên. Chỉ ghi cho publication đang hiệu lực. |
 
 Các timestamp người dùng cung cấp phải có múi giờ hợp lệ. URL cần đúng mẫu validator của nền tảng; validator không truy cập URL để chứng minh bài đã được đăng. Sau ghi nhận hoặc đính chính, đọc lại phiên bản để lấy revision mới.
 

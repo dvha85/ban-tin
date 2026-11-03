@@ -236,7 +236,9 @@ class PublicationMixin:
         if observed_at is None:
             raise ValidationError('Cần thời điểm quan sát số liệu.')
         values = {}
-        for field in ('views', 'likes', 'saves', 'shares', 'followers', 'minutes'):
+        for field in ('views', 'likes', 'saves', 'shares', 'followers', 'minutes', 'replies', 'reposts', 'quotes'):
+            if field in ('replies', 'reposts', 'quotes') and field not in data:
+                continue  # Preserve the legacy response and stored payload shape.
             value = data.get(field)
             if value is not None and (type(value) is not int or not 0 <= value <= 1000000000):
                 raise ValidationError('Số liệu phải là số nguyên không âm hoặc để trống.')

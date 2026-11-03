@@ -75,6 +75,23 @@ function hasOtherPendingChanges(editor, except, pendingUrl) {
   return Boolean(pendingUrl || [...editor.querySelectorAll('[data-dirty="true"]')].some(section => section !== except));
 }
 
+const METRIC_LABELS = {views: 'Lượt xem', likes: 'Lượt thích', saves: 'Lượt lưu', shares: 'Lượt chia sẻ',
+  replies: 'Lượt trả lời', reposts: 'Lượt đăng lại', quotes: 'Lượt trích dẫn',
+  followers: 'Theo dõi mới do bạn ghi', minutes: 'Phút chuẩn bị'};
+function metricFields(platform) {
+  const postFields = platform === 'facebook' ? ['views', 'likes', 'saves', 'shares'] :
+    ['views', 'likes', 'replies', 'reposts', 'quotes', ...(platform === 'x' ? ['saves'] : [])];
+  return [...postFields, 'followers', 'minutes'].map(key => [key, METRIC_LABELS[key]]);
+}
+function metricDisplayFields(platform, values) {
+  const fields = metricFields(platform);
+  for (const key of Object.keys(METRIC_LABELS)) {
+    if (!fields.some(([existing]) => existing === key) && values[key] != null)
+      fields.push([key, METRIC_LABELS[key]]);
+  }
+  return fields;
+}
+
 function parseConflictTarget(search) {
   const params = new URLSearchParams(search);
   const kind = params.get('kind');
@@ -87,5 +104,5 @@ function parseConflictTarget(search) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails, hasOtherPendingChanges};
+  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails, hasOtherPendingChanges, metricFields, metricDisplayFields};
 }

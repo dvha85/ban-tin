@@ -530,6 +530,24 @@ class VariantTests(unittest.TestCase):
         self.assertIsNone(metric['views'])
         self.assertEqual(metric['likes'], 0)
 
+    def test_platform_metrics_keep_optional_values_and_validate_without_partial_writes(self):
+        variant = self.make_approved('x')
+        record = self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
+            'url': 'https://x.com/test/status/900', 'idempotency_key': 'metrics_test_900'})
+        at = '2026-11-03T10:00:00+07:00'
+        old = self.room.save_publication_metrics(record['id'], {'observed_at': at, 'shares': 3})
+        self.assertNotIn('reposts', old)
+        new = self.room.save_publication_metrics(record['id'], {'observed_at': at,
+            'replies': 0, 'reposts': 8, 'quotes': None})
+        self.assertEqual((new['replies'], new['reposts'], new['quotes']), (0, 8, None))
+        for value in (-1, True, 1.5, '3', 1000000001):
+            with self.subTest(value=value), self.assertRaises(ValidationError):
+                self.room.save_publication_metrics(record['id'], {'observed_at': at, 'reposts': value})
+        metrics = self.room.publications(variant['id'])[0]['metrics']
+        self.assertEqual(len(metrics), 2)
+        self.assertEqual(json.loads(metrics[0]['payload'])['shares'], 3)
+        self.assertEqual(json.loads(metrics[1]['payload'])['reposts'], 8)
+
     def test_policy_change_keeps_archive_but_blocks_ready_export(self):
         variant = self.make_approved('x')
         with patch('newsroom.variants.POLICY_VERSION', 'future-policy'):

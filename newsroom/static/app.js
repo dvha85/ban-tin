@@ -944,9 +944,8 @@ async function renderVariantPublication(area, variant) {
         for (const metric of existing.metrics) {
           const values = JSON.parse(metric.payload);
           details.append(node('p', 'small-note', `${formatDate(metric.observed_at)} · ` +
-            [['views', 'Xem'], ['likes', 'Thích'], ['saves', 'Lưu'], ['shares', 'Chia sẻ'],
-              ['followers', 'Theo dõi mới'], ['minutes', 'Phút']].map(([key, label]) =>
-              `${label}: ${values[key] === null ? 'chưa biết' : values[key]}`).join(' · ') +
+            metricDisplayFields(variant.platform, values).map(([key, label]) =>
+              `${label}: ${values[key] == null ? 'chưa biết' : values[key]}`).join(' · ') +
             (values.note ? ` · ${values.note}` : '')));
         }
         block.append(details);
@@ -954,16 +953,17 @@ async function renderVariantPublication(area, variant) {
       const addMetrics = node('button', 'button secondary', 'Nhập số liệu');
       bulletinAction(addMetrics, async () => {
         if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi nhập số liệu.');
-        const values = window.prompt('Nhập 6 số nguyên cách nhau bằng dấu phẩy theo thứ tự: lượt xem, thích, lưu, chia sẻ, theo dõi mới, phút chuẩn bị. Để trống giá trị chưa biết.', ',,,,,');
+        const metrics = metricFields(variant.platform);
+        const values = window.prompt(`Nhập ${metrics.length} số nguyên cách nhau bằng dấu phẩy theo thứ tự: ${metrics.map(([, label]) => label).join(', ')}. Để trống giá trị chưa biết.`, ','.repeat(metrics.length - 1));
         if (values === null) return;
         const fields = values.split(',').map(value => value.trim());
-        if (fields.length !== 6 || fields.some(value => value && !/^\d+$/.test(value)))
-          throw new Error('Cần đúng 6 giá trị; mỗi giá trị là số nguyên không âm hoặc để trống.');
+        if (fields.length !== metrics.length || fields.some(value => value && !/^\d+$/.test(value)))
+          throw new Error(`Cần đúng ${metrics.length} giá trị; mỗi giá trị là số nguyên không âm hoặc để trống.`);
         const observed = window.prompt('Thời điểm quan sát (ISO 8601 có múi giờ):', new Date().toISOString());
         if (observed === null) return;
         const note = window.prompt('Ghi chú số liệu (không bắt buộc):', ''); if (note === null) return;
         const payload = {observed_at: observed, note};
-        ['views', 'likes', 'saves', 'shares', 'followers', 'minutes'].forEach((key, index) => {
+        metrics.forEach(([key], index) => {
           payload[key] = fields[index] === '' ? null : Number(fields[index]);
         });
         await api(`/api/publications/${existing.id}/metrics`, payload);

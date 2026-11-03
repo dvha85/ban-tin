@@ -484,6 +484,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | PUB-03 / POST-05 | Đang làm | Giữ lý do và URL đính chính khi server báo lỗi, kể cả lỗi không có đích trùng; điền lại khi thử trên cùng trang và nhắc kiểm tra trạng thái. Python 153/153, JS 15/15 | Dữ liệu chưa lưu mất khi tải lại/chuyển phiên bản; công cụ trình duyệt bị gián đoạn tại hộp xác nhận, chưa thử trọn luồng giao diện |
 | 03/11/2026 | PUB-03 / POST-04/05 | Đang làm | Đánh dấu phần đính chính đang nhập là chưa lưu, có nút bỏ; chặn các thao tác có thể ghi đè và dùng cảnh báo rời trang sẵn có. Python 153/153, JS 16/16 | Chưa smoke luồng prompt/cảnh báo trên trình duyệt; chấp nhận rời trang hoặc tải lại vẫn bỏ phần chưa lưu |
 | 03/11/2026 | PUB-03 / POST-04/05 | Đang làm | Test handler thực tế với DOM/API giả: hủy nhập URL, cảnh báo rời trang, thử lại gặp lỗi và bỏ đính chính. Python 153/153, JS 17/17; cập nhật lệnh test trong README | Trình duyệt không phản hồi; chưa smoke hộp thoại và luồng đính chính thành công |
+| 03/11/2026 | PUB-04 / POST-06 | Đang làm | Thêm số liệu trả lời/đăng lại/trích dẫn nhập tay; nhãn/tập trường theo kênh, giữ hiển thị số liệu cũ. Python 154/154, JS 18/18 | Chưa smoke UI hoặc xác minh số liệu trên tài khoản thật; không tự đồng bộ nền tảng |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
