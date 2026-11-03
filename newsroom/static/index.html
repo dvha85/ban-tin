@@ -7,6 +7,7 @@
   <title>Bàn tin — Góc biên tập của bạn</title>
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/draft-state.js" defer></script>
   <script src="/static/app.js" defer></script>
 </head>
 <body>
@@ -16,6 +17,7 @@
     <nav aria-label="Điều hướng chính">
       <button class="nav-item active" data-view="inbox"><span class="nav-icon">▤</span> Hộp tin <span id="nav-count" class="count">0</span></button>
       <button class="nav-item" data-view="drafts"><span class="nav-icon">✎</span> Bàn biên tập <span id="draft-count" class="count">0</span></button>
+      <button class="nav-item" data-view="bulletins"><span class="nav-icon">☷</span> Bản tin</button>
       <button class="nav-item" data-view="sources"><span class="nav-icon">◎</span> Nguồn tin</button>
       <button class="nav-item" data-view="guide"><span class="nav-icon">⌘</span> Cách sử dụng</button>
     </nav>
@@ -48,13 +50,19 @@
       <div class="section-heading"><div><h2>Hộp tin của bạn <span class="badge subtle">NGUỒN QUỐC TẾ</span></h2><p>Chọn một tin có ích. Đọc nguồn trước khi viết.</p></div><span class="small-note">Ưu tiên biên tập ≠ mức độ thịnh hành</span></div>
       <div class="inbox-grid">
         <section class="panel story-panel" aria-label="Danh sách tin">
-          <div class="filter-row"><label class="search-label"><span>⌕</span><input id="search-input" type="search" placeholder="Tìm theo tiêu đề, nguồn…" aria-label="Tìm tin"></label><select id="age-filter" aria-label="Khoảng thời gian"><option value="7">7 ngày</option><option value="2">48 giờ</option><option value="all">Tất cả</option></select></div>
+          <div class="filter-row"><label class="search-label"><span>⌕</span><input id="search-input" type="search" placeholder="Tìm theo tiêu đề, nguồn…" aria-label="Tìm tin"></label><select id="age-filter" aria-label="Khoảng thời gian"><option value="7">7 ngày</option><option value="2">48 giờ</option><option value="1">24 giờ</option><option value="all">Tất cả</option></select></div>
+          <div class="action-row"><button id="create-bulletin" class="button secondary">Tạo bản tin từ tin đã chọn (0/10)</button></div>
           <div class="tabs category-tabs" aria-label="Lọc chủ đề"><button class="active" data-category="all">Tất cả</button><button data-category="ai">AI thực dụng</button><button data-category="tools">Thiết bị & phần mềm</button></div>
           <div id="story-list" class="story-list"></div>
           <div id="list-footer" class="list-footer">Tối đa 500 tin gần nhất.</div>
         </section>
         <section id="article-detail" class="panel article-panel" aria-label="Tư liệu tin đã chọn"><div class="empty-state"><span class="empty-symbol">▤</span><h3>Bắt đầu bằng một nguồn tốt.</h3><p>Nhấn “Lấy tin mới” hoặc tự nhập liên kết.<br>Không có bài nào được tự động đăng.</p></div></section>
       </div>
+    </section>
+
+    <section id="view-bulletins" class="view" hidden>
+      <div class="section-heading"><div><h2>Bản tin nhiều mục</h2><p>Chọn tin, kiểm chứng từng mục và biên tập trước khi tạo nội dung cho từng kênh.</p></div></div>
+      <div class="editor-grid"><aside class="panel draft-panel"><h3>Danh sách bản tin</h3><div id="bulletin-list"></div></aside><section id="bulletin-editor" class="panel editor-panel"><p>Chọn bản tin hoặc tạo từ Hộp tin.</p></section></div>
     </section>
 
     <section id="view-drafts" class="view" hidden>

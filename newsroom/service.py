@@ -13,6 +13,10 @@ from urllib.parse import urlsplit
 from .config import SOURCES, validate_data_dir
 from .feeds import canonical_url, fetch_feed, plain_text, rank_article, title_key
 from .collection_service import CollectionMixin
+from .migrations import migrate
+from .bulletins import BulletinMixin
+from .variants import VariantMixin
+from .publications import PublicationMixin
 
 
 class ValidationError(ValueError):
@@ -33,7 +37,7 @@ def _text(value, name, limit):
     return value.strip()
 
 
-class Newsroom(CollectionMixin):
+class Newsroom(PublicationMixin, VariantMixin, BulletinMixin, CollectionMixin):
     CHECKS = {
         'sources': 'Tôi đã mở và đọc nguồn gốc, đối chiếu các thông tin chính.',
         'facts': 'Tôi đã kiểm tra tên, số liệu, ngày và điều kiện áp dụng tại Việt Nam.',
@@ -51,50 +55,8 @@ class Newsroom(CollectionMixin):
         self.refresh_lock = threading.Lock()
         self.backup_lock = threading.Lock()
         with self.connection() as conn:
+            migrate(conn, self.data_dir)
             conn.execute('PRAGMA journal_mode=WAL')
-            version = conn.execute('PRAGMA user_version').fetchone()[0]
-            if version not in (0, 1, 2, 3):
-                raise RuntimeError('Dữ liệu thuộc phiên bản mới hơn. Không tự hạ cấp.')
-            if version in (1, 2):
-                folder = self.data_dir / 'backups'
-                folder.mkdir(exist_ok=True)
-                label = 'pre-v02' if version == 1 else 'pre-v03'
-                with closing(sqlite3.connect(folder / f'{label}-{secrets.token_hex(4)}.sqlite3')) as backup:
-                    conn.backup(backup)
-            conn.executescript('''
-                CREATE TABLE IF NOT EXISTS articles (
-                    id INTEGER PRIMARY KEY, title TEXT NOT NULL, title_key TEXT NOT NULL,
-                    url TEXT NOT NULL UNIQUE, summary TEXT NOT NULL,
-                    source_name TEXT NOT NULL, published_at TEXT, date_kind TEXT NOT NULL,
-                    fetched_at TEXT NOT NULL
-                );
-                CREATE INDEX IF NOT EXISTS articles_title_key ON articles(title_key);
-                CREATE TABLE IF NOT EXISTS article_sources (
-                    id INTEGER PRIMARY KEY, article_id INTEGER NOT NULL REFERENCES articles(id),
-                    url TEXT NOT NULL UNIQUE, title TEXT NOT NULL, summary TEXT NOT NULL,
-                    source_name TEXT NOT NULL, published_at TEXT, date_kind TEXT NOT NULL,
-                    retrieved_at TEXT NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS drafts (
-                    id INTEGER PRIMARY KEY, article_id INTEGER NOT NULL REFERENCES articles(id),
-                    revision INTEGER NOT NULL, status TEXT NOT NULL,
-                    payload TEXT NOT NULL, approved_hash TEXT, approved_at TEXT,
-                    post_url TEXT, published_at TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS history (
-                    id INTEGER PRIMARY KEY, draft_id INTEGER NOT NULL REFERENCES drafts(id),
-                    action TEXT NOT NULL, snapshot TEXT NOT NULL, at TEXT NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS source_health (
-                    source_id TEXT PRIMARY KEY, checked_at TEXT NOT NULL,
-                    ok INTEGER NOT NULL, message TEXT NOT NULL, added INTEGER NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS metrics (
-                    draft_id INTEGER PRIMARY KEY REFERENCES drafts(id),
-                    saves INTEGER NOT NULL, shares INTEGER NOT NULL,
-                    followers INTEGER NOT NULL, minutes INTEGER NOT NULL, note TEXT NOT NULL
-                );
-            ''')
         self.init_collection()
 
     @contextmanager

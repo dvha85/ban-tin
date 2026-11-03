@@ -3,8 +3,8 @@
 - Ngày lập / cập nhật: **03/11/2026**, giờ Việt Nam.
 - Repository: [dvha85/ban-tin](https://github.com/dvha85/ban-tin).
 - Mốc mã nguồn được review: **`a180354e52e98a678d093609f9e8f2d37e6cd0a3`**, nhánh `main`, phiên bản ứng dụng `0.3.0`, dữ liệu schema `3`.
-- Trạng thái: **Đã lập kế hoạch; chưa triển khai các thay đổi dưới đây.**
-- Phạm vi được yêu cầu ở lượt này: lập và lưu tài liệu để theo dõi. Không coi tài liệu này là xác nhận đã sửa lỗi, đã nâng cấp DB hoặc được phép đăng bài ra ngoài.
+- Trạng thái: **Đang triển khai; chưa nghiệm thu hoặc phát hành 0.4.** Chi tiết và bằng chứng ở mục 11.
+- Tài liệu này theo dõi kế hoạch và tiến độ, không xác nhận đã nâng cấp dữ liệu đang sử dụng hoặc đăng bài ra ngoài.
 - Hướng phát hành đề xuất: **0.3.1 sửa lỗi → 0.4 bản tin nhiều mục và đầu ra Facebook / Threads / X**. Đây là mốc chức năng, chưa ấn định ngày phát hành.
 
 ## 1. Kết quả cần đạt
@@ -253,18 +253,18 @@ Quy mô S/M/L là tương đối, không phải cam kết số ngày. Mặc đ�
 
 | Giai đoạn | Đầu ra | Phụ thuộc | Quy mô | Trạng thái |
 | --- | --- | --- | --- | --- |
-| G0 | Hotfix URL, có thể phát hành 0.3.1 riêng | Không | S | Chưa bắt đầu |
-| G1 | Hợp đồng dữ liệu, policy và migration an toàn | Review kế hoạch | M | Chưa bắt đầu |
-| G2 | Bản tin nhiều mục + nguồn + gói tư liệu | G1 | L | Chưa bắt đầu |
-| G3 | Ba biến thể, preview, đếm/chia đoạn | G1, G2 | L | Chưa bắt đầu |
-| G4 | Duyệt/xuất đúng snapshot | G2, G3 | M | Chưa bắt đầu |
-| G5 | Nhật ký đa kênh, chống lặp, chỉ số | G0, G4 | M | Chưa bắt đầu |
+| G0 | Hotfix URL, có thể phát hành 0.3.1 riêng | Không | S | Đang làm — chờ smoke trình duyệt |
+| G1 | Hợp đồng dữ liệu, policy và migration an toàn | Review kế hoạch | M | Đang làm |
+| G2 | Bản tin nhiều mục + nguồn + gói tư liệu | G1 | L | Đang làm — chưa QA giao diện |
+| G3 | Ba biến thể, preview, đếm/chia đoạn | G1, G2 | L | Đang làm — còn kiểm chứng bộ đếm và QA chia đoạn |
+| G4 | Duyệt/xuất đúng snapshot | G2, G3 | M | Đang làm — chưa QA toàn luồng |
+| G5 | Nhật ký đa kênh, chống lặp, chỉ số | G0, G4 | M | Đang làm — còn giao diện và QA |
 | G6 | Hồi quy, QA Windows, tài liệu và pilot | G0–G5 | M | Chưa bắt đầu |
 
 ### G0 — Hotfix URL
 
-- [ ] **FIX-01 / P0:** Viết test tái hiện URL A tràn sang B, cả trường hợp đã ghi nhận và đang nhập dở.
-- [ ] **FIX-02 / P0:** Bind/reset trường URL theo draft; hiển thị đúng đường dẫn đã lưu, bổ sung xác nhận có ngữ cảnh.
+- [x] **FIX-01 / P0:** Viết test tái hiện URL A tràn sang B, cả trường hợp đã ghi nhận và đang nhập dở.
+- [x] **FIX-02 / P0:** Bind/reset trường URL theo draft; hiển thị đúng đường dẫn đã lưu, bổ sung xác nhận có ngữ cảnh.
 - [ ] **FIX-03 / P0:** Chạy hồi quy backend + test JS + smoke thật trên dữ liệu thử; cập nhật bằng chứng 0.3.1.
 
 Gate: URL-01…04 tại mục 8 đạt, không migration, bản xuất legacy không đổi.
@@ -427,9 +427,9 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | --- | --- | --- | --- | --- |
 | 03/11/2026 | Review hiện trạng | Hoàn tất | Commit nền `a180354`; 88/88 test; probe RSS chỉ đọc; tái hiện URL bằng DOM giả | Giữ làm baseline, không coi là nghiệm thu 0.4 |
 | 03/11/2026 | Lập kế hoạch nâng cấp | Hoàn tất | Tài liệu này; chưa triển khai chức năng | Xem/chốt phạm vi rồi bắt đầu G0 |
-| — | FIX-01…03 | Chưa bắt đầu | — | Viết hồi quy trước khi sửa |
-| — | BASE/DB | Chưa bắt đầu | — | Chốt hợp đồng và migration |
-| — | DIG/FMT/APR/PUB | Chưa bắt đầu | — | Thực hiện theo phụ thuộc mục 7 |
+| 03/11/2026 | FIX-01…03 | Đang làm | `tests/draft-state.test.js` 2/2 và 88/88 Python đạt; chưa thử trình duyệt thực | Smoke trình duyệt trên kho thử |
+| 03/11/2026 | BASE/DB | Đang làm | Migration schema 4 và kiểm thử rollback/restore đã được bổ sung; 103 test Python đạt trên kho thử | Mở rộng fixture và kiểm thử nâng cấp thực tế |
+| 03/11/2026 | DIG/FMT/APR/PUB | Đang làm | Có lõi, giao diện, test chia đoạn 9→10 và test HTTP CSRF; đã smoke một bản tin/phiên bản X với URL giả trên kho thử | Kiểm chứng bộ đếm, QA toàn luồng, clipboard, file tải, restart và thêm pilot |
 | — | QA/DOC/PILOT/REL | Chưa bắt đầu | — | Chỉ đóng khi đủ bằng chứng mục 10 |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.

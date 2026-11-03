@@ -83,6 +83,39 @@ class ServerTests(unittest.TestCase):
         for endpoint in ('/api/ai', '/api/facebook/publish', '/api/login/chatgpt'):
             self.assertEqual(self.request('POST', endpoint, {}, headers)[0], 404)
 
+    def test_bulletin_and_variant_routes_enforce_session_and_support_preview_split(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin trong fixture HTTP',
+            'url': 'https://example.com/fixture', 'summary': 'Nguồn minh họa.'})
+        payload = {'article_ids': [article['id']], 'title': 'Bản tin thử'}
+        self.assertEqual(self.request('POST', '/api/bulletins', payload)[0], 401)
+        without_token = dict(headers)
+        without_token.pop('X-CSRF-Token')
+        self.assertEqual(self.request('POST', '/api/bulletins', payload, without_token)[0], 403)
+        status, _, body = self.request('POST', '/api/bulletins', payload, headers)
+        self.assertEqual(status, 201)
+        bulletin = json.loads(body)
+        item_id = bulletin['items'][0]['id']
+        status, _, body = self.request('POST', f"/api/bulletins/{bulletin['id']}/variants", {
+            'bulletin_revision': bulletin['revision'], 'platform': 'x', 'account_label': 'Kênh thử'}, headers)
+        self.assertEqual(status, 200)
+        variant = json.loads(body)
+        segment = {'text': ('Một câu minh họa. ' * 30).strip(), 'item_ids': [item_id]}
+        path = f"/api/variants/{variant['id']}"
+        self.assertEqual(self.request('POST', path + '/split', {'revision': variant['revision'],
+                                                                'segments': [segment]}, without_token)[0], 403)
+        status, _, body = self.request('POST', path + '/split', {'revision': variant['revision'],
+                                                                  'segments': [segment]}, headers)
+        self.assertEqual(status, 200)
+        result = json.loads(body)
+        self.assertGreater(len(result['segments']), 1)
+        self.assertTrue(result['preview']['valid'])
+        self.assertTrue(all(post['urls'] == [article['url']] for post in result['preview']['posts']))
+        self.assertEqual(self.request('POST', path + '/split', {'revision': 999, 'segments': [segment]}, headers)[0], 409)
+        self.assertEqual(self.request('GET', path + '/export', headers=headers)[0], 400)
+        self.assertEqual(self.request('POST', path + '/publications', {'revision': 1,
+            'position': 0, 'url': 'https://x.com/test/status/123', 'idempotency_key': 'test_key_123'}, headers)[0], 400)
+
     def test_collection_endpoints_require_session_csrf_and_confirmation(self):
         path = '/api/collection/sources/typesafe'
         self.assertEqual(self.request('POST', path, {'enabled': True, 'confirmed': True})[0], 401)

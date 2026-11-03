@@ -9,6 +9,7 @@ from pathlib import Path
 from .config import default_data_dir, validate_data_dir
 from .server import make_server
 from .service import Newsroom, now_iso
+from .migrations import CURRENT_SCHEMA
 
 
 def seed_demo(room):
@@ -38,11 +39,16 @@ def restore(backup, destination):
     with closing(sqlite3.connect(source_path.as_uri() + '?mode=ro', uri=True)) as source:
         if source.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
             raise ValueError('Tệp sao lưu lỗi toàn vẹn.')
-        if source.execute('PRAGMA user_version').fetchone()[0] not in (1, 2, 3):
+        version = source.execute('PRAGMA user_version').fetchone()[0]
+        if version not in (1, 2, 3, CURRENT_SCHEMA):
             raise ValueError('Tệp không đúng phiên bản dữ liệu Bàn tin.')
         tables = {row[0] for row in source.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         if not {'articles', 'drafts', 'history', 'article_sources'} <= tables:
             raise ValueError('Tệp không có cấu trúc dữ liệu Bàn tin.')
+        if version == CURRENT_SCHEMA and not {'bulletins', 'bulletin_items', 'content_variants',
+                                               'variant_approvals', 'publications', 'publication_events',
+                                               'publication_metrics', 'bulletin_history'} <= tables:
+            raise ValueError('Tệp schema mới thiếu bảng dữ liệu bản tin.')
         target_dir.mkdir(parents=True, exist_ok=False)
         destination_conn = sqlite3.connect(target_dir / 'bantin.sqlite3')
         try:

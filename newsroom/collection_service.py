@@ -20,34 +20,6 @@ def at():
 
 class CollectionMixin:
     def init_collection(self):
-        with self.connection() as conn:
-            conn.executescript('''
-                CREATE TABLE IF NOT EXISTS collection_settings (
-                    source_id TEXT PRIMARY KEY, enabled INTEGER NOT NULL,
-                    confirmed_at TEXT NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS collection_jobs (
-                    id INTEGER PRIMARY KEY, source_id TEXT NOT NULL,
-                    status TEXT NOT NULL, reason TEXT NOT NULL, message TEXT NOT NULL,
-                    created_at TEXT NOT NULL, updated_at TEXT NOT NULL
-                );
-                CREATE UNIQUE INDEX IF NOT EXISTS active_collection_job
-                    ON collection_jobs(source_id) WHERE status IN ('pending','running','unknown');
-                CREATE TABLE IF NOT EXISTS collection_evidence (
-                    url TEXT PRIMARY KEY, collection_method TEXT NOT NULL,
-                    content_hash TEXT NOT NULL, excerpt_hash TEXT NOT NULL, scope TEXT NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS collection_attempts (
-                    id INTEGER PRIMARY KEY, job_id INTEGER NOT NULL REFERENCES collection_jobs(id),
-                    started_at TEXT NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS custom_sources (
-                    id TEXT PRIMARY KEY, name TEXT NOT NULL, kind TEXT NOT NULL,
-                    url TEXT NOT NULL, url_key TEXT NOT NULL UNIQUE, input_url TEXT NOT NULL,
-                    site TEXT NOT NULL, prefix TEXT NOT NULL, created_at TEXT NOT NULL
-                );
-                PRAGMA user_version=3;
-            ''')
         self.recover_collection_jobs()
 
     def recover_collection_jobs(self):

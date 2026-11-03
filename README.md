@@ -1,5 +1,11 @@
 # Bàn tin — bản chạy trên máy tính của bạn
 
+## Bản tin nhiều mục (đang phát triển)
+
+Trên nhánh đang phát triển, Hộp tin cho chọn tối đa 10 tin để tạo bản tin. Mỗi mục giữ nguồn riêng; bạn có thể biên tập, kiểm chứng và tạo phiên bản Facebook, Threads hoặc X. Ứng dụng chỉ chuẩn bị văn bản và lưu nhật ký do bạn nhập; bạn tự đăng thủ công.
+
+Chức năng này chưa hoàn tất nghiệm thu 0.4. Bộ đếm X dùng dữ liệu emoji của thư viện năm 2019; bộ đếm Threads là ước lượng thận trọng, chưa xác minh đầy đủ theo mọi emoji và ứng dụng. Kiểm tra lại văn bản trên nền tảng trước khi đăng. Xem [kế hoạch và các việc còn lại](docs/KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md).
+
 Trợ lý biên tập tiếng Việt cho hướng nội dung **“Công nghệ mới có ích gì cho người Việt?”**.
 
 Ứng dụng lấy tin RSS/API và web được chọn, chuẩn bị tư liệu để bạn tự dùng ChatGPT Plus, lưu bài và hỗ trợ duyệt. **RSS/API/Crawl4AI không cần khóa model. Hermes + Browser Use là tầng tùy chọn, mặc định chưa kết nối, chỉ gọi AI sau khi bạn xác nhận riêng. Không đăng nhập ChatGPT hoặc tự đăng mạng xã hội.**

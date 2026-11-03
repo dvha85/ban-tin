@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## Phần 0.4 đang phát triển (03/11/2026)
+
+- Lần chạy 03/11/2026: `python -B -m unittest discover -s tests` đạt 103/103; `node --test tests/draft-state.test.js` đạt 2/2; `node --check newsroom/static/app.js` đạt. Có test lỗi rollback/restore, snapshot duyệt, URL, số liệu `null`/`0`, HTTP/CSRF và chia đoạn 9 → 10, giữ nguồn, từ chối câu quá dài.
+- Kiểm tra thủ công trên ứng dụng qua trình duyệt trong máy, với kho fixture nằm tại thư mục tạm tách khỏi kho vận hành: chọn ba tin, tạo bản tin, lưu và xác nhận một mục, tạo và duyệt một phiên bản X, ghi nhận URL X giả và tải lại trang. Không có bài đăng thật.
+- Nút sao chép hiển thị thành công nhưng lần đọc clipboard trong trình duyệt kiểm thử trả về rỗng; **chưa xác nhận nội dung clipboard thực tế**. Chưa kiểm tra đầy đủ bàn phím, fallback clipboard, file tải, restart tiến trình, ba pilot, mọi chính sách ký tự hoặc kho vận hành.
+- Để chạy: `python -B -m unittest discover -s tests -v` và `node --test tests/draft-state.test.js`. Kết quả cụ thể cần ghi lại sau lần chạy cuối trước phát hành.
+
 ## Bản 0.3 — thêm nguồn theo dõi (16/10/2026)
 
 - Baseline64/64 trước sửa. Thêm hồi quy nhập bài thủ công không tạo nguồn theo dõi/không đổi bản duyệt, chạy19/19 bài kiểm tra workflow trước triển khai. Viết hợp đồng tính năng mới trước module; quan sát lỗi chưa có chức năng, sau đó triển khai.

@@ -145,7 +145,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/':
                 self.respond(200, (STATIC / 'index.html').read_bytes(), 'text/html; charset=utf-8', {
                     'Set-Cookie': f'{self.server.cookie_name}={self.server.session_key}; HttpOnly; SameSite=Strict; Path=/'})
-            elif path in ('/static/app.js', '/static/app.css', '/static/favicon.svg'):
+            elif path in ('/static/app.js', '/static/draft-state.js', '/static/app.css', '/static/favicon.svg'):
                 filename = path.rsplit('/', 1)[1]
                 content_type = {'js': 'text/javascript; charset=utf-8', 'css': 'text/css; charset=utf-8',
                                 'svg': 'image/svg+xml'}[filename.rsplit('.', 1)[1]]
@@ -155,6 +155,42 @@ class Handler(BaseHTTPRequestHandler):
                 result['busy'] = result['busy'] or self.server.job_lock.locked()
                 result['csrf_token'] = self.server.csrf_token
                 self.respond(200, result)
+            elif path == '/api/bulletins':
+                self.respond(200, self.server.room.bulletins())
+            elif path.startswith('/api/bulletins/'):
+                parts = path.split('/')
+                if len(parts) not in (4, 5) or not parts[3].isdigit():
+                    self.json_error(404, 'Không tìm thấy bản tin.')
+                    return
+                bulletin_id = int(parts[3])
+                if len(parts) == 4:
+                    self.respond(200, self.server.room.bulletin(bulletin_id))
+                elif parts[4] == 'packet':
+                    self.respond(200, {'text': self.server.room.bulletin_packet(bulletin_id)})
+                elif parts[4] == 'variants':
+                    self.respond(200, self.server.room.variants(bulletin_id))
+                else:
+                    self.json_error(404, 'Không tìm thấy chức năng.')
+            elif path.startswith('/api/variants/'):
+                parts = path.split('/')
+                if len(parts) not in (4, 5) or not parts[3].isdigit():
+                    self.json_error(404, 'Không tìm thấy phiên bản.')
+                    return
+                variant_id = int(parts[3])
+                if len(parts) == 4:
+                    self.respond(200, self.server.room.variant(variant_id))
+                elif parts[4] == 'export':
+                    self.respond(200, self.server.room.export_variant(variant_id))
+                elif parts[4] == 'archive':
+                    self.respond(200, self.server.room.export_variant(variant_id, archive=True))
+                elif parts[4] == 'download':
+                    export = self.server.room.export_variant(variant_id)
+                    self.respond(200, '\n\n---\n\n'.join(export['posts']), 'text/plain; charset=utf-8',
+                                 {'Content-Disposition': f'attachment; filename="ban-tin-{variant_id}.txt"'})
+                elif parts[4] == 'publications':
+                    self.respond(200, self.server.room.publications(variant_id))
+                else:
+                    self.json_error(404, 'Không tìm thấy chức năng.')
             elif path.startswith('/api/drafts/'):
                 parts = path.split('/')
                 if len(parts) != 5 or not parts[3].isdigit():
@@ -240,6 +276,62 @@ class Handler(BaseHTTPRequestHandler):
                 if type(article_id) is not int:
                     raise ValidationError('Cần chọn một tin trước.')
                 self.respond(200, room.create_draft(article_id))
+            elif path == '/api/bulletins':
+                self.respond(201, room.create_bulletin(data))
+            elif path.startswith('/api/bulletins/'):
+                parts = path.split('/')
+                if len(parts) < 5 or not parts[3].isdigit():
+                    self.json_error(404, 'Không tìm thấy chức năng.')
+                    return
+                bulletin_id = int(parts[3])
+                if len(parts) == 5 and parts[4] == 'save':
+                    result = room.save_bulletin(bulletin_id, data)
+                elif len(parts) == 5 and parts[4] == 'items':
+                    result = room.change_bulletin_items(bulletin_id, data)
+                elif len(parts) == 5 and parts[4] == 'variants':
+                    result = room.create_variant(bulletin_id, data)
+                elif len(parts) == 7 and parts[4] == 'items' and parts[5].isdigit() and parts[6] == 'save':
+                    result = room.save_bulletin_item(bulletin_id, int(parts[5]), data)
+                else:
+                    self.json_error(404, 'Không tìm thấy chức năng.')
+                    return
+                self.respond(200, result)
+            elif path.startswith('/api/variants/'):
+                parts = path.split('/')
+                if len(parts) != 5 or not parts[3].isdigit():
+                    self.json_error(404, 'Không tìm thấy chức năng.')
+                    return
+                variant_id, action = int(parts[3]), parts[4]
+                if action == 'save':
+                    result = room.save_variant(variant_id, data)
+                elif action == 'preview':
+                    result = room.preview_variant(variant_id, data)
+                elif action == 'split':
+                    result = room.split_variant(variant_id, data)
+                elif action == 'approve':
+                    result = room.approve_variant(variant_id, data)
+                elif action == 'clone':
+                    result = room.clone_variant(variant_id, data)
+                elif action == 'publications':
+                    result = room.record_publication(variant_id, data)
+                else:
+                    self.json_error(404, 'Không tìm thấy chức năng.')
+                    return
+                self.respond(200, result)
+            elif path.startswith('/api/publications/'):
+                parts = path.split('/')
+                if len(parts) != 5 or not parts[3].isdigit():
+                    self.json_error(404, 'Không tìm thấy chức năng.')
+                    return
+                publication_id, action = int(parts[3]), parts[4]
+                if action == 'corrections':
+                    result = room.correct_publication(publication_id, data)
+                elif action == 'metrics':
+                    result = room.save_publication_metrics(publication_id, data)
+                else:
+                    self.json_error(404, 'Không tìm thấy chức năng.')
+                    return
+                self.respond(200, result)
             elif path == '/api/backup':
                 self.respond(200, {'path': room.backup()})
             elif path.startswith('/api/drafts/'):
