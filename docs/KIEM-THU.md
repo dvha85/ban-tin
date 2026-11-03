@@ -2,6 +2,8 @@
 
 ## Phần 0.4 đang phát triển (03/11/2026)
 
+- 04/11/2026, PUB-02 / POST-03/05: phát hiện khóa ghi nhận theo URL còn được giữ sau phản hồi thành công trong cùng trang. Đã xóa khóa sau thành công và giữ khóa khi lỗi để thử lại; test handler giả kiểm tra lỗi → thử lại dùng cùng khóa → lần ghi mới cùng URL dùng khóa khác. Backend vẫn kiểm tra idempotency và URL hiệu lực; chưa tái hiện chuỗi ghi nhận → hủy → ghi lại qua hộp xác nhận trên trình duyệt hoặc mất mạng thật.
+
 - 04/11/2026, PUB-03/04: phần lịch sử hiển thị tên sự kiện, lý do và liên kết thay thế; số liệu của lượt đã đính chính hoặc hủy vẫn xem được tại lượt đó. Kho fixture trên trình duyệt hiển thị các sự kiện và 10 lượt xem, 0 lượt thích của lượt cũ. Test DOM kiểm tra các giá trị này và giữ thông tin thô khi gặp sự kiện lạ hoặc payload lỗi. Hồi quy Python 163/163, JavaScript 26/26. Chưa thử mọi loại dữ liệu hỏng hay trình đọc màn hình.
 
 - 04/11/2026, PUB-03 / QA-02: trên kho fixture X hai đoạn, hủy lần lượt hai ghi nhận giả qua biểu mẫu. Trạng thái chuyển 2/2 → 1/2 → 0/2; URL đoạn còn lại giữ đúng sau lần hủy đầu, lịch sử giữ URL và lý do, nội dung phiên bản vẫn bị khóa sau khi hủy cả hai. Mở lại trong thẻ mới vẫn thấy 0/2 và khóa. Bổ sung tên truy cập phân biệt ô URL cho từng đoạn, kiểm tra trên cây accessibility của trình duyệt và test DOM giả. Chưa thử trình đọc màn hình, mọi kênh hoặc kết nối bị gián đoạn.

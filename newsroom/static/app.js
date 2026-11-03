@@ -1079,6 +1079,7 @@ async function renderVariantPublication(area, variant) {
         try { await api(`/api/variants/${variant.id}/publications`, {revision: variant.revision, position, url: value,
           idempotency_key: app.publicationKeys.get(key)}); }
         catch (error) { showClaimConflict(conflict, error); return; }
+        app.publicationKeys.delete(key);
         app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã ghi nhận thông tin do bạn nhập.');
       });
       url.addEventListener('input', () => {

@@ -69,6 +69,34 @@ test('publication URL fields have a distinct accessible label for each segment',
   assert.deepEqual(inputs.map(input => input['aria-label']), ['Liên kết bài đã đăng cho đoạn 1', 'Liên kết bài đã đăng cho đoạn 2']);
 });
 
+test('publication retry reuses its key but a later new recording gets a new key', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = []; let keyCount = 0;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout, calls,
+    fetch: () => new Promise(() => {}), crypto: {randomUUID: () => `key-${++keyCount}`},
+    window: {location: {search: ''}, confirm: () => true, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`api = async (path, body) => { if (path.endsWith('/publications') && body) {
+    calls.push(body); if (calls.length === 1) throw new Error('Mất kết nối'); return {}; }
+    return path.endsWith('/publications') ? [] : {posts: ['test']}; };
+    renderBulletin = () => {}; loadBulletinList = async () => {}; toast = () => {};`, context);
+  const area = new Element(); get('bulletin-editor').append(area); context.area = area;
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const url = walk(area).find(el => el.dataset.publicationUrl);
+  const report = walk(area).find(el => el.tagName === 'button' && el.textContent === 'Ghi nhận đã đăng');
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  url.value = 'https://x.com/a/status/123';
+  report.listeners.click[0]({}); await tick();
+  report.listeners.click[0]({}); await tick();
+  assert.equal(calls[0].idempotency_key, calls[1].idempotency_key);
+  report.listeners.click[0]({}); await tick();
+  assert.notEqual(calls[1].idempotency_key, calls[2].idempotency_key);
+});
+
 test('historical publications show readable events and retain their metrics', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
