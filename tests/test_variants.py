@@ -201,6 +201,18 @@ class VariantTests(unittest.TestCase):
             split_segments('x', segments, self.bulletin)
         self.assertEqual(segments[0]['text'], '😀' * 400)
 
+    def test_split_preserves_internal_blank_lines(self):
+        item = self.bulletin['items'][0]
+        original = 'Đoạn đầu.\n\n\n\nĐoạn tiếp theo.'
+        segments = [{'text': original, 'item_ids': [item['id']]}]
+        result = split_segments('x', segments, self.bulletin)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['text'], original)
+        first = 'A' * 100 + '.\n\n\n\n' + 'B' * 40 + '.'
+        second = 'C' * 100 + '.\n\n\n\n' + 'D' * 40 + '.'
+        result = split_segments('x', [{'text': first + ' ' + second, 'item_ids': [item['id']]}], self.bulletin)
+        self.assertEqual([entry['text'] for entry in result], [first, second])
+
     def test_approved_export_matches_preview_and_changes_invalidate(self):
         variant = self.make_approved('threads')
         preview = self.room.preview_variant(variant['id'])

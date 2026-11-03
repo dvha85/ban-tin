@@ -96,7 +96,16 @@ def split_segments(platform, segments, bulletin):
         # A boundary consists solely of whitespace after punctuation or a
         # paragraph break; no URL, word, or joined character is cut apart.
         sentences = re.split(r'(?<=[.!?。！？])(?=\s)|(?<=\n)(?=\n)', segment['text'].strip())
-        parts = [part for part in sentences if part.strip()]
+        parts = []
+        whitespace = ''
+        for part in sentences:
+            if not part.strip():
+                whitespace += part
+            else:
+                parts.append(whitespace + part)
+                whitespace = ''
+        if whitespace and parts:
+            parts[-1] += whitespace
         units.append((parts, segment, post['urls']))
     assumed_total = len(segments)
     for _ in range(MAX_SEGMENTS + 1):
