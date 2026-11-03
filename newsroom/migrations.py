@@ -5,6 +5,9 @@ from contextlib import closing
 
 CURRENT_SCHEMA = 4
 
+V4_TABLES = ('bulletins', 'bulletin_items', 'content_variants', 'variant_approvals',
+             'publications', 'publication_events', 'publication_metrics', 'bulletin_history')
+
 # Statements are executed one at a time in an explicit transaction. In
 # particular, do not use executescript(), which can commit a pending transaction.
 SCHEMA = (
@@ -90,6 +93,46 @@ SCHEMA = (
         entity_type TEXT NOT NULL, entity_id INTEGER NOT NULL, revision INTEGER NOT NULL,
         action TEXT NOT NULL, snapshot TEXT NOT NULL, at TEXT NOT NULL)''',
 )
+
+
+def validate_v4_structure(conn):
+    """Check the v4 contract without changing the source database."""
+    def quote(name):
+        return '"' + name.replace('"', '""') + '"'
+
+    def unique_indexes(connection, table):
+        result = set()
+        for row in connection.execute(f'PRAGMA index_list({quote(table)})'):
+            name, unique, partial = row[1], row[2], row[4]
+            if not unique:
+                continue
+            columns = tuple(entry[2] for entry in connection.execute(f'PRAGMA index_info({quote(name)})'))
+            where = ''
+            if partial:
+                sql_row = connection.execute("SELECT sql FROM sqlite_master WHERE type='index' AND name=?", (name,)).fetchone()
+                sql = sql_row[0] if sql_row else None
+                if not sql or ' where ' not in ' '.join(sql.lower().split()):
+                    continue
+                where = ''.join(' '.join(sql.lower().split()).split(' where ', 1)[1].split())
+            result.add((columns, where))
+        return result
+
+    with closing(sqlite3.connect(':memory:')) as reference:
+        for statement in SCHEMA:
+            reference.execute(statement)
+        for table in V4_TABLES:
+            quoted = quote(table)
+            columns = lambda db: [tuple(row[1:]) for row in db.execute(f'PRAGMA table_info({quoted})')]
+            foreign_keys = lambda db: {tuple(row[2:]) for row in db.execute(f'PRAGMA foreign_key_list({quoted})')}
+            if (columns(conn) != columns(reference)
+                    or not foreign_keys(reference) <= foreign_keys(conn)
+                    or not unique_indexes(reference, table) <= unique_indexes(conn, table)):
+                raise ValueError(f'Tệp schema mới có cấu trúc hoặc ràng buộc không hợp lệ: {table}.')
+    try:
+        if conn.execute('PRAGMA foreign_key_check').fetchone() is not None:
+            raise ValueError('Tệp sao lưu có dữ liệu vi phạm khóa ngoại.')
+    except sqlite3.DatabaseError as exc:
+        raise ValueError('Không thể kiểm tra khóa ngoại trong tệp sao lưu.') from exc
 
 
 def migrate(conn, data_dir):

@@ -9,7 +9,7 @@ from pathlib import Path
 from .config import default_data_dir, validate_data_dir
 from .server import make_server
 from .service import Newsroom, now_iso
-from .migrations import CURRENT_SCHEMA
+from .migrations import CURRENT_SCHEMA, validate_v4_structure
 
 
 def seed_demo(room):
@@ -52,6 +52,8 @@ def restore(backup, destination):
                                                'variant_approvals', 'publications', 'publication_events',
                                                'publication_metrics', 'bulletin_history'} <= tables:
             raise ValueError('Tệp schema mới thiếu bảng dữ liệu bản tin.')
+        if version == CURRENT_SCHEMA:
+            validate_v4_structure(source)
         target_dir.mkdir(parents=True, exist_ok=False)
         destination_path = target_dir / 'bantin.sqlite3'
         created_file = False

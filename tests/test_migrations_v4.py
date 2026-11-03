@@ -56,6 +56,34 @@ class MigrationV4Tests(unittest.TestCase):
         Newsroom(self.directory)
         self.assertEqual(len(list((self.directory / 'backups').glob('pre-v04-*.sqlite3'))), 1)
 
+    def test_restore_rejects_schema4_with_missing_constraints_or_foreign_keys(self):
+        changes = {
+            'index': 'DROP INDEX active_publication_position',
+            'wrong_index': 'DROP INDEX active_publication_position',
+            'columns': 'DROP TABLE publication_metrics',
+            'no_fk': 'DROP TABLE publication_metrics',
+            'orphan': "INSERT INTO publication_metrics (publication_id,observed_at,payload,created_at) VALUES (999,'t','{}','t')",
+        }
+        for name, sql in changes.items():
+            with self.subTest(name=name):
+                backup = Path(self.room.backup())
+                with closing(sqlite3.connect(backup)) as conn:
+                    metrics_sql = conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='publication_metrics'").fetchone()[0]
+                    conn.execute(sql)
+                    if name == 'columns':
+                        conn.execute('CREATE TABLE publication_metrics (id INTEGER PRIMARY KEY)')
+                    if name == 'no_fk':
+                        conn.execute(metrics_sql.replace('REFERENCES publications(id)', ''))
+                    if name == 'wrong_index':
+                        conn.execute('CREATE UNIQUE INDEX active_publication_position ON publications(variant_id, position) WHERE active=0')
+                    conn.commit()
+                    self.assertEqual(conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
+                target = self.directory / f'reject-{name}'
+                with self.assertRaisesRegex(ValueError, 'cấu trúc|khóa ngoại'):
+                    restore(backup, target)
+                self.assertFalse(target.exists())
+                self.assertTrue(backup.exists())
+
     def test_real_v3_fixture_preserves_all_legacy_rows_and_approved_exports(self):
         fixture_dir = Path(__file__).parent / 'fixtures'
         expected = json.loads((fixture_dir / 'legacy-v3-expected.json').read_text(encoding='utf-8'))
