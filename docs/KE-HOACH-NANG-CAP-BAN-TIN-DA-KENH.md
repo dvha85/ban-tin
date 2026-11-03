@@ -1,0 +1,455 @@
+# Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
+
+- Ngày lập / cập nhật: **03/11/2026**, giờ Việt Nam.
+- Repository: [dvha85/ban-tin](https://github.com/dvha85/ban-tin).
+- Mốc mã nguồn được review: **`a180354e52e98a678d093609f9e8f2d37e6cd0a3`**, nhánh `main`, phiên bản ứng dụng `0.3.0`, dữ liệu schema `3`.
+- Trạng thái: **Đã lập kế hoạch; chưa triển khai các thay đổi dưới đây.**
+- Phạm vi được yêu cầu ở lượt này: lập và lưu tài liệu để theo dõi. Không coi tài liệu này là xác nhận đã sửa lỗi, đã nâng cấp DB hoặc được phép đăng bài ra ngoài.
+- Hướng phát hành đề xuất: **0.3.1 sửa lỗi → 0.4 bản tin nhiều mục và đầu ra Facebook / Threads / X**. Đây là mốc chức năng, chưa ấn định ngày phát hành.
+
+## 1. Kết quả cần đạt
+
+Một người vận hành có thể chọn nhiều tin, biên tập thành một bản tin có nguồn rõ ràng, chuẩn bị phiên bản riêng cho từng mạng xã hội, duyệt đúng nội dung cuối cùng, sao chép để tự đăng và ghi nhận kết quả riêng từng kênh.
+
+Luồng đích:
+
+1. Lấy tin → lọc theo chủ đề / khoảng thời gian → chọn khoảng 3–5 tin.
+2. Sắp xếp các mục → đọc nguồn → bổ sung ghi chú kiểm chứng.
+3. Chuẩn bị gói tư liệu nhiều mục → người dùng chuyển sang ChatGPT nếu muốn → nhập lại kết quả hoặc tự viết.
+4. Biên tập bản tin gốc → chuẩn bị các biến thể Facebook / Threads / X.
+5. Xem chính xác văn bản sẽ xuất, độ dài và các đoạn trong chuỗi bài.
+6. Duyệt từng biến thể → sao chép / tải văn bản → tự đăng trên nền tảng.
+7. Ghi nhận URL từng bài / đoạn và số liệu quan sát được, không làm lẫn giữa các kênh.
+
+**Định nghĩa “tổng hợp” ở bản 0.4:** có cấu trúc bản tin nhiều mục, gói tư liệu và đầu ra đa kênh; nội dung do người dùng tự viết hoặc nhận qua bước AI thủ công. Không hứa có chức năng một nút tự đọc toàn văn, tự viết đúng sự thật và tự đăng.
+
+## 2. Hiện trạng đã kiểm tra
+
+| Hạng mục | Hiện tại | Hệ quả đối với mục tiêu |
+| --- | --- | --- |
+| Thu thập | RSS/API/web, nguồn tùy chỉnh, chống trùng cơ bản | Có đầu vào, nhưng chưa gom theo sự kiện hoặc tạo bản tin |
+| Tạo draft | Một `article_id`; tiêu đề/nội dung ban đầu rỗng | Chưa chọn nhiều bài để tổng hợp |
+| Gói tư liệu | Prompt cho một bài Page khoảng 250–400 từ | Người dùng phải chuyển đi/nhập lại; chưa có ba định dạng |
+| Duyệt | Checklist, revision, hash, sửa bài làm mất duyệt | Cần giữ và mở rộng sang từng biến thể |
+| Xuất | Một chuỗi tiêu đề + nội dung + danh sách URL | Chưa đếm toàn bộ đầu ra theo nền tảng hoặc chia chuỗi |
+| Ghi nhận đăng | Một `post_url`, chỉ nhận Facebook | Chưa quản lý Threads/X và nhiều lượt đăng |
+| Giao diện | Ô URL không được đặt lại khi đổi draft | Có thể ghi nhận bài B bằng URL còn sót của bài A |
+
+Bằng chứng từ phiên review ngày 03/11/2026:
+
+- Bộ hiện có: **88/88 kiểm thử đạt**, Python 3.13.13; không có nghĩa là các chức năng dự kiến trong kế hoạch đã được kiểm thử.
+- Probe RSS chỉ đọc, không ghi DB vận hành: **4/4 nguồn**, 70 mục; 7 trích đoạn Google ngắn hơn 80 ký tự. Đây là kiểm tra đầu nối, không xác minh chất lượng hay sự thật của 70 mục.
+- Lỗi URL đã tái hiện bằng cách thực thi các hàm giao diện hiện có với DOM giả trong Node; chưa có kiểm thử hồi quy giao diện được lưu vào repo cho lỗi này.
+- Chưa thử đăng bằng tài khoản Facebook/Threads/X thật, chưa xác minh quyền tài khoản hoặc điều kiện kiếm tiền.
+
+Điểm mã nguồn để bắt đầu; số dòng có thể thay đổi sau triển khai:
+
+- [service.py](../newsroom/service.py): `create_draft` khoảng dòng 231, `approve` 329, `export` 354, `mark_published` 360, `packet` 385.
+- [app.js](../newsroom/static/app.js): `setDraft` khoảng dòng 224–257, gửi URL khoảng dòng 558–562.
+- [feeds.py](../newsroom/feeds.py): `plain_text`, `parse_feed`, `rank_article`.
+- [collection_service.py](../newsroom/collection_service.py): `init_collection`, thu thập bằng chứng và quản lý phiên bản DB.
+- [__main__.py](../newsroom/__main__.py): `restore` đang chấp nhận schema 1/2/3.
+- [test_workflow.py](../tests/test_workflow.py), [test_server.py](../tests/test_server.py): hợp đồng hiện có cần bảo toàn.
+
+## 3. Phạm vi và nguyên tắc
+
+### 3.1. Có trong đợt nâng cấp
+
+- Sửa lỗi URL bị giữ giữa các bản nháp.
+- Chọn nhiều bài và sắp xếp bản tin nhiều mục; giữ nguồn theo từng mục.
+- Gói tư liệu có cấu trúc cho thao tác AI thủ công; biên tập được khi không dùng AI.
+- Nội dung, đích đăng, revision và duyệt riêng cho Facebook / Threads / X.
+- Preview, kiểm tra toàn bộ văn bản cuối, chia chuỗi có kiểm soát, copy và tải `.txt`.
+- Nhật ký đăng thủ công theo biến thể / đoạn; số liệu theo lượt đăng.
+- Migration, backup/restore, kiểm thử và hướng dẫn sử dụng tương ứng.
+
+### 3.2. Không tự mở rộng trong đợt này
+
+- Không OAuth, API đăng bài, lịch tự đăng, tự đăng nhập hoặc điều khiển tài khoản mạng xã hội.
+- Không gọi model trả phí để viết nội dung; không bật/tăng quyền hoặc hạn mức Hermes.
+- Không tải toàn văn hàng loạt, không nới robots/paywall/phạm vi nguồn để lấy đủ tin.
+- Không tự tạo ảnh/video, carousel, text attachment Threads hoặc bài dài theo gói tài khoản X.
+- Không chứng nhận bản quyền, tính nguyên bản, khả năng kiếm tiền hoặc sự thật của nội dung.
+- Không đưa máy chủ ra LAN/Internet, chuyển sang nhiều người dùng hoặc yêu cầu Docker/WSL.
+- Không tự sửa DB chính, commit/push hoặc đăng bài thật chỉ vì đã có kế hoạch.
+
+### 3.3. Các lựa chọn mặc định đề xuất
+
+| ID | Lựa chọn | Ghi chú |
+| --- | --- | --- |
+| D01 | Giữ giao diện HTML/CSS/JS và backend Python hiện tại | Không đổi framework để làm đợt này |
+| D02 | Bản tin mới có 1–10 mục, gợi ý 3–5 khi tổng hợp; luồng một bài cũ vẫn dùng được | Cho phép bản một mục để chuyển bài cũ sang đầu ra đa kênh; đây không phải giới hạn nền tảng |
+| D03 | Mỗi mục tối đa 3 nguồn, toàn bản tin tối đa 20 URL nguồn khác nhau | Tách khỏi giới hạn 8 nguồn của draft cũ; không cắt nguồn âm thầm |
+| D04 | Thêm bảng schema 4, giữ dữ liệu và workflow legacy | Không chuyển đổi hàng loạt hoặc tính lại hash bài cũ |
+| D05 | Mỗi biến thể thuộc một nền tảng và một nhãn đích đăng | Muốn đích khác: tạo bản sao chưa duyệt; không cần đăng nhập tài khoản |
+| D06 | Duyệt toàn bộ các đoạn của một biến thể cùng lúc | Sửa một đoạn làm mất duyệt của biến thể đó |
+| D07 | Bản đã ghi nhận đăng được giữ nguyên | Đính chính nhật ký bằng sự kiện có lý do; không xóa dấu vết |
+| D08 | Bộ đếm/renderer phía server là chuẩn | UI không được tự quyết định một bài có đủ điều kiện xuất hay không |
+| D09 | Node chỉ dùng khi phát triển/kiểm thử | Không biến thành điều kiện chạy ứng dụng thông thường |
+
+Những lựa chọn cần khảo sát kỹ thuật trước khi đóng thiết kế: thư viện/thuật toán đếm X; cách đếm Unicode Threads; mẫu URL bài đăng hợp lệ của từng nền tảng. Ghi kết quả, nguồn và ngày xác minh tại mục 12. Nếu chưa chứng minh được bộ đếm đúng, chưa tuyên bố nền tảng đó sẵn sàng phát hành.
+
+## 4. Thiết kế chức năng
+
+### 4.1. Sửa lỗi liên kết — phát hành độc lập 0.3.1
+
+- Khi chọn draft khác: xóa URL đang nhập của draft cũ; bài đã ghi nhận hiển thị URL lấy từ bản ghi của chính nó.
+- Không dùng giá trị DOM còn sót làm dữ liệu của bài mới.
+- Thay đổi URL chưa gửi phải được quản lý rõ là dữ liệu chưa lưu; chuyển bài cần cảnh báo phù hợp, không giữ lẫn sang bài kế tiếp.
+- Trong hộp xác nhận, hiển thị tiêu đề và URL sẽ ghi nhận; ở bản đa kênh hiển thị thêm nền tảng, đích và số đoạn.
+- URL rỗng/không hợp lệ phải bị chặn phía server; lỗi không tăng số bài đã đăng.
+- Không thay đổi schema hoặc nới điều kiện duyệt trong hotfix.
+
+### 4.2. Chọn tin và soạn bản tin gốc
+
+- Hộp tin có checkbox, số tin đã chọn, nút xóa lựa chọn và “Tạo bản tin tổng hợp”. Bộ lọc không âm thầm bỏ lựa chọn đang ẩn.
+- Cửa sổ thời gian: 24 giờ / 7 ngày / tùy chọn, theo ngày nguồn; hiển thị rõ `published`, `updated`, `unknown`.
+- Tin thiếu ngày, ngày tương lai hoặc ngoài cửa sổ không được tự gắn nhãn “tin mới hôm nay”; có thể thêm chủ động kèm cảnh báo.
+- Bản tin có ngày biên tập, tiêu đề, lời mở đầu, các mục theo thứ tự và phần kết tùy chọn. Lưu thời điểm bằng UTC, hiển thị giờ Việt Nam.
+- Mỗi mục có tiêu đề ngắn, nội dung tóm tắt do người dùng biên tập, ý nghĩa thực tế, giới hạn cần biết và nguồn liên quan.
+- Dùng nút Lên/Xuống để đổi thứ tự bằng bàn phím; kéo-thả chỉ là tiện ích bổ sung.
+- Một article không được thêm hai lần trong cùng bản tin. Cảnh báo khi đã dùng ở bản tin khác, không cấm tái sử dụng cho nội dung cập nhật.
+- Không tự gom sự kiện theo ngữ nghĩa. Bản tối thiểu cho bổ sung nguồn vào một mục và bỏ mục trùng bằng thao tác người dùng; gộp/tách mục tự động để sau.
+- Lưu từng mục có revision, không gửi lại toàn bộ kho tin. Giữ request tối đa 128 KB; kiểm tra kích thước UTF-8 trước gửi và phía server.
+
+### 4.3. Nguồn, kiểm chứng và gói tư liệu
+
+- Mỗi nguồn có ID ổn định, URL chuẩn hóa, tên nguồn, tiêu đề, trích đoạn, ngày nguồn/loại ngày, ngày lấy, phương pháp và phạm vi `excerpt`; lưu hash khi thực sự có.
+- Snapshot tư liệu thuộc bản tin. Refresh Hộp tin không cập nhật âm thầm bản tin hoặc biến thể đã duyệt.
+- Ghi chú kiểm chứng tách khỏi trích đoạn gốc. Nếu cho sửa trích đoạn, lưu rõ bản sửa thủ công và không dùng hash gốc để mô tả bản sửa.
+- Cảnh báo trích đoạn rỗng/ngắn, dữ kiện thiếu và tư liệu cũ. Ngưỡng ngắn, ví dụ dưới 80 ký tự, chỉ hỗ trợ thao tác, không phải điểm tin cậy.
+- Mỗi mục có checklist kiểm tra các khẳng định chính; ghi nguồn đối chiếu hoặc lý do chỉ dùng nguồn hãng. Không coi hai tên miền mặc nhiên là hai nguồn độc lập.
+- Giữ nhãn “theo hãng” khi chỉ có thông báo của hãng; không suy diễn thành đánh giá độc lập hoặc trải nghiệm thực tế.
+- Tư liệu gửi AI được phân cách là dữ liệu không đáng tin cậy, không phải chỉ dẫn. Prompt yêu cầu giữ ID mục/nguồn, không tự thêm dữ kiện và để danh sách điều cần kiểm tra riêng khỏi bài đăng.
+- Gói tư liệu tối đa đề xuất 64 KiB UTF-8. Nếu vượt, hiển thị phần nào quá lớn để người dùng chọn/bổ sung ghi chú ngắn hơn; không cắt giữa câu hoặc bỏ nguồn mà không báo.
+- Có thể tự viết toàn bộ mà không mở AI. Nút chuẩn bị tư liệu không tự tạo bài hoàn chỉnh hoặc gọi dịch vụ ngoài.
+- Bản đầu dùng biểu mẫu nhập nội dung có cấu trúc, không phụ thuộc parser tự hiểu mọi định dạng trả lời của ChatGPT; import JSON AI có thể làm sau.
+
+### 4.4. Biến thể theo nền tảng
+
+| Nền tảng | Đầu ra bản 0.4 | Quy tắc |
+| --- | --- | --- |
+| Facebook | Một bài có mở đầu, từng mục và nguồn | Giới hạn biên tập nội bộ; không quảng bá giới hạn 12.000 ký tự hiện có là giới hạn chính thức của Facebook |
+| Threads | Một bài ngắn hoặc chuỗi bài | Hồ sơ bài thông thường 500 ký tự; chưa hỗ trợ text attachment dài |
+| X | Một bài ngắn hoặc chuỗi bài | Hồ sơ chuẩn 280 đơn vị ký tự theo quy tắc weighted count, không mặc định tài khoản có quyền bài dài |
+
+Nguồn đối chiếu ngày 03/11/2026: [Meta về bài Threads và text attachment](https://about.fb.com/news/2025/09/attach-text-threads-posts-share-longer-perspectives/), [X về cách đếm ký tự](https://docs.x.com/fundamentals/counting-characters). Đây là căn cứ cho hồ sơ đầu ra, không xác nhận quyền/tính năng của tài khoản người dùng. Kiểm tra lại trước phát hành.
+
+- Mỗi biến thể có nội dung và đích đăng riêng; lưu Facebook không sửa Threads/X.
+- “Chuẩn bị biến thể” tạo khung có nhãn chưa biên tập hoặc gói yêu cầu viết lại; không tự rút gọn bằng cách cắt chữ và không giả là đã viết hoàn chỉnh.
+- Người dùng có thể chỉ làm một hoặc hai nền tảng; không bắt tạo đủ ba để xuất.
+- Tạo lại biến thể không ghi đè nội dung đã chỉnh. Cho xem khác biệt / tạo bản sao; cần xác nhận rõ nếu thay phần đang soạn.
+- Mỗi đoạn liên kết tới các mục/nguồn thực sự được sử dụng. Mỗi mục xuất hiện trong biến thể phải có nguồn truy vết, không chỉ một danh sách nguồn toàn bản tin mất quan hệ.
+- Cho phép bỏ một mục khỏi phiên bản ngắn nhưng phải hiển thị rõ; không bỏ nguồn của mục còn được giữ để vừa độ dài.
+
+### 4.5. Preview, đếm ký tự và chia chuỗi
+
+- Có một renderer chính thức tạo danh sách `rendered_posts`; preview, copy, `.txt`, kiểm tra và hash duyệt cùng dùng danh sách này.
+- Đếm chuỗi cuối cùng gồm tiêu đề nếu có, nội dung, khoảng trắng, xuống dòng, URL nguồn và đánh số `1/N`. Không chỉ đếm ô body.
+- X cần xử lý đúng chuẩn hóa Unicode, emoji và URL; không dùng `len()` hoặc `String.length` làm bộ đếm thay thế. Lựa chọn triển khai phải qua bộ fixture tham chiếu và kiểm tra giấy phép/phụ thuộc.
+- Với Threads, xác minh cách tính ký tự ghép/emoji trước khi chốt; không sao chép quy tắc đếm của X sang.
+- Server kiểm tra lại lúc duyệt, xuất và ghi nhận; UI hiển thị kết quả/phiên bản chính sách từ server. Có thể gọi preview có debounce, không bắt buộc hai bộ thuật toán độc lập.
+- Chia theo mục/đoạn/câu; không cắt URL hoặc cụm ký tự đang ghép. Đây là thao tác phân đoạn, không phải tóm tắt ngữ nghĩa.
+- Tính lại số đoạn và độ dài cho tới khi đánh số ổn định, gồm trường hợp 9 → 10 đoạn. Giới hạn nội bộ đề xuất tối đa 20 đoạn/biến thể.
+- Nếu không chia được mà vẫn giữ nghĩa/nguồn, báo rõ đoạn cần người dùng viết ngắn lại. Không tự xóa nội dung để làm bộ đếm đạt.
+- Preview mô tả văn bản cuối, không tuyên bố mô phỏng chính xác bố cục giao diện Facebook/Threads/X.
+- Sao chép từng đoạn; tải `.txt` UTF-8 có ranh giới đoạn rõ. Tiêu đề kỹ thuật/metadata của file không được vô tình đưa vào nút copy bài.
+- Khi chính sách nền tảng thay đổi: bản chưa đăng cần kiểm tra/duyệt lại; bản đã ghi nhận giữ snapshot cũ và thông tin chính sách thời điểm duyệt.
+
+### 4.6. Duyệt và nhật ký đăng
+
+- Duyệt theo biến thể, không một nút duyệt chung cả ba nền tảng.
+- Chặn khi mục được sử dụng chưa biên tập/thiếu nguồn, còn cờ chưa kiểm chứng, thiếu đích đăng, thiếu checklist, đoạn trống hoặc vượt giới hạn.
+- Hash bao gồm đầu ra chính xác theo thứ tự, nền tảng, đích, nguồn/snapshot liên quan, checklist, revision bản tin, phiên bản renderer và chính sách đầu ra.
+- Sửa một biến thể chỉ hủy duyệt biến thể đó. Sửa bản tin gốc làm tất cả biến thể chưa ghi nhận đăng bị đánh dấu cần cập nhật/duyệt lại; không tự ghi đè nội dung của chúng.
+- Các biến thể đã ghi nhận ít nhất một đoạn bị khóa toàn bộ đầu ra; sửa tiếp phải tạo bản sao chưa duyệt. Cho tiếp tục ghi các đoạn còn lại của snapshot đã khóa.
+- Khóa nội dung là mốc bất biến `locked_at`/`ever_recorded`, độc lập số URL đang có hiệu lực. Hủy/đính chính toàn bộ lượt ghi nhận không mở khóa nội dung để sửa lại.
+- Khi bản tin gốc hoặc policy thay đổi sau khi đã ghi nhận một phần: ghi URL cho bài người dùng đã đăng vẫn đối chiếu snapshot đã khóa, không đối chiếu nội dung cha hiện tại. Trước khi tiếp tục xuất đoạn chưa đăng, kiểm tra policy hiện hành; không còn phù hợp thì yêu cầu tạo bản sao/chỉnh/duyệt lại. Không sửa snapshot cũ để làm nó vừa giới hạn mới.
+- Tách xem/tải snapshot lưu trữ khỏi xuất dưới nhãn “sẵn sàng đăng”. Bản lưu trữ có nhãn lịch sử và policy thời điểm duyệt; không được dùng đường lưu trữ để vượt cổng kiểm tra của đầu ra mới.
+- Không lấy trạng thái của Facebook làm trạng thái đăng của Threads/X. Trạng thái tổng hợp của bản tin là thông tin suy ra, không là cổng chặn mọi kênh.
+- Với chuỗi bài, lưu URL từng đoạn và thời gian người dùng khai báo; phân biệt chưa ghi nhận / đã ghi nhận một phần / đã ghi nhận đủ. URL đoạn đầu là liên kết đại diện.
+- URL phải đúng HTTPS, hostname và hình dạng bài đăng của nền tảng; chống tên miền giả dạng, credentials, URL trang chủ/profile. Không truy cập URL để tự xác minh.
+- Xác minh và ghi tài liệu các dạng URL thực tế trước khi viết allowlist; hỗ trợ alias chính thức đã kiểm tra, không chỉ kiểm tra chuỗi chứa `facebook`/`threads`/`x`.
+- Yêu cầu ghi nhận có khóa chống lặp; cùng khóa và payload trả lại kết quả cũ, cùng khóa nhưng payload khác phải conflict. URL chuẩn hóa đang có hiệu lực chỉ thuộc một đoạn/lượt ghi nhận; trùng giữa các đoạn hoặc biến thể phải bị chặn kèm liên kết tới bản ghi cũ.
+- Nếu nhập sai URL: thêm sự kiện đính chính/hủy ghi nhận có lý do, không sửa/xóa bằng chứng lịch sử. Không tuyên bố việc này xóa hoặc chỉnh bài ngoài nền tảng.
+- Đính chính/hủy giải phóng quyền gắn URL cũ đang có hiệu lực nhưng giữ nguyên lịch sử; URL thay thế phải chưa được bản khác sử dụng. Kiểm tra cả URL legacy ở lớp đọc/overlay, không ghi lại bảng cũ. Nếu legacy đã có trùng, hiển thị để đối soát, không tự xóa hoặc làm migration thất bại.
+- Số liệu gắn với lượt đăng, có `observed_at`; số chưa biết là `null`, không tự điền `0`. Nhãn chỉ số riêng nền tảng; không bắt X phải có cùng chỉ số với Facebook.
+- Dashboard tách số bản tin gốc, số biến thể và số bài/đoạn đã ghi nhận; không tính một bản tin đăng ba kênh là ba bản tin nguyên bản.
+
+## 5. Thiết kế dữ liệu và tổ chức mã đề xuất
+
+Tên dưới đây là hợp đồng thiết kế dự kiến, chưa phải bảng/module đã tồn tại.
+
+| Bảng mới | Trách nhiệm chính | Ràng buộc |
+| --- | --- | --- |
+| `bulletins` | Tiêu đề, ngày biên tập, lời mở/kết, revision, thời điểm tạo/sửa | Không dùng một `published` chung cho mọi nền tảng |
+| `bulletin_items` | Thứ tự, nội dung từng mục, article nguồn và snapshot/ghi chú/checklist | ID mục ổn định; nguồn nằm trong snapshot có ID riêng; article tham chiếu không thay thế snapshot |
+| `content_variants` | Nền tảng, nhãn đích, nội dung/đoạn và liên kết mục/nguồn, revision bản tin gốc, revision riêng, `locked_at` | Không ghi đè biến thể từng ghi nhận; có trạng thái cần xem lại |
+| `variant_approvals` | Snapshot đầu ra và tư liệu đã duyệt, hash, version renderer/policy, thời gian | Bất biến; phê duyệt mới tạo bản ghi mới |
+| `publications` | Biến thể + approval + chỉ số đoạn, URL, thời gian, idempotency key | Khóa chống lặp; URL hiệu lực duy nhất; tham chiếu đúng snapshot chứ không nội dung đang sửa |
+| `publication_events` | Ghi nhận/đính chính/hủy ghi nhận, lý do, liên kết bản ghi | Append-only; giữ lịch sử URL cũ |
+| `publication_metrics` | Chỉ số quan sát, loại chỉ số, thời điểm, ghi chú | Theo publication; chấp nhận chưa có dữ liệu |
+| `bulletin_history` | Sự kiện sửa mục/đổi thứ tự/tạo biến thể/hủy duyệt | Có entity ID + revision, không dựa vào state UI |
+
+Giữ nguyên `drafts`, `history`, `metrics` và định dạng xuất legacy. Cung cấp thao tác **Tạo bản sao sang quy trình mới** khi cần; bản sao chưa duyệt, nguồn/bản cũ không bị sửa. Chưa cần tự chuyển mọi draft cũ thành bản tin nhiều mục.
+
+Trạng thái tiến độ thông thường: `draft` → `approved` → `partially_recorded` → `recorded`; biến thể một đoạn chuyển thẳng từ approved sang recorded. Tách khóa nội dung bất biến khỏi tiến độ nhật ký hiện hành: đính chính có thể giảm số đoạn hiệu lực nhưng không được đưa nội dung đã khóa về draft có thể sửa. Approval cũ vẫn còn để kiểm toán, nhưng không còn đủ điều kiện cho lần xuất mới của nội dung đã sửa.
+
+Tách module theo trách nhiệm, không viết toàn bộ tính năng vào `service.py`:
+
+- `newsroom/migrations.py`: sở hữu phiên bản DB và nâng cấp có giao dịch.
+- `newsroom/bulletins.py`: lưu bản tin/mục/snapshot và xung đột revision.
+- `newsroom/variants.py`: nội dung từng nền tảng, quan hệ với bản tin gốc và duyệt.
+- `newsroom/social_formats.py`: chính sách, renderer, validator và phân đoạn.
+- `newsroom/publications.py`: nhật ký đăng, idempotency, đính chính và chỉ số.
+- `newsroom/static/`: helper form/preview/selection có thể kiểm thử; giữ `app.js` làm điều phối giao diện.
+
+Các mutation phải dùng revision và giao dịch phù hợp, kiểm tra lại dưới khóa. Bật/kiểm tra foreign key trên từng kết nối khi thêm ràng buộc; tránh cascade xóa lịch sử hoặc snapshot đã duyệt. Không đưa nguồn nội dung vào `innerHTML` hoặc thực thi HTML/JS do AI trả về.
+
+### API nội bộ dự kiến
+
+| Nhóm | Endpoint / thao tác dự kiến | Hợp đồng |
+| --- | --- | --- |
+| Bản tin | `POST /api/bulletins`, `GET /api/bulletins/:id` | Tạo từ danh sách article đã chọn; trả snapshot có revision |
+| Mục | `POST /api/bulletins/:id/items`, `POST /api/bulletins/:id/reorder` | Lưu/thêm/bỏ có kiểm soát, thứ tự không trùng hoặc mất mục |
+| Tư liệu | `GET /api/bulletins/:id/packet` | Chỉ trả gói văn bản; không gọi model |
+| Biến thể | `POST /api/bulletins/:id/variants`, `POST /api/variants/:id/save` | Không ghi đè biến thể khác, revision bắt buộc |
+| Preview | `POST /api/variants/:id/preview` | Tính đầu ra không lưu/duyệt; trả counts, lỗi và policy version |
+| Duyệt/xuất | `POST /api/variants/:id/approve`, `GET /api/variants/:id/export` | Kiểm tra hash và nội dung chính xác; không xuất bản chưa duyệt như bản sẵn đăng |
+| Nhật ký | `POST /api/variants/:id/publications` | Chỉ ghi nhận lời xác nhận thủ công; không publish ra mạng |
+| Đính chính | `POST /api/publications/:id/corrections` | Ghi sự kiện, lý do, không viết lại lịch sử |
+| Chỉ số | `POST /api/publications/:id/metrics` | Quan sát thủ công, kiểm tra kiểu/range/thời điểm |
+
+Chốt chi tiết request/response và mã lỗi bằng test hợp đồng trước code UI. Tất cả endpoint giữ session/CSRF/Origin/Host, giới hạn kích thước và xử lý conflict hiện có. Không đưa toàn bộ snapshot vào `/api/state`; trả tóm tắt và tải chi tiết theo ID để tránh state tăng vô hạn.
+
+## 6. Migration, backup và rollback — cổng bắt buộc
+
+Rủi ro hiện có cần xử lý trước khi thêm schema 4:
+
+- `Newsroom.__init__` chỉ chấp nhận phiên bản DB 0/1/2/3.
+- `CollectionMixin.init_collection()` hiện chạy `PRAGMA user_version=3`; nếu không tách, khởi động có thể ghi sai mốc schema mới.
+- `restore()` cũng chỉ nhận schema 1/2/3.
+- Không giả định `executescript()` nằm trong transaction hiện tại là tự động atomic; thiết kế transaction phải rõ và có test lỗi giữa các bước.
+
+Quy trình đề xuất:
+
+1. Có một migration runner sở hữu version; các mixin không tự ghi `user_version`.
+2. Với DB cũ: backup bằng SQLite backup API, kiểm tra integrity và đóng handle trước khi thay đổi schema. Backup lỗi thì dừng nâng cấp.
+3. Thực hiện thay đổi cần thiết trong transaction rõ ràng; đặt schema version cuối cùng. Lỗi thì rollback, không tiếp tục mở app như đã thành công.
+4. Giữ nguyên từng byte payload/hash/export, revision, status, lịch sử, URL và metrics legacy; không tự duyệt lại, không bật nguồn, không chạy collection/model trong migration.
+5. Bao phủ DB mới và các đường 1/2/3 → 4. DB có version mới hơn ứng dụng phải bị từ chối rõ ràng, không sửa hoặc hạ version.
+6. Khởi động lại schema 4 không lặp backfill, không tạo bản sao dữ liệu hoặc backup migration liên tục.
+7. Restore cho schema 4 kiểm tra bảng/ràng buộc cần thiết; đích luôn là thư mục mới ngoài OneDrive, không ghi đè DB chính.
+8. Rollback phần mềm: dừng app, phục hồi backup trước nâng cấp vào thư mục mới và chạy mã phù hợp schema đó. Không hạ schema trực tiếp, không chạy code cũ trên DB 4.
+9. Backup trước nâng cấp không chứa công việc phát sinh sau nâng cấp; trước rollback phải giữ riêng DB 4 và bản xuất mới. Không hứa rollback tự hợp nhất dữ liệu mới vào schema cũ.
+
+Chỉ thử migration trên fixture và bản sao được phép trước. Chuyển sang dữ liệu vận hành cần một bước triển khai riêng: người dùng lưu bài, dừng phiên cũ, có backup đã kiểm tra và biết đường dẫn phục hồi.
+
+## 7. Backlog theo giai đoạn
+
+Ưu tiên: **P0** = bảo toàn dữ liệu/đúng bản duyệt; **P1** = cần cho bản 0.4; **P2** = cải thiện sau lõi. Đây là thứ tự triển khai, không phải nhãn mức độ lỗi của mọi tính năng còn thiếu.
+
+Quy mô S/M/L là tương đối, không phải cam kết số ngày. Mặc định mọi checkbox triển khai còn trống. Người thực hiện cập nhật ID task, trạng thái, commit và bằng chứng; không đánh dấu xong chỉ vì đã viết code.
+
+| Giai đoạn | Đầu ra | Phụ thuộc | Quy mô | Trạng thái |
+| --- | --- | --- | --- | --- |
+| G0 | Hotfix URL, có thể phát hành 0.3.1 riêng | Không | S | Chưa bắt đầu |
+| G1 | Hợp đồng dữ liệu, policy và migration an toàn | Review kế hoạch | M | Chưa bắt đầu |
+| G2 | Bản tin nhiều mục + nguồn + gói tư liệu | G1 | L | Chưa bắt đầu |
+| G3 | Ba biến thể, preview, đếm/chia đoạn | G1, G2 | L | Chưa bắt đầu |
+| G4 | Duyệt/xuất đúng snapshot | G2, G3 | M | Chưa bắt đầu |
+| G5 | Nhật ký đa kênh, chống lặp, chỉ số | G0, G4 | M | Chưa bắt đầu |
+| G6 | Hồi quy, QA Windows, tài liệu và pilot | G0–G5 | M | Chưa bắt đầu |
+
+### G0 — Hotfix URL
+
+- [ ] **FIX-01 / P0:** Viết test tái hiện URL A tràn sang B, cả trường hợp đã ghi nhận và đang nhập dở.
+- [ ] **FIX-02 / P0:** Bind/reset trường URL theo draft; hiển thị đúng đường dẫn đã lưu, bổ sung xác nhận có ngữ cảnh.
+- [ ] **FIX-03 / P0:** Chạy hồi quy backend + test JS + smoke thật trên dữ liệu thử; cập nhật bằng chứng 0.3.1.
+
+Gate: URL-01…04 tại mục 8 đạt, không migration, bản xuất legacy không đổi.
+
+### G1 — Hợp đồng và nền dữ liệu
+
+- [ ] **BASE-01 / P0:** Chụp fixture legacy gồm draft/approved/published, history, metrics và nguồn tùy chỉnh; lưu expected hash/export để đối chiếu.
+- [ ] **BASE-02 / P1:** Chốt D02/D03, kiểu dữ liệu, trạng thái, hợp đồng API và giới hạn request/packet; ghi quyết định tại mục 12.
+- [ ] **BASE-03 / P1:** Khảo sát bộ đếm X/Threads và URL từng nền tảng; chọn triển khai/licensing/dependency, lưu fixture có version.
+- [ ] **DB-01 / P0:** Tách migration runner, bỏ quyền ghi schema version khỏi mixin; thêm schema 4 và ràng buộc.
+- [ ] **DB-02 / P0:** Backup/restore/rollback và fault injection, startup idempotent, từ chối schema tương lai.
+
+Gate: MIG-01…05 đạt; không làm thay đổi dữ liệu legacy; policy chưa rõ phải được ghi là chưa đóng.
+
+### G2 — Bản tin tổng hợp
+
+- [ ] **DIG-01 / P1:** UI chọn nhiều tin, giữ lựa chọn khi lọc, đếm và giới hạn lựa chọn.
+- [ ] **DIG-02 / P1:** CRUD bản tin/mục, thứ tự, snapshot nguồn, revision và lịch sử.
+- [ ] **DIG-03 / P1:** Cảnh báo tuổi tin/trích đoạn, ghi chú kiểm chứng riêng, nguồn theo từng mục.
+- [ ] **DIG-04 / P1:** Gói tư liệu nhiều mục và biểu mẫu nhập lại kết quả; hoạt động khi không dùng AI.
+
+Gate: NEWS-01…06 và SOURCE-01…03 đạt; chưa tuyên bố đầu ra đa kênh hoàn chỉnh ở giai đoạn này.
+
+### G3 — Đầu ra từng nền tảng
+
+- [ ] **FMT-01 / P1:** Tạo/lưu độc lập các biến thể, đích đăng và quan hệ với revision bản tin; không ghi đè bản đã sửa.
+- [ ] **FMT-02 / P1:** Renderer chuẩn phía server và bộ đếm theo policy đã xác minh; UI preview chính chuỗi trả về.
+- [ ] **FMT-03 / P1:** Chia chuỗi theo ranh giới hợp lý, kiểm tra lại numbering/nguồn; trường hợp khó yêu cầu biên tập thủ công.
+- [ ] **FMT-04 / P1:** Xem/sửa từng đoạn, báo mục bị lược khỏi phiên bản ngắn; bảo đảm truy vết nguồn.
+
+Gate: VAR-01…04, TEXT-01…06 đạt; không dùng độ dài body làm bằng chứng bài vừa giới hạn.
+
+### G4 — Duyệt và xuất
+
+- [ ] **APR-01 / P0:** Approval snapshot/hash/version, checklist theo mục và biến thể, block các trạng thái chưa đủ điều kiện.
+- [ ] **APR-02 / P0:** Vô hiệu duyệt đúng phạm vi khi sửa nội dung/nguồn/đích/thứ tự/policy; giữ snapshot đã ghi nhận.
+- [ ] **APR-03 / P1:** Copy từng đoạn, `.txt` UTF-8, fallback thủ công; export chỉ từ snapshot hợp lệ.
+- [ ] **APR-04 / P0:** Bảo vệ conflict/race: sửa khi đang duyệt/xuất/ghi nhận không tạo hash hoặc nhật ký sai.
+
+Gate: APPROVE-01…06 đạt; preview/copy/file/approval tương đương chính xác ở cấp đoạn văn bản.
+
+### G5 — Nhật ký đa kênh
+
+- [ ] **PUB-01 / P1:** URL validator theo nền tảng và từng đoạn, nhãn đích rõ ràng, trạng thái ghi nhận một phần.
+- [ ] **PUB-02 / P0:** Idempotency, chống URL trùng giữa biến thể và khóa snapshot từ lần ghi nhận đầu tiên.
+- [ ] **PUB-03 / P1:** Đính chính có lịch sử; không lẫn URL khi chuyển bài/kênh/đoạn.
+- [ ] **PUB-04 / P1:** Chỉ số theo publication với thời điểm quan sát và `null` khi chưa biết; thống kê bản tin/lượt đăng tách biệt.
+
+Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi tài khoản mạng xã hội.
+
+### G6 — Nghiệm thu và tài liệu
+
+- [ ] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass.
+- [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
+- [ ] **QA-03 / P0:** Migration/restore end-to-end trên fixture và bản sao được phép; xác nhận đường lui và dữ liệu sau nâng cấp.
+- [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.
+- [ ] **PILOT-01 / P1:** Làm ít nhất ba bản tin thử với số mục/ngôn ngữ/độ dài khác nhau; ghi thời gian thao tác và vấn đề, không tự đăng công khai.
+- [ ] **REL-01 / P0:** Chốt checklist mục 10, tổng hợp bằng chứng và phần chưa kiểm chứng trước khi đề nghị triển khai bản chính.
+
+## 8. Ma trận kiểm thử bắt buộc
+
+| ID | Tình huống | Kết quả bắt buộc |
+| --- | --- | --- |
+| URL-01 | Ghi URL A, ghi nhận A, mở B đã duyệt | B có ô URL rỗng |
+| URL-02 | URL A nhập dở, chuyển B sau xác nhận | Không mang URL A sang B; không ghi nhận tự động |
+| URL-03 | Quay lại A đã ghi nhận | Hiển thị URL đã lưu của A, không sửa bản ghi |
+| URL-04 | URL thiếu/sai | Server từ chối; không đổi trạng thái/số lượt đăng |
+| MIG-01 | DB mới và schema 1/2/3 → 4 | Đúng schema, integrity; payload/hash/export/history/metrics cũ không đổi |
+| MIG-02 | Backup lỗi / lỗi giữa migration | Dừng an toàn, không schema nửa chừng, có đường phục hồi |
+| MIG-03 | Khởi động schema 4 hai lần | Không hạ version, không backfill/trùng dữ liệu |
+| MIG-04 | Restore schema 4, đích có sẵn, DB hỏng | Chỉ restore hợp lệ vào thư mục mới; không ghi đè |
+| MIG-05 | DB version cao hơn mã đang chạy | Từ chối rõ ràng, không sửa DB |
+| NEWS-01 | 0, 1, 2, 10, 11 mục; clone bài cũ; ID trùng/không tồn tại | 1–10 hợp lệ, clone một mục chưa duyệt; lỗi không lưu một phần |
+| NEWS-02 | Chọn rồi lọc/tìm kiếm/chuyển nhóm | Giữ lựa chọn, cho biết cả mục đang ẩn |
+| NEWS-03 | Thứ tự C → A → B, restart | Lưu/prompt/preview giữ đúng thứ tự |
+| NEWS-04 | Bỏ mục dùng chung URL nguồn | Không mất nguồn của mục còn lại |
+| NEWS-05 | Ngày UTC sát nửa đêm Việt Nam; unknown/future | Phân loại đúng, không giả ngày mới |
+| NEWS-06 | Request/packet đúng ngưỡng và vượt ngưỡng UTF-8 | Không truncate âm thầm, không ghi một phần |
+| SOURCE-01 | Refresh nguồn sau khi tạo/duyệt | Snapshot không thay âm thầm |
+| SOURCE-02 | Sửa ghi chú hoặc trích đoạn | Tách ghi chú; bản sửa không mang hash xuất xứ giả |
+| SOURCE-03 | Trích đoạn ngắn, nguồn có HTML/script/chỉ dẫn AI | Cảnh báo đúng; dữ liệu không được thực thi hoặc biến thành chỉ dẫn |
+| VAR-01 | Sửa Facebook | Threads/X và revision của chúng không đổi |
+| VAR-02 | Tạo lại biến thể đã chỉnh | Không ghi đè khi chưa xác nhận; có cách giữ bản cũ |
+| VAR-03 | Sửa bản tin khi Facebook đã ghi nhận, Threads chưa đăng | Snapshot Facebook giữ nguyên; Threads cần cập nhật/duyệt lại |
+| VAR-04 | Hai tab lưu cùng revision | Một lần thành công, lần cũ báo conflict |
+| TEXT-01 | Preview/copy/file/approval | Cùng chuỗi cuối ở từng đoạn, gồm nguồn và đánh số |
+| TEXT-02 | Đúng giới hạn và vượt một đơn vị | Đạt/chặn đúng, gồm trường hợp body ngắn nhưng thêm nguồn bị quá |
+| TEXT-03 | Tiếng Việt NFC/NFD, emoji ZWJ, CJK, URL dài | Khớp fixture policy, không dựa `String.length` |
+| TEXT-04 | Chia đoạn/câu và URL | Không mất/lặp nội dung, không đứt URL/cụm ký tự, mọi đoạn hợp lệ |
+| TEXT-05 | Từ 9 sang 10 đoạn, quá 20 đoạn, không thể chia | Tính lại đúng; báo yêu cầu sửa, không cắt bỏ nguồn |
+| TEXT-06 | Thay version policy/renderer | Bản chưa đăng phải kiểm tra lại; lịch sử đã ghi nhận giữ nguyên |
+| APPROVE-01 | Thiếu nguồn, cờ chưa kiểm chứng, đoạn trống/quá dài | Không được duyệt/xuất như bài sẵn đăng |
+| APPROVE-02 | Sửa nguồn/đích/thứ tự/nội dung | Hủy duyệt đúng phạm vi và reset kiểm tra phù hợp |
+| APPROVE-03 | Gọi export chưa duyệt / hash không khớp | Fail closed, không trả văn bản dưới nhãn đã duyệt |
+| APPROVE-04 | Đã ghi nhận một đoạn rồi sửa nội dung | Khóa toàn biến thể; tạo bản sao nếu cần sửa |
+| APPROVE-05 | Race save/approve/export/record | Không ghi sai snapshot hoặc mất cập nhật |
+| APPROVE-06 | Ghi nhận 1/N đoạn rồi sửa bản tin/policy | Lưu URL đã đăng theo snapshot khóa; xuất tiếp kiểm tra policy mới; bản lưu trữ có nhãn riêng |
+| POST-01 | Ba kênh, nhiều đoạn, đăng một phần | URL/thời gian/snapshot tách đúng; hoàn tất khi đủ đoạn |
+| POST-02 | URL khác kênh, domain giả, profile/home, credentials | Từ chối; không fetch để xác minh |
+| POST-03 | Bấm đúp, retry cùng key, key trùng/payload khác, URL trùng đoạn/biến thể/legacy | Idempotent hoặc conflict đúng; không tăng đếm sai; legacy trùng không làm hỏng migration |
+| POST-04 | Đổi draft/kênh/đoạn khi đang nhập URL | Không tràn URL; đúng cảnh báo chưa lưu |
+| POST-05 | Đính chính URL; hủy hết lượt ghi nhận; gắn lại URL đã giải phóng | Giữ lịch sử, chỉ URL hiệu lực là duy nhất; nội dung vẫn khóa dù tiến độ về 0 |
+| POST-06 | Chỉ số chưa có / số 0 / sai kiểu / sai publication | Phân biệt null/0; validate; thống kê tách bản tin và bài đăng |
+| SAFE-01 | Tất cả mutation mới không session/CSRF/Origin hợp lệ | Bị từ chối như API hiện có |
+| SAFE-02 | Nâng cấp/tạo bản tin/preview/ghi nhận | Không bật nguồn, chạy AI, gửi mạng xã hội hoặc thay DB khác |
+| SAFE-03 | Thêm module JS/static mới | Chỉ phục vụ file hợp lệ; giữ CSP/Host/traversal protections |
+
+Phương án thực thi:
+
+- Python `unittest`: persistence, migration, policy/rendering, snapshot/hash, conflict, API và bảo mật.
+- Node `node:test` + `node:assert/strict`: selection, binding form, trạng thái chưa lưu, thao tác đổi kênh và hiển thị đầu ra. Tách helper có giao diện ổn định; không duy trì test bằng cách cắt hàm từ source theo chuỗi.
+- Fixture chung cho văn bản phức tạp và các chuỗi kỳ vọng. Nếu frontend cũng có bộ đếm, phải chạy cùng fixture và khớp server.
+- Smoke trình duyệt thật không thay bằng DOM stub: chọn/đổi thứ tự bằng bàn phím, đổi kênh, lưu/reload, download, dán clipboard sang ứng dụng khác bằng dữ liệu thử.
+- Không cần đăng công khai để nghiệm thu nội bộ. Kiểm tra trên tài khoản thật là bước riêng do người dùng quyết định.
+
+Lệnh baseline hiện có:
+
+```powershell
+rtk proxy python -B -m unittest discover -s tests -v
+```
+
+Khi các test JS đã được tạo, thêm lệnh chạy thư mục test JS thực tế vào README và tài liệu kiểm thử; không ghi một lệnh với đường dẫn chưa tồn tại như thể đã chạy thành công.
+
+## 9. Rủi ro và cách kiểm soát
+
+| Rủi ro | Cách xử lý / cổng chặn |
+| --- | --- |
+| Migration ghi sai version hoặc mất duyệt legacy | Runner tập trung, backup trước, transaction, expected byte/hash fixtures |
+| Nhiều nguồn vượt request limit | Lưu theo mục, cap UTF-8, trả lỗi rõ; không tăng limit vô hạn |
+| Rút ngắn làm sai nghĩa/bỏ nguồn | Người dùng biên tập; chia đoạn không tự tóm tắt; duyệt đầu ra cuối |
+| Đếm ký tự sai hoặc luật nền tảng đổi | Policy version + nguồn/ngày kiểm tra + fixture và gate trước phát hành |
+| Nguồn sửa nhưng snapshot cũ vẫn tồn tại | Hiển thị tuổi tư liệu, yêu cầu người dùng đối chiếu; không quảng cáo đã đồng bộ nguồn |
+| Một kênh đã đăng, kênh khác còn chỉnh | Approval bất biến, state theo biến thể; clone khi sửa bản đã ghi nhận |
+| Ghi nhầm/ghi lặp URL | Binding theo ID, xác nhận có ngữ cảnh, idempotency, đính chính có lịch sử |
+| Bộ test pass nhưng clipboard/Unicode thực tế lỗi | QA Windows và dán thử thật; có download/fallback |
+| Scope trượt sang tài khoản/chi phí/tự đăng | Ghi ngoài phạm vi; cần quyết định riêng trước khi triển khai |
+
+Các cải tiến để sau 0.4: tải lại nguồn web đã biết theo yêu cầu và so sánh thay đổi; gợi ý gom sự kiện; import kết quả AI có cấu trúc; ảnh có hồ sơ quyền; text attachment/bài dài; đồng bộ chỉ số; AI tích hợp hoặc đăng tự động. Chưa hứa triển khai, chưa gán ngày và không tự mở quyền cho các mục này.
+
+## 10. Định nghĩa hoàn thành bản 0.4
+
+- [ ] Tạo được bản tin từ ít nhất ba bài nguồn, giữ thứ tự và truy vết nguồn từng mục qua restart.
+- [ ] Biên tập được hoàn toàn thủ công hoặc qua gói tư liệu AI thủ công, không phát sinh model call.
+- [ ] Tạo được ba biến thể độc lập; có thể chỉ chọn một kênh để sử dụng.
+- [ ] Văn bản cuối, bộ đếm, preview, copy, `.txt` và approval khớp nhau; không mất nguồn khi chia chuỗi.
+- [ ] Sửa đúng phạm vi hủy duyệt; bài đã ghi nhận bất biến; ghi nhận một phần được xử lý rõ.
+- [ ] Lưu riêng URL và số liệu từng kênh/đoạn; không còn lỗi URL bị giữ từ bản khác.
+- [ ] Legacy giữ nguyên nội dung/hash/export/history; migration và restore schema 4 đạt kiểm thử lỗi.
+- [ ] Các test hiện có và mới đạt; có bằng chứng QA trình duyệt/clipboard, không chỉ thông báo từ nút copy.
+- [ ] README/hướng dẫn/kiến trúc/kiểm thử cập nhật, phần chưa kiểm chứng được ghi rõ.
+- [ ] Người dùng đã xem kết quả pilot và quyết định triển khai lên kho dữ liệu vận hành.
+
+Không dùng các tuyên bố “đã đăng thật”, “đã xác minh nội dung”, “đủ quyền kiếm tiền” hoặc “sẵn sàng tự động hoàn toàn” để mô tả việc hoàn thành checklist này.
+
+## 11. Theo dõi tiến độ và bằng chứng
+
+Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ quyết định` / `Chờ kiểm thử` / `Hoàn tất`.
+
+| Ngày | Task/mốc | Trạng thái | Bằng chứng / commit / người thực hiện | Bước tiếp theo |
+| --- | --- | --- | --- | --- |
+| 03/11/2026 | Review hiện trạng | Hoàn tất | Commit nền `a180354`; 88/88 test; probe RSS chỉ đọc; tái hiện URL bằng DOM giả | Giữ làm baseline, không coi là nghiệm thu 0.4 |
+| 03/11/2026 | Lập kế hoạch nâng cấp | Hoàn tất | Tài liệu này; chưa triển khai chức năng | Xem/chốt phạm vi rồi bắt đầu G0 |
+| — | FIX-01…03 | Chưa bắt đầu | — | Viết hồi quy trước khi sửa |
+| — | BASE/DB | Chưa bắt đầu | — | Chốt hợp đồng và migration |
+| — | DIG/FMT/APR/PUB | Chưa bắt đầu | — | Thực hiện theo phụ thuộc mục 7 |
+| — | QA/DOC/PILOT/REL | Chưa bắt đầu | — | Chỉ đóng khi đủ bằng chứng mục 10 |
+
+Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
+
+## 12. Sổ quyết định
+
+| Ngày / ID | Quyết định | Trạng thái / căn cứ |
+| --- | --- | --- |
+| 03/11/2026 / SCOPE | Giữ người dùng duyệt và tự đăng; chưa AI API/tự đăng | Đề xuất mặc định của kế hoạch; phù hợp workflow hiện có |
+| 03/11/2026 / DATA | Additive schema 4 + legacy nguyên vẹn; clone không kế thừa approval | Đề xuất để giảm rủi ro dữ liệu |
+| 03/11/2026 / LIMIT | 1–10 mục, 3 nguồn/mục, 20 URL, packet 64 KiB, tối đa 20 đoạn | Cần chốt bằng fixture tại BASE-02; không phải hạn mức nền tảng |
+| — / COUNTER | Chọn triển khai bộ đếm, version fixture, license/dependency | Chưa chốt; BASE-03, phải đóng trước gate G3 |
+| — / URL | Mẫu URL bài đăng và alias hợp lệ Facebook/Threads/X | Chưa chốt; BASE-03/PUB-01 |
+| — / RELEASE | Bằng chứng pilot và chấp thuận dùng trên DB chính | Chưa có; G6 |
+
+## 13. Tài liệu liên quan
+
+- [README](../README.md): cách chạy và phạm vi đang có.
+- [Kiến trúc hiện hành](KIEN-TRUC.md): schema, snapshot, bảo mật và giới hạn thu thập.
+- [Hướng dẫn sử dụng hiện hành](HUONG-DAN-SU-DUNG.md): luồng thủ công và backup/restore.
+- [Bằng chứng kiểm thử](KIEM-THU.md): tách test phần mềm, nguồn thật và giới hạn chưa xác nhận.
+
+Tài liệu này bổ sung roadmap kỹ thuật; không thay thế mô tả chức năng hiện đang có trong README cho tới khi từng mốc thực sự được triển khai và kiểm thử.
