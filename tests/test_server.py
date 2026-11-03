@@ -53,6 +53,38 @@ class ServerTests(unittest.TestCase):
         headers['Origin'] = 'https://evil.example'
         self.assertEqual(self.request('POST', '/api/articles/import', {}, headers)[0], 403)
 
+    def test_every_multichannel_post_route_requires_session_csrf_and_origin_before_dispatch(self):
+        headers = self.session()
+        routes = [
+            ('/api/bulletins', 'create_bulletin', 201),
+            ('/api/bulletins/1/save', 'save_bulletin', 200),
+            ('/api/bulletins/1/items', 'change_bulletin_items', 200),
+            ('/api/bulletins/1/items/1/save', 'save_bulletin_item', 200),
+            ('/api/bulletins/1/variants', 'create_variant', 200),
+            ('/api/variants/1/save', 'save_variant', 200),
+            ('/api/variants/1/preview', 'preview_variant', 200),
+            ('/api/variants/1/split', 'split_variant', 200),
+            ('/api/variants/1/approve', 'approve_variant', 200),
+            ('/api/variants/1/clone', 'clone_variant', 200),
+            ('/api/variants/1/publications', 'record_publication', 200),
+            ('/api/publications/1/corrections', 'correct_publication', 200),
+            ('/api/publications/1/metrics', 'save_publication_metrics', 200),
+            ('/api/drafts/1/copy-bulletin', 'copy_legacy_draft', 200),
+        ]
+        no_cookie = {key: value for key, value in headers.items() if key != 'Cookie'}
+        no_csrf = {key: value for key, value in headers.items() if key != 'X-CSRF-Token'}
+        no_origin = {key: value for key, value in headers.items() if key != 'Origin'}
+        invalid = [(no_cookie, 401), (dict(headers, Cookie='invalid=1'), 401), (no_csrf, 403),
+                   (dict(headers, **{'X-CSRF-Token': 'wrong'}), 403), (no_origin, 403),
+                   (dict(headers, Origin='https://evil.example'), 403), (dict(headers, Host='evil.example'), 403)]
+        for path, method, expected_success in routes:
+            with self.subTest(path=path), patch.object(self.room, method, return_value={}) as handler:
+                for rejected_headers, status in invalid:
+                    self.assertEqual(self.request('POST', path, {}, rejected_headers)[0], status)
+                    handler.assert_not_called()
+                self.assertEqual(self.request('POST', path, {}, headers)[0], expected_success)
+                handler.assert_called_once()
+
     def test_host_and_static_traversal(self):
         self.assertEqual(self.request('GET', '/', headers={'Host': 'evil.example'})[0], 403)
         self.assertEqual(self.request('GET', '/static/source-warnings.js')[0], 200)
