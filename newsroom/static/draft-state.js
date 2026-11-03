@@ -33,6 +33,27 @@ function verifiedCopyText(shown, current, position) {
   return current.posts[position];
 }
 
+function conflictTargetUrl(target) {
+  if (!target || typeof target !== 'object') return null;
+  const fields = target.kind === 'publication' ? ['bulletin_id', 'variant_id', 'publication_id', 'position'] :
+    target.kind === 'legacy_draft' ? ['draft_id'] : null;
+  if (!fields || fields.some(key => !Number.isSafeInteger(target[key]) || target[key] < (key === 'position' ? 0 : 1))) return null;
+  const params = new URLSearchParams({kind: target.kind});
+  fields.forEach(key => params.set(key, String(target[key])));
+  return `/?${params}`;
+}
+
+function parseConflictTarget(search) {
+  const params = new URLSearchParams(search);
+  const kind = params.get('kind');
+  const fields = kind === 'publication' ? ['bulletin_id', 'variant_id', 'publication_id', 'position'] :
+    kind === 'legacy_draft' ? ['draft_id'] : null;
+  if (!fields || params.getAll('kind').length !== 1 || fields.some(key => params.getAll(key).length !== 1 || !/^(0|[1-9]\d*)$/.test(params.get(key)))) return null;
+  const target = {kind};
+  fields.forEach(key => { target[key] = Number(params.get(key)); });
+  return conflictTargetUrl(target) ? target : null;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText};
+  module.exports = {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget};
 }

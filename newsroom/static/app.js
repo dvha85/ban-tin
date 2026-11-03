@@ -5,7 +5,7 @@ const labelCategory = value => value === 'ai' ? 'AI thực dụng' : 'Thiết b�
 const labelStatus = value => ({draft: 'Đang soạn', approved: 'Đã duyệt', published: 'Đã ghi nhận đăng'})[value] || value;
 const app = {state: null, view: 'inbox', category: 'all', articleId: null, draft: null,
   dirty: false, reviewDirty: false, tab: 'packet', csrf: '', busy: false, exportId: null,
-  selectedArticles: new Set(), bulletin: null, bulletinDirty: false, variantId: null, publicationKeys: new Map()};
+  selectedArticles: new Set(), bulletin: null, bulletinDirty: false, variantId: null, publicationKeys: new Map(), conflictTarget: null};
 let pollTimer, toastTimer;
 
 // All external/source/model text is inserted as text or input values, never HTML.
@@ -38,8 +38,21 @@ async function api(path, body) {
   }
   const json = (response.headers.get('Content-Type') || '').includes('application/json');
   const result = json ? await response.json() : await response.text();
-  if (!response.ok) throw new Error(result.error || 'Chưa thực hiện được. Hãy giữ bản đang sửa và thử lại.');
+  if (!response.ok) {
+    const error = new Error(result.error || 'Chưa thực hiện được. Hãy giữ bản đang sửa và thử lại.');
+    error.target = result.target;
+    throw error;
+  }
   return result;
+}
+function showClaimConflict(container, error, correction = null) {
+  const href = conflictTargetUrl(error.target);
+  if (!href) throw error;
+  container.replaceChildren(node('p', '', error.message));
+  const target = link(href, 'Mở bản ghi để đối soát trong thẻ mới ↗');
+  container.append(target, node('p', 'small-note', 'Giữ thẻ này để tiếp tục nội dung và liên kết đang nhập. Bản ghi có thể đã thay đổi.'));
+  if (correction) container.append(node('p', 'small-note', `Đính chính chưa lưu · Lý do: ${correction.reason} · Liên kết đề xuất: ${correction.url}`));
+  container.className = 'notice warning'; container.hidden = false;
 }
 async function mutation(action) {
   if (app.busy) return toast('Đang lưu thao tác trước. Vui lòng chờ một chút.');
@@ -256,6 +269,7 @@ async function openDraft(draft) {
   view('drafts');
 }
 async function setDraft(draft) {
+  if (app.draft?.id !== draft.id || draft.status === 'published') $('legacy-claim-conflict').hidden = true;
   bindPublicationFields(app.draft, draft, $('post-url'), $('published-link'));
   app.draft = structuredClone(draft);
   const stateIndex = app.state.drafts.findIndex(item => item.id === draft.id);
@@ -890,6 +904,7 @@ async function renderVariantPublication(area, variant) {
   } else {
     section.append(node('p', 'notice warning', 'Bản hiển thị là lịch sử, không còn đủ điều kiện xuất để đăng. Hãy tạo bản sao và duyệt theo quy tắc hiện tại.'));
   }
+  let targetBlock = null;
   output.posts.forEach((text, position) => {
     const block = node('div', 'bulletin-block');
     const field = node('textarea'); field.rows = 5; field.readOnly = true; field.value = text;
@@ -902,6 +917,8 @@ async function renderVariantPublication(area, variant) {
     block.append(node('h4', '', `Đoạn ${position + 1}`), field);
     if (ready) block.append(copyButton);
     const existing = publications.find(record => record.position === position && record.active);
+    if (existing && app.conflictTarget?.kind === 'publication' && app.conflictTarget.variant_id === variant.id &&
+        app.conflictTarget.publication_id === existing.id && app.conflictTarget.position === position) targetBlock = block;
     if (existing) {
       block.append(node('p', '', 'Đã ghi nhận:'), link(existing.url, existing.url));
       if (existing.metrics.length) {
@@ -936,18 +953,21 @@ async function renderVariantPublication(area, variant) {
         renderBulletin(); toast('Đã lưu số liệu do bạn nhập.');
       });
       const correct = node('button', 'button secondary', 'Đính chính liên kết');
+      const conflict = node('div'); conflict.hidden = true;
       bulletinAction(correct, async () => {
         if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi đính chính.');
         const reason = window.prompt('Lý do đính chính (ít nhất 5 ký tự):'); if (reason === null) return;
         const url = window.prompt('Liên kết thay thế. Để trống để hủy ghi nhận:', existing.url); if (url === null) return;
         if (!window.confirm('Ghi nhận đính chính này? Lịch sử cũ vẫn được giữ.')) return;
-        await api(`/api/publications/${existing.id}/corrections`, {revision: variant.revision, reason, url});
+        try { await api(`/api/publications/${existing.id}/corrections`, {revision: variant.revision, reason, url}); }
+        catch (error) { showClaimConflict(conflict, error, {reason, url}); return; }
         renderBulletin(); await loadBulletinList(); toast('Đã lưu đính chính.');
       });
-      block.append(addMetrics, correct);
+      block.append(addMetrics, correct, conflict);
     } else {
       const url = node('input'); url.type = 'url'; url.placeholder = 'Liên kết bài đã tự đăng'; url.dataset.publicationUrl = 'true';
       const report = node('button', 'button secondary', 'Ghi nhận đã đăng');
+      const conflict = node('div'); conflict.hidden = true;
       bulletinAction(report, async () => {
         if (hasPendingBulletinUrl(url) || area.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
           throw new Error('Hãy lưu các thay đổi khác trước khi ghi nhận.');
@@ -955,15 +975,16 @@ async function renderVariantPublication(area, variant) {
         if (!window.confirm(`Ghi nhận đoạn ${position + 1} đã đăng trên ${variant.platform.toUpperCase()} · ${variant.account_label}?\n\n${value}\n\nỨng dụng không kiểm tra bài đăng.`)) return;
         const key = `${variant.id}:${position}:${value}`;
         if (!app.publicationKeys.has(key)) app.publicationKeys.set(key, crypto.randomUUID());
-        await api(`/api/variants/${variant.id}/publications`, {revision: variant.revision, position, url: value,
-          idempotency_key: app.publicationKeys.get(key)});
+        try { await api(`/api/variants/${variant.id}/publications`, {revision: variant.revision, position, url: value,
+          idempotency_key: app.publicationKeys.get(key)}); }
+        catch (error) { showClaimConflict(conflict, error); return; }
         app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã ghi nhận thông tin do bạn nhập.');
       });
       url.addEventListener('input', () => {
         app.bulletinDirty = [...$('bulletin-editor').querySelectorAll('[data-dirty="true"]')].length > 0 ||
           [...$('bulletin-editor').querySelectorAll('[data-publication-url]')].some(input => input.value.trim());
       });
-      block.append(url, report);
+      block.append(url, report, conflict);
     }
     section.append(block);
   });
@@ -978,6 +999,14 @@ async function renderVariantPublication(area, variant) {
     section.append(details);
   }
   area.append(section);
+  if (app.conflictTarget?.kind === 'publication' && app.conflictTarget.variant_id === variant.id) {
+    app.conflictTarget = null;
+    if (targetBlock) {
+      targetBlock.tabIndex = -1;
+      targetBlock.prepend(node('p', 'notice warning', 'Bản ghi được chọn để đối soát. Hãy kiểm tra lại liên kết và lịch sử.'));
+      targetBlock.scrollIntoView({block: 'center'}); targetBlock.focus({preventScroll: true});
+    } else toast('Bản ghi không còn hiệu lực hoặc đã thay đổi. Hãy kiểm tra lịch sử của phiên bản này.', true);
+  }
 }
 function chooseBulletinSources(article) {
   if (article.sources.length <= 3) return undefined;
@@ -1144,8 +1173,10 @@ listen($('mark-published'), 'click', async () => {
   if (!url) throw new Error('Hãy nhập liên kết bài Facebook đã đăng.');
   if (!window.confirm(`Ghi nhận bài “${app.draft.title}” đã đăng trên Page “${app.draft.page_name}”?\n\nLiên kết: ${url}\n\nỨng dụng không kiểm tra Facebook.`)) return;
   await mutation(async () => {
-    const draft = await api(`/api/drafts/${app.draft.id}/published`, {
-      revision: app.draft.revision, post_url: url});
+    let draft;
+    try { draft = await api(`/api/drafts/${app.draft.id}/published`, {
+      revision: app.draft.revision, post_url: url}); }
+    catch (error) { showClaimConflict($('legacy-claim-conflict'), error); return; }
     await setDraft(draft);
     await loadState();
     toast('Đã ghi nhận lời xác nhận của bạn. Bản nội dung này được giữ nguyên.');
@@ -1193,4 +1224,23 @@ window.addEventListener('beforeunload', event => {
     event.preventDefault(); event.returnValue = '';
   }
 });
-loadState().then(poll).catch(error => toast(error.message, true));
+async function openConflictTarget() {
+  const target = parseConflictTarget(window.location.search);
+  if (!target) return;
+  if (target.kind === 'legacy_draft') {
+    const draft = app.state.drafts.find(row => row.id === target.draft_id);
+    if (!draft) throw new Error('Không tìm thấy bài cũ để đối soát.');
+    await setDraft(draft); setTab('review'); view('drafts');
+    if (draft.status === 'published' && draft.post_url) {
+      $('published-link').scrollIntoView({block: 'center'}); $('published-link').focus({preventScroll: true});
+    }
+    toast(`Đang xem bài cũ #${draft.id}. Hãy kiểm tra liên kết đã ghi nhận.`);
+    return;
+  }
+  const bulletin = await api(`/api/bulletins/${target.bulletin_id}`);
+  const variants = await api(`/api/bulletins/${target.bulletin_id}/variants`);
+  if (!variants.some(row => row.id === target.variant_id)) throw new Error('Không tìm thấy phiên bản cần đối soát trong bản tin.');
+  app.bulletin = bulletin; app.variantId = target.variant_id; app.conflictTarget = target;
+  renderBulletin(); view('bulletins');
+}
+loadState().then(async () => { poll(); await openConflictTarget(); }).catch(error => toast(error.message, true));

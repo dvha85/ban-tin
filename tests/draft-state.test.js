@@ -1,7 +1,22 @@
 'use strict';
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText} = require('../newsroom/static/draft-state.js');
+const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget} = require('../newsroom/static/draft-state.js');
+
+test('conflict links identify a local publication or legacy draft and reject malformed targets', () => {
+  const publication = {kind: 'publication', bulletin_id: 2, variant_id: 3, publication_id: 4, position: 0};
+  const legacy = {kind: 'legacy_draft', draft_id: 7};
+  for (const target of [publication, legacy]) {
+    const url = conflictTargetUrl(target);
+    assert.match(url, /^\/\?/);
+    assert.deepEqual(parseConflictTarget(new URL(url, 'http://localhost').search), target);
+  }
+  for (const target of [null, {kind: 'legacy_draft', draft_id: '../1'},
+    {...publication, position: -1}, {...publication, bulletin_id: 0}, {...publication, variant_id: 1.5}]) {
+    assert.equal(conflictTargetUrl(target), null);
+  }
+  assert.equal(parseConflictTarget('?kind=publication&bulletin_id=2&variant_id=3&publication_id=4&position=0&position=1'), null);
+});
 
 test('copy requires the same currently valid approval and the same segment', () => {
   const shown = {approval_id: 4, posts: ['đoạn cũ', 'nguồn']};
