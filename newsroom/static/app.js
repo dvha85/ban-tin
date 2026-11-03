@@ -5,7 +5,8 @@ const labelCategory = value => value === 'ai' ? 'AI thực dụng' : 'Thiết b�
 const labelStatus = value => ({draft: 'Đang soạn', approved: 'Đã duyệt', published: 'Đã ghi nhận đăng'})[value] || value;
 const app = {state: null, view: 'inbox', category: 'all', articleId: null, draft: null,
   dirty: false, reviewDirty: false, tab: 'packet', csrf: '', busy: false, exportId: null,
-  selectedArticles: new Set(), bulletin: null, bulletinDirty: false, variantId: null, publicationKeys: new Map(), conflictTarget: null};
+  selectedArticles: new Set(), bulletin: null, bulletinDirty: false, variantId: null, publicationKeys: new Map(), conflictTarget: null,
+  storeChanged: false};
 let pollTimer, toastTimer;
 
 // All external/source/model text is inserted as text or input values, never HTML.
@@ -26,6 +27,7 @@ function toast(message, error = false) {
   toastTimer = setTimeout(() => { $('toast').hidden = true; }, error ? 12000 : 6500);
 }
 async function api(path, body) {
+  if (body !== undefined && app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
   const payload = body === undefined ? undefined : requestJson(body);
   let response;
   try {
@@ -46,7 +48,14 @@ async function api(path, body) {
   }
   return result;
 }
+function markStoreChanged() {
+  app.storeChanged = true;
+  $('session-recovery').hidden = false;
+  $('store-changed-warning').hidden = false;
+  $('recover-session').hidden = true;
+}
 async function recoverSession() {
+  if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
   if (!app.state || typeof app.state.data_dir !== 'string') throw new Error('Không xác định được kho dữ liệu ban đầu. Hãy sao chép nội dung trước khi tải lại.');
   let page, response;
   try {
@@ -56,7 +65,11 @@ async function recoverSession() {
     if (!response.ok) throw new Error('Không lấy được phiên mới.');
   } catch (_) { throw new Error('Chưa khôi phục được kết nối. Giữ nội dung đang nhập và thử lại.'); }
   const state = await response.json();
-  if (state.data_dir !== app.state.data_dir || typeof state.csrf_token !== 'string' || !state.csrf_token)
+  if (state.data_dir !== app.state.data_dir) {
+    markStoreChanged();
+    throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
+  }
+  if (typeof state.csrf_token !== 'string' || !state.csrf_token)
     throw new Error('Kho dữ liệu hoặc phiên mới không khớp. Sao chép nội dung trước khi tải lại.');
   app.csrf = state.csrf_token;
   $('session-recovery').hidden = true;
@@ -143,7 +156,12 @@ function renderState() {
 }
 async function loadState() {
   const wasBusy = app.state && app.state.busy;
-  app.state = await api('/api/state');
+  const state = await api('/api/state');
+  if (app.state && state.data_dir !== app.state.data_dir) {
+    markStoreChanged();
+    throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
+  }
+  app.state = state;
   app.csrf = app.state.csrf_token;
   if (!app.articleId && app.state.articles.length) app.articleId = app.state.articles[0].id;
   renderState();

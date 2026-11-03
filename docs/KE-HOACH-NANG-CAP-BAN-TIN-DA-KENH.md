@@ -16,6 +16,8 @@
 
 > Bổ sung thử mất phản hồi: test đóng socket sau khi server ghi URL giả hoặc số liệu; gửi lại cùng khóa không tạo bản ghi trùng. Đây là lỗi tiêm ở server thử; chưa xác minh luồng mạng và thao tác lại bằng trình duyệt. Chi tiết tại `KIEM-THU.md`.
 
+> Bảo vệ đổi kho: cập nhật trạng thái nền hoặc khôi phục phiên phát hiện đường dẫn kho khác sẽ giữ nội dung và chặn POST tiếp theo. Test handler đạt; chưa thử UI thật, không phát hiện DB bị thay thế trong cùng thư mục hoặc hủy request đã gửi.
+
 > Bổ sung PUB-02/03: tách namespace khóa đính chính nội bộ khỏi khóa client để tránh lỗi trùng khóa; kiểm thử tái hiện lỗi cũ và đối chiếu lịch sử, retry trên kho tạm. Xem `KIEM-THU.md`.
 
 > Bổ sung FIX-03: trên nhánh 0.4, giao diện chặn URL bài cũ để trống và giữ trạng thái đã duyệt; test service kiểm tra thêm URL sai miền và trang chủ. Hồi quy gần nhất 164 Python, 28 JavaScript đạt. Chưa kiểm tra các URL sai này qua UI hoặc xác nhận bản 0.3.1 phát hành độc lập.

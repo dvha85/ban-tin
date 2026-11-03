@@ -65,6 +65,31 @@ test('session recovery preserves the editor and never retries a mutation automat
   assert.equal(vm.runInContext('app.csrf', context), 'new');
 });
 
+test('periodic refresh cannot silently switch the open editor to another data directory', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    requestJson: JSON.stringify, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.calls = calls;
+  vm.runInContext(`app.state = {data_dir: 'original'}; app.csrf = 'original-token'; app.bulletinDirty = true;
+    fetch = async (url, opts) => { calls.push([url, opts.method]); return {ok: true,
+      headers: {get: () => 'application/json'}, json: async () => ({data_dir: 'different', csrf_token: 'different-token'})}; };`, context);
+  get('field-title').value = 'Giữ nguyên';
+  await assert.rejects(vm.runInContext('loadState()', context), /kho dữ liệu/i);
+  assert.equal(vm.runInContext('app.state.data_dir', context), 'original');
+  assert.equal(vm.runInContext('app.csrf', context), 'original-token');
+  assert.equal(get('field-title').value, 'Giữ nguyên');
+  assert.equal(get('store-changed-warning').hidden, false);
+  assert.equal(get('recover-session').hidden, true);
+  await assert.rejects(vm.runInContext("api('/api/bulletins/1/save', {})", context), /kho dữ liệu/i);
+  assert.equal(calls.filter(row => row[1] === 'POST').length, 0);
+});
+
 test('variant dirty tracking ignores publication and metric fields but tracks edits', () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

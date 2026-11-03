@@ -144,7 +144,7 @@ Với bản sao schema 4, restore kiểm tra thêm cấu trúc các bảng bản
 | --- | --- |
 | Trình duyệt không mở / báo mất kết nối | Kiểm tra cửa sổ chạy còn mở; mở lại `MO-BAN-TIN.cmd`, vào địa chỉ 8877. |
 | Báo cổng đang dùng | Có thể ứng dụng đã chạy; thử mở địa chỉ 8877, không chạy thêm nhiều cửa sổ. Nếu đó là phần mềm khác, nhờ hỗ trợ đổi cổng. |
-| Phiên hết hạn sau khi khởi động lại | Giữ / sao chép phần chưa lưu trước, rồi tải lại trang. Không có tự phục hồi chữ chưa lưu. |
+| Phiên hết hạn sau khi khởi động lại | Giữ trang đang mở, chọn **Khôi phục kết nối** nếu nút xuất hiện. Kiểm tra dữ liệu và lịch sử trước khi tự lưu lại vì thao tác trước có thể đã hoàn tất. Nếu báo kho đã thay đổi hoặc khôi phục không được, sao chép nội dung chưa lưu ra nơi an toàn trước khi tải lại. Nếu cơ sở dữ liệu bị thay thế trong cùng thư mục, đường dẫn giống nhau không phát hiện được; hãy sao chép nội dung và tải lại. Chức năng đang phát triển, chưa hoàn tất thử trên trình duyệt. |
 | Nguồn lỗi | Xem mục **Nguồn tin**, thử lại sau hoặc nhập URL và ghi chú thủ công. Dữ liệu đã có không bị xóa. |
 | Không thấy tin cũ | Đổi khoảng thời gian sang **Tất cả**; danh sách vẫn giới hạn 500 tin gần nhất. |
 | Bản duyệt bị hủy | Có thay đổi nội dung, nguồn, Page hoặc xác nhận kiểm tra; lưu và duyệt lại. |
