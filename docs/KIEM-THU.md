@@ -10,6 +10,7 @@
 - [Tài liệu X](https://docs.x.com/fundamentals/counting-characters) mô tả trọng số và rút gọn URL; [Meta](https://about.fb.com/news/2025/09/attach-text-threads-posts-share-longer-perspectives/) mô tả bài Threads 500 ký tự và tính năng đính kèm văn bản dài. Ứng dụng này chỉ hỗ trợ văn bản chính, chưa hỗ trợ tính năng đính kèm; chưa tìm được đặc tả đủ chi tiết để xác minh cách đếm mọi emoji trên Threads.
 - Trên Edge, tải `.txt` cho một đoạn X đã duyệt từ kho thử và đọc tệp UTF-8: nội dung và URL nguồn khớp đoạn hiển thị. Đây mới là một trường hợp một đoạn.
 - Khi sửa tiêu đề chưa lưu rồi chuyển bản tin, Edge đã hiện hộp xác nhận bỏ thay đổi. Phiên điều khiển bị dừng tại hộp xác nhận nên chưa xác minh cả hai nhánh tiếp tục/hủy.
+- Bổ sung nhắc kiểm tra nguồn thiếu/ngắn, ngày không rõ/tương lai/cũ hơn 7 ngày. Chạy `node --test tests/draft-state.test.js tests/source-warnings.test.js` đạt 3/3; test HTTP riêng xác nhận tệp JS được phục vụ và vẫn chặn traversal. Đây là nhắc biên tập, không phải kiểm chứng độ tin cậy. Chưa smoke giao diện sau thay đổi này.
 - Nút sao chép hiển thị thành công nhưng lần đọc clipboard trong trình duyệt kiểm thử trả về rỗng; **chưa xác nhận nội dung clipboard thực tế**. Chưa kiểm tra đầy đủ bàn phím, fallback clipboard, file nhiều đoạn, ba pilot, mọi chính sách ký tự hoặc kho vận hành.
 - Để chạy: `python -B -m unittest discover -s tests -v` và `node --test tests/draft-state.test.js`. Kết quả cụ thể cần ghi lại sau lần chạy cuối trước phát hành.
 

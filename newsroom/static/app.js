@@ -544,7 +544,10 @@ function renderBulletin() {
     const sources = node('div', 'source-link-list');
     item.sources.forEach(source => {
       sources.append(link(source.url, source.title || source.source_name || source.url));
-      sources.append(node('p', 'small-note', `Ngày nguồn: ${formatDate(source.published_at)} · Thu thập: ${formatDate(source.retrieved_at)} · Tư liệu là trích đoạn hoặc ghi chú, cần mở nguồn gốc.`));
+      const dateLabel = source.date_kind === 'updated' ? 'Ngày cập nhật' : source.date_kind === 'published' ? 'Ngày xuất bản' : 'Ngày nguồn chưa rõ loại';
+      sources.append(node('p', 'small-note', `${dateLabel}: ${formatDate(source.published_at)} · Thu thập: ${formatDate(source.retrieved_at)} · Tư liệu là trích đoạn hoặc ghi chú, cần mở nguồn gốc.`));
+      const warnings = sourceWarnings(source);
+      if (warnings.length) sources.append(node('p', 'small-note', `Cần kiểm tra: ${warnings.join(' ')} Đây là nhắc biên tập, không đánh giá độ tin cậy.`));
       const removeSource = node('button', 'text-button', 'Bỏ nguồn này');
       removeSource.disabled = item.sources.length <= 1;
       bulletinAction(removeSource, async () => {

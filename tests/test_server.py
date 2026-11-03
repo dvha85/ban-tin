@@ -55,6 +55,7 @@ class ServerTests(unittest.TestCase):
 
     def test_host_and_static_traversal(self):
         self.assertEqual(self.request('GET', '/', headers={'Host': 'evil.example'})[0], 403)
+        self.assertEqual(self.request('GET', '/static/source-warnings.js')[0], 200)
         self.assertEqual(self.request('GET', '/static/../service.py')[0], 404)
 
     def test_security_headers_and_import_roundtrip(self):
