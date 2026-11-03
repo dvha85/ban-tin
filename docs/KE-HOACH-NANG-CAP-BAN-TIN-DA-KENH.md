@@ -6,6 +6,8 @@
 
 > Bổ sung PUB-02/03: tách namespace khóa đính chính nội bộ khỏi khóa client để tránh lỗi trùng khóa; kiểm thử tái hiện lỗi cũ và đối chiếu lịch sử, retry trên kho tạm. Xem `KIEM-THU.md`.
 
+> Bổ sung FIX-03: trên nhánh 0.4, giao diện chặn URL bài cũ để trống và giữ trạng thái đã duyệt; test service kiểm tra thêm URL sai miền và trang chủ. Hồi quy gần nhất 164 Python, 28 JavaScript đạt. Chưa kiểm tra các URL sai này qua UI hoặc xác nhận bản 0.3.1 phát hành độc lập.
+
 - Ngày lập / cập nhật: **03/11/2026**, giờ Việt Nam.
 - Repository: [dvha85/ban-tin](https://github.com/dvha85/ban-tin).
 - Mốc mã nguồn được review: **`a180354e52e98a678d093609f9e8f2d37e6cd0a3`**, nhánh `main`, phiên bản ứng dụng `0.3.0`, dữ liệu schema `3`.
