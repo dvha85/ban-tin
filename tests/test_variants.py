@@ -564,6 +564,42 @@ class VariantTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             self.room.save_publication_metrics(record['id'], {**payload, 'idempotency_key': 'bad'})
 
+    def test_reported_and_observed_times_use_utc_and_retry_legacy_offsets(self):
+        variant = self.make_approved('x')
+        data = {'revision': variant['revision'], 'position': 0, 'url': 'https://x.com/test/status/902',
+                'idempotency_key': 'time_retry_902', 'reported_at': '2026-11-03T10:00:00+07:00'}
+        record = self.room.record_publication(variant['id'], data)
+        self.assertEqual(record['reported_at'], '2026-11-03T03:00:00+00:00')
+        self.assertEqual(self.room.record_publication(variant['id'], {**data, 'reported_at': '2026-11-03T03:00:00Z'})['id'], record['id'])
+        metric_data = {'observed_at': '2026-11-03T10:00:00+07:00', 'views': 7,
+                       'idempotency_key': 'metric_time_902'}
+        metric = self.room.save_publication_metrics(record['id'], metric_data)
+        self.assertEqual(metric['observed_at'], '2026-11-03T03:00:00+00:00')
+        self.assertEqual(self.room.save_publication_metrics(record['id'], {**metric_data,
+            'observed_at': '2026-11-03T03:00:00Z'}), metric)
+        # Simulate rows created before UTC normalization, including the original request hash.
+        import hashlib
+        from newsroom.publications import _json
+        legacy_time = '2026-11-03T10:00:00+07:00'
+        legacy_request = {'variant_id': variant['id'], 'position': 0, 'url': data['url'], 'reported_at': legacy_time}
+        with self.room.connection() as conn:
+            conn.execute('UPDATE publications SET reported_at=?, request_hash=? WHERE id=?',
+                (legacy_time, hashlib.sha256(_json(legacy_request).encode()).hexdigest(), record['id']))
+            conn.execute('UPDATE publication_metrics SET observed_at=? WHERE id=?', (legacy_time, metric['id']))
+        retried = self.room.record_publication(variant['id'], data)
+        self.assertEqual(retried['reported_at'], legacy_time)
+        self.assertEqual(self.room.record_publication(variant['id'], {**data,
+            'reported_at': '2026-11-03T03:00:00Z'})['id'], record['id'])
+        retried_metric = self.room.save_publication_metrics(record['id'], metric_data)
+        self.assertEqual(retried_metric['observed_at'], legacy_time)
+        self.assertEqual(retried_metric['id'], metric['id'])
+        self.assertEqual(self.room.save_publication_metrics(record['id'], {**metric_data,
+            'observed_at': '2026-11-03T03:00:00Z'})['id'], metric['id'])
+        with self.assertRaises(Conflict):
+            self.room.record_publication(variant['id'], {**data, 'reported_at': '2026-11-03T11:00:00+07:00'})
+        with self.assertRaises(ValidationError):
+            self.room.save_publication_metrics(record['id'], {**metric_data, 'observed_at': '0001-01-01T00:00:00+14:00'})
+
     def test_policy_change_keeps_archive_but_blocks_ready_export(self):
         variant = self.make_approved('x')
         with patch('newsroom.variants.POLICY_VERSION', 'future-policy'):

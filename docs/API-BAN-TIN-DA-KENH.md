@@ -56,6 +56,8 @@ Mỗi segment có `text` và `item_ids`; `source_ids` có thể chỉ định ng
 
 Các timestamp người dùng cung cấp phải có múi giờ hợp lệ. URL cần đúng mẫu validator của nền tảng; validator không truy cập URL để chứng minh bài đã được đăng. Sau ghi nhận hoặc đính chính, đọc lại phiên bản để lấy revision mới.
 
+`reported_at` và `observed_at` mới được chuẩn hóa về UTC trước khi lưu; UI hiển thị theo giờ Việt Nam. Bản ghi tạo trước thay đổi có thể giữ offset gốc và không được viết lại. Retry cùng key so sánh thời điểm sau quy đổi UTC, kể cả bản cũ; phản hồi retry giữ nguyên timestamp đã lưu. Thời điểm vượt phạm vi biểu diễn sau quy đổi bị từ chối.
+
 Số liệu có thể gửi thêm `idempotency_key` gồm 8–100 ký tự ASCII chữ, số, `_` hoặc `-`, phạm vi theo từng publication. Cùng key và dữ liệu đã chuẩn hóa trả lại kết quả cũ kể cả sau khi publication bị hủy; cùng key với dữ liệu khác trả 409. Lượt ghi mới vẫn yêu cầu publication hiệu lực. Key được lưu trong chuỗi JSON `payload` dưới tên `_idempotency_key` và không có trong phản hồi ghi; client cũ không gửi key vẫn hoạt động như trước, không được bảo đảm chống trùng. Giao diện chỉ giữ key trong trang đang mở: sau tải lại hoặc sửa dữ liệu cần đối chiếu lịch sử nếu kết quả trước đó không rõ.
 
 ### Phạm vi URL ghi nhận hiện tại

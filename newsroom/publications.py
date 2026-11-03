@@ -2,7 +2,7 @@
 import hashlib
 import json
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 
 from .bulletins import _json, _now, _text
@@ -63,9 +63,9 @@ def _reported_time(value):
         parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
         if parsed.tzinfo is None:
             raise ValueError()
-    except ValueError:
+        return parsed.astimezone(timezone.utc).isoformat()
+    except (ValueError, OverflowError):
         raise ValidationError('Thời gian cần định dạng ISO có múi giờ.') from None
-    return parsed.isoformat()
 
 
 class PublicationMixin:
@@ -160,7 +160,12 @@ class PublicationMixin:
             request_hash = hashlib.sha256(_json(request).encode()).hexdigest()
             existing = conn.execute('SELECT * FROM publications WHERE idempotency_key=?', (key,)).fetchone()
             if existing:
-                if existing['request_hash'] != request_hash:
+                # Older records hashed the original offset; verify that exact
+                # historical request and compare its instant without rewriting it.
+                legacy_request = {**request, 'reported_at': existing['reported_at']}
+                legacy_hash = hashlib.sha256(_json(legacy_request).encode()).hexdigest()
+                same_instant = _reported_time(existing['reported_at']) == reported_at
+                if existing['request_hash'] != request_hash and not (same_instant and existing['request_hash'] == legacy_hash):
                     raise Conflict('Mã ghi nhận đã được dùng cho dữ liệu khác.')
                 return dict(existing)
             variant = self._locked_variant(conn, variant_id, data.get('revision'))
@@ -260,9 +265,9 @@ class PublicationMixin:
                         raise ValidationError('Không thể kiểm tra số liệu đã lưu do dữ liệu không hợp lệ.')
                     if stored.get('_idempotency_key') == key:
                         stored.pop('_idempotency_key')
-                        if row['observed_at'] != observed_at or stored != values:
+                        if _reported_time(row['observed_at']) != observed_at or stored != values:
                             raise Conflict('Mã số liệu đã được dùng cho dữ liệu khác.')
-                        return {'id': row['id'], 'publication_id': publication_id, 'observed_at': observed_at, **stored}
+                        return {'id': row['id'], 'publication_id': publication_id, 'observed_at': row['observed_at'], **stored}
             if not publication['active']:
                 raise ValidationError('Không nhập số liệu cho lượt ghi nhận đã hủy.')
             stored_values = {**values, '_idempotency_key': key} if key is not None else values

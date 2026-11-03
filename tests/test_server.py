@@ -274,6 +274,7 @@ class ServerTests(unittest.TestCase):
             'observed_at': '2026-11-03T10:00:00+07:00', 'views': 0})
         self.assertEqual(metric['views'], 0)
         self.assertIsNone(metric['likes'])
+        self.assertEqual(metric['observed_at'], '2026-11-03T03:00:00+00:00')
         social_metric = post(f"/api/publications/{reported['id']}/metrics", {
             'observed_at': '2026-11-03T10:01:00+07:00', 'replies': 0, 'reposts': 3, 'quotes': None,
             'idempotency_key': 'http_metric_1001'})
