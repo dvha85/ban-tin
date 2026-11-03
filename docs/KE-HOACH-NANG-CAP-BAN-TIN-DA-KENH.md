@@ -463,6 +463,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 03/11/2026 | NEWS-06 / BASE-02 | Đang làm | Test HTTP tạo bản tin bằng JSON UTF-8 đúng 128.000 byte trả 201; vượt một byte trả 413, không tạo thêm hoặc sửa bản tin. Bộ hồi quy 145/145 Python và 10/10 JS đạt | Đệm bằng trường không sử dụng; chưa smoke yêu cầu quá ngưỡng qua UI hoặc hoàn tất hợp đồng API |
 | 03/11/2026 | BASE-02 / DOC-01 | Đang làm | Thêm bản đồ API đa kênh theo route và mã service hiện hành, gồm revision, giới hạn, ghi nhận và lỗi thường gặp | Chưa liệt kê đầy đủ schema phản hồi, mọi tổ hợp lỗi hoặc có xác nhận hợp đồng; chưa đóng BASE-02 |
 | 03/11/2026 | SOURCE-03 | Đang làm | Smoke Edge kho tạm: tiêu đề nguồn dạng thẻ `img` hiện thành chữ, không có phần tử con, nguồn ngắn có cảnh báo. Test gói tư liệu giữ chỉ dẫn giả và dấu kết thúc giả trong JSON; 146/146 Python, 10/10 JS đạt | Chưa kiểm chứng mọi vị trí hiển thị và mọi HTML; phân cách không bảo đảm model bên ngoài bỏ qua chỉ dẫn |
+| 03/11/2026 | APR-03 / QA-02 | Đang làm | Edge, kho tạm: server thử từ chối API clipboard bằng Permissions-Policy; hộp sao chép thủ công hiện đúng đoạn và hai nguồn, chọn toàn bộ; Ctrl+C/Ctrl+V vào ô khác cùng trang giữ đúng văn bản và xuống dòng | Chưa xác nhận clipboard API thành công hoặc dán sang ứng dụng khác; không đăng và không lưu ô thử |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
