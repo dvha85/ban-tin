@@ -115,6 +115,13 @@ class VariantTests(unittest.TestCase):
         self.assertFalse(result['valid'])  # source URL and its label count too
         self.assertIn(item['sources'][0]['url'], result['posts'][0]['text'])
 
+    def test_x_url_weight_and_boundary(self):
+        for url in ('https://t.co/a', 'https://example.com/' + 'long-path-' * 15):
+            with self.subTest(url=url):
+                self.assertEqual(count_text('x', url), (23, True))
+                self.assertEqual(count_text('x', 'a' * 256 + ' ' + url), (280, True))
+                self.assertEqual(count_text('x', 'a' * 257 + ' ' + url), (281, False))
+
     def test_approval_requires_each_claim_checked_with_evidence(self):
         item = self.bulletin['items'][0]
         modified = self.room.save_bulletin_item(self.bulletin['id'], item['id'], {
