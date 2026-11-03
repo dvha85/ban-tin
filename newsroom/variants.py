@@ -239,7 +239,9 @@ class VariantMixin:
                             raise ValidationError(f'Mã hash không khớp trích đoạn tại mục {item_number}, nguồn {source_number}. '
                                                   'Hãy đối chiếu, bổ sung nguồn đúng và bỏ nguồn sai trước khi duyệt.')
                 if item['id'] in used_ids and (not item['body'] or not item['verified']
-                        or len(item['verification_note']) < 20 or UNRESOLVED.search(item['body'])):
+                        or len(item['verification_note']) < 20 or any(
+                            UNRESOLVED.search(item[field])
+                            for field in ('title', 'body', 'angle', 'verification_note'))):
                     raise ValidationError('Mỗi mục được dùng cần nội dung, ghi chú kiểm chứng và xác nhận đã kiểm tra.')
                 if item['id'] in used_ids and (not item.get('claims') or any(
                         not claim.get('checked') or not claim.get('evidence', '').strip()

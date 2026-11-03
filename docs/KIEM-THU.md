@@ -2,6 +2,8 @@
 
 ## Smoke test giao diện đa kênh 04/11/2026
 
+- APR-01 / SOURCE-03: test tái hiện mục có dấu `[CẦN KIỂM TRA]` trong tiêu đề, góc nhìn hoặc ghi chú kiểm chứng vẫn được duyệt. Sau sửa, mục được dùng bị chặn khi các trường biên tập này còn dấu chưa kiểm chứng; bỏ dấu và xác nhận lại thì duyệt được. Policy `2026-11-04-v4` yêu cầu kiểm tra lại bản duyệt cũ, trong khi archive vẫn đọc snapshot. Hồi quy 177/177 Python, 33/33 JavaScript đạt; chưa smoke giao diện policy v4.
+
 - BASE-03: đối chiếu `normalize_post_url` cho thấy dạng Threads `/@user/post/...` chấp nhận đoạn cuối rộng hơn `/t/...`, bao gồm `a%2Fb`; đã thêm test mô tả hành vi hiện có và sửa bản đồ API. Chưa xác minh URL này tồn tại trên Meta hoặc các biểu diễn mã hóa có cùng danh tính; BASE-03 tiếp tục mở, cần đối chiếu thủ công.
 
 - PUB-03/BASE-02: test service tái hiện `url: null` trong yêu cầu đính chính bị hiểu là hủy ghi nhận. Sau sửa, `null`, boolean, số, mảng và object bị từ chối; test service và HTTP xác nhận bản ghi, lịch sử và revision không đổi, còn chuỗi rỗng vẫn hủy theo hợp đồng. Hồi quy 175/175 Python, 33/33 JavaScript đạt; dữ liệu giả trên kho tạm.

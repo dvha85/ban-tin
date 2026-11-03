@@ -162,6 +162,37 @@ class VariantTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             self.make_approved('threads')
 
+    def test_approval_rejects_unresolved_markers_in_editorial_item_fields(self):
+        for field in ('title', 'angle', 'verification_note'):
+            with self.subTest(field=field):
+                item = self.bulletin['items'][0]
+                edited = self.room.save_bulletin_item(self.bulletin['id'], item['id'], {
+                    'bulletin_revision': self.bulletin['revision'], 'revision': item['revision'],
+                    field: 'Thông tin [CẦN KIỂM TRA] trước khi đăng.'})
+                item = edited['items'][0]
+                self.bulletin = self.room.save_bulletin_item(edited['id'], item['id'], {
+                    'bulletin_revision': edited['revision'], 'revision': item['revision'], 'verified': True,
+                    'claims': [{**item['claims'][0], 'checked': True}]})
+                with self.assertRaises(ValidationError):
+                    self.make_approved('facebook')
+                item = self.bulletin['items'][0]
+                edited = self.room.save_bulletin_item(self.bulletin['id'], item['id'], {
+                    'bulletin_revision': self.bulletin['revision'], 'revision': item['revision'],
+                    field: 'Thông tin đã đối chiếu nguồn phù hợp.'})
+                item = edited['items'][0]
+                self.bulletin = self.room.save_bulletin_item(edited['id'], item['id'], {
+                    'bulletin_revision': edited['revision'], 'revision': item['revision'], 'verified': True,
+                    'claims': [{**item['claims'][0], 'checked': True}]})
+        self.assertEqual(self.make_approved('facebook')['status'], 'approved')
+
+    def test_older_approval_requires_review_after_editorial_policy_change(self):
+        with patch('newsroom.variants.POLICY_VERSION', '2026-11-03-v3'):
+            variant = self.make_approved('facebook')
+        self.assertTrue(self.room.variant(variant['id'])['policy_stale'])
+        with self.assertRaises(ValidationError):
+            self.room.export_variant(variant['id'])
+        self.assertTrue(self.room.export_variant(variant['id'], archive=True)['archive'])
+
     def test_approval_rejects_missing_claim_or_evidence_and_unresolved_markers(self):
         cases = [[],
                  [{'text': 'Dữ kiện', 'evidence': '', 'checked': True}],

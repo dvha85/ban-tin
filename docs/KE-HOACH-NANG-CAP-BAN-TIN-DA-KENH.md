@@ -38,6 +38,8 @@
 
 > Bổ sung BASE-03: mẫu URL Threads đầy đủ trong mã rộng hơn mẫu `/t/` và có thể nhận đoạn mã hóa phần trăm; đã sửa mô tả API và thêm test đặc tả hành vi. Chưa chứng minh tính hợp lệ hoặc trùng lặp trên Meta; tiếp tục đối soát thủ công.
 
+> Bổ sung APR-01: chính sách `2026-11-04-v4` chặn duyệt khi tiêu đề, nội dung, góc nhìn hoặc ghi chú kiểm chứng của mục được dùng còn dấu chưa xác minh. Bản duyệt theo policy cũ cần kiểm tra lại; snapshot lịch sử được giữ. Test service và hồi quy đạt, chưa smoke UI v4.
+
 > Bổ sung PUB-02/03: tách namespace khóa đính chính nội bộ khỏi khóa client để tránh lỗi trùng khóa; kiểm thử tái hiện lỗi cũ và đối chiếu lịch sử, retry trên kho tạm. Xem `KIEM-THU.md`.
 
 > Bổ sung FIX-03: trên nhánh 0.4, giao diện chặn URL bài cũ để trống và giữ trạng thái đã duyệt; test service kiểm tra thêm URL sai miền và trang chủ. Hồi quy gần nhất 164 Python, 28 JavaScript đạt. Chưa kiểm tra các URL sai này qua UI hoặc xác nhận bản 0.3.1 phát hành độc lập.
