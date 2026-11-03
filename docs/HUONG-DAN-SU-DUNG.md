@@ -12,6 +12,8 @@
 
 Để sửa một liên kết đã ghi nhận, chọn **Đính chính liên kết** tại đoạn đó, nhập lý do và URL thay thế. Để trống URL nếu muốn hủy ghi nhận trong ứng dụng. Đọc nội dung, đánh dấu xác nhận rồi chọn **Lưu đính chính**; chỉnh lý do hoặc URL sau khi xác nhận sẽ yêu cầu xác nhận lại. Lịch sử ghi nhận cũ được giữ, và thao tác này không sửa hay xóa bài trên mạng xã hội. Khi có lỗi, dữ liệu đang nhập được giữ để sửa hoặc bỏ.
 
+Mở **Lịch sử ghi nhận đã đính chính** để xem URL cũ, lý do, liên kết thay thế và số liệu từng ghi cho lượt cũ. Số liệu thuộc lượt ghi nhận cũ, không tự chuyển sang lượt thay thế.
+
 Nếu trình duyệt từ chối quyền clipboard, hộp **Sao chép thủ công** sẽ hiện nội dung đã chọn sẵn. Nhấn `Ctrl+C`, sau đó chuyển đến nơi cần dán và nhấn `Ctrl+V`; kiểm tra lại cả nội dung và nguồn trước khi đăng. Bạn cũng có thể tải tệp `.txt` của bản duyệt.
 
 Trong **Bàn biên tập**, nút **Tạo bản sao sang bản tin** sao chép bài cũ đã lưu thành bản tin và phiên bản Facebook chưa duyệt. Bài cũ và lịch sử của nó được giữ nguyên. Nếu bài dài hơn 4.000 ký tự, toàn văn nằm trong phiên bản Facebook; bạn cần viết lại nội dung mục để kiểm chứng trước khi duyệt.

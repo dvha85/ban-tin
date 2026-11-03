@@ -69,6 +69,32 @@ test('publication URL fields have a distinct accessible label for each segment',
   assert.deepEqual(inputs.map(input => input['aria-label']), ['Liên kết bài đã đăng cho đoạn 1', 'Liên kết bài đã đăng cho đoạn 2']);
 });
 
+test('historical publications show readable events and retain their metrics', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), crypto: {randomUUID: () => 'test-key'},
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`api = async path => path.endsWith('/publications') ? [{id: 11, position: 0, active: false,
+    url: 'https://x.com/a/status/123', recorded_at: '2026-11-03T10:00:00Z',
+    events: [{action: 'reported', at: '2026-11-03T10:00:00Z', payload: '{}'},
+      {action: 'corrected', at: '2026-11-03T11:00:00Z', payload: JSON.stringify({reason: 'Sai liên kết', replacement_url: 'https://x.com/a/status/456'})},
+      {action: 'future_action', at: '2026-11-03T12:00:00Z', payload: '{broken'}],
+    metrics: [{observed_at: '2026-11-03T10:30:00Z', payload: JSON.stringify({views: 10, likes: 0})}]}] : {posts: ['test']};`, context);
+  const area = new Element(); get('bulletin-editor').append(area); context.area = area;
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const texts = walk(area).map(el => el.textContent).join('\n');
+  assert.match(texts, /Đã ghi nhận/); assert.match(texts, /Đã đính chính/);
+  assert.match(texts, /Lý do: Sai liên kết/); assert.match(texts, /https:\/\/x.com\/a\/status\/456/);
+  assert.match(texts, /Lượt xem: 10/); assert.match(texts, /Lượt thích: 0/);
+  assert.match(texts, /future_action/); assert.match(texts, /Dữ liệu sự kiện: \{broken/);
+  assert.doesNotMatch(texts, /"replacement_url"/);
+});
+
 test('metric form retains edits on error and retries the same payload idempotently', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

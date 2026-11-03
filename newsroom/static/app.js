@@ -926,6 +926,28 @@ async function renderVariantPublication(area, variant) {
   } else {
     section.append(node('p', 'notice warning', 'Bản hiển thị là lịch sử, không còn đủ điều kiện xuất để đăng. Hãy tạo bản sao và duyệt theo quy tắc hiện tại.'));
   }
+  const metricText = metric => {
+    try {
+      const values = JSON.parse(metric.payload);
+      return `${formatDate(metric.observed_at)} · ` + metricDisplayFields(variant.platform, values)
+        .map(([key, label]) => `${label}: ${values[key] == null ? 'chưa biết' : values[key]}`).join(' · ') +
+        (values.note ? ` · ${values.note}` : '');
+    } catch (_) { return `${formatDate(metric.observed_at)} · Không đọc được số liệu: ${metric.payload}`; }
+  };
+  const eventText = event => {
+    const labels = {reported: 'Đã ghi nhận', corrected: 'Đã đính chính', cancelled: 'Đã hủy ghi nhận', correction_of: 'Ghi nhận thay thế'};
+    const prefix = `${labels[event.action] || event.action} · ${formatDate(event.at)}`;
+    try {
+      const payload = JSON.parse(event.payload);
+      if (!payload || typeof payload !== 'object' || Array.isArray(payload) || !labels[event.action]) throw new Error('unknown event');
+      const parts = [];
+      if (payload.reason) parts.push(`Lý do: ${payload.reason}`);
+      if (payload.replacement_url) parts.push(`Liên kết thay thế: ${payload.replacement_url}`);
+      if (payload.publication_id != null) parts.push(`Thay thế ghi nhận #${payload.publication_id}`);
+      if (payload.reported_at) parts.push(`Thời điểm tự khai: ${formatDate(payload.reported_at)}`);
+      return [prefix, ...parts].join(' · ');
+    } catch (_) { return `${prefix} · Dữ liệu sự kiện: ${event.payload}`; }
+  };
   let targetBlock = null;
   output.posts.forEach((text, position) => {
     const block = node('div', 'bulletin-block');
@@ -947,11 +969,7 @@ async function renderVariantPublication(area, variant) {
         const details = node('details');
         details.append(node('summary', '', `Số liệu đã lưu (${existing.metrics.length})`));
         for (const metric of existing.metrics) {
-          const values = JSON.parse(metric.payload);
-          details.append(node('p', 'small-note', `${formatDate(metric.observed_at)} · ` +
-            metricDisplayFields(variant.platform, values).map(([key, label]) =>
-              `${label}: ${values[key] == null ? 'chưa biết' : values[key]}`).join(' · ') +
-            (values.note ? ` · ${values.note}` : '')));
+          details.append(node('p', 'small-note', metricText(metric)));
         }
         block.append(details);
       }
@@ -1077,7 +1095,11 @@ async function renderVariantPublication(area, variant) {
     historical.forEach(record => {
       const row = node('p', 'small-note', `Đoạn ${record.position + 1} · ${record.url} · ${formatDate(record.recorded_at)}`);
       details.append(row);
-      record.events.forEach(event => details.append(node('p', 'small-note', `${event.action} · ${formatDate(event.at)} · ${event.payload}`)));
+      record.events.forEach(event => details.append(node('p', 'small-note', eventText(event))));
+      if (record.metrics.length) {
+        details.append(node('p', 'small-note', 'Số liệu của lượt ghi nhận này:'));
+        record.metrics.forEach(metric => details.append(node('p', 'small-note', metricText(metric))));
+      }
     });
     section.append(details);
   }
