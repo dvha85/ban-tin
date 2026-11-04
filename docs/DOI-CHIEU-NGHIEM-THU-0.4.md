@@ -10,6 +10,8 @@
 
 > QA-02: lỗi phục hồi phiên sau restart đã được xử lý bằng nút khôi phục không tải trang; không tự gửi lại thao tác và có so sánh thư mục kho. Test handler, HTTP và smoke UI trên kho giả đạt; đường dẫn trùng không chứng minh kho chưa bị thay thế. Các trường hợp kết quả lưu không rõ được thử sau đó như nêu ở cập nhật đầu tài liệu; chi tiết tại `KIEM-THU.md`.
 
+> FIX-03: người dùng đã xác nhận URL-01…04 đạt trên Edge với kho giả của hotfix 0.3.1 độc lập; API kho thử xác nhận trạng thái và URL cuối. Hồi quy 89 Python, 6 JavaScript đạt; xem `KIEM-THU.md`. Đây chưa phải nghiệm thu toàn bộ QA-02 hoặc phát hành 0.3.1.
+
 Ngày cập nhật bằng chứng: 04/11/2026. Đối chiếu mục 10 của [kế hoạch nâng cấp](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) với mã và bằng chứng được ghi trong [nhật ký kiểm thử](KIEM-THU.md). Đây là trạng thái kiểm chứng, không phải chấp thuận triển khai. Các lệnh và kết quả chi tiết, dữ liệu sử dụng và giới hạn được ghi tại nhật ký đó.
 
 | Điều kiện mục 10 | Bằng chứng hiện có | Phần còn thiếu để kết luận |

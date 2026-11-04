@@ -94,6 +94,8 @@
 
 > Bổ sung BASE-02 / DIG-02: API từ chối lựa chọn nguồn có ID tin không thuộc danh sách hoặc giá trị `null`; thao tác thêm mục và sao chép bài cũ cũng từ chối `null`. Việc bỏ hẳn lựa chọn vẫn dùng nguồn có sẵn. Test service và HTTP kiểm tra dữ liệu không bị ghi dở; chi tiết tại `KIEM-THU.md`.
 
+> Cập nhật FIX-03: ngày 04/11/2026 người dùng kiểm tra bốn bước URL-01…04 trên Edge với kho giả của nhánh `codex/legacy-url-hotfix-031` tại `4680ee1` và xác nhận đều đạt. Đối chiếu API sau thao tác thấy một bài ghi nhận đúng URL giả, một bài vẫn đã duyệt, tổng ghi nhận là 1. Hồi quy bản độc lập 89/89 Python và 6/6 JavaScript đạt. Đây là nghiệm thu trên kho thử; chưa phát hành 0.3.1.
+
 - Ngày lập / cập nhật: **03/11/2026**, giờ Việt Nam.
 - Repository: [dvha85/ban-tin](https://github.com/dvha85/ban-tin).
 - Mốc mã nguồn được review: **`a180354e52e98a678d093609f9e8f2d37e6cd0a3`**, nhánh `main`, phiên bản ứng dụng `0.3.0`, dữ liệu schema `3`.
@@ -347,7 +349,7 @@ Quy mô S/M/L là tương đối, không phải cam kết số ngày. Mặc đ�
 
 | Giai đoạn | Đầu ra | Phụ thuộc | Quy mô | Trạng thái |
 | --- | --- | --- | --- | --- |
-| G0 | Hotfix URL, có thể phát hành 0.3.1 riêng | Không | S | Đang làm — chờ smoke trình duyệt |
+| G0 | Hotfix URL, có thể phát hành 0.3.1 riêng | Không | S | Đã kiểm thử trên kho giả — chưa phát hành |
 | G1 | Hợp đồng dữ liệu, policy và migration an toàn | Review kế hoạch | M | Đang làm |
 | G2 | Bản tin nhiều mục + nguồn + gói tư liệu | G1 | L | Đang làm — đã smoke một số luồng, chưa hoàn tất QA |
 | G3 | Ba biến thể, preview, đếm/chia đoạn | G1, G2 | L | Đang làm — còn kiểm chứng bộ đếm và QA chia đoạn |
@@ -359,7 +361,7 @@ Quy mô S/M/L là tương đối, không phải cam kết số ngày. Mặc đ�
 
 - [x] **FIX-01 / P0:** Viết test tái hiện URL A tràn sang B, cả trường hợp đã ghi nhận và đang nhập dở.
 - [x] **FIX-02 / P0:** Bind/reset trường URL theo draft; hiển thị đúng đường dẫn đã lưu, bổ sung xác nhận có ngữ cảnh.
-- [ ] **FIX-03 / P0:** Chạy hồi quy backend + test JS + smoke thật trên dữ liệu thử; cập nhật bằng chứng 0.3.1.
+- [x] **FIX-03 / P0:** Chạy hồi quy backend + test JS + smoke thật trên dữ liệu thử; cập nhật bằng chứng 0.3.1. Người dùng thực hiện URL-01…04 trên Edge với fixture, kết quả và giới hạn tại `KIEM-THU.md`.
 
 Gate: URL-01…04 tại mục 8 đạt, không migration, bản xuất legacy không đổi.
 
