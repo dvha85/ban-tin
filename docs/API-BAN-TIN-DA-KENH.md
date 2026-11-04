@@ -59,6 +59,14 @@ Khi tạo bản tin, `source_selection` là object có khóa ID tin dạng chu�
 
 Mỗi segment có `text` và `item_ids`; `source_ids` có thể chỉ định nguồn được dùng. Sửa nội dung hoặc đích bỏ checklist và duyệt tương ứng; khi lưu thay đổi, không giả định các giá trị `checks` gửi cùng sẽ được xác nhận. Kiểm tra nội dung và xác nhận checklist ở lượt lưu tiếp theo. Phiên bản đã có ghi nhận bị khóa; muốn sửa hãy tạo bản sao.
 
+Chi tiết đầu vào đối chiếu với `save_variant` và `render_segments`:
+
+- `account_label` là chuỗi tối đa 120 ký tự trước khi bỏ khoảng trắng; khi duyệt phải có tên khác rỗng.
+- `segments` là mảng từ 1 đến 20 object; Facebook chỉ nhận một đoạn. Mỗi `text` là chuỗi tối đa 12.000 ký tự, không chứa NUL. Khi lưu có thể để nội dung trống, nhưng duyệt yêu cầu mọi đoạn có nội dung và đầu ra đầy đủ nằm trong giới hạn của policy.
+- Mỗi `item_ids` là mảng không rỗng gồm ID nguyên khác nhau, thuộc bản tin. Nếu gửi `source_ids`, đây là mảng ID nguồn dạng chuỗi, không trùng, thuộc các mục đã chọn và có ít nhất một nguồn cho mỗi mục. Nếu bỏ hoặc gửi `null`, renderer dùng mọi nguồn của các mục đó.
+- Khi không có thay đổi nội dung, `checks` nếu gửi phải là object; năm khóa được xác nhận chỉ khi giá trị là boolean `true`, khóa thiếu hoặc giá trị khác trở thành `false`. Khi nội dung, đích, bản tin gốc hoặc policy thay đổi, server bỏ cả năm xác nhận và không dùng các giá trị `checks` gửi cùng. Nếu trạng thái và checklist không đổi, lưu trả phiên bản hiện có mà không tăng revision.
+- `revision` phải là số nguyên khớp revision hiện tại; sai hoặc thiếu trả 409. Sau thay đổi bản tin gốc cần xác nhận `adopt_bulletin_revision: true`; nếu bản sao yêu cầu đối chiếu nguồn thì cần `attribution_reviewed: true`. Đây là hợp đồng theo mã hiện tại, chưa chứng minh mọi tổ hợp qua HTTP.
+
 Khi duyệt mới, nguồn được chọn mà có `excerpt_hash` phải khớp SHA-256 của `summary` UTF-8; sai lệch trả 400, nêu thứ tự mục và nguồn trong bản tin, không tạo bản duyệt. Người biên tập cần đối chiếu nguồn, thêm nguồn chính xác và bỏ nguồn sai rồi kiểm tra lại. Mỗi mục phải giữ ít nhất một nguồn; nếu nguồn sai là nguồn duy nhất, cần thêm nguồn đối chiếu phù hợp trước khi bỏ. Khi cần nhập lại cùng URL, bỏ nguồn cũ trước rồi thêm lại URL và kiểm chứng lại mục. Nguồn không có hash vẫn cần kiểm chứng thủ công; hash khớp chỉ chứng minh trích đoạn khớp dấu vết lưu, không chứng minh tính xác thực. Bản duyệt lịch sử không được tự sửa hoặc rà soát lại bởi cổng này.
 
 ## Ghi nhận thủ công và số liệu
