@@ -340,7 +340,7 @@ test('metric form retains edits on error and retries the same payload idempotent
     document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
-  vm.runInContext(`api = async (path, body) => path.endsWith('/metrics') ? (calls.push(body), Promise.reject(new Error('Lỗi thử'))) : path.endsWith('/publications') ?
+  vm.runInContext(`api = async (path, body) => path.endsWith('/metrics') ? (calls.push(body), Promise.reject(Object.assign(new Error('Lỗi thử'), {outcomeUnknown: true}))) : path.endsWith('/publications') ?
     [{id: 11, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : {posts: ['test']};`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
   await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
@@ -356,6 +356,7 @@ test('metric form retains edits on error and retries the same payload idempotent
   button('Lưu số liệu').listeners.click[0]({}); await tick();
   assert.equal(calls[0].views, 10); assert.equal(calls[0].likes, 0); assert.equal(calls[0].replies, null);
   assert.equal(field('views').value, '10'); assert.ok(walk(area).some(el => el.textContent.includes('Lỗi thử')));
+  assert.ok(walk(area).some(el => el.textContent.includes('có thể đã được lưu')));
   button('Lưu số liệu').listeners.click[0]({}); await tick();
   assert.equal(calls[1].idempotency_key, calls[0].idempotency_key);
   field('views').value = '11'; button('Lưu số liệu').listeners.click[0]({}); await tick();
@@ -393,6 +394,11 @@ test('correction form preserves inputs and requires confirmation before submitti
   assert.equal(calls.length, 1); assert.equal(calls[0].reason, 'Lý do sửa thử');
   assert.equal(field('url').value, 'https://wrong.example/post');
   assert.ok(walk(area).some(el => el.textContent.includes('Liên kết không hợp lệ')));
+  vm.runInContext(`api = async () => { throw Object.assign(new Error('Mất kết nối'), {outcomeUnknown: true}); };`, context);
+  button('Lưu đính chính').listeners.click[0]({}); await tick();
+  assert.ok(walk(area).some(el => el.textContent.includes('thay đổi có thể đã được lưu')));
+  assert.equal(field('reason').value, 'Lý do sửa thử');
+  assert.equal(field('url').value, 'https://wrong.example/post');
   field('url').value = 'https://x.com/a/status/456'; field('url').listeners.input[0]({}); await tick();
   assert.equal(field('confirm').checked, false);
   button('Lưu đính chính').listeners.click[0]({}); await tick();

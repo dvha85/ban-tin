@@ -2,6 +2,8 @@
 
 ## QA-02: phản hồi ghi nhận bị ngắt 04/11/2026
 
+- PUB-04 / đính chính: mô phỏng lỗi kết quả chưa rõ tại handler giao diện. Trước sửa thông báo số liệu không nói rõ khả năng đã lưu; sau sửa, số liệu và đính chính hiển thị cảnh báo đối soát, giữ đầu vào. Test số liệu kiểm tra retry cùng nội dung dùng cùng khóa, đổi nội dung dùng khóa mới; test đính chính kiểm tra giữ lý do/URL. Đây là test DOM/API giả, chưa smoke cảnh báo trên trình duyệt hoặc thử mọi lỗi mạng. Hồi quy trước và sau sửa đều đạt 183 Python, 36 JavaScript; test cảnh báo mới thất bại trước sửa.
+
 - Bổ sung lỗi đọc phản hồi sau khi `fetch` đã trả header: trước sửa test JSON bị cắt không đánh dấu kết quả ghi chưa rõ; sau sửa, test giả lập JSON bị cắt và luồng văn bản lỗi đều đánh dấu POST, còn GET không mang cờ đó. Trường hợp 401/403 vẫn mở vùng khôi phục phiên nếu có trạng thái ứng dụng. Hồi quy sau sửa: 183/183 Python, 36/36 JavaScript; test mở rộng cho văn bản chạy riêng đạt. Chưa thử kịch bản đọc body lỗi qua trình duyệt hoặc mạng thật.
 
 - Trên server riêng chạy checkout hiện tại và SQLite fixture, đóng socket ngay sau khi ghi URL X giả thành công. Trình duyệt hiển thị cảnh báo cố định rằng kết quả chưa rõ, giữ URL và xác nhận. Tab thứ hai thấy một đoạn đã ghi nhận; thử lại trên tab đầu hiển thị 1/2 và tổng vẫn là một đoạn. Không có bài đăng thực.

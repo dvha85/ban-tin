@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> QA-02 / PUB-04: bổ sung cảnh báo kết quả chưa rõ cho nhập số liệu và đính chính khi không nhận được phản hồi; giữ nội dung đang nhập để đối soát. Test handler giả đạt; chưa smoke hai cảnh báo này trên trình duyệt, QA-02 vẫn mở. Xem `KIEM-THU.md`.
+
 > QA-02 bổ sung: lỗi đọc nội dung phản hồi sau khi nhận header cũng được đánh dấu kết quả ghi chưa rõ; test JavaScript mô phỏng JSON bị cắt và luồng văn bản lỗi. Chưa smoke tình huống này trên trình duyệt; xem `KIEM-THU.md`.
 
 > QA-02 ngày 04/11: trên kho giả, thử ngắt phản hồi sau khi server đã ghi URL; giao diện cảnh báo kết quả chưa rõ và giữ URL, thử lại vẫn chỉ có một đoạn ghi nhận. Đã bổ sung cảnh báo cố định khi `fetch` của thao tác ghi thất bại. Đây là một tình huống tiêm lỗi, QA-02 và BASE-03 vẫn mở; xem `KIEM-THU.md`.

@@ -90,6 +90,7 @@ listen($('recover-session'), 'click', recoverSession);
 function showClaimConflict(container, error, correction = null) {
   const {message, href} = claimConflictDetails(error, correction);
   container.replaceChildren(node('p', '', message));
+  if (error.outcomeUnknown) container.append(node('p', '', 'Kết quả chưa rõ: thay đổi có thể đã được lưu. Hãy kiểm tra dữ liệu và lịch sử trước khi thử lại.'));
   if (href) container.append(link(href, 'Mở bản ghi để đối soát trong thẻ mới ↗'));
   container.append(node('p', 'small-note', 'Giữ thẻ này để tiếp tục nội dung và liên kết đang nhập. Bản ghi có thể đã thay đổi; hãy kiểm tra trước khi thử lại.'));
   if (correction) container.append(node('p', 'small-note', `Đính chính chưa lưu · Lý do: ${correction.reason} · Liên kết đề xuất: ${correction.url}`));
@@ -1069,7 +1070,10 @@ async function renderVariantPublication(area, variant) {
           if (metricFingerprint !== fingerprint) { metricFingerprint = fingerprint; metricKey = crypto.randomUUID(); }
           payload.idempotency_key = metricKey;
           try { await api(`/api/publications/${existing.id}/metrics`, payload); }
-          catch (err) { error.textContent = `${err.message} Kiểm tra số liệu đã lưu trước khi thử lại nếu mất kết nối.`; return; }
+          catch (err) {
+            error.textContent = err.outcomeUnknown ? `${err.message} Kết quả chưa rõ: số liệu có thể đã được lưu. Hãy kiểm tra lịch sử trước khi thử lại hoặc sửa số liệu.` : err.message;
+            return;
+          }
           app.bulletinDirty = false; renderBulletin(); toast('Đã lưu số liệu do bạn nhập.');
         });
         listen(discard, 'click', () => {
