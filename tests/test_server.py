@@ -75,6 +75,11 @@ class ServerTests(unittest.TestCase):
                 status, _, _ = self.request('POST', path, {**payload, 'archive_revision': invalid}, headers)
                 self.assertEqual(status, 400)
                 self.assertFalse(self.room.bulletin(bulletin['id'])['archived'])
+        for invalid in (None, False, '1', [], {}):
+            with self.subTest(revision=invalid):
+                status, _, _ = self.request('POST', path, {**payload, 'revision': invalid}, headers)
+                self.assertEqual(status, 409)
+                self.assertFalse(self.room.bulletin(bulletin['id'])['archived'])
         status, _, body = self.request('POST', path, payload, headers)
         self.assertEqual(status, 200, body)
         archived = json.loads(body)
@@ -612,6 +617,13 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(reported['active'], 1)
         self.assertIsNone(reported['reported_at'])
         self.assertNotIn('events', reported)
+        other = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+            'platform': 'x', 'account_label': 'Kênh giả khác'})
+        status, _, _ = self.request('POST', f"/api/variants/{other['id']}/publications", {
+            **publication_payload, 'revision': other['revision']}, headers)
+        self.assertEqual(status, 409)
+        self.assertEqual(get(f"/api/variants/{other['id']}/publications"), [])
+        self.assertEqual(get('/api/bulletin-stats')['recorded_posts'], 1)
         current = get(path)
         self.assertEqual(current['status'], 'partially_recorded')
         status, _, body = self.request('POST', path + '/publications', {'revision': current['revision'],

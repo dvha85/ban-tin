@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## BASE-02: revision lưu trữ và phạm vi khóa ghi nhận 04/11/2026
+
+- Đối chiếu HTTP trên kho giả: `revision` nội dung sai kiểu ở yêu cầu lưu trữ trả 409 và không lưu trữ; `archived` hoặc `archive_revision` sai kiểu trả 400. Mở rộng test vòng đời ghi nhận: dùng khóa đã ghi cho một phiên bản khác trả 409, không tạo ghi nhận cho phiên bản kia và tổng ghi nhận vẫn là 1. Đây là các trường hợp bổ sung cho test hiện có, không thay đổi logic ứng dụng.
+- `python -B -m unittest discover -s tests -p test_server.py -q` đạt 31/31 trước và sau bổ sung. Đã sửa tài liệu API để phân biệt các mã lỗi, phạm vi khóa toàn kho và hai trường trạng thái lưu trữ trong phản hồi. Phần còn lại của BASE-02 vẫn cần đối chiếu; không suy rộng các kết quả này sang mọi trường hợp API.
+
 ## FMT-02 / QA-02: cảnh báo xem trước khi bản tin gốc đã đổi 04/11/2026
 
 - Trên trình duyệt tích hợp với server mã `6f9e7dc` và kho minh họa SQLite tạm, mở cùng bản tin ở hai thẻ; thẻ một chọn phiên bản X giả ở revision bản tin 1, thẻ hai sửa tiêu đề và lưu thành revision 2. Thẻ một nhập nội dung đoạn chưa lưu rồi bấm xem trước: hộp xem trước hiện nội dung mới nhập, nguồn giả và cảnh báo sao chép nội dung chưa lưu trước khi mở lại bản tin. Sau khi đóng hộp, nội dung chưa lưu vẫn còn trong ô. Đây là một tình huống UI với dữ liệu giả, không chứng minh mọi tổ hợp đồng thời hoặc toàn bộ QA-02.

@@ -24,7 +24,7 @@ Tài liệu này mô tả API nội bộ của nhánh phát triển 0.4, chưa p
 | `GET /api/bulletin-stats` | — | Thống kê bản tin và ghi nhận đa kênh. |
 | `GET /api/legacy-publication-duplicates` | — | Mảng nhóm `{match, drafts}` đối soát bài cũ; mỗi draft có `id`, `url` gốc. `match` là `recognized` hoặc `exact`; chỉ đọc, không sửa dữ liệu. |
 | `POST /api/bulletins` | `article_ids` (1–10 ID nguyên khác nhau), tùy chọn `title`, `edition_date`, `source_selection` | 201 và bản tin mới. `source_selection` là object khóa theo article ID dạng chuỗi; nguồn phải thuộc tin. |
-| `POST /api/bulletins/{id}/archive` | `revision`, `archive_revision`, `archived` boolean | Lưu trữ khi `true`, khôi phục khi `false`; trả bản tin. Sai kiểu trả 400; revision nội dung hoặc lưu trữ cũ trả 409. |
+| `POST /api/bulletins/{id}/archive` | `revision`, `archive_revision`, `archived` boolean | Lưu trữ khi `true`, khôi phục khi `false`; trả bản tin. `archived` hoặc `archive_revision` sai kiểu trả 400; `revision` nội dung sai kiểu hoặc không khớp và `archive_revision` cũ trả 409. |
 | `POST /api/bulletins/{id}/save` | `revision`; tùy chọn `title`, `edition_date`, `introduction`, `conclusion`, `item_ids` | Trả bản tin. `item_ids` xác định thứ tự đầy đủ các mục hiện có. |
 | `POST /api/bulletins/{id}/items` | `revision` và một trong `article_id` hoặc `remove_item_id`; khi thêm có thể gửi `source_selection` | Trả bản tin. Không thêm trùng article; phải giữ ít nhất một mục. |
 | `POST /api/bulletins/{id}/items/{item_id}/save` | `bulletin_revision`, revision của mục trong `revision`; các trường cần sửa | Trả toàn bộ bản tin mới, bao gồm revision mới của mục và bản tin. |
@@ -83,6 +83,8 @@ Khi duyệt mới, nguồn được chọn mà có `excerpt_hash` phải khớp 
 | `POST /api/publications/{id}/corrections` | Revision của **phiên bản** trong `revision`, `reason`, `url` thay thế hoặc chuỗi rỗng để hủy | Ghi sự kiện và trả `corrected_id`, `replacement_id`, `status`; nội dung phiên bản vẫn khóa. Bỏ trường `url` cũng được hiểu là hủy theo hợp đồng cũ; nếu có trường này, nó phải là chuỗi, `null` và các kiểu khác bị từ chối. |
 | `POST /api/publications/{id}/metrics` | `observed_at`, các trường `views`, `likes`, `saves`, `shares`, `followers`, `minutes`, `note`; thêm tùy chọn `replies`, `reposts`, `quotes` | Giá trị số là số nguyên từ 0 đến 1.000.000.000 hoặc `null`; không có số liệu khác với 0. Ba trường mới chỉ xuất hiện trong payload/phản hồi nếu được gửi; payload cũ giữ nguyên. Chỉ ghi cho publication đang hiệu lực. |
 
+Khóa ghi nhận URL có phạm vi **toàn kho**, không riêng một phiên bản. Retry cùng khóa đối chiếu phiên bản, vị trí, URL đã chuẩn hóa và thời điểm đăng đã chuẩn hóa; revision không nằm trong dữ liệu đối chiếu retry. Do đó một khóa đã dùng cho phiên bản khác trả 409, kể cả khi bản ghi cũ đã bị hủy. Trường hợp cùng khóa và dữ liệu ghi nhận trả lại bản ghi cũ, cần kiểm tra `active` và lịch sử trước khi kết luận bản ghi còn hiệu lực.
+
 Các timestamp người dùng cung cấp phải có múi giờ hợp lệ. URL cần đúng mẫu validator của nền tảng; validator không truy cập URL để chứng minh bài đã được đăng. Sau ghi nhận hoặc đính chính, đọc lại phiên bản để lấy revision mới.
 
 Khóa của bản ghi thay thế sau đính chính do server tạo và dùng dấu `:` để tách khỏi tập khóa client được phép gửi. Đây là chi tiết nội bộ, không dùng để gửi retry ghi nhận mới. Bản ghi đính chính cũ vẫn giữ nguyên khóa đã lưu.
@@ -115,8 +117,8 @@ Các trường dưới đây mô tả mã hiện tại, không phải cam kết 
 
 | Phản hồi | Trường được trả về |
 | --- | --- |
-| `GET /api/bulletins` | Mỗi phần tử có `id`, `revision`, `title`, `edition_date`, `created_at`, `updated_at`, `item_count`. |
-| Chi tiết bản tin và mutation trả bản tin | Có `id`, `revision`, `title`, `introduction`, `conclusion`, `edition_date`, `created_at`, `updated_at`, `items`. Mỗi item có `id`, `bulletin_id`, `article_id` (có thể `null`), `position` bắt đầu từ 0, `revision`, cùng các trường `title`, `body`, `angle`, `verification_note`, `verified`, `sources`, `claims`. |
+| `GET /api/bulletins` | Mỗi phần tử có `id`, `revision`, `title`, `edition_date`, `created_at`, `updated_at`, `item_count`, `archived`, `archive_revision`. |
+| Chi tiết bản tin và mutation trả bản tin | Có `id`, `revision`, `title`, `introduction`, `conclusion`, `edition_date`, `created_at`, `updated_at`, `archived`, `archive_revision`, `items`. Mỗi item có `id`, `bulletin_id`, `article_id` (có thể `null`), `position` bắt đầu từ 0, `revision`, cùng các trường `title`, `body`, `angle`, `verification_note`, `verified`, `sources`, `claims`. |
 | Phiên bản | Có `id`, `bulletin_id`, `platform`, `account_label`, `revision`, `bulletin_revision`, `status`, `approval_id`, `locked_at`, `created_at`, `updated_at`, `segments`, `checks`, `needs_update`, `policy_stale`, `publication_progress`. `approval_id` và `locked_at` có thể `null`; `publication_progress` là `null` hoặc `{active, total}`. Bản sao có thể có thêm `attribution_review_required`. |
 | Preview | Có `platform`, `policy_version`, `renderer_version`, `posts`, `valid`, `warning`; API preview bổ sung `needs_update`, `omitted_item_ids`. Mỗi post có `position`, `text`, `body`, `item_ids`, `source_ids`, `urls`, `length`, `limit`, `valid`. `text` là đầu ra đầy đủ đã gồm số thứ tự và nguồn. |
 | Split | `{segments, preview}`; `preview` là kết quả renderer và không có hai trường bổ sung riêng của API preview. Kết quả chưa được lưu. |
