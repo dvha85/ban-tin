@@ -54,6 +54,42 @@ class ServerTests(unittest.TestCase):
         headers['Origin'] = 'https://evil.example'
         self.assertEqual(self.request('POST', '/api/articles/import', {}, headers)[0], 403)
 
+    def test_bulletin_archive_http_is_reversible_and_checks_revisions(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử lưu trữ',
+            'url': 'https://example.com/archive-http', 'summary': 'Dữ liệu giả.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']], 'title': 'Bản tin thử'})
+        path = f"/api/bulletins/{bulletin['id']}/archive"
+        payload = {'revision': bulletin['revision'], 'archive_revision': 0, 'archived': True}
+        self.assertEqual(self.request('POST', path, payload)[0], 401)
+        missing_csrf = dict(headers)
+        missing_csrf.pop('X-CSRF-Token')
+        self.assertEqual(self.request('POST', path, payload, missing_csrf)[0], 403)
+        for invalid in (None, 0, 'true', [], {}):
+            with self.subTest(invalid=invalid):
+                status, _, _ = self.request('POST', path, {**payload, 'archived': invalid}, headers)
+                self.assertEqual(status, 400)
+                self.assertFalse(self.room.bulletin(bulletin['id'])['archived'])
+        for invalid in (None, False, -1, '0', [], {}):
+            with self.subTest(archive_revision=invalid):
+                status, _, _ = self.request('POST', path, {**payload, 'archive_revision': invalid}, headers)
+                self.assertEqual(status, 400)
+                self.assertFalse(self.room.bulletin(bulletin['id'])['archived'])
+        status, _, body = self.request('POST', path, payload, headers)
+        self.assertEqual(status, 200, body)
+        archived = json.loads(body)
+        self.assertTrue(archived['archived'])
+        self.assertGreater(archived['archive_revision'], 0)
+        status, _, body = self.request('GET', '/api/bulletins', headers=headers)
+        self.assertEqual(status, 200)
+        self.assertTrue(json.loads(body)[0]['archived'])
+        status, _, _ = self.request('POST', path, {**payload, 'archived': False}, headers)
+        self.assertEqual(status, 409)
+        status, _, body = self.request('POST', path, {**payload, 'archive_revision': archived['archive_revision'],
+                                                     'archived': False}, headers)
+        self.assertEqual(status, 200, body)
+        self.assertFalse(json.loads(body)['archived'])
+
     def test_variant_platform_wrong_json_types_are_rejected_without_writes(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử kiểu nền tảng',

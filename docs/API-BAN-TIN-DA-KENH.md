@@ -24,9 +24,12 @@ Tài liệu này mô tả API nội bộ của nhánh phát triển 0.4, chưa p
 | `GET /api/bulletin-stats` | — | Thống kê bản tin và ghi nhận đa kênh. |
 | `GET /api/legacy-publication-duplicates` | — | Mảng nhóm `{match, drafts}` đối soát bài cũ; mỗi draft có `id`, `url` gốc. `match` là `recognized` hoặc `exact`; chỉ đọc, không sửa dữ liệu. |
 | `POST /api/bulletins` | `article_ids` (1–10 ID nguyên khác nhau), tùy chọn `title`, `edition_date`, `source_selection` | 201 và bản tin mới. `source_selection` là object khóa theo article ID dạng chuỗi; nguồn phải thuộc tin. |
+| `POST /api/bulletins/{id}/archive` | `revision`, `archive_revision`, `archived` boolean | Lưu trữ khi `true`, khôi phục khi `false`; trả bản tin. Sai kiểu trả 400; revision nội dung hoặc lưu trữ cũ trả 409. |
 | `POST /api/bulletins/{id}/save` | `revision`; tùy chọn `title`, `edition_date`, `introduction`, `conclusion`, `item_ids` | Trả bản tin. `item_ids` xác định thứ tự đầy đủ các mục hiện có. |
 | `POST /api/bulletins/{id}/items` | `revision` và một trong `article_id` hoặc `remove_item_id`; khi thêm có thể gửi `source_selection` | Trả bản tin. Không thêm trùng article; phải giữ ít nhất một mục. |
 | `POST /api/bulletins/{id}/items/{item_id}/save` | `bulletin_revision`, revision của mục trong `revision`; các trường cần sửa | Trả toàn bộ bản tin mới, bao gồm revision mới của mục và bản tin. |
+
+Danh sách và chi tiết bản tin trả thêm `archived` (boolean) và `archive_revision` (số nguyên; 0 nếu chưa đổi trạng thái). API danh sách vẫn trả cả bản tin lưu trữ; giao diện ẩn theo cờ trừ khi người dùng chọn hiện. Lưu trữ/khôi phục là thao tác tổ chức, không đổi revision nội dung, bản duyệt hay thống kê và không khóa chỉnh sửa. Gửi cùng trạng thái với `archive_revision` hiện tại là no-op; sau phản hồi chưa rõ phải đọc lại trước khi thử lại. Mã cũ không biết lọc cờ lưu trữ.
 
 Các trường mục có thể gửi gồm `title`, `body`, `angle`, `verification_note`, `verified`, `claims`, `add_source`, `remove_source_id`. `claims` gồm tối đa 10 object `{text, evidence, checked}`. `add_source` gồm `url`, `title`, `summary`; mỗi mục giữ 1–3 nguồn và toàn bản tin tối đa 20 URL nguồn khác nhau. Sửa nội dung hoặc nguồn bỏ xác nhận mục và các xác nhận khẳng định; xác nhận lại sau khi lưu. Không nhầm revision bản tin với revision mục.
 

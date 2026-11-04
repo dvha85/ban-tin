@@ -544,7 +544,7 @@ function bulletinAction(button, action, afterSuccess = null) {
     $('create-bulletin').disabled = true;
     $('clear-bulletin-selection').disabled = true;
     try {
-      const result = await withInertTargets([$('bulletin-editor'), $('bulletin-list'), $('view-inbox'), document.querySelector('.sidebar nav')], action);
+      const result = await withInertTargets([$('bulletin-editor'), $('bulletin-list'), $('show-archived-bulletins'), $('view-inbox'), document.querySelector('.sidebar nav')], action);
       if (afterSuccess) afterSuccess();
       return result;
     }
@@ -556,7 +556,7 @@ function bulletinAction(button, action, afterSuccess = null) {
 }
 async function loadBulletinList() {
   const [entries, stats, duplicates] = await Promise.all([api('/api/bulletins'), api('/api/bulletin-stats'), api('/api/legacy-publication-duplicates')]);
-  $('bulletin-stats').textContent = `${stats.bulletins} bản tin · ${stats.variants} phiên bản kênh · ${stats.recorded_bulletins} bản tin có ghi nhận · ${stats.recorded_posts} đoạn đã ghi nhận. Không cộng với thống kê bài cũ ở trên.`;
+  $('bulletin-stats').textContent = `${stats.bulletins} bản tin · ${stats.variants} phiên bản kênh · ${stats.recorded_bulletins} bản tin có ghi nhận · ${stats.recorded_posts} đoạn đã ghi nhận. Số liệu gồm cả bản tin lưu trữ; không cộng với thống kê bài cũ ở trên.`;
   const notice = $('legacy-duplicate-notice');
   notice.replaceChildren();
   notice.hidden = !duplicates.length;
@@ -572,11 +572,12 @@ async function loadBulletinList() {
   }
   const list = $('bulletin-list');
   list.replaceChildren();
-  if (!entries.length) list.append(empty('Chưa có bản tin.', 'Chọn tin trong Hộp tin để bắt đầu.'));
-  for (const entry of entries) {
+  const visible = entries.filter(entry => !entry.archived || $('show-archived-bulletins').checked);
+  if (!visible.length) list.append(empty('Chưa có bản tin trong danh sách.', 'Chọn tin trong Hộp tin hoặc hiện bản tin đã lưu trữ.'));
+  for (const entry of visible) {
     const button = node('button', `draft-card${app.bulletin?.id === entry.id ? ' selected' : ''}`);
     button.append(node('strong', '', entry.title || `Bản tin #${entry.id}`),
-      node('small', '', `${entry.edition_date} · ${entry.item_count} mục · v${entry.revision}`));
+      node('small', '', `${entry.edition_date} · ${entry.item_count} mục · v${entry.revision}${entry.archived ? ' · Đã lưu trữ' : ''}`));
     bulletinAction(button, async () => {
       if (app.bulletinDirty && !window.confirm('Bản tin có thay đổi chưa lưu. Bỏ thay đổi và mở bản khác?')) return;
       app.bulletin = await api(`/api/bulletins/${entry.id}`);
@@ -623,7 +624,38 @@ function renderBulletin() {
   editor.replaceChildren();
   if (!bulletin) return;
   editor.append(node('h3', '', bulletin.title || `Bản tin #${bulletin.id}`),
-    node('p', 'small-note', `Phiên bản ${bulletin.revision}. Lưu từng phần trước khi chuyển sang phần khác.`));
+    node('p', 'small-note', `Phiên bản ${bulletin.revision}.${bulletin.archived ? ' Đã lưu trữ.' : ''} Lưu từng phần trước khi chuyển sang phần khác.`));
+  if (typeof bulletin.archived === 'boolean' && Number.isSafeInteger(bulletin.archive_revision) && bulletin.archive_revision >= 0) {
+    const archiveButton = node('button', 'button secondary', bulletin.archived ? 'Khôi phục bản tin' : 'Lưu trữ bản tin');
+    bulletinAction(archiveButton, async () => {
+      if (app.bulletinDirty || hasPendingBulletinUrl() || hasPendingPublicationEdit())
+        throw new Error('Hãy lưu hoặc bỏ các thay đổi trước khi thay đổi trạng thái lưu trữ.');
+      const label = bulletin.title || `Bản tin #${bulletin.id}`;
+      const prompt = bulletin.archived ? `Khôi phục “${label}” về danh sách đang làm?` :
+        `Lưu trữ “${label}”? Bản tin sẽ tạm ẩn khỏi danh sách đang làm và có thể khôi phục.`;
+      if (!window.confirm(prompt)) return;
+      let updated;
+      try {
+        updated = await api(`/api/bulletins/${bulletin.id}/archive`, {
+          revision: bulletin.revision, archive_revision: bulletin.archive_revision, archived: !bulletin.archived});
+      } catch (error) {
+        if (error.outcomeUnknown) error.message += ' Trạng thái lưu trữ có thể đã thay đổi; hãy kiểm tra lại danh sách trước khi thử lại.';
+        throw error;
+      }
+      app.bulletin = updated;
+      if (updated.archived && !$('show-archived-bulletins').checked) {
+        app.bulletin = null; app.variantId = null;
+        editor.replaceChildren(empty('Bản tin đã lưu trữ.', 'Bật “Hiện bản tin đã lưu trữ” để xem hoặc khôi phục.'));
+      } else renderBulletin();
+      const message = updated.archived ? 'Đã lưu trữ bản tin; có thể khôi phục.' : 'Đã khôi phục bản tin.';
+      try { await loadBulletinList(); }
+      catch (_) { toast(`${message} Chưa tải lại được danh sách; hãy thử mở lại.`, true); return; }
+      toast(message);
+    });
+    editor.append(archiveButton);
+  } else {
+    editor.append(node('p', 'small-note', 'Để lưu trữ bản tin, hãy khởi động lại ứng dụng để dùng phiên bản mới.'));
+  }
   const top = node('section', 'bulletin-block');
   const title = bulletinField('Tiêu đề', bulletin.title);
   const edition = bulletinField('Ngày bản tin', bulletin.edition_date);
@@ -1250,6 +1282,7 @@ listen($('search-input'), 'input', renderStories);
 listen($('age-filter'), 'change', renderStories);
 listen($('custom-age'), 'input', renderStories);
 listen($('clear-bulletin-selection'), 'click', () => { app.selectedArticles.clear(); renderStories(); });
+listen($('show-archived-bulletins'), 'change', loadBulletinList);
 listen($('draft-filter'), 'change', renderDrafts);
 listen($('refresh-button'), 'click', async () => {
   await api('/api/refresh', {});

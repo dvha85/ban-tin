@@ -88,6 +88,12 @@ class BulletinMixin:
         if not row:
             raise ValidationError('Không tìm thấy bản tin.')
         result = dict(row)
+        marker = conn.execute('''SELECT id,action FROM bulletin_history
+            WHERE bulletin_id=? AND entity_type='bulletin'
+            AND action IN ('bulletin_archived','bulletin_unarchived') ORDER BY id DESC LIMIT 1''',
+            (bulletin_id,)).fetchone()
+        result['archived'] = bool(marker and marker['action'] == 'bulletin_archived')
+        result['archive_revision'] = marker['id'] if marker else 0
         result['items'] = []
         for item in conn.execute('SELECT * FROM bulletin_items WHERE bulletin_id=? ORDER BY position', (bulletin_id,)):
             value = dict(item)
@@ -104,9 +110,36 @@ class BulletinMixin:
 
     def bulletins(self):
         with self.connection() as conn:
-            return [dict(row) for row in conn.execute('''SELECT id,revision,title,edition_date,created_at,updated_at,
-                (SELECT COUNT(*) FROM bulletin_items WHERE bulletin_id=bulletins.id) AS item_count
-                FROM bulletins ORDER BY updated_at DESC,id DESC''')]
+            rows = conn.execute('''SELECT b.id,b.revision,b.title,b.edition_date,b.created_at,b.updated_at,
+                (SELECT COUNT(*) FROM bulletin_items WHERE bulletin_id=b.id) AS item_count,
+                COALESCE(h.id,0) AS archive_revision,
+                COALESCE(h.action='bulletin_archived',0) AS archived
+                FROM bulletins b LEFT JOIN (
+                    SELECT bulletin_id,MAX(id) AS event_id FROM bulletin_history
+                    WHERE entity_type='bulletin' AND action IN ('bulletin_archived','bulletin_unarchived')
+                    GROUP BY bulletin_id
+                ) markers ON markers.bulletin_id=b.id
+                LEFT JOIN bulletin_history h ON h.id=markers.event_id
+                ORDER BY b.updated_at DESC,b.id DESC''')
+            return [{**dict(row), 'archived': bool(row['archived'])} for row in rows]
+
+    def set_bulletin_archived(self, bulletin_id, data):
+        from .service import Conflict, ValidationError
+        desired = data.get('archived')
+        expected_archive = data.get('archive_revision')
+        if type(desired) is not bool or type(expected_archive) is not int or expected_archive < 0:
+            raise ValidationError('Trạng thái lưu trữ hoặc phiên bản lưu trữ không hợp lệ.')
+        with self.connection() as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            bulletin = self._locked_bulletin(conn, bulletin_id, data.get('revision'))
+            if expected_archive != bulletin['archive_revision']:
+                raise Conflict('Trạng thái lưu trữ đã thay đổi ở cửa sổ khác. Hãy mở lại bản tin.')
+            if desired == bulletin['archived']:
+                return bulletin
+            action = 'bulletin_archived' if desired else 'bulletin_unarchived'
+            self._bulletin_history(conn, bulletin_id, 'bulletin', bulletin_id, bulletin['revision'],
+                                   action, {'archived': desired})
+            return self._bulletin(conn, bulletin_id)
 
     def bulletin_history(self, bulletin_id):
         with self.connection() as conn:

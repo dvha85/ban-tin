@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## DIG-02: lưu trữ và khôi phục bản tin 04/11/2026
+
+- Người dùng chọn lưu trữ có thể khôi phục. Trên kho fixture, test `test_archiving_bulletin_preserves_approved_and_recorded_versions` kiểm tra một bản duyệt chưa ghi nhận và một phiên bản đã ghi nhận một đoạn, cùng URL và số liệu 0: lưu trữ và khôi phục giữ nội dung, revision, snapshot duyệt, lịch sử publication, số liệu và thống kê; backup/restore giữ trạng thái lưu trữ và dữ liệu. Không có dữ liệu hay bài đăng thật.
+- `test_archive_conflicts_with_concurrent_archive_or_content_edit` chạy hai yêu cầu đồng thời: một thành công, một conflict, chỉ một sự kiện; trạng thái không đổi không tạo thêm sự kiện và yêu cầu dùng revision nội dung cũ bị từ chối. Test danh sách kiểm tra trạng thái độc lập của hai bản tin; test HTTP kiểm tra session/CSRF, kiểu dữ liệu, conflict và chu kỳ lưu trữ/khôi phục.
+- Test handler giao diện trong DOM giả kiểm tra chặn khi có nội dung hoặc URL chưa lưu, hủy xác nhận, ẩn/hiện danh sách lưu trữ, khôi phục, cảnh báo kết quả chưa rõ, báo đúng khi đã khôi phục nhưng tải lại danh sách thất bại, và không hiện nút khi backend cũ chưa hỗ trợ lưu trữ. Test thiếu chức năng đã thất bại trước triển khai; trường hợp phản hồi ghi thành công nhưng tải danh sách thất bại cũng thất bại trước khi sửa thông báo.
+- Trước sửa: Python 190/190, JavaScript 42/42. Sau sửa backend và UI: Python 194/194, JavaScript 43/43; không đổi schema. Chưa thử nút mới trên trình duyệt; QA-02 và DIG-02 vẫn mở cho bước đó. Lưu trữ chỉ thay cách hiển thị danh sách, không khóa chỉnh sửa nếu bản tin được mở lại.
+
 ## NEWS-05: ngày nguồn cũ qua nửa đêm Việt Nam 04/11/2026
 
 - Trước sửa, kiểm thử handler giao diện dùng dữ liệu giả và đồng hồ cố định tái hiện tin từ 8 ngày trở lên hiển thị `23:59` thay vì `23/10/2026`: định dạng tiếng Việt trả giờ trước ngày, trong khi mã lấy phần đầu chuỗi. Sau sửa, định dạng ngày riêng với múi giờ `Asia/Ho_Chi_Minh`; hai thời điểm UTC ở hai phía nửa đêm được hiển thị `23/10/2026` và `24/10/2026`.

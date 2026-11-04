@@ -314,6 +314,8 @@ class Handler(BaseHTTPRequestHandler):
                 bulletin_id = int(parts[3])
                 if len(parts) == 5 and parts[4] == 'save':
                     result = room.save_bulletin(bulletin_id, data)
+                elif len(parts) == 5 and parts[4] == 'archive':
+                    result = room.set_bulletin_archived(bulletin_id, data)
                 elif len(parts) == 5 and parts[4] == 'items':
                     result = room.change_bulletin_items(bulletin_id, data)
                 elif len(parts) == 5 and parts[4] == 'variants':

@@ -1,5 +1,7 @@
 import json
 import tempfile
+import threading
+from concurrent.futures import ThreadPoolExecutor
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
@@ -55,6 +57,52 @@ class BulletinTests(unittest.TestCase):
         self.assertEqual(read['revision'], bulletin['revision'])
         self.assertEqual([item['id'] for item in read['items']], [item['id'] for item in bulletin['items']])
         self.assertEqual(len(self.room.bulletin(bulletin['id'])['items']), 2)
+
+    def test_archive_conflicts_with_concurrent_archive_or_content_edit(self):
+        bulletin = self.create()
+        request = {'revision': bulletin['revision'], 'archive_revision': 0, 'archived': True}
+        barrier = threading.Barrier(2)
+
+        def archive():
+            barrier.wait(timeout=5)
+            try:
+                return self.room.set_bulletin_archived(bulletin['id'], request)
+            except Conflict:
+                return None
+
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            results = list(workers.map(lambda _: archive(), range(2)))
+        self.assertEqual(sum(result is not None for result in results), 1)
+        self.assertTrue(self.room.bulletin(bulletin['id'])['archived'])
+        actions = [row['action'] for row in self.room.bulletin_history(bulletin['id'])]
+        self.assertEqual(actions.count('bulletin_archived'), 1)
+
+        current = self.room.bulletin(bulletin['id'])
+        same = self.room.set_bulletin_archived(bulletin['id'], {
+            'revision': current['revision'], 'archive_revision': current['archive_revision'], 'archived': True})
+        self.assertEqual(same, current)
+        self.assertEqual([row['action'] for row in self.room.bulletin_history(bulletin['id'])], actions)
+        self.room.save_bulletin(bulletin['id'], {'revision': current['revision'], 'title': 'Đã sửa ở cửa sổ khác'})
+        with self.assertRaises(Conflict):
+            self.room.set_bulletin_archived(bulletin['id'], {
+                'revision': current['revision'], 'archive_revision': current['archive_revision'], 'archived': False})
+        self.assertTrue(self.room.bulletin(bulletin['id'])['archived'])
+
+    def test_archived_list_tracks_each_bulletin_independently(self):
+        first, second = self.create(), self.create()
+        def change(bulletin, state):
+            return self.room.set_bulletin_archived(bulletin['id'], {
+                'revision': bulletin['revision'], 'archive_revision': bulletin['archive_revision'],
+                'archived': state})
+
+        first = change(first, True)
+        second = change(second, True)
+        first = change(first, False)
+        rows = {row['id']: row for row in self.room.bulletins()}
+        self.assertFalse(rows[first['id']]['archived'])
+        self.assertTrue(rows[second['id']]['archived'])
+        self.assertEqual(rows[first['id']]['archive_revision'], first['archive_revision'])
+        self.assertEqual(rows[second['id']]['archive_revision'], second['archive_revision'])
 
     def test_selection_validation_is_atomic(self):
         first = self.articles[0]['id']

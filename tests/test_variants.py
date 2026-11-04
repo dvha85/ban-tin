@@ -95,6 +95,59 @@ class VariantTests(unittest.TestCase):
             'revision': draft['revision'], 'checks': {key: True for key in self.room.CHECKS}})
         return self.room.approve(draft['id'], draft['revision'])
 
+    def test_archiving_bulletin_preserves_approved_and_recorded_versions(self):
+        from newsroom.__main__ import restore
+
+        recorded = self.make_approved(two=True)
+        publication = self.room.record_publication(recorded['id'], {
+            'revision': recorded['revision'], 'position': 0,
+            'url': 'https://x.com/fixture/status/76001', 'idempotency_key': 'archive_fixture_76001'})
+        self.room.save_publication_metrics(publication['id'], {
+            'observed_at': '2026-11-04T10:00:00+07:00', 'views': 0})
+        unpublished = self.make_approved(platform='threads')
+        before = self.room.bulletin(self.bulletin['id'])
+        self.assertFalse(before['archived'])
+        self.assertEqual(before['archive_revision'], 0)
+        before_variants = {key: self.room.variant(key) for key in (recorded['id'], unpublished['id'])}
+        before_exports = {key: self.room.export_variant(key) for key in before_variants}
+        before_publications = self.room.publications(recorded['id'])
+        before_stats = self.room.bulletin_stats()
+
+        archived = self.room.set_bulletin_archived(before['id'], {
+            'revision': before['revision'], 'archive_revision': before['archive_revision'], 'archived': True})
+        self.assertTrue(archived['archived'])
+        self.assertGreater(archived['archive_revision'], 0)
+        self.assertEqual(archived['revision'], before['revision'])
+        self.assertEqual(archived['items'], before['items'])
+        self.assertTrue(next(row for row in self.room.bulletins() if row['id'] == before['id'])['archived'])
+        for key in before_variants:
+            self.assertEqual(self.room.variant(key), before_variants[key])
+            self.assertEqual(self.room.export_variant(key), before_exports[key])
+        self.assertEqual(self.room.publications(recorded['id']), before_publications)
+        self.assertEqual(self.room.bulletin_stats(), before_stats)
+        with self.assertRaises(Conflict):
+            self.room.set_bulletin_archived(before['id'], {
+                'revision': before['revision'], 'archive_revision': 0, 'archived': False})
+        self.assertTrue(self.room.bulletin(before['id'])['archived'])
+
+        target = Path(self.temp.name) / 'archived-restore'
+        restore(self.room.backup(), target)
+        reopened = Newsroom(target)
+        self.assertTrue(reopened.bulletin(before['id'])['archived'])
+        self.assertEqual(reopened.publications(recorded['id']), before_publications)
+        self.assertEqual(reopened.export_variant(unpublished['id']), before_exports[unpublished['id']])
+
+        restored = self.room.set_bulletin_archived(before['id'], {
+            'revision': archived['revision'], 'archive_revision': archived['archive_revision'], 'archived': False})
+        self.assertFalse(restored['archived'])
+        self.assertGreater(restored['archive_revision'], archived['archive_revision'])
+        self.assertEqual(restored['revision'], before['revision'])
+        self.assertEqual(self.room.publications(recorded['id']), before_publications)
+        self.assertEqual(self.room.export_variant(unpublished['id']), before_exports[unpublished['id']])
+        actions = [entry['action'] for entry in self.room.bulletin_history(before['id'])]
+        self.assertEqual(actions.count('bulletin_archived'), 1)
+        self.assertEqual(actions.count('bulletin_unarchived'), 1)
+
     def test_legacy_duplicate_overlay_preserves_original_records(self):
         drafts = [self.make_approved_legacy() for _ in range(3)]
         urls = ['https://facebook.com/page/posts/77',

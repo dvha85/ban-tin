@@ -615,3 +615,81 @@ test('older source dates show the Vietnam calendar date across midnight', () => 
   assert.equal(vm.runInContext("shortDate('2026-11-04T17:31:00Z')", context), 'Ngày nguồn ở tương lai');
   assert.equal(vm.runInContext("shortDate(null)", context), 'Chưa rõ ngày');
 });
+
+test('bulletin archive controls preserve unsaved work and show archived entries on request', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = [], messages = [];
+  let confirmed = false, uncertain = false, listFails = false;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+    setTimeout, clearTimeout, fetch: () => new Promise(() => {}), calls, messages,
+    shouldFail: () => uncertain, shouldFailList: () => listFails,
+    window: {location: {search: ''}, addEventListener() {}, confirm: () => confirmed},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.state = {articles: [], bulletin_usage: {}};
+    app.bulletin = {id: 7, revision: 4, archive_revision: 0, archived: false, title: 'Bản tin thử',
+      edition_date: '2026-11-04', introduction: '', conclusion: '', items: []};
+    toast = message => messages.push(message);
+    api = async (path, body) => {
+      if (path === '/api/bulletins/7/archive') {
+        calls.push({path, body});
+        if (shouldFail()) { const error = new Error('Mất kết nối'); error.outcomeUnknown = true; throw error; }
+        return {...app.bulletin, archived: body.archived, archive_revision: body.archive_revision + 1};
+      }
+      if (path === '/api/bulletins/7/variants') return [];
+      if (path === '/api/bulletins') {
+        if (shouldFailList()) throw new Error('Không tải được danh sách');
+        return [
+          {id: 7, revision: 4, title: 'Đang làm', edition_date: '2026-11-04', item_count: 1, archived: false},
+          {id: 8, revision: 3, title: 'Đã cất', edition_date: '2026-11-03', item_count: 1, archived: true}];
+      }
+      if (path === '/api/bulletin-stats') return {bulletins: 2, variants: 0, recorded_bulletins: 0, recorded_posts: 0};
+      if (path === '/api/legacy-publication-duplicates') return [];
+      throw new Error('Unexpected API ' + path);
+    }; renderBulletin();`, context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const button = name => walk(get('bulletin-editor')).find(el => el.tagName === 'button' && el.textContent === name);
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  assert.ok(button('Lưu trữ bản tin'));
+  vm.runInContext('app.bulletinDirty = true', context);
+  button('Lưu trữ bản tin').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 0); assert.match(messages.at(-1), /lưu|bỏ/i);
+  vm.runInContext('app.bulletinDirty = false', context);
+  const pending = new Element('input'); pending.dataset.publicationUrl = '0'; pending.value = 'https://x.com/fake/status/1';
+  get('bulletin-editor').append(pending);
+  button('Lưu trữ bản tin').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 0); assert.match(messages.at(-1), /lưu|bỏ/i);
+  get('bulletin-editor').children = get('bulletin-editor').children.filter(child => child !== pending);
+  button('Lưu trữ bản tin').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 0);
+  confirmed = true;
+  button('Lưu trữ bản tin').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[0].body)), {revision: 4, archive_revision: 0, archived: true});
+  assert.equal(vm.runInContext('app.bulletin', context), null);
+  assert.ok(walk(get('bulletin-list')).some(el => el.textContent === 'Đang làm'));
+  assert.ok(!walk(get('bulletin-list')).some(el => el.textContent === 'Đã cất'));
+  get('show-archived-bulletins').checked = true;
+  get('show-archived-bulletins').listeners.change[0]({}); await tick();
+  assert.ok(walk(get('bulletin-list')).some(el => el.textContent === 'Đã cất'));
+
+  vm.runInContext(`app.bulletin = {id: 7, revision: 4, archive_revision: 1, archived: true,
+    title: 'Bản tin thử', edition_date: '2026-11-04', introduction: '', conclusion: '', items: []}; renderBulletin();`, context);
+  await tick();
+  assert.ok(button('Khôi phục bản tin'));
+  uncertain = true;
+  button('Khôi phục bản tin').listeners.click[0]({}); await tick();
+  assert.match(messages.at(-1), /có thể đã thay đổi/);
+  assert.equal(vm.runInContext('app.bulletin.archived', context), true);
+  uncertain = false; listFails = true;
+  button('Khôi phục bản tin').listeners.click[0]({}); await tick();
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[2].body)), {revision: 4, archive_revision: 1, archived: false});
+  assert.equal(vm.runInContext('app.bulletin.archived', context), false);
+  assert.match(messages.at(-1), /Đã khôi phục.*chưa tải lại/i);
+  vm.runInContext(`app.bulletin = {id: 7, revision: 4, title: 'Máy chủ cũ',
+    edition_date: '2026-11-04', introduction: '', conclusion: '', items: []}; renderBulletin();`, context);
+  assert.equal(button('Lưu trữ bản tin'), undefined);
+  assert.ok(walk(get('bulletin-editor')).some(el => /khởi động lại.*ứng dụng/i.test(el.textContent)));
+});
