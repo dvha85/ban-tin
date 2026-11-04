@@ -92,6 +92,8 @@
 
 > Đồng bộ thêm quy tắc trên vào nhánh 0.4: test mới tái hiện lỗi cũ; hồi quy sau sửa 183 Python và 41 JavaScript đạt. Chưa smoke hộp thoại và chuyển trạng thái trên UI; xem `KIEM-THU.md`.
 
+> Bổ sung BASE-02 / DIG-02: API từ chối lựa chọn nguồn có ID tin không thuộc danh sách hoặc giá trị `null`; thao tác thêm mục và sao chép bài cũ cũng từ chối `null`. Việc bỏ hẳn lựa chọn vẫn dùng nguồn có sẵn. Test service và HTTP kiểm tra dữ liệu không bị ghi dở; chi tiết tại `KIEM-THU.md`.
+
 - Ngày lập / cập nhật: **03/11/2026**, giờ Việt Nam.
 - Repository: [dvha85/ban-tin](https://github.com/dvha85/ban-tin).
 - Mốc mã nguồn được review: **`a180354e52e98a678d093609f9e8f2d37e6cd0a3`**, nhánh `main`, phiên bản ứng dụng `0.3.0`, dữ liệu schema `3`.

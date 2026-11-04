@@ -69,6 +69,33 @@ class ServerTests(unittest.TestCase):
                 self.assertIn('error', json.loads(body))
                 self.assertEqual(self.room.variants(bulletin['id']), [])
 
+    def test_invalid_source_selection_is_rejected_over_http_without_writes(self):
+        headers = self.session()
+        first = self.room.import_article({'title': 'Tin chọn nguồn 1',
+            'url': 'https://example.com/http-source-1', 'summary': 'Nguồn giả một.'})
+        second = self.room.import_article({'title': 'Tin chọn nguồn 2',
+            'url': 'https://example.com/http-source-2', 'summary': 'Nguồn giả hai.'})
+        draft = self.room.create_draft(first['id'])
+        for selection in ({str(second['id']): [second['url']]}, {str(first['id']): None}):
+            with self.subTest(selection=selection):
+                status, _, body = self.request('POST', '/api/bulletins',
+                    {'article_ids': [first['id']], 'source_selection': selection}, headers)
+                self.assertEqual(status, 400, body)
+                self.assertIn('error', json.loads(body))
+                self.assertEqual(self.room.bulletins(), [])
+        bulletin = self.room.create_bulletin({'article_ids': [first['id']]})
+        before_history = self.room.bulletin_history(bulletin['id'])
+        status, _, body = self.request('POST', f"/api/bulletins/{bulletin['id']}/items", {
+            'revision': bulletin['revision'], 'article_id': second['id'], 'source_selection': None}, headers)
+        self.assertEqual(status, 400, body)
+        self.assertEqual(self.room.bulletin(bulletin['id']), bulletin)
+        self.assertEqual(self.room.bulletin_history(bulletin['id']), before_history)
+        status, _, body = self.request('POST', f"/api/drafts/{draft['id']}/copy-bulletin", {
+            'revision': draft['revision'], 'source_selection': None}, headers)
+        self.assertEqual(status, 400, body)
+        self.assertEqual(len(self.room.bulletins()), 1)
+        self.assertEqual(self.room.draft(draft['id']), draft)
+
     def test_variant_save_contract_over_http(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử hợp đồng lưu',

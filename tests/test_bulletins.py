@@ -63,6 +63,47 @@ class BulletinTests(unittest.TestCase):
                 self.room.create_bulletin({'article_ids': ids})
         self.assertEqual(self.room.bulletins(), [])
 
+    def test_source_selection_rejects_unknown_article_keys_and_null(self):
+        first, second = self.articles[:2]
+        first_id, second_id = first['id'], second['id']
+        valid_url = first['sources'][0]['url']
+        invalid = ({str(second_id): [valid_url]},
+                   {str(first_id): [valid_url], str(second_id): [valid_url]},
+                   {str(first_id): None},
+                   {str(first_id): []},
+                   {str(first_id): [second['url']]},
+                   {str(first_id): [valid_url, valid_url]},
+                   {str(first_id): 'not-a-list'},
+                   {f'0{first_id}': [valid_url]})
+        for selection in invalid:
+            with self.subTest(selection=selection):
+                with self.assertRaises(ValidationError):
+                    self.room.create_bulletin({'article_ids': [first_id], 'source_selection': selection})
+                self.assertEqual(self.room.bulletins(), [])
+        selected = self.room.create_bulletin({'article_ids': [first_id, second_id],
+            'source_selection': {str(first_id): [valid_url]}})
+        self.assertEqual([source['url'] for source in selected['items'][0]['sources']], [valid_url])
+        self.assertEqual([source['url'] for source in selected['items'][1]['sources']],
+                         [source['url'] for source in second['sources']])
+
+    def test_null_source_selection_does_not_add_item(self):
+        first, second = self.articles[:2]
+        bulletin = self.room.create_bulletin({'article_ids': [first['id']]})
+        before_history = self.room.bulletin_history(bulletin['id'])
+        with self.assertRaises(ValidationError):
+            self.room.change_bulletin_items(bulletin['id'], {'revision': bulletin['revision'],
+                'article_id': second['id'], 'source_selection': None})
+        self.assertEqual(self.room.bulletin(bulletin['id']), bulletin)
+        self.assertEqual(self.room.bulletin_history(bulletin['id']), before_history)
+
+    def test_null_source_selection_does_not_copy_legacy(self):
+        first = self.articles[0]
+        draft = self.room.create_draft(first['id'])
+        with self.assertRaises(ValidationError):
+            self.room.copy_legacy_draft(draft['id'], {'revision': draft['revision'], 'source_selection': None})
+        self.assertEqual(self.room.bulletins(), [])
+        self.assertEqual(self.room.draft(draft['id']), draft)
+
     def test_item_and_source_limits_at_boundaries_are_atomic(self):
         for index in range(3, 11):
             self.articles.append(self.room.import_article({'title': f'Tin giới hạn {index}',

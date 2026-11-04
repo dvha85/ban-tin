@@ -42,6 +42,8 @@ class BulletinMixin:
             draft = self._locked_draft(conn, draft_id, data.get('revision'))
             sources = draft['sources']
             selections = data.get('source_selection')
+            if 'source_selection' in data and not isinstance(selections, list):
+                raise ValidationError('Danh sách nguồn đã chọn không hợp lệ.')
             if selections is not None:
                 if (not isinstance(selections, list) or not all(isinstance(url, str) for url in selections)
                         or len(set(selections)) != len(selections)):
@@ -186,12 +188,16 @@ class BulletinMixin:
     def create_bulletin(self, data):
         from .service import ValidationError
         ids = data.get('article_ids')
-        if not isinstance(ids, list) or not 1 <= len(ids) <= MAX_ITEMS or any(type(i) is not int for i in ids):
+        if (not isinstance(ids, list) or not 1 <= len(ids) <= MAX_ITEMS or
+                any(type(i) is not int or not -(2**63) <= i < 2**63 for i in ids)):
             raise ValidationError('Hãy chọn từ 1 đến 10 tin.')
         if len(set(ids)) != len(ids):
             raise ValidationError('Một tin chỉ được chọn một lần trong bản tin.')
         source_selection = data.get('source_selection', {})
-        if not isinstance(source_selection, dict):
+        article_keys = {str(article_id) for article_id in ids}
+        if (not isinstance(source_selection, dict) or
+                any(key not in article_keys or not isinstance(value, list)
+                    for key, value in source_selection.items())):
             raise ValidationError('Danh sách chọn nguồn không hợp lệ.')
         title = _text(data.get('title', ''), 'Tiêu đề bản tin', 180)
         today = datetime.now(timezone(timedelta(hours=7))).date().isoformat()
@@ -336,6 +342,8 @@ class BulletinMixin:
             if (article_id is None) == (remove_id is None):
                 raise ValidationError('Chọn thêm một tin hoặc bỏ một mục.')
             if article_id is not None:
+                if 'source_selection' in data and not isinstance(data['source_selection'], list):
+                    raise ValidationError('Danh sách nguồn đã chọn không hợp lệ.')
                 if len(bulletin['items']) >= MAX_ITEMS:
                     raise ValidationError('Bản tin chỉ có tối đa 10 mục.')
                 if any(item['article_id'] == article_id for item in bulletin['items']):

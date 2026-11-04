@@ -39,7 +39,7 @@ Các giới hạn dưới đây được đối chiếu với `create_bulletin`,
 | Khẳng định | Tối đa 10; mỗi `text`: 500 và không rỗng sau khi bỏ khoảng trắng; `evidence`: 1.000; `checked` phải là boolean. Để duyệt, khẳng định của mục được sử dụng còn phải có bằng chứng và được xác nhận. |
 | Nguồn thêm thủ công | `title`: 300; `summary`: 3.000; `url` phải qua kiểm tra URL HTTPS và thuộc giới hạn URL của ứng dụng. |
 
-Khi tạo bản tin, `source_selection` là object có khóa ID tin dạng chuỗi, giá trị là mảng URL. Khi thêm một tin qua `/items`, trường cùng tên là mảng URL trực tiếp cho tin đó. Nếu bỏ lựa chọn nguồn, server dùng các nguồn có sẵn và vẫn yêu cầu 1–3 nguồn. Việc gửi lựa chọn sai hoặc vượt giới hạn bị từ chối; không mặc định chọn lại.
+Khi tạo bản tin, `source_selection` là object có khóa là biểu diễn thập phân chính xác của ID tin trong `article_ids`, giá trị là mảng URL của tin đó. Khóa không thuộc danh sách đã chọn, khóa viết khác biểu diễn ID hoặc giá trị không phải mảng (kể cả `null`) bị từ chối. Có thể bỏ khóa của một tin để dùng nguồn có sẵn của tin đó. Khi thêm một tin qua `/items` hoặc sao chép bài cũ qua `/copy-bulletin`, trường cùng tên nếu được gửi phải là mảng URL trực tiếp; `null` bị từ chối. Nếu bỏ trường lựa chọn nguồn, server dùng các nguồn có sẵn và vẫn yêu cầu 1–3 nguồn. Việc gửi lựa chọn sai hoặc vượt giới hạn bị từ chối; không mặc định chọn lại.
 
 ## Phiên bản theo kênh
 
