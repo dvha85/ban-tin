@@ -1,5 +1,7 @@
 # Đối chiếu điều kiện nghiệm thu 0.4
 
+> QA-02 / DIG-02: trên một kho giả, đã đổi thứ tự và lưu nội dung qua giao diện; sau khi dừng và mở lại tiến trình máy chủ, trình duyệt mở lại đúng revision, thứ tự, nội dung và URL từng mục. Đây là lượt thử riêng với bản tin hai mục được chuẩn bị bằng service; QA-02 vẫn mở. Xem `KIEM-THU.md`.
+
 > APR-01 / QA-02: server v5 mã 1b57698 trên kho giả đã thử lưu, xác nhận lại và duyệt lại bản X chưa ghi nhận; bản X khác đã ghi nhận 1/2 theo v4 giữ snapshot lịch sử và ghi nhận thêm URL giả đoạn 2 qua giao diện. Phạm vi, giới hạn và các trạng thái khác xem KIEM-THU.md; QA-02 và BASE-03 vẫn mở.
 
 > MIG-01…05 / QA-03: bổ sung kiểm tra integrity, khóa ngoại, restore DB hỏng và thử khôi phục backup schema 3 bằng mã 0.3.1 trên fixture. Python 190/190 và JavaScript 41/41 đạt. Phần thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng; chưa triển khai. Xem `KIEM-THU.md`.

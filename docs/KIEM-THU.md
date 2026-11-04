@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## QA-02 / DIG-02: mở lại sau khởi động máy chủ 04/11/2026
+
+- Trên kho SQLite tạm tạo bằng service, chuẩn bị hai tin và một bản tin giả. Với trình duyệt tích hợp và mã `1a988d9`, chuyển mục thứ hai lên đầu, nhập nội dung tiếng Việt cho mục đó và lưu qua giao diện. Bản tin chuyển từ revision 1 sang 3.
+- Dừng tiến trình máy chủ thử, khởi động tiến trình mới với cùng thư mục SQLite và cổng tạm khác, rồi mở lại bản tin qua trình duyệt. Revision vẫn là 3; thứ tự, nội dung đã lưu và hai URL `example.com` theo từng mục hiển thị như trước khi dừng.
+- Phạm vi chỉ gồm một bản tin nháp, một lần lưu nội dung và đổi thứ tự; không kiểm tra phiên bản đã duyệt, khôi phục thẻ cũ, dữ liệu chưa lưu hay kho vận hành. Không truy cập URL nguồn hoặc đăng bài; QA-02 vẫn mở.
+
 ## QA-02: tiêu điểm khi chọn phiên bản 04/11/2026
 
 - Trên trình duyệt tích hợp với kho SQLite giả, trước sửa chọn phiên bản X bằng phím xuống và Enter làm giao diện dựng lại và tiêu điểm rơi về vùng trang. Baseline JavaScript đạt 45/45; test DOM bổ sung ban đầu không đạt vì danh sách chưa có nhãn truy cập.
