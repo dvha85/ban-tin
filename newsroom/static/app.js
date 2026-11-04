@@ -36,7 +36,9 @@ async function api(path, body) {
       headers: body === undefined ? {} : {'Content-Type': 'application/json', 'X-CSRF-Token': app.csrf},
       body: payload});
   } catch (_) {
-    throw new Error('Mất kết nối với Bàn tin. Giữ nội dung chưa lưu; kiểm tra cửa sổ chạy ứng dụng.');
+    const error = new Error('Mất kết nối với Bàn tin. Giữ nội dung chưa lưu; kiểm tra cửa sổ chạy ứng dụng.');
+    if (body !== undefined) error.outcomeUnknown = true;
+    throw error;
   }
   const json = (response.headers.get('Content-Type') || '').includes('application/json');
   const result = json ? await response.json() : await response.text();
@@ -1138,7 +1140,15 @@ async function renderVariantPublication(area, variant) {
           if (!app.publicationKeys.has(key)) app.publicationKeys.set(key, crypto.randomUUID());
           try { await api(`/api/variants/${variant.id}/publications`, {revision: variant.revision, position, url: value,
             idempotency_key: app.publicationKeys.get(key)}); }
-          catch (error) { showClaimConflict(conflict, error); return; }
+          catch (error) {
+            if (error.outcomeUnknown) {
+              conflict.className = 'notice warning'; conflict.setAttribute('role', 'alert');
+              conflict.replaceChildren(node('p', '', 'Kết quả chưa rõ: liên kết có thể đã được ghi nhận. Hãy kiểm tra dữ liệu và lịch sử trước khi thử lại.'));
+              conflict.hidden = false;
+              return;
+            }
+            showClaimConflict(conflict, error); return;
+          }
           app.publicationKeys.delete(key);
           app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã ghi nhận thông tin do bạn nhập.');
         });
@@ -1146,7 +1156,7 @@ async function renderVariantPublication(area, variant) {
         confirmation.append(confirm, back); confirmation.hidden = false;
       });
       url.addEventListener('input', () => {
-        confirmedUrl = null; confirmation.hidden = true;
+        confirmedUrl = null; confirmation.hidden = true; conflict.hidden = true;
         app.bulletinDirty = [...$('bulletin-editor').querySelectorAll('[data-dirty="true"]')].length > 0 ||
           [...$('bulletin-editor').querySelectorAll('[data-publication-url]')].some(input => input.value.trim());
       });

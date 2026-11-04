@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## QA-02: phản hồi ghi nhận bị ngắt 04/11/2026
+
+- Trên server riêng chạy checkout hiện tại và SQLite fixture, đóng socket ngay sau khi ghi URL X giả thành công. Trình duyệt hiển thị cảnh báo cố định rằng kết quả chưa rõ, giữ URL và xác nhận. Tab thứ hai thấy một đoạn đã ghi nhận; thử lại trên tab đầu hiển thị 1/2 và tổng vẫn là một đoạn. Không có bài đăng thực.
+- Trước sửa, giao diện chỉ thông báo mất kết nối chung. Sau sửa, lỗi `fetch` khi xác nhận ghi nhận có cảnh báo riêng và giữ khóa thử lại; sửa URL ẩn cảnh báo. Test handler mô phỏng kiểm tra cảnh báo, URL và khóa. Hồi quy trước sửa: 183 Python và 34 JavaScript đạt; sau sửa: 183 Python và 35 JavaScript đạt.
+- Phạm vi là một lần tiêm lỗi sau commit cho ghi nhận đa kênh; chưa chứng minh mọi lỗi mạng, lỗi đọc nội dung phản hồi sau khi `fetch` thành công, hay thao tác khác. QA-02 vẫn mở cho bàn phím, clipboard, rời trang và các tình huống còn lại; BASE-03 vẫn cần đối chiếu nền tảng.
+
 ## Smoke test giao diện đa kênh 04/11/2026
 
 - APR-01 / thông báo: khi trường biên tập của mục được dùng còn dấu chưa xác minh, lỗi duyệt nêu thứ tự mục và tên trường thay vì chỉ yêu cầu kiểm tra chung. Test service kiểm tra bốn trường, test HTTP kiểm tra ghi chú; hồi quy 178/178 Python và 33/33 JavaScript đạt, test bốn trường chạy lại sau mở rộng đạt. Chưa smoke hiển thị thông báo trên UI.

@@ -170,6 +170,21 @@ test('publication URL fields have a distinct accessible label for each segment',
   assert.deepEqual(inputs.map(input => input['aria-label']), ['Liên kết bài đã đăng cho đoạn 1', 'Liên kết bài đã đăng cho đoạn 2']);
 });
 
+test('network failure marks a mutation outcome as unknown', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    requestJson: JSON.stringify, fetch: async () => { throw new Error('offline'); },
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  await assert.rejects(vm.runInContext("api('/api/variants/3/publications', {url: 'fixture'})", context),
+    error => error.outcomeUnknown === true);
+  await assert.rejects(vm.runInContext("api('/api/state')", context),
+    error => error.outcomeUnknown !== true);
+});
+
 test('publication retry reuses its key but a later new recording gets a new key', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
@@ -181,7 +196,7 @@ test('publication retry reuses its key but a later new recording gets a new key'
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
   vm.runInContext(`api = async (path, body) => { if (path.endsWith('/publications') && body) {
-    calls.push(body); if (calls.length === 1) throw new Error('Mất kết nối'); return {}; }
+    calls.push(body); if (calls.length === 1) throw Object.assign(new Error('Mất kết nối'), {outcomeUnknown: true}); return {}; }
     return path.endsWith('/publications') ? [] : {posts: ['test']}; };
     renderBulletin = () => {}; loadBulletinList = async () => {}; toast = () => {};`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
@@ -194,6 +209,8 @@ test('publication retry reuses its key but a later new recording gets a new key'
   report.listeners.click[0]({}); await tick();
   const confirm = () => walk(area).find(el => el.tagName === 'button' && el.textContent === 'Xác nhận ghi nhận');
   confirm().listeners.click[0]({}); await tick();
+  assert.ok(walk(area).some(el => !el.hidden && el.textContent.includes('có thể đã được ghi nhận')));
+  assert.equal(url.value, 'https://x.com/a/status/123');
   confirm().listeners.click[0]({}); await tick();
   assert.equal(calls[0].idempotency_key, calls[1].idempotency_key);
   confirm().listeners.click[0]({}); await tick();
