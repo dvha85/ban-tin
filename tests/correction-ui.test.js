@@ -397,6 +397,8 @@ test('correction form preserves inputs and requires confirmation before submitti
   vm.runInContext(`api = async () => { throw Object.assign(new Error('Mất kết nối'), {outcomeUnknown: true}); };`, context);
   button('Lưu đính chính').listeners.click[0]({}); await tick();
   assert.ok(walk(area).some(el => el.textContent.includes('thay đổi có thể đã được lưu')));
+  assert.ok(walk(area).some(el => el.textContent.includes('Đính chính đang đối soát')));
+  assert.ok(!walk(area).some(el => el.textContent.includes('Đính chính chưa lưu ·')));
   assert.equal(field('reason').value, 'Lý do sửa thử');
   assert.equal(field('url').value, 'https://wrong.example/post');
   field('url').value = 'https://x.com/a/status/456'; field('url').listeners.input[0]({}); await tick();
@@ -404,7 +406,7 @@ test('correction form preserves inputs and requires confirmation before submitti
   button('Lưu đính chính').listeners.click[0]({}); await tick();
   assert.equal(calls.length, 1);
   assert.equal(vm.runInContext('app.bulletinDirty', context), true);
-  button('Bỏ đính chính chưa lưu').listeners.click[0]({}); await tick();
+  button('Bỏ nội dung biểu mẫu').listeners.click[0]({}); await tick();
   assert.equal(vm.runInContext('app.bulletinDirty', context), false);
 });
 
@@ -455,7 +457,7 @@ test('pending correction remains dirty until explicitly discarded', async () => 
   await new Promise(resolve => setImmediate(resolve));
   assert.ok(walk(notice).some(el => el.textContent.includes('Liên kết không hợp lệ')));
   assert.equal(field('url').value, 'https://wrong.example/post');
-  button('Bỏ đính chính chưa lưu').listeners.click[0]({});
+  button('Bỏ nội dung biểu mẫu').listeners.click[0]({});
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(vm.runInContext('app.bulletinDirty', context), false);
   assert.equal(notice.hidden, true);

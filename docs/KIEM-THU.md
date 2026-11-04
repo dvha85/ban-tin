@@ -2,6 +2,8 @@
 
 ## QA-02: phản hồi ghi nhận bị ngắt 04/11/2026
 
+- Smoke trình duyệt tích hợp trên SQLite fixture riêng, server tiêm ngắt socket sau commit: nhập số liệu X 123 lượt xem, 0 lượt thích; cảnh báo hiện và giữ giá trị. Retry cùng nội dung hiển thị một lượt số liệu, với các trường còn lại chưa biết. Sau đó thử đính chính URL giả; cảnh báo hiện và giữ lý do/URL. Phát hiện dòng “đính chính chưa lưu” gây hiểu nhầm khi kết quả chưa rõ: test mới thất bại trước sửa; sau sửa hiển thị “đính chính đang đối soát”, thẻ khác thấy URL mới và một mục lịch sử. Nút bỏ được đổi thành “Bỏ nội dung biểu mẫu”, xác nhận nhãn qua cây giao diện. Hồi quy sau sửa 183 Python, 36 JavaScript đạt. Đây là các trường hợp tiêm lỗi riêng, không chứng minh mọi lỗi mạng hay dữ liệu vận hành.
+
 - PUB-04 / đính chính: mô phỏng lỗi kết quả chưa rõ tại handler giao diện. Trước sửa thông báo số liệu không nói rõ khả năng đã lưu; sau sửa, số liệu và đính chính hiển thị cảnh báo đối soát, giữ đầu vào. Test số liệu kiểm tra retry cùng nội dung dùng cùng khóa, đổi nội dung dùng khóa mới; test đính chính kiểm tra giữ lý do/URL. Đây là test DOM/API giả, chưa smoke cảnh báo trên trình duyệt hoặc thử mọi lỗi mạng. Hồi quy trước và sau sửa đều đạt 183 Python, 36 JavaScript; test cảnh báo mới thất bại trước sửa.
 
 - Bổ sung lỗi đọc phản hồi sau khi `fetch` đã trả header: trước sửa test JSON bị cắt không đánh dấu kết quả ghi chưa rõ; sau sửa, test giả lập JSON bị cắt và luồng văn bản lỗi đều đánh dấu POST, còn GET không mang cờ đó. Trường hợp 401/403 vẫn mở vùng khôi phục phiên nếu có trạng thái ứng dụng. Hồi quy sau sửa: 183/183 Python, 36/36 JavaScript; test mở rộng cho văn bản chạy riêng đạt. Chưa thử kịch bản đọc body lỗi qua trình duyệt hoặc mạng thật.

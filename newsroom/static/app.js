@@ -93,7 +93,7 @@ function showClaimConflict(container, error, correction = null) {
   if (error.outcomeUnknown) container.append(node('p', '', 'Kết quả chưa rõ: thay đổi có thể đã được lưu. Hãy kiểm tra dữ liệu và lịch sử trước khi thử lại.'));
   if (href) container.append(link(href, 'Mở bản ghi để đối soát trong thẻ mới ↗'));
   container.append(node('p', 'small-note', 'Giữ thẻ này để tiếp tục nội dung và liên kết đang nhập. Bản ghi có thể đã thay đổi; hãy kiểm tra trước khi thử lại.'));
-  if (correction) container.append(node('p', 'small-note', `Đính chính chưa lưu · Lý do: ${correction.reason} · Liên kết đề xuất: ${correction.url}`));
+  if (correction) container.append(node('p', 'small-note', `${error.outcomeUnknown ? 'Đính chính đang đối soát' : 'Đính chính chưa lưu'} · Lý do: ${correction.reason} · Liên kết đề xuất: ${correction.url}`));
   container.className = 'notice warning'; container.hidden = false;
 }
 async function mutation(action) {
@@ -1117,7 +1117,7 @@ async function renderVariantPublication(area, variant) {
           catch (error) { showClaimConflict(errors, error, {reason: reason.value, url: url.value}); return; }
           app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã lưu đính chính.');
         });
-        const discard = node('button', 'button secondary', 'Bỏ đính chính chưa lưu');
+        const discard = node('button', 'button secondary', 'Bỏ nội dung biểu mẫu');
         listen(discard, 'click', () => {
           delete conflict.dataset.dirty; delete conflict.dataset.pendingCorrection; delete conflict.dataset.pendingPublicationEdit;
           conflict.hidden = true; conflict.replaceChildren();
