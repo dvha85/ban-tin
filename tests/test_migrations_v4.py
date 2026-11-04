@@ -113,6 +113,9 @@ class MigrationV4Tests(unittest.TestCase):
             self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
         upgraded = Newsroom(target)
         with upgraded.connection() as conn:
+            self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 4)
+            self.assertEqual(conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
+            self.assertIsNone(conn.execute('PRAGMA foreign_key_check').fetchone())
             for table in ('articles', 'article_sources', 'drafts', 'history', 'metrics', 'custom_sources', 'collection_settings'):
                 with self.subTest(table=table):
                     actual = [dict(row) for row in conn.execute(f'SELECT * FROM {table} ORDER BY rowid')]
@@ -153,7 +156,9 @@ class MigrationV4Tests(unittest.TestCase):
                     self.assertEqual(upgraded.export(int(draft_id)), expected_export)
                 with upgraded.connection() as conn:
                     self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 4)
-                    for table in ('drafts', 'history', 'metrics'):
+                    self.assertEqual(conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
+                    self.assertIsNone(conn.execute('PRAGMA foreign_key_check').fetchone())
+                    for table in ('articles', 'article_sources', 'drafts', 'history', 'metrics'):
                         self.assertEqual([dict(row) for row in conn.execute(f'SELECT * FROM {table} ORDER BY rowid')], expected[table])
                 self.assertEqual(len(list((target / 'backups').glob(f'pre-v0{version + 1}-*.sqlite3'))), 1)
                 restored_dir = self.directory / f'restored-upgraded-v{version}'
@@ -315,6 +320,24 @@ class MigrationV4Tests(unittest.TestCase):
         with closing(sqlite3.connect(target / 'bantin.sqlite3')) as conn:
             self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 99)
             self.assertEqual(conn.execute('PRAGMA journal_mode').fetchone()[0], previous_mode)
+
+    def test_restore_rejects_physically_damaged_database_before_creating_destination(self):
+        backup = Path(self.room.backup())
+        with closing(sqlite3.connect(backup)) as conn:
+            page_size = conn.execute('PRAGMA page_size').fetchone()[0]
+            root_page = conn.execute("SELECT rootpage FROM sqlite_master WHERE name='drafts'").fetchone()[0]
+        self.assertGreater(root_page, 1)
+        damaged = bytearray(backup.read_bytes())
+        page_start = (root_page - 1) * page_size
+        self.assertIn(damaged[page_start], (5, 13))
+        damaged[page_start] = 0
+        backup.write_bytes(damaged)
+
+        destination = self.directory / 'restore-corrupt'
+        with self.assertRaises((sqlite3.DatabaseError, ValueError)):
+            restore(backup, destination)
+        self.assertFalse(destination.exists())
+        self.assertEqual(backup.read_bytes(), bytes(damaged))
 
     def test_restore_interrupted_copy_removes_its_partial_destination(self):
         backup = self.room.backup()

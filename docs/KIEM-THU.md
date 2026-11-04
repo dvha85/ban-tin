@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## MIG-01/04 và QA-03: nâng cấp, restore và đường lui trên fixture 04/11/2026
+
+- Mở rộng `test_upgrade_reduced_schema_1_and_2_preserves_legacy_exports` và `test_real_v3_fixture_preserves_all_legacy_rows_and_approved_exports`: sau nâng cấp schema 1/2 mô phỏng và schema 3 từ fixture mã cũ, kiểm tra version 4, `integrity_check`, `foreign_key_check`, hai bản xuất và các hàng bài nguồn, nguồn bài, bản nháp, lịch sử và số liệu. Fixture schema 3 còn đối chiếu nguồn tùy chỉnh và thiết lập; schema 1/2 là mô phỏng bằng cách rút gọn fixture 3, không phải snapshot lịch sử.
+- `test_restore_rejects_physically_damaged_database_before_creating_destination` làm hỏng trang b-tree của bảng draft trong một backup fixture; restore từ chối, không tạo thư mục đích và không thay đổi backup hỏng. Các test khác kiểm tra đích đã tồn tại, lỗi sao lưu/migration, gián đoạn restore, version tương lai và cấu trúc hoặc khóa ngoại sai.
+- Thử đường lui liên phiên bản một lần trên thư mục tạm: tạo kho từ `tests/fixtures/legacy-v3.sql` (fixture được tạo bởi mã `a180354`), chạy mã 0.4 tại `1c3ff2b` để nâng schema 3 → 4, đối chiếu bảy bảng legacy và hai bản xuất, tạo một bài và bản tin giả sau nâng cấp. Dùng restore của 0.4 khôi phục backup `pre-v04` sang thư mục mới, rồi chạy mã 0.3.1 tại `4680ee1` trong tiến trình riêng. Mã cũ mở được schema 3, `integrity_check=ok`, không có lỗi khóa ngoại; bảy bảng và hai bản xuất khớp fixture ban đầu. Công việc giả tạo sau nâng cấp không nằm trong backup cũ và không được tự hợp nhất.
+- Baseline migration trước mở rộng: 14/14; sau bổ sung: 15/15. Hồi quy `python -B -m unittest discover -s tests -q`: 190/190; `node --test`: 41/41 (mã JavaScript không đổi khi thêm test Python). Đây là bằng chứng trên dữ liệu giả, không chứng minh mọi dạng schema lịch sử, payload hay lỗi hệ thống tệp. Người dùng xác nhận không có SQLite cũ nên không thử bản sao vận hành và không triển khai ứng dụng.
+
 ## DB-01/02: xác nhận hợp đồng schema trước khi sử dụng 04/11/2026
 
 - Trước sửa, ba fixture schema 3 có cột legacy bị thiếu, bảng bản tin tồn tại sai cấu trúc hoặc hàng history mồ côi vẫn được nâng mốc lên 4. Test mới tái hiện cả ba trường hợp. Sau sửa, runner tạo bảng trong transaction, kiểm tra cấu trúc bảng/cột legacy cần thiết, cấu trúc và ràng buộc bảng mới cùng `foreign_key_check` trước khi đặt `user_version`; nếu lỗi thì rollback. Test đối chiếu schema, hàng draft/history và version 3 trước/sau; bản backup trước nâng cấp tồn tại và `integrity_check` trả `ok`.

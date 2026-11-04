@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> DB-01/02 / QA-03 ngày 04/11: các trường hợp MIG-01…05 đã được đối chiếu trong phạm vi fixture; thử thêm đường lui từ backup schema 3 bằng mã 0.3.1. Người dùng không có SQLite cũ nên không áp dụng bước thử bản sao vận hành. Chi tiết và giới hạn tại `KIEM-THU.md`.
+
 > MIG-03: mở rộng fixture nâng cấp schema 3 → 4 bằng một bản tin tạo sau nâng cấp; sau hai lần mở lại, toàn bộ hàng ở các bảng người dùng, export legacy, version, integrity và khóa ngoại giữ nguyên, không tạo backup migration mới. Đây là kiểm thử fixture, không thay cho nghiệm thu toàn bộ migration. Xem `KIEM-THU.md`.
 
 > QA-02: smoke trên trình duyệt với server fixture trả 503 sau commit số liệu cho thấy cảnh báo kết quả chưa rõ, giữ giá trị và retry cùng nội dung chỉ có một lượt số liệu. Đây là một trường hợp tiêm lỗi; QA-02 vẫn mở. Xem `KIEM-THU.md`.
@@ -374,10 +376,10 @@ Gate: URL-01…04 tại mục 8 đạt, không migration, bản xuất legacy kh
 - [x] **BASE-01 / P0:** Chụp fixture legacy gồm draft/approved/published, history, metrics và nguồn tùy chỉnh; lưu expected hash/export để đối chiếu. Fixture tổng hợp được tạo bằng mã schema 3 tại commit nền `a180354`; test so sánh từng hàng và bản xuất sau nâng cấp.
 - [ ] **BASE-02 / P1:** Chốt D02/D03, kiểu dữ liệu, trạng thái, hợp đồng API và giới hạn request/packet; ghi quyết định tại mục 12.
 - [ ] **BASE-03 / P1:** Khảo sát bộ đếm X/Threads và URL từng nền tảng; chọn triển khai/licensing/dependency, lưu fixture có version.
-- [ ] **DB-01 / P0:** Tách migration runner, bỏ quyền ghi schema version khỏi mixin; thêm schema 4 và ràng buộc.
-- [ ] **DB-02 / P0:** Backup/restore/rollback và fault injection, startup idempotent, từ chối schema tương lai.
+- [x] **DB-01 / P0:** Tách migration runner, bỏ quyền ghi schema version khỏi mixin; thêm schema 4 và ràng buộc.
+- [x] **DB-02 / P0:** Backup/restore/rollback và fault injection, startup idempotent, từ chối schema tương lai.
 
-Gate: MIG-01…05 đạt; không làm thay đổi dữ liệu legacy; policy chưa rõ phải được ghi là chưa đóng.
+Gate: MIG-01…05 đạt trong phạm vi fixture đã ghi; dữ liệu legacy mẫu giữ nguyên. Không có SQLite cũ để thử bản sao vận hành; policy chưa rõ vẫn phải được ghi là chưa đóng.
 
 ### G2 — Bản tin tổng hợp
 
@@ -419,7 +421,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 - [ ] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
-- [ ] **QA-03 / P0:** Migration/restore end-to-end trên fixture và bản sao được phép; xác nhận đường lui và dữ liệu sau nâng cấp.
+- [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.
 - [x] **PILOT-01 / P1:** Làm ít nhất ba bản tin thử với số mục/ngôn ngữ/độ dài khác nhau; ghi thời gian thao tác và vấn đề, không tự đăng công khai. Ba lượt dùng kho demo tạm và trình duyệt tích hợp; chi tiết và giới hạn tại `KIEM-THU.md`.
 - [ ] **REL-01 / P0:** Chốt checklist mục 10, tổng hợp bằng chứng và phần chưa kiểm chứng trước khi đề nghị triển khai bản chính.
@@ -616,6 +618,8 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 04/11/2026 | PUB-03/04 / QA-02 | Đang làm | Lịch sử hiện sự kiện dễ đọc và số liệu của lượt cũ; thử trên fixture X sau đính chính/hủy, đối chiếu 10 lượt xem và 0 lượt thích. Test sự kiện lạ và payload lỗi giữ thông tin thô; Python 163/163, JS 26/26 | Chưa thử mọi dữ liệu hỏng, trình đọc màn hình hay các kênh khác |
 | 04/11/2026 | PUB-02 / POST-03/05 | Đang làm | Sau phản hồi ghi nhận thành công, xóa khóa chống lặp trong trang để lượt ghi mới sau hủy không dùng lại khóa cũ. Test handler giả xác nhận retry sau lỗi giữ khóa và lượt mới dùng khóa khác | Chưa thử chuỗi đầy đủ qua hộp xác nhận trình duyệt hoặc mất mạng thật; tiếp tục đối chiếu trạng thái khi kết quả không rõ |
 | 04/11/2026 | PUB-02 / POST-03/05 / QA-02 | Đang làm | Vùng xác nhận ghi nhận nêu đoạn, kênh, URL; thay URL vô hiệu xác nhận. Trên cùng trang fixture X: ghi → hủy → ghi lại cùng URL thành công, 0/2 → 1/2 → 0/2 → 1/2; test handler retry và thay URL | Chưa thử mất mạng thật, mọi kênh hoặc toàn bộ QA bàn phím |
+
+| 04/11/2026 | DB-01/02 / QA-03 | Hoàn tất trong phạm vi fixture | Nâng cấp schema 1/2 mô phỏng và schema 3; kiểm tra integrity, khóa ngoại, dữ liệu, restore hỏng và đường lui 0.3.1; Python 190/190, JS 41/41 | Không có SQLite cũ để thử bản sao vận hành; backup cũ không chứa công việc sau nâng cấp |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
