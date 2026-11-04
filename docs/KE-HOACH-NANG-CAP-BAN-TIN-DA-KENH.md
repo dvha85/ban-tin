@@ -88,6 +88,8 @@
 
 > Cập nhật 04/11/2026: đã chuẩn bị bản sửa độc lập từ `main` trên nhánh `codex/legacy-url-hotfix-031`, commit `a042339`. Hồi quy 89 Python và 2 JavaScript đạt. Trình duyệt tích hợp đã hiện cảnh báo khi chuyển bài có URL chưa lưu, nhưng công cụ bị kẹt ở hộp thoại; chưa hoàn tất smoke URL-01…04 cho bản này. Mẫu đầu ra 0.4 đã được người dùng xác nhận phù hợp.
 
+> Bổ sung hotfix `d535012`: xóa URL chưa ghi nhận khi cùng bài bị hủy duyệt; trước khi lưu sửa đổi có URL đang nhập, giao diện cảnh báo khả năng mất URL. Test helper tái hiện lỗi cũ và đạt sau sửa; hồi quy 89 Python, 3 JavaScript đạt. Chưa kiểm tra hộp thoại và chuyển trạng thái này qua UI; FIX-03 vẫn mở.
+
 - Ngày lập / cập nhật: **03/11/2026**, giờ Việt Nam.
 - Repository: [dvha85/ban-tin](https://github.com/dvha85/ban-tin).
 - Mốc mã nguồn được review: **`a180354e52e98a678d093609f9e8f2d37e6cd0a3`**, nhánh `main`, phiên bản ứng dụng `0.3.0`, dữ liệu schema `3`.
