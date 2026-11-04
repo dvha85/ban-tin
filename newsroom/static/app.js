@@ -627,13 +627,38 @@ function renderBulletin() {
     node('p', 'small-note', `Phiên bản ${bulletin.revision}.${bulletin.archived ? ' Đã lưu trữ.' : ''} Lưu từng phần trước khi chuyển sang phần khác.`));
   if (typeof bulletin.archived === 'boolean' && Number.isSafeInteger(bulletin.archive_revision) && bulletin.archive_revision >= 0) {
     const archiveButton = node('button', 'button secondary', bulletin.archived ? 'Khôi phục bản tin' : 'Lưu trữ bản tin');
-    bulletinAction(archiveButton, async () => {
+    const confirmation = node('div', 'notice');
+    confirmation.hidden = true;
+    confirmation.setAttribute('role', 'group');
+    confirmation.setAttribute('aria-label', 'Xác nhận thay đổi trạng thái lưu trữ');
+    const label = bulletin.title || `Bản tin #${bulletin.id}`;
+    const prompt = bulletin.archived ? `Khôi phục “${label}” về danh sách đang làm?` :
+      `Lưu trữ “${label}”? Bản tin sẽ tạm ẩn khỏi danh sách đang làm và có thể khôi phục.`;
+    const confirmButton = node('button', 'button secondary', bulletin.archived ? 'Xác nhận khôi phục' : 'Xác nhận lưu trữ');
+    const cancelButton = node('button', 'button secondary', bulletin.archived ? 'Hủy khôi phục' : 'Hủy lưu trữ');
+    const snapshot = {id: bulletin.id, revision: bulletin.revision, archive_revision: bulletin.archive_revision,
+      archived: bulletin.archived, title: bulletin.title};
+    const checkPending = () => {
       if (app.bulletinDirty || hasPendingBulletinUrl() || hasPendingPublicationEdit())
         throw new Error('Hãy lưu hoặc bỏ các thay đổi trước khi thay đổi trạng thái lưu trữ.');
-      const label = bulletin.title || `Bản tin #${bulletin.id}`;
-      const prompt = bulletin.archived ? `Khôi phục “${label}” về danh sách đang làm?` :
-        `Lưu trữ “${label}”? Bản tin sẽ tạm ẩn khỏi danh sách đang làm và có thể khôi phục.`;
-      if (!window.confirm(prompt)) return;
+    };
+    listen(archiveButton, 'click', () => {
+      if (app.busy) return;
+      checkPending();
+      confirmation.hidden = false;
+      confirmButton.focus();
+    });
+    listen(cancelButton, 'click', () => {
+      confirmation.hidden = true;
+      archiveButton.focus();
+    });
+    bulletinAction(confirmButton, async () => {
+      if (confirmation.hidden || app.bulletin !== bulletin ||
+          Object.keys(snapshot).some(key => bulletin[key] !== snapshot[key])) {
+        confirmation.hidden = true;
+        throw new Error('Bản tin đã thay đổi. Hãy mở lại và xác nhận thao tác.');
+      }
+      checkPending();
       let updated;
       try {
         updated = await api(`/api/bulletins/${bulletin.id}/archive`, {
@@ -652,7 +677,8 @@ function renderBulletin() {
       catch (_) { toast(`${message} Chưa tải lại được danh sách; hãy thử mở lại.`, true); return; }
       toast(message);
     });
-    editor.append(archiveButton);
+    confirmation.append(node('p', '', prompt), confirmButton, cancelButton);
+    editor.append(archiveButton, confirmation);
   } else {
     editor.append(node('p', 'small-note', 'Để lưu trữ bản tin, hãy khởi động lại ứng dụng để dùng phiên bản mới.'));
   }

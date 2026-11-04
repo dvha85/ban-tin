@@ -387,7 +387,7 @@ Gate: MIG-01…05 đạt trong phạm vi fixture đã ghi; dữ liệu legacy m�
 
 - [ ] **DIG-01 / P1:** UI chọn nhiều tin, giữ lựa chọn khi lọc, đếm và giới hạn lựa chọn.
 - [ ] **DIG-02 / P1:** CRUD bản tin/mục, thứ tự, snapshot nguồn, revision và lịch sử.
-  - Theo lựa chọn của người dùng, bổ sung lưu trữ có thể khôi phục để ẩn cả bản tin khỏi danh sách đang làm; giữ nội dung, bản duyệt, ghi nhận và lịch sử. Test service, HTTP và DOM giả đạt; còn smoke trình duyệt trước khi đóng DIG-02.
+  - Theo lựa chọn của người dùng, bổ sung lưu trữ có thể khôi phục để ẩn cả bản tin khỏi danh sách đang làm; giữ nội dung, bản duyệt, ghi nhận và lịch sử. Test service, HTTP, DOM giả và smoke lưu trữ/khôi phục trên trình duyệt với kho giả đạt; xem phạm vi tại `KIEM-THU.md`.
 - [ ] **DIG-03 / P1:** Cảnh báo tuổi tin/trích đoạn, ghi chú kiểm chứng riêng, nguồn theo từng mục.
 - [ ] **DIG-04 / P1:** Gói tư liệu nhiều mục và biểu mẫu nhập lại kết quả; hoạt động khi không dùng AI.
 
@@ -657,7 +657,7 @@ Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết q
 | 04/11/2026 / BASE-03 NFC | [Tài liệu X](https://docs.x.com/fundamentals/counting-characters) mô tả đếm sau chuẩn hóa NFC và khuyến nghị `twitter-text`. Mã vendored chuẩn hóa NFC trước khi nhận diện URL/emoji và tính trọng số; gọi `count_text('x', ...)` với `café` dạng tổ hợp và dạng tách đều trả `(4, True)`. | Đây là kiểm tra một ví dụ cục bộ, không xác minh toàn bộ Unicode, URL, emoji mới hoặc composer X; Threads vẫn là ước lượng. BASE-03 và điều kiện phát hành liên quan tiếp tục mở. |
 | 04/11/2026 / REQUEST | Chọn tối đa 128.000 byte UTF-8 cho JSON POST và 65.536 byte UTF-8 cho toàn bộ packet; vượt giới hạn phải báo lỗi thay vì cắt. | Đối chiếu `MAX_BODY` trong `newsroom/server.py`, `MAX_PACKET_BYTES` trong `newsroom/bulletins.py`; test `test_bulletin_request_utf8_size_boundary_over_http` và `test_packet_limit_counts_complete_utf8_output_and_identifies_large_items`. Hai giới hạn có phạm vi khác nhau, không phải giới hạn nền tảng. |
 | 03/11/2026 / COUNTER | X dùng twitter-text vendored với dữ liệu emoji Unicode 15.1; 24 fixture upstream có commit và giấy phép ghim trong `tests/fixtures/TWITTER-TEXT-README.md`. Threads dùng ước lượng có thể đếm thiếu | Chưa đóng BASE-03: hành vi X thực tế, emoji mới hơn và cách đếm Threads chưa được xác minh đầy đủ; phải đóng trước gate G3 |
-| 04/11/2026 / ARCHIVE | Người dùng chọn lưu trữ bản tin có thể khôi phục thay cho xóa. Mặc định ẩn khỏi danh sách đang làm; giữ dữ liệu, bản duyệt và ghi nhận. | Đã triển khai và kiểm thử trên fixture, còn smoke trình duyệt; DIG-02 vẫn mở. |
+| 04/11/2026 / ARCHIVE | Người dùng chọn lưu trữ bản tin có thể khôi phục thay cho xóa. Mặc định ẩn khỏi danh sách đang làm; giữ dữ liệu, bản duyệt và ghi nhận. | Đã triển khai, kiểm thử và smoke lưu trữ/khôi phục trên kho giả; các phần khác của DIG-02 và QA-02 vẫn theo dõi theo kế hoạch. |
 | — / URL | Mẫu URL bài đăng và alias hợp lệ Facebook/Threads/X | Chưa chốt; BASE-03/PUB-01 |
 | — / RELEASE | Bằng chứng pilot và chấp thuận dùng trên DB chính | Chưa có; G6 |
 

@@ -17,6 +17,7 @@ class Element {
   replaceChildren(...children) { this.children = children; }
   addEventListener(name, listener) { (this.listeners[name] ||= []).push(listener); }
   setAttribute(name, value) { this[name] = value; }
+  focus() { this.focused = true; }
   querySelectorAll(selector) {
     const rows = [];
     const visit = element => {
@@ -620,11 +621,11 @@ test('bulletin archive controls preserve unsaved work and show archived entries 
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
   const calls = [], messages = [];
-  let confirmed = false, uncertain = false, listFails = false;
+  let uncertain = false, listFails = false;
   const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
     setTimeout, clearTimeout, fetch: () => new Promise(() => {}), calls, messages,
     shouldFail: () => uncertain, shouldFailList: () => listFails,
-    window: {location: {search: ''}, addEventListener() {}, confirm: () => confirmed},
+    window: {location: {search: ''}, addEventListener() {}, confirm: () => { throw new Error('Unexpected browser dialog'); }},
     document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
@@ -664,8 +665,25 @@ test('bulletin archive controls preserve unsaved work and show archived entries 
   get('bulletin-editor').children = get('bulletin-editor').children.filter(child => child !== pending);
   button('Lưu trữ bản tin').listeners.click[0]({}); await tick();
   assert.equal(calls.length, 0);
-  confirmed = true;
+  assert.ok(walk(get('bulletin-editor')).some(el => /Lưu trữ.*Bản tin thử/.test(el.textContent)));
+  assert.equal(button('Xác nhận lưu trữ').focused, true);
+  const oldConfirm = button('Xác nhận lưu trữ');
+  button('Hủy lưu trữ').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 0);
+  assert.equal(button('Lưu trữ bản tin').focused, true);
+  oldConfirm.listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 0);
   button('Lưu trữ bản tin').listeners.click[0]({}); await tick();
+  vm.runInContext("app.bulletin.title = 'Bản tin khác'", context);
+  button('Xác nhận lưu trữ').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 0); assert.match(messages.at(-1), /đã thay đổi/i);
+  vm.runInContext("app.bulletin.title = 'Bản tin thử'", context);
+  button('Lưu trữ bản tin').listeners.click[0]({}); await tick();
+  vm.runInContext('app.bulletinDirty = true', context);
+  button('Xác nhận lưu trữ').listeners.click[0]({}); await tick();
+  assert.equal(calls.length, 0); assert.match(messages.at(-1), /lưu|bỏ/i);
+  vm.runInContext('app.bulletinDirty = false', context);
+  button('Xác nhận lưu trữ').listeners.click[0]({}); await tick();
   assert.equal(calls.length, 1);
   assert.deepEqual(JSON.parse(JSON.stringify(calls[0].body)), {revision: 4, archive_revision: 0, archived: true});
   assert.equal(vm.runInContext('app.bulletin', context), null);
@@ -681,10 +699,11 @@ test('bulletin archive controls preserve unsaved work and show archived entries 
   assert.ok(button('Khôi phục bản tin'));
   uncertain = true;
   button('Khôi phục bản tin').listeners.click[0]({}); await tick();
+  button('Xác nhận khôi phục').listeners.click[0]({}); await tick();
   assert.match(messages.at(-1), /có thể đã thay đổi/);
   assert.equal(vm.runInContext('app.bulletin.archived', context), true);
   uncertain = false; listFails = true;
-  button('Khôi phục bản tin').listeners.click[0]({}); await tick();
+  button('Xác nhận khôi phục').listeners.click[0]({}); await tick();
   assert.deepEqual(JSON.parse(JSON.stringify(calls[2].body)), {revision: 4, archive_revision: 1, archived: false});
   assert.equal(vm.runInContext('app.bulletin.archived', context), false);
   assert.match(messages.at(-1), /Đã khôi phục.*chưa tải lại/i);
