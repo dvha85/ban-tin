@@ -759,10 +759,18 @@ function renderBulletin(focusVariantSelector = false) {
     const verified = node('input'); verified.type = 'checkbox'; verified.checked = item.verified;
     checkLabel.append(verified, document.createTextNode(' Tôi đã đọc nguồn và kiểm chứng mục này'));
     section.append(checkLabel, node('p', 'small-note', 'Khi sửa nội dung, xác nhận kiểm chứng sẽ được bỏ; lưu lại rồi xác nhận ở lần lưu tiếp theo.'));
-    trackBulletinSection(section, [...Object.values(fields).map(field => field.input), claimState, verified]);
+    const sourceUrl = bulletinField('Liên kết nguồn HTTPS', '');
+    const sourceTitle = bulletinField('Tiêu đề nguồn', '');
+    const sourceNote = bulletinField('Ghi chú về nguồn', '', true);
+    const sourceFields = [sourceUrl.input, sourceTitle.input, sourceNote.input];
+    const itemFields = [...Object.values(fields).map(field => field.input), claimState, verified];
+    const itemOriginal = itemFields.map(field => field.type === 'checkbox' ? field.checked : field.value);
+    const hasSourceDraft = () => sourceFields.some(field => field.value !== '');
+    trackBulletinSection(section, [...itemFields, ...sourceFields]);
     const actions = node('div', 'action-row');
     const saveItem = node('button', 'button secondary', 'Lưu mục');
     bulletinAction(saveItem, async () => {
+      if (hasSourceDraft()) throw new Error('Hãy thêm hoặc hủy nguồn đang nhập trước khi lưu mục.');
       if (hasPendingBulletinUrl() || hasPendingPublicationEdit() || top.dataset.dirty === 'true' || [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el !== section && el.dataset.dirty === 'true'))
         throw new Error('Hãy lưu hoặc bỏ thay đổi ở các phần khác trước.');
       const data = {bulletin_revision: bulletin.revision, revision: item.revision, verified: verified.checked,
@@ -774,14 +782,44 @@ function renderBulletin(focusVariantSelector = false) {
     actions.append(saveItem);
     const addSource = node('button', 'button secondary', 'Bổ sung nguồn');
     addSource.disabled = item.sources.length >= 3;
-    bulletinAction(addSource, async () => {
+    const sourceForm = node('div', 'bulletin-block');
+    sourceForm.hidden = true;
+    sourceForm.setAttribute('role', 'group');
+    sourceForm.setAttribute('aria-label', 'Bổ sung nguồn cho mục');
+    const confirmSource = node('button', 'button secondary', 'Xác nhận thêm nguồn');
+    const cancelSource = node('button', 'button secondary', 'Hủy thêm nguồn');
+    sourceForm.append(sourceUrl.wrapper, sourceTitle.wrapper, sourceNote.wrapper, confirmSource, cancelSource);
+    listen(addSource, 'click', () => {
+      if (app.busy) return;
       if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi bổ sung nguồn.');
-      const url = window.prompt('Liên kết nguồn HTTPS:'); if (url === null) return;
-      const title = window.prompt('Tiêu đề nguồn:', ''); if (title === null) return;
-      const summary = window.prompt('Ghi chú về nguồn:', ''); if (summary === null) return;
-      app.bulletin = await api(`/api/bulletins/${bulletin.id}/items/${item.id}/save`, {
-        bulletin_revision: bulletin.revision, revision: item.revision, add_source: {url, title, summary}});
-      renderBulletin(); await loadBulletinList(); toast('Đã thêm nguồn; cần kiểm chứng lại mục.');
+      sourceForm.hidden = false;
+      sourceUrl.input.focus();
+    });
+    listen(cancelSource, 'click', () => {
+      if (app.busy || sourceForm.hidden) return;
+      sourceFields.forEach(field => { field.value = ''; });
+      sourceForm.hidden = true;
+      section.dispatchEvent(new Event('input', {bubbles: true}));
+      addSource.focus();
+    });
+    bulletinAction(confirmSource, async () => {
+      if (sourceForm.hidden) return;
+      if (sectionDiffers(itemFields, itemOriginal) || hasPendingBulletinUrl() || hasPendingPublicationEdit() ||
+          top.dataset.dirty === 'true' || [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el !== section && el.dataset.dirty === 'true'))
+        throw new Error('Hãy lưu hoặc bỏ thay đổi ở các phần khác trước khi thêm nguồn.');
+      try {
+        app.bulletin = await api(`/api/bulletins/${bulletin.id}/items/${item.id}/save`, {
+          bulletin_revision: bulletin.revision, revision: item.revision,
+          add_source: {url: sourceUrl.input.value, title: sourceTitle.input.value, summary: sourceNote.input.value}});
+      } catch (error) {
+        if (error.outcomeUnknown) throw new Error('Chưa rõ nguồn đã được thêm hay chưa. Hãy giữ nội dung và kiểm tra bản tin ở thẻ khác trước khi thử lại.');
+        throw error;
+      }
+      app.bulletinDirty = false;
+      renderBulletin();
+      try { await loadBulletinList(); }
+      catch (_) { return toast('Đã thêm nguồn, nhưng chưa tải lại được danh sách bản tin.'); }
+      toast('Đã thêm nguồn; cần kiểm chứng lại mục.');
     });
     actions.append(addSource);
     const remove = node('button', 'button secondary', 'Bỏ mục khỏi bản tin');
@@ -807,7 +845,7 @@ function renderBulletin(focusVariantSelector = false) {
       }, () => focusMovedItem(editor, item.id, delta));
       actions.append(move);
     }
-    section.append(actions); editor.append(section);
+    section.append(actions, sourceForm); editor.append(section);
   });
   const packet = node('button', 'button secondary', 'Sao chép gói tư liệu');
   listen(packet, 'click', async () => {

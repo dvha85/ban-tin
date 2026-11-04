@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> DIG-03 / QA-02 ngày 04/11: thay ba hộp thoại thêm nguồn bằng biểu mẫu trong trang, giữ nội dung khi lỗi và nhắc đối chiếu nếu kết quả ghi chưa rõ. Edge trên kho giả đã thử URL sai, thêm nguồn đúng và đổi thứ tự hai mục; nguồn vẫn thuộc mục ban đầu. Chi tiết và giới hạn tại `KIEM-THU.md`.
+
 > BASE-03 / TEXT-03 ngày 04/11: bổ sung fixture upstream 108 trường hợp nhận diện URL X và kiểm tra số ký tự trên 76 trường hợp ASCII. Đây là bằng chứng thư viện cục bộ, chưa xác minh mọi URL/composer thực tế; Threads vẫn ước lượng và BASE-03 tiếp tục mở. Chi tiết tại `KIEM-THU.md`.
 
 > FMT-03 / TEXT-05 ngày 04/11: test service với X và Threads chia đúng 20 đoạn, giữ văn bản và nguồn; từ chối trường hợp cần 21 đoạn, không đổi bản đã lưu sau mở lại. Chưa xác minh composer thật hoặc toàn bộ QA; xem `KIEM-THU.md`.

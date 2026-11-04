@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## DIG-03 / QA-02: biểu mẫu bổ sung nguồn 04/11/2026
+
+- Thay ba `window.prompt` bằng biểu mẫu có nhãn, nút xác nhận và hủy ngay tại mục. Nội dung nguồn đang nhập được tính là chưa lưu; không lưu mục hoặc ghi nguồn khi có các phần khác đang sửa. Khi lỗi, giữ ô nhập; nếu kết quả ghi chưa rõ, yêu cầu đối chiếu bản tin ở thẻ khác. Trường hợp ghi xong nhưng không tải lại danh sách có thông báo riêng.
+- Test handler DOM giả thất bại trước sửa vì chưa có biểu mẫu; sau sửa kiểm tra lỗi, kết quả chưa rõ, giữ thay đổi mục khác khi hủy, và phản hồi đúng khi tải danh sách thất bại. Trước sửa hồi quy 205/205 Python và 46/46 JavaScript; sau sửa 205/205 Python và 47/47 JavaScript, `node --check` đạt.
+- Edge với kho SQLite giả hai mục: nhập URL sai được báo lỗi và giữ tiêu đề/ghi chú; sửa thành URL `example.com` rồi xác nhận, nguồn xuất hiện ở mục A. Đổi thứ tự A xuống sau B, giao diện và đọc SQLite chỉ đọc đều cho thấy A vẫn có cả hai nguồn, B giữ nguồn riêng; bản tin ở revision 3. Không truy cập URL hoặc dữ liệu vận hành. Chưa thử mất mạng thật, trình đọc màn hình hoặc các tình huống rời trang được người dùng chọn để sau.
+
 ## BASE-03 / TEXT-03: đối chiếu nhận diện URL X 04/11/2026
 
 - Lưu ngoại tuyến bốn nhóm gồm 108 ví dụ URL và vị trí từ [twitter-text extract.yml](https://github.com/twitter/twitter-text/blob/30e2430d90cff3b46393ea54caf511441983c260/conformance/extract.yml) tại commit đã ghim; bộ nhận diện dùng trong bộ đếm khớp toàn bộ ví dụ đó. Thêm kiểm tra 76 ví dụ ASCII trong nhóm URL: tính độc lập một đơn vị cho mỗi ký tự và 23 cho mỗi URL đã cho, rồi so với bộ đếm X của ứng dụng. Nguồn, SHA-256 và giấy phép ghi tại `tests/fixtures/TWITTER-TEXT-README.md`.

@@ -16,6 +16,7 @@ class Element {
   append(...children) { this.children.push(...children); }
   replaceChildren(...children) { this.children = children; }
   addEventListener(name, listener) { (this.listeners[name] ||= []).push(listener); }
+  dispatchEvent(event) { for (const listener of this.listeners[event.type] || []) listener(event); }
   setAttribute(name, value) { this[name] = value; }
   focus() { this.focused = true; }
   querySelectorAll(selector) {
@@ -26,12 +27,87 @@ class Element {
       if (selector === '[data-pending-correction="true"]' && element.dataset.pendingCorrection === 'true') rows.push(element);
       if (selector === '[data-pending-publication-edit="true"]' && element.dataset.pendingPublicationEdit === 'true') rows.push(element);
       if (selector === '[data-publication-url]' && element.dataset.publicationUrl) rows.push(element);
+      if (selector === '.bulletin-item, .variant-editor' && /\b(bulletin-item|variant-editor)\b/.test(element.className || '')) rows.push(element);
       element.children.forEach(visit);
     };
     this.children.forEach(visit); return rows;
   }
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
 }
+
+test('inline source form keeps pending fields, blocks unrelated saves, and retains failed input', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = [], messages = [];
+  let fail = true, unknown = false, listFails = false;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+    Event: class { constructor(type) { this.type = type; } },
+    setTimeout, clearTimeout, fetch: () => new Promise(() => {}), calls, messages,
+    sourceWarnings: () => [], shouldFail: () => fail, isUnknown: () => unknown, shouldFailList: () => listFails,
+    window: {location: {search: ''}, addEventListener() {}, prompt() { throw new Error('Unexpected browser prompt'); }},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.state = {articles: [], bulletin_usage: {}};
+    app.bulletin = {id: 7, revision: 4, title: 'Bản thử', edition_date: '2026-11-04', introduction: '', conclusion: '',
+      items: [{id: 5, article_id: 1, revision: 2, title: 'Mục thử', body: '', angle: '', verification_note: '',
+        verified: false, claims: [], sources: [{source_id: 'source1', url: 'https://example.com/a',
+          title: 'Nguồn A', published_at: null, retrieved_at: null, date_kind: 'unknown'}]}]};
+    toast = message => messages.push(message);
+    api = async (path, body) => {
+      if (path === '/api/bulletins/7/variants') return [];
+      if (path === '/api/bulletins/7/items/5/save') {
+        calls.push({path, body});
+        if (shouldFail()) { const error = new Error('Không lưu được nguồn'); error.outcomeUnknown = isUnknown(); throw error; }
+        return {...app.bulletin, revision: 5};
+      }
+      if (path === '/api/bulletins') { if (shouldFailList()) throw new Error('Không tải được danh sách'); return []; }
+      if (path === '/api/bulletin-stats') return {bulletins: 1, variants: 0, recorded_bulletins: 0, recorded_posts: 0};
+      if (path === '/api/legacy-publication-duplicates') return [];
+      throw new Error('Unexpected API ' + path);
+    }; renderBulletin();`, context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const find = (tag, text) => walk(get('bulletin-editor')).find(el => el.tagName === tag && el.textContent === text);
+  const input = label => find('label', label)?.children.find(el => el instanceof Element);
+  const click = async label => { find('button', label).listeners.click[0]({}); await new Promise(resolve => setImmediate(resolve)); };
+  await click('Bổ sung nguồn');
+  assert.ok(input('Liên kết nguồn HTTPS'));
+  assert.equal(input('Liên kết nguồn HTTPS').focused, true);
+  const section = walk(get('bulletin-editor')).find(el => /\bbulletin-item\b/.test(el.className || ''));
+  const url = input('Liên kết nguồn HTTPS'), title = input('Tiêu đề nguồn'), note = input('Ghi chú về nguồn');
+  url.value = 'https://example.com/b'; title.value = 'Nguồn B'; note.value = 'Ghi chú thử';
+  section.listeners.input[0]({target: url});
+  assert.equal(vm.runInContext('app.bulletinDirty', context), true);
+  await click('Lưu mục');
+  assert.equal(calls.length, 0); assert.match(messages.at(-1), /nguồn/i);
+  await click('Xác nhận thêm nguồn');
+  assert.equal(calls.length, 1); assert.match(messages.at(-1), /Không lưu được nguồn/);
+  assert.equal(url.value, 'https://example.com/b'); assert.equal(note.value, 'Ghi chú thử');
+  assert.equal(vm.runInContext('app.bulletinDirty', context), true);
+  unknown = true;
+  await click('Xác nhận thêm nguồn');
+  assert.equal(calls.length, 2); assert.match(messages.at(-1), /chưa rõ.*thẻ khác/i);
+  assert.equal(url.value, 'https://example.com/b');
+  const itemTitle = walk(section).find(el => el.tagName === 'label' && el.textContent === 'Tiêu đề').children[0];
+  itemTitle.value = 'Mục sửa dở'; section.listeners.input[0]({target: itemTitle});
+  await click('Xác nhận thêm nguồn');
+  assert.equal(calls.length, 2); assert.match(messages.at(-1), /phần khác/i);
+  await click('Hủy thêm nguồn');
+  assert.equal(vm.runInContext('app.bulletinDirty', context), true);
+  assert.equal(itemTitle.value, 'Mục sửa dở');
+  assert.equal(url.value, ''); assert.equal(title.value, ''); assert.equal(note.value, '');
+  itemTitle.value = 'Mục thử'; section.listeners.input[0]({target: itemTitle});
+  assert.equal(vm.runInContext('app.bulletinDirty', context), false);
+  await click('Bổ sung nguồn');
+  url.value = 'https://example.com/b'; title.value = 'Nguồn B'; note.value = 'Ghi chú thử';
+  section.listeners.input[0]({target: url});
+  fail = false; listFails = true;
+  await click('Xác nhận thêm nguồn');
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[2].body)), {bulletin_revision: 4, revision: 2,
+    add_source: {url: 'https://example.com/b', title: 'Nguồn B', summary: 'Ghi chú thử'}});
+  assert.equal(vm.runInContext('app.bulletinDirty', context), false);
+  assert.match(messages.at(-1), /Đã thêm nguồn.*chưa tải lại/i);
+});
 
 test('session recovery preserves the editor and never retries a mutation automatically', async () => {
   const elements = new Map();
