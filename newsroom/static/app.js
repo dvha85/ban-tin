@@ -618,7 +618,7 @@ function markVariantDirty(area, event) {
     app.bulletinDirty = true; area.dataset.dirty = 'true';
   }
 }
-function renderBulletin() {
+function renderBulletin(focusVariantSelector = false) {
   const bulletin = app.bulletin;
   const editor = $('bulletin-editor');
   editor.replaceChildren();
@@ -850,7 +850,7 @@ function renderBulletin() {
   const variants = node('section', 'bulletin-block');
   variants.append(node('h3', '', 'Phiên bản theo kênh'));
   editor.append(variants);
-  renderVariants(variants, bulletin).catch(error => toast(error.message, true));
+  renderVariants(variants, bulletin, focusVariantSelector).catch(error => toast(error.message, true));
 }
 function variantStatus(variant) {
   const progress = variant.publication_progress;
@@ -861,10 +861,11 @@ function variantStatus(variant) {
   }
   return variant.status === 'draft' ? 'Bản nháp' : variant.status;
 }
-async function renderVariants(container, bulletin) {
+async function renderVariants(container, bulletin, focusSelector = false) {
   const variants = await api(`/api/bulletins/${bulletin.id}/variants`);
   if (!container.isConnected) return;
   const selector = node('select');
+  selector.setAttribute('aria-label', 'Chọn phiên bản');
   const placeholder = node('option', '', 'Chọn phiên bản'); placeholder.value = ''; selector.append(placeholder);
   variants.forEach(variant => {
     const option = node('option', '', `${variant.platform.toUpperCase()} · ${variant.account_label || '(chưa đặt tên)'} · ${variantStatus(variant)}`);
@@ -872,6 +873,7 @@ async function renderVariants(container, bulletin) {
   });
   selector.value = variants.some(variant => variant.id === app.variantId) ? String(app.variantId) : '';
   const platform = node('select');
+  platform.setAttribute('aria-label', 'Nền tảng phiên bản mới');
   for (const value of ['facebook', 'threads', 'x']) {
     const option = node('option', '', value.toUpperCase()); option.value = value; platform.append(option);
   }
@@ -888,10 +890,13 @@ async function renderVariants(container, bulletin) {
       selector.value = app.variantId ? String(app.variantId) : '';
       throw new Error('Hãy lưu các thay đổi trước khi đổi phiên bản.');
     }
+    const restoreFocus = document.activeElement === selector;
     app.variantId = selector.value ? Number(selector.value) : null;
-    renderBulletin();
+    renderBulletin(restoreFocus);
   });
   container.append(selector, platform, create, area);
+  if (focusSelector && app.view === 'bulletins' && app.bulletin === bulletin && document.activeElement === document.body)
+    selector.focus({preventScroll: true});
   const variant = variants.find(row => row.id === app.variantId);
   if (!variant) return;
   const locked = !!variant.locked_at;

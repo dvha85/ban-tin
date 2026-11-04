@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## QA-02: tiêu điểm khi chọn phiên bản 04/11/2026
+
+- Trên trình duyệt tích hợp với kho SQLite giả, trước sửa chọn phiên bản X bằng phím xuống và Enter làm giao diện dựng lại và tiêu điểm rơi về vùng trang. Baseline JavaScript đạt 45/45; test DOM bổ sung ban đầu không đạt vì danh sách chưa có nhãn truy cập.
+- Đã đặt nhãn truy cập cho danh sách phiên bản và danh sách nền tảng mới; sau khi đổi phiên bản, tiêu điểm được khôi phục vào danh sách nếu người dùng chưa chuyển sang điều khiển khác và vẫn ở cùng bản tin. Test DOM kiểm tra trường hợp đã chuyển tiêu điểm hoặc chuyển màn hình không bị giành tiêu điểm.
+- Trên trình duyệt tích hợp sau sửa, chọn X bằng phím xuống và Enter giữ tiêu điểm tại danh sách phiên bản; Tab tiếp chuyển tới danh sách nền tảng mới. Thao tác chỉ trên kho giả với một bản tin, một phiên bản X; chưa kiểm tra trình đọc màn hình, mọi cách chọn trên từng trình duyệt hoặc toàn bộ luồng bàn phím. QA-02 vẫn mở; việc thử rời trang/tải lại khi có thay đổi chưa lưu để sau theo lựa chọn của người dùng.
+- Hồi quy sau sửa: 201/201 Python và 46/46 JavaScript đạt trên các bộ kiểm thử hiện có và ca mới.
+
 ## BASE-02: từ chối request ngắn hơn Content-Length 04/11/2026
 
 - Trước sửa, 31/31 test server hiện có đạt. Test socket mới gửi JSON tạo bản tin hợp lệ nhưng khai báo dài hơn một byte, rồi đóng chiều gửi: server trả 201 và tạo bản tin trên kho giả, dù chưa nhận đủ body.

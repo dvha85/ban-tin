@@ -28,6 +28,8 @@
 
 > QA-02 ngày 04/11: trình duyệt đã hiện xác nhận khi chuyển bản tin có thay đổi chưa lưu; công cụ bị gián đoạn tại hộp thoại nên chưa xác minh kết quả hủy. Đã chọn phiên bản X và kích hoạt sao chép bằng bàn phím; chưa đối chiếu được clipboard trong lượt này. Chi tiết tại `KIEM-THU.md`; QA-02 vẫn mở.
 
+> QA-02 ngày 04/11: bổ sung nhãn cho danh sách phiên bản và nền tảng mới, khôi phục tiêu điểm sau khi chọn phiên bản bằng bàn phím. Trình duyệt tích hợp trên kho giả đã thử phím xuống, Enter và Tab; QA-02 còn mở cho các trường hợp khác. Chi tiết tại `KIEM-THU.md`.
+
 > Cập nhật kiểm thử 04/11/2026: Trên fixture, đã ghi nhận URL giả Facebook và Threads, đối chiếu số liệu riêng 101/0 và 202/3, rồi tải lại và xác nhận số liệu Threads còn lưu. Tổng quan có ba đoạn ghi nhận trên ba phiên bản, trong đó X mới có 1/2 đoạn. QA-02 và BASE-03 vẫn mở; chi tiết tại `KIEM-THU.md`.
 
 > Bổ sung DIG-01/02: trên Edge, chọn ba tin giả bằng bàn phím, lọc còn một tin và tạo bản tin vẫn gồm cả ba; đổi thứ tự rồi tải lại giữ đúng thứ tự và URL từng mục. Chưa thử restart server ở lượt UI này; chi tiết tại `KIEM-THU.md`.

@@ -605,6 +605,47 @@ test('cancelled metric entry remains available and blocks navigation until disca
 });
 
 
+test('variant selection restores focus only while the user has not moved elsewhere', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const body = new Element('body');
+  const document = {body, activeElement: body, getElementById: get, querySelectorAll: () => [],
+    querySelector: () => new Element(), createElement: tag => new Element(tag), createTextNode: text => text};
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}}, document});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.bulletin = {id: 1, items: []};
+  vm.runInContext(`app.view = 'bulletins'; app.bulletin = bulletin; api = async () => [];
+    renderBulletin = focus => { globalThis.requestedFocus = focus; };`, context);
+  context.container = new Element();
+  await vm.runInContext('renderVariants(container, bulletin)', context);
+  const selector = context.container.children[0];
+  assert.equal(selector['aria-label'], 'Chọn phiên bản');
+  assert.equal(context.container.children[1]['aria-label'], 'Nền tảng phiên bản mới');
+  document.activeElement = selector;
+  selector.listeners.change[0]({});
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(context.requestedFocus, true);
+  document.activeElement = new Element('button');
+  selector.listeners.change[0]({});
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(context.requestedFocus, false);
+
+  document.activeElement = body;
+  context.container = new Element();
+  await vm.runInContext('renderVariants(container, bulletin, true)', context);
+  assert.equal(context.container.children[0].focused, true);
+  document.activeElement = new Element('button');
+  context.container = new Element();
+  await vm.runInContext('renderVariants(container, bulletin, true)', context);
+  assert.notEqual(context.container.children[0].focused, true);
+  document.activeElement = body;
+  vm.runInContext("app.view = 'inbox'", context);
+  context.container = new Element();
+  await vm.runInContext('renderVariants(container, bulletin, true)', context);
+  assert.notEqual(context.container.children[0].focused, true);
+});
+
 test('approval error stays visible and preserves editor contents until a new attempt', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
