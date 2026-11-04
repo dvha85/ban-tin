@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## FMT-02: hiển thị phiên bản quy tắc trong xem trước 04/11/2026
+
+- Trước sửa, test handler với DOM/API giả thất bại vì hộp xem trước phiên bản chưa khóa không hiển thị `policy_version` do server trả. Sau sửa, hộp hiện phiên bản quy tắc cùng cảnh báo bộ đếm; vẫn hiện cảnh báo khi bản tin gốc đã thay đổi và giữ cảnh báo các mục bị lược. Văn bản bài và nguồn không thay đổi.
+- Hồi quy nền trước sửa: Python 195/195 và 40/40 JavaScript ở nhóm thử, không tính test đang mở rộng để tái hiện lỗi. Sau sửa: `python -B -m unittest discover -s tests -q` 195/195 và `node --test` 44/44. Đây là kiểm thử handler với DOM/API giả; chưa kiểm tra hiển thị mới trên trình duyệt và không chứng minh policy trùng với nền tảng thật.
+
 ## BASE-02: revision lưu trữ và phạm vi khóa ghi nhận 04/11/2026
 
 - Đối chiếu HTTP trên kho giả: `revision` nội dung sai kiểu ở yêu cầu lưu trữ trả 409 và không lưu trữ; `archived` hoặc `archive_revision` sai kiểu trả 400. Mở rộng test vòng đời ghi nhận: dùng khóa đã ghi cho một phiên bản khác trả 409, không tạo ghi nhận cho phiên bản kia và tổng ghi nhận vẫn là 1. Đây là các trường hợp bổ sung cho test hiện có, không thay đổi logic ứng dụng.

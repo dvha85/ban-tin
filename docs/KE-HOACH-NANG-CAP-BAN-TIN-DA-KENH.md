@@ -640,6 +640,8 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | 04/11/2026 | BASE-02 | Đang làm | Đối chiếu và sửa mô tả revision lưu trữ, phạm vi khóa ghi nhận toàn kho và trường phản hồi; bổ sung kiểm tra HTTP, 31/31 test server đạt trước/sau | Chưa đối chiếu mọi trường hoặc tổ hợp hợp đồng API |
 
+| 04/11/2026 | FMT-02 / QA-02 | Đang làm | Hộp xem trước bản nháp hiển thị phiên bản quy tắc do server trả; test tái hiện trước sửa, Python 195/195 và JS 44/44 sau sửa | Chưa smoke thay đổi giao diện; BASE-03 và QA-02 vẫn mở |
+
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
 ## 12. Sổ quyết định

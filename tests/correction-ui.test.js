@@ -711,7 +711,7 @@ test('preview warns if the server sees a newer bulletin revision', async () => {
       id: 3, revision: 1, platform: 'x', account_label: 'Kênh thử', status: 'draft',
       locked_at: null, needs_update: false, policy_stale: false,
       checks: {}, segments: [{text: 'Tin giả', item_ids: [1], source_ids: ['source-1']}]
-    }] : {warning: 'Bộ đếm chỉ hỗ trợ.', needs_update: isStale(), omitted_item_ids: [],
+    }] : {warning: 'Bộ đếm chỉ hỗ trợ.', policy_version: 'fixture-policy-v1', needs_update: isStale(), omitted_item_ids: [],
           posts: [{position: 0, length: 10, limit: 280, valid: true, text: 'Tin giả'}]};
     showText = (title, text, warning) => previews.push({title, text, warning});`, context);
   const bulletin = {id: 7, items: [{id: 1, title: 'Tin giả', sources: [{source_id: 'source-1', url: 'https://example.com/a'}]}]};
@@ -723,9 +723,11 @@ test('preview warns if the server sees a newer bulletin revision', async () => {
   const tick = () => new Promise(resolve => setImmediate(resolve));
   preview.listeners.click[0]({}); await tick();
   assert.match(previews[0].warning, /bản tin gốc đã thay đổi/i);
+  assert.match(previews[0].warning, /fixture-policy-v1/);
   assert.match(previews[0].warning, /sao chép nội dung chưa lưu trước khi mở lại bản tin/i);
   assert.match(previews[0].warning, /kiểm tra.*duyệt/i);
   stale = false;
   preview.listeners.click[0]({}); await tick();
   assert.doesNotMatch(previews[1].warning, /bản tin gốc đã thay đổi/i);
+  assert.match(previews[1].warning, /fixture-policy-v1/);
 });
