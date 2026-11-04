@@ -21,6 +21,7 @@
 
 ## NEWS-05: ngày nguồn cũ qua nửa đêm Việt Nam 04/11/2026
 
+- Trình duyệt tích hợp trên server mã `8746864` với kho minh họa tạm chứa hai tin giả có thời điểm `2026-10-23T16:59:00+00:00` và `2026-10-23T17:01:00+00:00`. Bộ lọc mặc định 7 ngày không hiện hai tin; chọn **Tất cả** hiện lần lượt ngày `23/10/2026` và `24/10/2026` trên danh sách. Phần chi tiết tương ứng hiện `23:59 23/10/2026` và `00:01 24/10/2026`. Lượt này kiểm tra hai thời điểm cũ, không bao phủ mọi bộ lọc hoặc trạng thái ngày.
 - Trước sửa, kiểm thử handler giao diện dùng dữ liệu giả và đồng hồ cố định tái hiện tin từ 8 ngày trở lên hiển thị `23:59` thay vì `23/10/2026`: định dạng tiếng Việt trả giờ trước ngày, trong khi mã lấy phần đầu chuỗi. Sau sửa, định dạng ngày riêng với múi giờ `Asia/Ho_Chi_Minh`; hai thời điểm UTC ở hai phía nửa đêm được hiển thị `23/10/2026` và `24/10/2026`.
 - Test cũng kiểm tra tin gần đây qua nửa đêm, ngày tương lai và ngày chưa rõ. Test mới thất bại trước sửa và đạt sau sửa; toàn bộ `node --test` 42/42 và `python -B -m unittest discover -s tests -q` 190/190 đạt. Đây là test JavaScript chạy handler thật trong DOM giả, chưa smoke cách hiển thị mới trên trình duyệt.
 
