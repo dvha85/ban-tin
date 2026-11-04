@@ -2,7 +2,7 @@
 
 > QA-02 ngày 04/11: trên trình duyệt và kho giả, ngắt phản hồi sau commit số liệu và đính chính; cảnh báo hiển thị, giữ nội dung, retry số liệu không tạo lượt trùng và thẻ khác thấy liên kết đính chính. Đã sửa nhãn đính chính khi kết quả chưa rõ; QA-02 vẫn mở cho các trường hợp còn lại. Chi tiết tại `KIEM-THU.md`.
 
-> QA-02 / PUB-04: bổ sung cảnh báo kết quả chưa rõ cho nhập số liệu và đính chính khi không nhận được phản hồi; giữ nội dung đang nhập để đối soát. Test handler giả đạt; chưa smoke hai cảnh báo này trên trình duyệt, QA-02 vẫn mở. Xem `KIEM-THU.md`.
+> QA-02 / PUB-04: bổ sung cảnh báo kết quả chưa rõ cho nhập số liệu và đính chính khi không nhận được phản hồi; giữ nội dung đang nhập để đối soát. Test handler giả và smoke hai trường hợp tiêm lỗi trên trình duyệt đạt; QA-02 vẫn mở. Xem `KIEM-THU.md`.
 
 > QA-02 bổ sung: lỗi đọc nội dung phản hồi sau khi nhận header cũng được đánh dấu kết quả ghi chưa rõ; test JavaScript mô phỏng JSON bị cắt và luồng văn bản lỗi. Chưa smoke tình huống này trên trình duyệt; xem `KIEM-THU.md`.
 
@@ -22,7 +22,7 @@
 
 > QA-02 / lỗi cần xử lý: khi server thử dừng trước lúc lưu, giá trị đang nhập được giữ và có thông báo mất kết nối. Sau restart, lần lưu lại trên trang cũ bị từ chối vì phiên thay đổi và thông báo yêu cầu tải lại, có nguy cơ mất nội dung chưa lưu. Cần cơ chế khôi phục an toàn và kiểm thử cả kết quả lưu không rõ; trước mắt sao chép nội dung trước khi tải lại. Xem `KIEM-THU.md`.
 
-> Bổ sung: đã thêm nút khôi phục phiên không tải lại và không tự gửi lại thao tác; kiểm tra thư mục dữ liệu và yêu cầu người dùng đối chiếu trước khi lưu lại. Test handler giả đạt; chưa smoke giao diện thật sau sửa, chưa thử trường hợp ghi thành công nhưng mất phản hồi. Đường dẫn giống nhau không chứng minh nội dung kho không bị thay thế.
+> Bổ sung: đã thêm nút khôi phục phiên không tải lại và không tự gửi lại thao tác; kiểm tra thư mục dữ liệu và yêu cầu người dùng đối chiếu trước khi lưu lại. Sau đó đã smoke trên kho giả cả khôi phục phiên và một số trường hợp mất phản hồi sau ghi; xem các cập nhật mới hơn và `KIEM-THU.md`. Đường dẫn giống nhau không chứng minh nội dung kho không bị thay thế.
 
 > Kiểm thử HTTP bổ sung: server mới cùng kho tạm từ chối cookie/CSRF cũ, chấp nhận phiên mới, lưu revision hiện tại và từ chối gửi lại revision cũ. Đây là bằng chứng server, chưa thay thế smoke trình duyệt hoặc thử mất phản hồi.
 
@@ -66,11 +66,11 @@
 
 > Bổ sung BASE-03: mẫu URL Threads đầy đủ trong mã rộng hơn mẫu `/t/` và có thể nhận đoạn mã hóa phần trăm; đã sửa mô tả API và thêm test đặc tả hành vi. Chưa chứng minh tính hợp lệ hoặc trùng lặp trên Meta; tiếp tục đối soát thủ công.
 
-> Bổ sung APR-01: chính sách `2026-11-04-v4` chặn duyệt khi tiêu đề, nội dung, góc nhìn hoặc ghi chú kiểm chứng của mục được dùng còn dấu chưa xác minh. Bản duyệt theo policy cũ cần kiểm tra lại; snapshot lịch sử được giữ. Test service và hồi quy đạt, chưa smoke UI v4.
+> Bổ sung APR-01: chính sách `2026-11-04-v4` chặn duyệt khi tiêu đề, nội dung, góc nhìn hoặc ghi chú kiểm chứng của mục được dùng còn dấu chưa xác minh. Bản duyệt theo policy cũ cần kiểm tra lại; snapshot lịch sử được giữ. Test service và hồi quy đạt; smoke UI v4 cho trường ghi chú được ghi ở cập nhật đầu tài liệu.
 
 > Bổ sung APR-01 qua HTTP: ghi chú chưa xác minh bị chặn duyệt/xuất; sau sửa và xác nhận lại có thể duyệt/xuất trên kho giả. Edge vẫn báo từ chối quyền điều khiển, nên QA giao diện v4 tiếp tục mở; xem `KIEM-THU.md`.
 
-> Bổ sung APR-01: lỗi dấu chưa xác minh nêu thứ tự mục và trường cần sửa; test service/HTTP đạt, chưa smoke hiển thị trên UI.
+> Bổ sung APR-01: lỗi dấu chưa xác minh nêu thứ tự mục và trường cần sửa; test service/HTTP đạt và đã smoke hiển thị trường ghi chú trên UI.
 
 > Bổ sung APR-01 / QA-02: lỗi duyệt được giữ tại vùng phiên bản với role alert cho đến lần thử tiếp theo hoặc dựng lại giao diện; nội dung đang nhập được giữ khi lỗi. Đã kiểm tra handler với DOM/API giả; chưa smoke trên trình duyệt.
 
@@ -335,7 +335,7 @@ Quy mô S/M/L là tương đối, không phải cam kết số ngày. Mặc đ�
 | --- | --- | --- | --- | --- |
 | G0 | Hotfix URL, có thể phát hành 0.3.1 riêng | Không | S | Đang làm — chờ smoke trình duyệt |
 | G1 | Hợp đồng dữ liệu, policy và migration an toàn | Review kế hoạch | M | Đang làm |
-| G2 | Bản tin nhiều mục + nguồn + gói tư liệu | G1 | L | Đang làm — chưa QA giao diện |
+| G2 | Bản tin nhiều mục + nguồn + gói tư liệu | G1 | L | Đang làm — đã smoke một số luồng, chưa hoàn tất QA |
 | G3 | Ba biến thể, preview, đếm/chia đoạn | G1, G2 | L | Đang làm — còn kiểm chứng bộ đếm và QA chia đoạn |
 | G4 | Duyệt/xuất đúng snapshot | G2, G3 | M | Đang làm — chưa QA toàn luồng |
 | G5 | Nhật ký đa kênh, chống lặp, chỉ số | G0, G4 | M | Đang làm — còn giao diện và QA |
