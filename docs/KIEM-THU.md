@@ -2,6 +2,7 @@
 
 ## FMT-02: hiển thị phiên bản quy tắc trong xem trước 04/11/2026
 
+- Trên trình duyệt tích hợp với server mã `3e39f7b` và kho minh họa tạm: chuẩn bị bằng service một bản tin hai mục và ba phiên bản nháp chỉ dùng mục đầu. Mở lần lượt Facebook, Threads, X qua giao diện và xem trước: cả ba hiện `2026-11-04-v4`, cảnh báo bộ đếm riêng, thông báo mục 2 không có trong phiên bản, nội dung và URL nguồn giả của mục 1. Đây là smoke ba bản nháp đã chuẩn bị sẵn; không chứng minh chính sách khớp nền tảng thật hay toàn bộ QA.
 - Trước sửa, test handler với DOM/API giả thất bại vì hộp xem trước phiên bản chưa khóa không hiển thị `policy_version` do server trả. Sau sửa, hộp hiện phiên bản quy tắc cùng cảnh báo bộ đếm; vẫn hiện cảnh báo khi bản tin gốc đã thay đổi và giữ cảnh báo các mục bị lược. Văn bản bài và nguồn không thay đổi.
 - Hồi quy nền trước sửa: Python 195/195 và 40/40 JavaScript ở nhóm thử, không tính test đang mở rộng để tái hiện lỗi. Sau sửa: `python -B -m unittest discover -s tests -q` 195/195 và `node --test` 44/44. Đây là kiểm thử handler với DOM/API giả; chưa kiểm tra hiển thị mới trên trình duyệt và không chứng minh policy trùng với nền tảng thật.
 

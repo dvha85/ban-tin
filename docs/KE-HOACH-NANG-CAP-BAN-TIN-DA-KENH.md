@@ -642,6 +642,8 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | 04/11/2026 | FMT-02 / QA-02 | Đang làm | Hộp xem trước bản nháp hiển thị phiên bản quy tắc do server trả; test tái hiện trước sửa, Python 195/195 và JS 44/44 sau sửa | Chưa smoke thay đổi giao diện; BASE-03 và QA-02 vẫn mở |
 
+| 04/11/2026 | FMT-02 / FMT-04 / QA-02 | Đang làm | Trình duyệt tích hợp với kho giả trên mã `3e39f7b`: ba bản nháp Facebook, Threads, X hiện phiên bản quy tắc, cảnh báo riêng, mục 2 bị lược và nguồn mục 1 | Các bản nháp chuẩn bị bằng service; chưa chứng minh policy khớp nền tảng hoặc toàn bộ QA |
+
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
 ## 12. Sổ quyết định
