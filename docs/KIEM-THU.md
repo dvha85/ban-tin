@@ -1,5 +1,9 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## MIG-03: khởi động lại schema 4
+
+- Mở rộng `test_migration_preserves_legacy_and_backups_and_is_idempotent`: sau khi nâng cấp fixture schema 3 và tạo một bản tin mới ở schema 4, chụp các hàng trong tất cả bảng người dùng, mở `Newsroom` thêm hai lần rồi đối chiếu toàn bộ hàng, export legacy, version 4, `integrity_check`, `foreign_key_check` và số backup migration. Bộ migration 12/12 đạt; toàn bộ 183 Python và 37 JavaScript đạt. Đây là dữ liệu giả; không chứng minh mọi tình huống mất điện hay hệ thống tệp.
+
 ## QA-02: phản hồi ghi nhận bị ngắt 04/11/2026
 
 - Smoke 503 sau commit: server fixture ghi số liệu X 456 lượt xem, 0 lượt thích rồi thay phản hồi thành HTTP 503 với nội dung lỗi giả. Trình duyệt giữ giá trị và cảnh báo có thể đã lưu; retry cùng biểu mẫu cho thấy một lượt số liệu với các trường chưa nhập là chưa biết. Log server thử xác nhận thời điểm tiêm sau commit. Chỉ kiểm tra trường hợp số liệu, không chứng minh toàn bộ 5xx hoặc lỗi mạng thật.

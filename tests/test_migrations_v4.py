@@ -53,7 +53,24 @@ class MigrationV4Tests(unittest.TestCase):
         with closing(sqlite3.connect(backups[0])) as conn:
             self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
             self.assertEqual(conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
+        article = migrated.import_article({'title': 'Tin mới sau nâng cấp',
+            'url': 'https://example.com/post-upgrade', 'summary': 'Dữ liệu thử sau nâng cấp.'})
+        bulletin = migrated.create_bulletin({'article_ids': [article['id']]})
+        self.assertEqual(len(bulletin['items']), 1)
+        def snapshot(room):
+            with room.connection() as conn:
+                names = [row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")]
+                return {name: [tuple(row) for row in conn.execute(f'SELECT * FROM "{name}" ORDER BY rowid')]
+                        for name in names}
+        before_restart = snapshot(migrated)
         Newsroom(self.directory)
+        restarted = Newsroom(self.directory)
+        self.assertEqual(snapshot(restarted), before_restart)
+        self.assertEqual(restarted.export(draft['id']), before_export)
+        with restarted.connection() as conn:
+            self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 4)
+            self.assertEqual(conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
+            self.assertIsNone(conn.execute('PRAGMA foreign_key_check').fetchone())
         self.assertEqual(len(list((self.directory / 'backups').glob('pre-v04-*.sqlite3'))), 1)
 
     def test_restore_rejects_schema4_with_missing_constraints_or_foreign_keys(self):

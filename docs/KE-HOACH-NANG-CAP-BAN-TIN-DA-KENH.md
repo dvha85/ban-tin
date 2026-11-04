@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> MIG-03: mở rộng fixture nâng cấp schema 3 → 4 bằng một bản tin tạo sau nâng cấp; sau hai lần mở lại, toàn bộ hàng ở các bảng người dùng, export legacy, version, integrity và khóa ngoại giữ nguyên, không tạo backup migration mới. Đây là kiểm thử fixture, không thay cho nghiệm thu toàn bộ migration. Xem `KIEM-THU.md`.
+
 > QA-02: smoke trên trình duyệt với server fixture trả 503 sau commit số liệu cho thấy cảnh báo kết quả chưa rõ, giữ giá trị và retry cùng nội dung chỉ có một lượt số liệu. Đây là một trường hợp tiêm lỗi; QA-02 vẫn mở. Xem `KIEM-THU.md`.
 
 > QA-02: phản hồi HTTP 5xx của thao tác ghi nay được coi là kết quả chưa rõ, để phần ghi nhận/số liệu/đính chính hướng dẫn đối soát. Test JavaScript mô phỏng 503 và 409; smoke 503 sau commit số liệu được ghi ở cập nhật mới hơn. BASE-03 vẫn mở vì tài liệu kỹ thuật Threads tiếp tục trả 429. Xem `KIEM-THU.md`.
