@@ -596,3 +596,22 @@ test('approval error stays visible and preserves editor contents until a new att
   button.listeners.click[0]({}); await new Promise(resolve => setImmediate(resolve));
   assert.equal(calls.length, 2); assert.match(alert.textContent, /Mục 1/);
 });
+
+test('older source dates show the Vietnam calendar date across midnight', () => {
+  class FixedDate extends Date {
+    static now() { return Date.parse('2026-11-04T17:30:00Z'); }
+  }
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date: FixedDate, Error, Promise,
+    setTimeout, clearTimeout, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  assert.equal(vm.runInContext("shortDate('2026-10-23T16:59:00Z')", context), '23/10/2026');
+  assert.equal(vm.runInContext("shortDate('2026-10-23T17:01:00Z')", context), '24/10/2026');
+  assert.equal(vm.runInContext("shortDate('2026-11-04T16:50:00Z')", context), 'Trong giờ qua');
+  assert.equal(vm.runInContext("shortDate('2026-11-04T17:31:00Z')", context), 'Ngày nguồn ở tương lai');
+  assert.equal(vm.runInContext("shortDate(null)", context), 'Chưa rõ ngày');
+});

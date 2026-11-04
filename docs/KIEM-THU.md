@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## NEWS-05: ngày nguồn cũ qua nửa đêm Việt Nam 04/11/2026
+
+- Trước sửa, kiểm thử handler giao diện dùng dữ liệu giả và đồng hồ cố định tái hiện tin từ 8 ngày trở lên hiển thị `23:59` thay vì `23/10/2026`: định dạng tiếng Việt trả giờ trước ngày, trong khi mã lấy phần đầu chuỗi. Sau sửa, định dạng ngày riêng với múi giờ `Asia/Ho_Chi_Minh`; hai thời điểm UTC ở hai phía nửa đêm được hiển thị `23/10/2026` và `24/10/2026`.
+- Test cũng kiểm tra tin gần đây qua nửa đêm, ngày tương lai và ngày chưa rõ. Test mới thất bại trước sửa và đạt sau sửa; toàn bộ `node --test` 42/42 và `python -B -m unittest discover -s tests -q` 190/190 đạt. Đây là test JavaScript chạy handler thật trong DOM giả, chưa smoke cách hiển thị mới trên trình duyệt.
+
 ## MIG-01/04 và QA-03: nâng cấp, restore và đường lui trên fixture 04/11/2026
 
 - Mở rộng `test_upgrade_reduced_schema_1_and_2_preserves_legacy_exports` và `test_real_v3_fixture_preserves_all_legacy_rows_and_approved_exports`: sau nâng cấp schema 1/2 mô phỏng và schema 3 từ fixture mã cũ, kiểm tra version 4, `integrity_check`, `foreign_key_check`, hai bản xuất và các hàng bài nguồn, nguồn bài, bản nháp, lịch sử và số liệu. Fixture schema 3 còn đối chiếu nguồn tùy chỉnh và thiết lập; schema 1/2 là mô phỏng bằng cách rút gọn fixture 3, không phải snapshot lịch sử.

@@ -120,7 +120,7 @@ function shortDate(value) {
   if (hours < 1) return 'Trong giờ qua';
   if (hours < 24) return `${Math.floor(hours)} giờ trước`;
   if (hours < 8 * 24) return `${Math.floor(hours / 24)} ngày trước`;
-  return formatDate(value).split(' ')[0];
+  return new Intl.DateTimeFormat('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Ho_Chi_Minh'}).format(new Date(value));
 }
 function link(url, text) {
   const element = node('a', '', text);

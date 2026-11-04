@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> NEWS-05 ngày 04/11: sửa ngày nguồn cũ bị hiển thị thành giờ trong danh sách; kiểm thử mốc UTC hai phía nửa đêm Việt Nam, ngày tương lai/chưa rõ và tin gần đây đạt trong DOM giả. Chưa smoke thay đổi này trên trình duyệt; xem `KIEM-THU.md`.
+
 > DB-01/02 / QA-03 ngày 04/11: các trường hợp MIG-01…05 đã được đối chiếu trong phạm vi fixture; thử thêm đường lui từ backup schema 3 bằng mã 0.3.1. Người dùng không có SQLite cũ nên không áp dụng bước thử bản sao vận hành. Chi tiết và giới hạn tại `KIEM-THU.md`.
 
 > MIG-03: mở rộng fixture nâng cấp schema 3 → 4 bằng một bản tin tạo sau nâng cấp; sau hai lần mở lại, toàn bộ hàng ở các bảng người dùng, export legacy, version, integrity và khóa ngoại giữ nguyên, không tạo backup migration mới. Đây là kiểm thử fixture, không thay cho nghiệm thu toàn bộ migration. Xem `KIEM-THU.md`.
@@ -620,6 +622,8 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 04/11/2026 | PUB-02 / POST-03/05 / QA-02 | Đang làm | Vùng xác nhận ghi nhận nêu đoạn, kênh, URL; thay URL vô hiệu xác nhận. Trên cùng trang fixture X: ghi → hủy → ghi lại cùng URL thành công, 0/2 → 1/2 → 0/2 → 1/2; test handler retry và thay URL | Chưa thử mất mạng thật, mọi kênh hoặc toàn bộ QA bàn phím |
 
 | 04/11/2026 | DB-01/02 / QA-03 | Hoàn tất trong phạm vi fixture | Nâng cấp schema 1/2 mô phỏng và schema 3; kiểm tra integrity, khóa ngoại, dữ liệu, restore hỏng và đường lui 0.3.1; Python 190/190, JS 41/41 | Không có SQLite cũ để thử bản sao vận hành; backup cũ không chứa công việc sau nâng cấp |
+
+| 04/11/2026 | NEWS-05 / DIG-03 | Đang làm | Sửa hiển thị ngày nguồn cũ theo múi giờ Việt Nam; test tái hiện trước sửa và đạt sau sửa; Python 190/190, JS 42/42 | Chưa smoke thay đổi trên trình duyệt; QA-02 vẫn mở |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
