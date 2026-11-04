@@ -32,6 +32,8 @@
 
 > QA-02 / DIG-02 ngày 04/11: trên kho giả, đã đổi thứ tự, lưu nội dung mục qua giao diện, dừng và khởi động lại tiến trình máy chủ với cùng kho; mở lại thấy revision, nội dung, thứ tự và URL từng mục được giữ. Phạm vi chi tiết tại `KIEM-THU.md`; QA-02 vẫn mở.
 
+> APR-04 / APPROVE-05 ngày 04/11: kiểm tra có điều phối cả hai thứ tự sửa bản tin gốc và ghi nhận URL trên SQLite giả; ghi nhận cũ bị conflict nếu bản tin sửa trước, còn nếu ghi nhận trước thì giữ URL và snapshot đã khóa. Đây là test service, không bao phủ mọi cuộc đua; xem `KIEM-THU.md`.
+
 > Cập nhật kiểm thử 04/11/2026: Trên fixture, đã ghi nhận URL giả Facebook và Threads, đối chiếu số liệu riêng 101/0 và 202/3, rồi tải lại và xác nhận số liệu Threads còn lưu. Tổng quan có ba đoạn ghi nhận trên ba phiên bản, trong đó X mới có 1/2 đoạn. QA-02 và BASE-03 vẫn mở; chi tiết tại `KIEM-THU.md`.
 
 > Bổ sung DIG-01/02: trên Edge, chọn ba tin giả bằng bàn phím, lọc còn một tin và tạo bản tin vẫn gồm cả ba; đổi thứ tự rồi tải lại giữ đúng thứ tự và URL từng mục. Chưa thử restart server ở lượt UI này; chi tiết tại `KIEM-THU.md`.

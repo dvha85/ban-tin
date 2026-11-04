@@ -799,6 +799,83 @@ class VariantTests(unittest.TestCase):
                     with self.assertRaises(ValidationError):
                         self.room.export_variant(variant['id'])
 
+    def test_parent_edit_and_record_serialize_in_both_orders(self):
+        for first_operation in ('edit', 'record'):
+            with self.subTest(first_operation=first_operation):
+                variant = self.make_approved('x')
+                approved = self.room.export_variant(variant['id'], archive=True)
+                bulletin = self.room.bulletin(self.bulletin['id'])
+                locked = threading.Event()
+                release = threading.Event()
+                queued = threading.Event()
+                thread_state = threading.local()
+                method_name = '_locked_bulletin' if first_operation == 'edit' else '_locked_variant'
+                original = getattr(self.room, method_name)
+                original_connection = self.room.connection
+
+                @contextmanager
+                def traced_connection():
+                    with original_connection() as conn:
+                        if getattr(thread_state, 'second', False):
+                            conn.set_trace_callback(lambda sql: queued.set() if sql == 'BEGIN IMMEDIATE' else None)
+                        yield conn
+
+                def hold_transaction(*args):
+                    result = original(*args)
+                    locked.set()
+                    if not release.wait(10):
+                        raise AssertionError('Transaction was not released')
+                    return result
+
+                def attempt(operation, signal=False):
+                    thread_state.second = signal
+                    if operation == 'edit':
+                        return self.room.save_bulletin(bulletin['id'], {
+                            'revision': bulletin['revision'], 'title': f'Bản tin sửa khi {first_operation}'})
+                    return self.room.record_publication(variant['id'], {
+                        'revision': variant['revision'], 'position': 0,
+                        'url': f'https://x.com/test/status/{1001 if first_operation == "edit" else 1002}',
+                        'idempotency_key': f'parent_race_{first_operation}'})
+
+                with patch.object(self.room, method_name, side_effect=hold_transaction), \
+                     patch.object(self.room, 'connection', side_effect=traced_connection):
+                    with ThreadPoolExecutor(max_workers=2) as pool:
+                        first = pool.submit(attempt, first_operation)
+                        try:
+                            self.assertTrue(locked.wait(10), 'First transaction did not acquire its lock')
+                            second_operation = 'record' if first_operation == 'edit' else 'edit'
+                            second = pool.submit(attempt, second_operation, True)
+                            self.assertTrue(queued.wait(10), 'Second transaction did not start')
+                        finally:
+                            release.set()
+                        first.result(timeout=10)
+                        if first_operation == 'edit':
+                            with self.assertRaises(Conflict):
+                                second.result(timeout=10)
+                        else:
+                            second.result(timeout=10)
+
+                current = self.room.variant(variant['id'])
+                publications = self.room.publications(variant['id'])
+                self.assertEqual(self.room.bulletin(bulletin['id'])['revision'], bulletin['revision'] + 1)
+                if first_operation == 'edit':
+                    self.assertEqual(publications, [])
+                    self.assertEqual(current['status'], 'draft')
+                    self.assertIsNone(current['locked_at'])
+                    self.assertTrue(current['needs_update'])
+                    self.assertTrue(all(value is False for value in current['checks'].values()))
+                    with self.assertRaises(ValidationError):
+                        self.room.export_variant(variant['id'])
+                else:
+                    self.assertEqual(len(publications), 1)
+                    self.assertTrue(publications[0]['active'])
+                    self.assertEqual(publications[0]['url'], 'https://x.com/test/status/1002')
+                    self.assertEqual(publications[0]['approval_id'], approved['approval_id'])
+                    self.assertIsNotNone(current['locked_at'])
+                    self.assertEqual(current['status'], 'recorded')
+                    self.assertEqual(self.room.export_variant(variant['id'], archive=True), approved)
+                self.bulletin = self.room.bulletin(bulletin['id'])
+
     def test_record_separate_segments_retry_and_immutable_after_correction(self):
         variant = self.make_approved('x', two=True)
         data = {'revision': variant['revision'], 'position': 0, 'url': 'https://x.com/test/status/123',

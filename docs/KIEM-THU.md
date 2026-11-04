@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## APR-04 / APPROVE-05: sửa bản tin gốc đồng thời ghi nhận 04/11/2026
+
+- Trước khi bổ sung, nhóm kiểm thử phiên bản đạt 49/49. Test `test_parent_edit_and_record_serialize_in_both_orders` dùng hai luồng trên cùng kho SQLite tạm, giữ transaction đầu khi luồng thứ hai bắt đầu `BEGIN IMMEDIATE`, rồi lần lượt thử cả hai thứ tự.
+- Nếu sửa bản tin gốc lấy khóa trước, ghi nhận dùng revision cũ bị conflict, không có publication, bản chưa khóa trở về nháp và không xuất được. Nếu ghi nhận lấy khóa trước, cả hai thao tác hoàn tất: URL giả gắn với approval ban đầu, phiên bản bị khóa và bản lưu lịch sử vẫn khớp snapshot trước khi sửa bản tin gốc.
+- Đây là bằng chứng ở mức service với hai thứ tự được điều phối, không phải kiểm thử đồng thời qua HTTP hoặc mọi loại lỗi hệ thống; không gọi mạng xã hội. APR-04 và QA-02 tiếp tục được theo dõi trong kế hoạch.
+- Hồi quy đạt 202/202 Python và 46/46 JavaScript; sau khi bổ sung hai kiểm tra URL và trạng thái vào ca mới, chạy riêng ca đó tiếp tục đạt.
+
 ## QA-02 / DIG-02: mở lại sau khởi động máy chủ 04/11/2026
 
 - Trên kho SQLite tạm tạo bằng service, chuẩn bị hai tin và một bản tin giả. Với trình duyệt tích hợp và mã `1a988d9`, chuyển mục thứ hai lên đầu, nhập nội dung tiếng Việt cho mục đó và lưu qua giao diện. Bản tin chuyển từ revision 1 sang 3.
