@@ -13,6 +13,17 @@ The upstream project is licensed under Apache License 2.0; see the adjacent
 `TWITTER-TEXT-APACHE-2.0.txt`. These fixtures exercise the official published
 examples, not every Unicode version or behavior of today's X application.
 
+`twitter-text-url-extract.json` contains the complete `urls`,
+`urls_with_indices`, `urls_with_directional_markers` and
+`tco_urls_with_params` sections (108 examples) from the same commit's
+[conformance/extract.yml](https://github.com/twitter/twitter-text/blob/30e2430d90cff3b46393ea54caf511441983c260/conformance/extract.yml),
+retrieved 2026-11-04. The source file SHA-256 is
+`2b4f65d43462eb9785785eb94b633d1eccf920d5047fa17d98a45ea219851c71`.
+The tests compare extracted URLs and, where provided, indices. For 76 ASCII URL
+cases, another test derives the total using one per character and 23 per URL;
+this does not verify all weighted lengths or current X composer behavior. YAML was converted
+to JSON for offline tests and requires no YAML package at runtime.
+
 The separate `test_reference_javascript_310_characterization_for_newer_emoji`
 cases were compared on 2026-11-03 with npm `twitter-text` 3.1.0 (tarball
 integrity `sha512-nulfUi3FN6z0LUjYipJid+eiwXvOLb8Ass7Jy/6zsXmZK3URte043m8fL3FyDzrK+WLpyqhHuR/TcARTN/iuGQ==`)

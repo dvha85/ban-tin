@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> BASE-03 / TEXT-03 ngày 04/11: bổ sung fixture upstream 108 trường hợp nhận diện URL X và kiểm tra số ký tự trên 76 trường hợp ASCII. Đây là bằng chứng thư viện cục bộ, chưa xác minh mọi URL/composer thực tế; Threads vẫn ước lượng và BASE-03 tiếp tục mở. Chi tiết tại `KIEM-THU.md`.
+
 > FMT-03 / TEXT-05 ngày 04/11: test service với X và Threads chia đúng 20 đoạn, giữ văn bản và nguồn; từ chối trường hợp cần 21 đoạn, không đổi bản đã lưu sau mở lại. Chưa xác minh composer thật hoặc toàn bộ QA; xem `KIEM-THU.md`.
 
 > DOC-01 / QA-01 ngày 04/11: sửa lệnh kiểm thử JavaScript trong README và `KIEM-THU.md` để chạy cả ba test lưu bản nháp cũ bị thiếu; lệnh cập nhật đạt 46/46 test. Hai mục vẫn mở cho nghiệm thu và lần chạy cuối trước phát hành.

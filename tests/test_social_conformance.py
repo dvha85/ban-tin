@@ -5,10 +5,37 @@ import unittest
 from pathlib import Path
 
 from newsroom.social_formats import count_text
-from newsroom._vendor.twitter_text import parse_tweet
+from newsroom._vendor.twitter_text import extract_urls, extract_urls_with_indices, parse_tweet
 
 
 class TwitterTextConformance(unittest.TestCase):
+    def test_url_extraction_matches_upstream_corpus(self):
+        path = Path(__file__).parent / 'fixtures' / 'twitter-text-url-extract.json'
+        fixture = json.loads(path.read_text(encoding='utf-8'))
+        self.assertEqual(fixture['source_commit'], '30e2430d90cff3b46393ea54caf511441983c260')
+        self.assertEqual(fixture['source_sha256'], '2b4f65d43462eb9785785eb94b633d1eccf920d5047fa17d98a45ea219851c71')
+        expected_sizes = {'urls': 91, 'urls_with_indices': 10,
+                          'urls_with_directional_markers': 2, 'tco_urls_with_params': 5}
+        self.assertEqual({group: len(cases) for group, cases in fixture['groups'].items()}, expected_sizes)
+        for group, cases in fixture['groups'].items():
+            for case in cases:
+                with self.subTest(group=group, description=case['description']):
+                    extractor = extract_urls_with_indices if group in (
+                        'urls_with_indices', 'urls_with_directional_markers') else extract_urls
+                    self.assertEqual(extractor(case['text']), case['expected'])
+
+    def test_x_count_uses_upstream_ascii_url_boundaries(self):
+        path = Path(__file__).parent / 'fixtures' / 'twitter-text-url-extract.json'
+        fixture = json.loads(path.read_text(encoding='utf-8'))
+        cases = [case for case in fixture['groups']['urls'] if case['text'].isascii()]
+        self.assertEqual(len(cases), 76)
+        for case in cases:
+            with self.subTest(description=case['description']):
+                # ASCII weighs one per character; replace each expected URL's
+                # weight with 23 according to the pinned X counting policy.
+                expected = len(case['text']) + sum(23 - len(url) for url in case['expected'])
+                self.assertEqual(count_text('x', case['text'])[0], expected)
+
     def test_x_counts_crlf_without_silently_collapsing_two_characters(self):
         # Pinned upstream JS parseTweet normalizes NFC but does not collapse CRLF.
         for text, length in (('A\r\nB', 4), ('A\nB', 3), ('A\rB', 3),

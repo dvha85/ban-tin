@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## BASE-03 / TEXT-03: đối chiếu nhận diện URL X 04/11/2026
+
+- Lưu ngoại tuyến bốn nhóm gồm 108 ví dụ URL và vị trí từ [twitter-text extract.yml](https://github.com/twitter/twitter-text/blob/30e2430d90cff3b46393ea54caf511441983c260/conformance/extract.yml) tại commit đã ghim; bộ nhận diện dùng trong bộ đếm khớp toàn bộ ví dụ đó. Thêm kiểm tra 76 ví dụ ASCII trong nhóm URL: tính độc lập một đơn vị cho mỗi ký tự và 23 cho mỗi URL đã cho, rồi so với bộ đếm X của ứng dụng. Nguồn, SHA-256 và giấy phép ghi tại `tests/fixtures/TWITTER-TEXT-README.md`.
+- Trước bổ sung: 5/5 test conformance đạt. Sau bổ sung: toàn bộ 205/205 Python và 46/46 JavaScript đạt. Các ví dụ kiểm tra mã cục bộ theo tài liệu upstream tại commit ghim, không chứng minh mọi URL, Unicode mới hoặc composer X hiện tại; bộ đếm Threads vẫn là ước lượng và BASE-03 tiếp tục mở.
+
 ## FMT-03 / TEXT-05: ranh giới số đoạn 04/11/2026
 
 - Với kho SQLite giả, kiểm thử X và Threads: văn bản gồm 20 câu phải chia thành đúng 20 đoạn; nối các trường biên tập khôi phục chính xác văn bản, mỗi đoạn hợp lệ theo bộ đếm hiện tại, có số thứ tự và URL nguồn. Với 21 câu cùng kích thước, yêu cầu chia bị từ chối; mở lại kho xác nhận revision và các đoạn đã lưu không thay đổi.
