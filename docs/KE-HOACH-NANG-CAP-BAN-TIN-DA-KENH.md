@@ -645,6 +645,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 04/11/2026 | FMT-02 / FMT-04 / QA-02 | Đang làm | Trình duyệt tích hợp với kho giả trên mã `3e39f7b`: ba bản nháp Facebook, Threads, X hiện phiên bản quy tắc, cảnh báo riêng, mục 2 bị lược và nguồn mục 1 | Các bản nháp chuẩn bị bằng service; chưa chứng minh policy khớp nền tảng hoặc toàn bộ QA |
 | 04/11/2026 | SAFE-01 / SAFE-03 | Đang làm | Bổ sung route lưu trữ vào ma trận session/CSRF/Origin/Host; kiểm tra đủ bảy tài nguyên tĩnh đang cho phép và một số đường dẫn bị chặn. HTTP 31/31 đạt | Danh sách route tường minh phải cập nhật khi thêm API; chưa bao phủ mọi biến thể request hoặc toàn bộ QA |
 | 04/11/2026 | APR-04 / APPROVE-05 | Đang làm | Thử bốn cặp lưu nội dung/ghi nhận URL cạnh tranh cùng revision trên SQLite giả; đối chiếu trạng thái, publication và snapshot theo thao tác thắng; 46/46 test phiên bản đạt | Bộ lập lịch không bảo đảm chạy đủ cả hai thứ tự trong mỗi lượt; chưa kết luận mọi tình huống race hoặc toàn bộ QA |
+| 04/11/2026 | BASE-03 / FMT-02 | Đang làm | Sửa bộ đếm X giữ cả CR và LF thay vì gộp CRLF; test tái hiện 280/281 và chặn duyệt, tăng policy v5 và giữ archive v4 | Chưa kiểm tra composer X thực tế hoặc quy tắc Threads; policy dùng chung nên bản duyệt cũ ở cả ba kênh cần xem lại |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 

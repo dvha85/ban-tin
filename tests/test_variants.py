@@ -301,6 +301,25 @@ class VariantTests(unittest.TestCase):
                 with self.assertRaises(ValidationError):
                     self.make_approved('threads')
 
+    def test_approval_counts_crlf_in_final_x_post_including_source(self):
+        item = self.bulletin['items'][0]
+        source = item['sources'][0]['source_id']
+        template = {'text': 'A', 'item_ids': [item['id']], 'source_ids': [source]}
+        suffix_weight = render_segments('x', [template], self.bulletin)['posts'][0]['length'] - 1
+        body = 'A' * (278 - suffix_weight) + '\r\nB'
+        segment = {**template, 'text': body}
+        rendered = render_segments('x', [segment], self.bulletin)
+        self.assertEqual(rendered['posts'][0]['length'], 281)
+        self.assertFalse(rendered['valid'])
+        variant = self.room.create_variant(self.bulletin['id'], {'platform': 'x', 'account_label': 'Kênh thử',
+                                               'bulletin_revision': self.bulletin['revision']})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'segments': [segment]})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                                                          'checks': {key: True for key in CHECKS}})
+        with self.assertRaises(ValidationError):
+            self.room.approve_variant(variant['id'], {'revision': variant['revision']})
+        self.assertEqual(self.room.variant(variant['id'])['status'], 'draft')
+
     def test_split_rechecks_numbering_and_keeps_sources_and_text(self):
         item = self.bulletin['items'][0]
         # Each sentence fits alone, but two do not. The last index crosses 9→10.
@@ -1016,8 +1035,8 @@ class VariantTests(unittest.TestCase):
                 self.room.export_variant(variant['id'])
             self.assertTrue(self.room.export_variant(variant['id'], archive=True)['archive'])
 
-    def test_older_approval_is_stale_under_v3_but_archive_remains_available(self):
-        for version in ('2026-11-03-v1', '2026-11-03-v2'):
+    def test_older_approvals_are_stale_but_archive_remains_available(self):
+        for version in ('2026-11-03-v1', '2026-11-03-v2', '2026-11-04-v4'):
             with self.subTest(version=version):
                 with patch('newsroom.variants.POLICY_VERSION', version):
                     variant = self.make_approved('x')

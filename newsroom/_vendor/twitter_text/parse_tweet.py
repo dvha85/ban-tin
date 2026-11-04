@@ -111,7 +111,9 @@ def parse_tweet(text: str, options: dict = config['defaults'], *, emoji_extracto
     emoji_parsing_enabled = options['emoji_parsing_enabled']
     max_weighted_tweet_length = options['max_weighted_tweet_length']
 
-    normalized_text = convert_line_ending(unicodedata.normalize('NFC', text))
+    # Match the pinned upstream JavaScript counter: normalize Unicode but keep
+    # the original line endings, so CRLF contributes both code points.
+    normalized_text = unicodedata.normalize('NFC', text)
 
     url_entities_map = transform_entities_to_hash(extract_urls_with_indices(normalized_text))
     emoji_entities_map = transform_entities_to_hash(emoji_extractor(normalized_text))

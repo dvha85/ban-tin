@@ -9,6 +9,15 @@ from newsroom._vendor.twitter_text import parse_tweet
 
 
 class TwitterTextConformance(unittest.TestCase):
+    def test_x_counts_crlf_without_silently_collapsing_two_characters(self):
+        # Pinned upstream JS parseTweet normalizes NFC but does not collapse CRLF.
+        for text, length in (('A\r\nB', 4), ('A\nB', 3), ('A\rB', 3),
+                             ('cafe\u0301\r\nB', 7)):
+            with self.subTest(text=repr(text)):
+                self.assertEqual(count_text('x', text), (length, True))
+        self.assertEqual(count_text('x', 'a' * 277 + '\r\nX'), (280, True))
+        self.assertEqual(count_text('x', 'a' * 278 + '\r\nX'), (281, False))
+
     def test_weighted_lengths_and_validity_from_upstream(self):
         path = Path(__file__).parent / 'fixtures' / 'twitter-text-conformance.json'
         fixture = json.loads(path.read_text(encoding='utf-8'))

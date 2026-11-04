@@ -22,6 +22,11 @@
 - Test `test_invalid_multichannel_field_types_do_not_change_saved_data` gửi 34 giá trị sai kiểu qua HTTP tại sáu nhóm trường chọn tin, thứ tự mục, `verified`, `claims` và `segments` của save/preview. Các yêu cầu đều trả 400 JSON; bản tin, phiên bản, lịch sử và số bản tin trên kho giả không đổi. Sau bổ sung, toàn bộ Python 195/195 đạt; JavaScript 43/43 đã đạt ở hồi quy trước, mã JavaScript không đổi trong lượt này.
 - Bổ sung mô tả kiểu nguồn, khẳng định, đoạn và preview tại `API-BAN-TIN-DA-KENH.md`, bao gồm khác biệt giữa `source_ids: null` và `source_selection: null`. Phạm vi này không chứng minh mọi trường, tổ hợp dữ liệu hay giao diện; BASE-02 vẫn mở.
 
+## BASE-03 / FMT-02: đếm CRLF trong bài X 04/11/2026
+
+- Bộ parser Python cũ gộp CRLF thành LF trước khi đếm, dù văn bản xuất vẫn giữ CRLF. Theo [mã JavaScript twitter-text được ghim](https://github.com/twitter/twitter-text/blob/30e2430d90cff3b46393ea54caf511441983c260/js/src/parseTweet.js), bộ đếm tham chiếu chuẩn hóa NFC và đếm trên chuỗi đó, không gộp CRLF. Trước sửa, `A\r\nB` bị tính 3 thay vì 4; một bài gồm cả nguồn bị tính 280 thay vì 281 và có thể lọt cổng duyệt.
+- Bổ sung test tái hiện trước sửa, sau sửa kiểm tra CRLF/LF/CR, NFC và ranh giới 280/281; test service xác nhận preview tính 281 và từ chối duyệt, bản nháp được giữ. Policy tăng lên `2026-11-04-v5`; test chính sách cũ v4 xác nhận bản chưa đăng cần kiểm tra lại và archive vẫn giữ. Vì policy dùng chung, bản chưa đăng đã duyệt của cả ba kênh cần kiểm tra lại. Hồi quy sau sửa: 198/198 Python và 44/44 JavaScript. Chưa đối chiếu hành vi composer X thực tế hoặc smoke policy v5 trên trình duyệt; BASE-03 và QA-02 vẫn mở.
+
 ## APR-04: lưu phiên bản cạnh tranh với ghi nhận URL 04/11/2026
 
 - `test_competing_edit_and_record_keep_approval_and_publication_consistent` thực hiện bốn lần trên SQLite tạm, mỗi lần cho hai luồng lưu nội dung và ghi nhận URL giả bắt đầu với cùng revision. Kiểm tra đúng một thao tác thành công; nếu ghi nhận thắng thì nội dung và snapshot duyệt được giữ, còn nếu lưu thắng thì không có publication và bản sửa không xuất được dưới nhãn đã duyệt. `test_variants.py` đạt 46/46; hồi quy toàn bộ Python 196/196 và JavaScript 44/44 đạt. Kiểm thử chấp nhận cả hai thứ tự nhưng không bảo đảm bộ lập lịch đã chạy cả hai trong một lượt; không thay thế mọi tình huống race hoặc QA qua giao diện.

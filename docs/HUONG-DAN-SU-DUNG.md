@@ -24,7 +24,7 @@ Trong **Bàn biên tập**, nút **Tạo bản sao sang bản tin** sao chép b�
 
 Đây là chức năng chưa nghiệm thu. Đếm ký tự Threads và emoji X còn giới hạn; luôn kiểm tra lại khi dán lên nền tảng. Ứng dụng không đăng, không đo kết quả và không tự xác minh URL trên mạng xã hội.
 
-Chính sách duyệt hiện là `2026-11-04-v4`: các mục được dùng không được còn dấu `[CẦN KIỂM TRA]` hoặc `[CHƯA XÁC MINH]` trong tiêu đề, nội dung, góc nhìn hoặc ghi chú kiểm chứng. Phiên bản v3 bổ sung nhận diện emoji X; v2 bổ sung checklist khẳng định. Phiên bản chưa đăng được duyệt theo chính sách cũ cần kiểm tra lại, lưu và xác nhận lại trước khi duyệt. Phiên bản đã ghi nhận giữ bản lưu lịch sử; nếu cần thay đổi nội dung hoặc tiếp tục xuất theo chính sách mới, tạo bản sao và duyệt lại. Vì policy hiện dùng chung, thay đổi này yêu cầu kiểm tra lại cả ba kênh.
+Chính sách duyệt hiện là `2026-11-04-v5`: bộ đếm X giữ cả hai ký tự của cặp xuống dòng CRLF khi đếm, theo bộ đếm tham chiếu; kiểm tra lại trên nền tảng trước khi đăng. Policy v4 chặn dấu `[CẦN KIỂM TRA]` hoặc `[CHƯA XÁC MINH]` trong các trường biên tập của mục được dùng; v3 bổ sung nhận diện emoji X; v2 bổ sung checklist khẳng định. Phiên bản chưa đăng được duyệt theo chính sách cũ cần kiểm tra lại, lưu và xác nhận lại trước khi duyệt. Phiên bản đã ghi nhận giữ bản lưu lịch sử; nếu cần thay đổi nội dung hoặc tiếp tục xuất theo chính sách mới, tạo bản sao và duyệt lại. Vì policy hiện dùng chung, thay đổi này yêu cầu kiểm tra lại cả ba kênh.
 
 ## 1. Mở, dừng và mở lại
 
