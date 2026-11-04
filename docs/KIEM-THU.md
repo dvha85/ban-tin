@@ -4,6 +4,10 @@
 
 - Mở rộng `test_migration_preserves_legacy_and_backups_and_is_idempotent`: sau khi nâng cấp fixture schema 3 và tạo một bản tin mới ở schema 4, chụp các hàng trong tất cả bảng người dùng, mở `Newsroom` thêm hai lần rồi đối chiếu toàn bộ hàng, export legacy, version 4, `integrity_check`, `foreign_key_check` và số backup migration. Bộ migration 12/12 đạt; toàn bộ 183 Python và 37 JavaScript đạt. Đây là dữ liệu giả; không chứng minh mọi tình huống mất điện hay hệ thống tệp.
 
+## QA-02: chuyển bản tin có thay đổi chưa lưu 04/11/2026
+
+- QA-02 / chưa lưu, ngày 04/11/2026: người dùng tự kiểm tra trên Edge với kho SQLite giả gồm `Bản tin thử A` và `Bản tin thử B`, mã server tại `7dc2623`. Sau khi sửa tiêu đề A mà không lưu, chọn B rồi hủy cảnh báo giữ A và giá trị đang nhập; chọn B lần nữa và đồng ý mở B; quay lại A thấy tiêu đề ban đầu. Người dùng xác nhận cả bốn bước đạt. Đọc lại API kho thử thấy A và B đều revision 1, tiêu đề ban đầu, lịch sử chỉ có `created`, xác nhận không có bản lưu ngoài ý muốn. Các lựa chọn trong hộp thoại dựa trên báo cáo của người dùng; không suy rộng sang rời trang, phiên bản hoặc biểu mẫu khác. QA-02 vẫn mở.
+
 ## QA-02: phản hồi ghi nhận bị ngắt 04/11/2026
 
 - Smoke 503 sau commit: server fixture ghi số liệu X 456 lượt xem, 0 lượt thích rồi thay phản hồi thành HTTP 503 với nội dung lỗi giả. Trình duyệt giữ giá trị và cảnh báo có thể đã lưu; retry cùng biểu mẫu cho thấy một lượt số liệu với các trường chưa nhập là chưa biết. Log server thử xác nhận thời điểm tiêm sau commit. Chỉ kiểm tra trường hợp số liệu, không chứng minh toàn bộ 5xx hoặc lỗi mạng thật.

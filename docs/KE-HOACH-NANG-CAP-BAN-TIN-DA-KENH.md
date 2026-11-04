@@ -96,6 +96,8 @@
 
 > Cập nhật FIX-03: ngày 04/11/2026 người dùng kiểm tra bốn bước URL-01…04 trên Edge với kho giả của nhánh `codex/legacy-url-hotfix-031` tại `4680ee1` và xác nhận đều đạt. Đối chiếu API sau thao tác thấy một bài ghi nhận đúng URL giả, một bài vẫn đã duyệt, tổng ghi nhận là 1. Hồi quy bản độc lập 89/89 Python và 6/6 JavaScript đạt. Đây là nghiệm thu trên kho thử; chưa phát hành 0.3.1.
 
+> Bổ sung QA-02: người dùng đã thử Hủy và Đồng ý khi chuyển từ bản tin có tiêu đề chưa lưu sang bản tin khác trên Edge với kho giả; quay lại bản đầu thấy dữ liệu cũ. API xác nhận cả hai revision không đổi. QA-02 còn mở cho các trường hợp khác; chi tiết tại `KIEM-THU.md`.
+
 - Ngày lập / cập nhật: **03/11/2026**, giờ Việt Nam.
 - Repository: [dvha85/ban-tin](https://github.com/dvha85/ban-tin).
 - Mốc mã nguồn được review: **`a180354e52e98a678d093609f9e8f2d37e6cd0a3`**, nhánh `main`, phiên bản ứng dụng `0.3.0`, dữ liệu schema `3`.

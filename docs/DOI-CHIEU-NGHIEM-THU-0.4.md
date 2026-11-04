@@ -12,6 +12,8 @@
 
 > FIX-03: người dùng đã xác nhận URL-01…04 đạt trên Edge với kho giả của hotfix 0.3.1 độc lập; API kho thử xác nhận trạng thái và URL cuối. Hồi quy 89 Python, 6 JavaScript đạt; xem `KIEM-THU.md`. Đây chưa phải nghiệm thu toàn bộ QA-02 hoặc phát hành 0.3.1.
 
+> QA-02: người dùng đã kiểm tra cả hai lựa chọn của cảnh báo khi chuyển bản tin có tiêu đề chưa lưu trên Edge với kho giả. API kho thử xác nhận hai bản tin vẫn ở revision ban đầu; xem `KIEM-THU.md`. Các trường hợp rời trang, biểu mẫu và thao tác bàn phím còn lại vẫn cần đối chiếu.
+
 Ngày cập nhật bằng chứng: 04/11/2026. Đối chiếu mục 10 của [kế hoạch nâng cấp](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) với mã và bằng chứng được ghi trong [nhật ký kiểm thử](KIEM-THU.md). Đây là trạng thái kiểm chứng, không phải chấp thuận triển khai. Các lệnh và kết quả chi tiết, dữ liệu sử dụng và giới hạn được ghi tại nhật ký đó.
 
 | Điều kiện mục 10 | Bằng chứng hiện có | Phần còn thiếu để kết luận |
@@ -29,7 +31,7 @@ Ngày cập nhật bằng chứng: 04/11/2026. Đối chiếu mục 10 của [k�
 
 ## Các việc tiếp theo có phụ thuộc bên ngoài
 
-1. Hoàn tất QA-02 trên kho giả, nhất là hủy điều hướng khi có nội dung chưa lưu, các thao tác bàn phím và các tổ hợp kênh/đoạn còn thiếu. Các lượt đã có bằng chứng UI được ghi riêng trong `KIEM-THU.md`; không thay bằng DOM giả.
+1. Hoàn tất QA-02 trên kho giả, nhất là rời trang khi có nội dung chưa lưu, các thao tác bàn phím và các tổ hợp kênh/đoạn còn thiếu. Hai lựa chọn khi chuyển bản tin đã được người dùng thử; các lượt có bằng chứng UI được ghi riêng trong `KIEM-THU.md`.
 2. Hoàn tất BASE-03 bằng bằng chứng phù hợp cho cách đếm và mẫu URL của các nền tảng; khi chưa chứng minh được thì giữ nhãn ước lượng và gate mở.
 3. Không áp dụng thử migration/restore trên bản sao SQLite cũ trong đợt này: người dùng xác nhận chưa có dữ liệu cũ. Các kiểm thử migration/restore bằng fixture vẫn được giữ; không coi đó là thử dữ liệu vận hành.
 4. Tổng hợp bằng chứng mới, đối chiếu lại toàn bộ mục 10 và để người dùng xem pilot trước quyết định triển khai.
