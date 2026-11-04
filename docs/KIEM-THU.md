@@ -1,5 +1,14 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+
+## APR-01 / FMT-02: giao diện khi đổi policy v4 sang v5 04/11/2026
+
+- Trên kho SQLite giả riêng, tạo bằng service ba phiên bản Facebook, Threads và X, mỗi bản một đoạn, đã duyệt theo policy `2026-11-04-v4` và chưa ghi nhận đăng. Chạy server từ mã `a22deb0` với policy v5; trình duyệt tích hợp hiển thị cả ba phiên bản và cảnh báo quy tắc đã đổi, yêu cầu lưu, kiểm tra và xác nhận lại.
+- Với từng kênh, chọn **Xem bản lưu lịch sử**: hộp thoại ghi policy v4 và hiển thị nội dung cùng URL nguồn giả. Vùng xuất của cả ba hiển thị bản lịch sử và không có nút sao chép/tải để đăng. Ở phiên bản X, **Xem trước** hiển thị policy v5 và 59/280 cho đoạn mẫu. Đây là smoke với dữ liệu chuẩn bị sẵn; chưa thử duyệt lại theo v5, phiên bản đã ghi nhận một phần, CRLF qua giao diện hoặc composer thật.
+- Hồi quy sau sửa: 198/198 Python và 45/45 JavaScript đạt. Test DOM giả bổ sung kiểm tra thông báo ở cả hai trạng thái khóa và không hiển thị nút sao chép/tải khi chỉ có bản lịch sử. Test không thay thế kiểm tra toàn bộ giao diện.
+- Khi phiên bản chưa khóa, vùng xuất trước sửa hướng dẫn tạo bản sao, mâu thuẫn với cảnh báo yêu cầu lưu, kiểm tra và duyệt lại phiên bản hiện có. Đã chỉnh thông báo theo trạng thái khóa. Smoke lại trên cùng kho giả: phiên bản X chưa ghi nhận hướng dẫn kiểm tra, lưu và duyệt lại; phiên bản X đã ghi nhận đủ và bị khóa hướng dẫn tạo bản sao nếu cần sửa. Không thử bản đã ghi nhận một phần; không coi smoke này là hoàn tất QA-02 hoặc BASE-03.
+
+
 ## FMT-02: hiển thị phiên bản quy tắc trong xem trước 04/11/2026
 
 - Trên trình duyệt tích hợp với server mã `3e39f7b` và kho minh họa tạm: chuẩn bị bằng service một bản tin hai mục và ba phiên bản nháp chỉ dùng mục đầu. Mở lần lượt Facebook, Threads, X qua giao diện và xem trước: cả ba hiện `2026-11-04-v4`, cảnh báo bộ đếm riêng, thông báo mục 2 không có trong phiên bản, nội dung và URL nguồn giả của mục 1. Đây là smoke ba bản nháp đã chuẩn bị sẵn; không chứng minh chính sách khớp nền tảng thật hay toàn bộ QA.

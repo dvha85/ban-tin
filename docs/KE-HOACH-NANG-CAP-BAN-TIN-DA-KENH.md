@@ -1,5 +1,9 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+
+> APR-01 / FMT-02 ngày 04/11: kho giả có ba phiên bản đã duyệt v4 hiển thị cảnh báo policy cũ và mở được bản lưu lịch sử trên cả Facebook, Threads và X khi chạy server v5; preview X hiện v5. Đã sửa và smoke hướng dẫn vùng xuất: bản chưa khóa được hướng dẫn lưu, kiểm tra và duyệt lại, còn bản đã khóa được hướng dẫn tạo bản sao nếu cần sửa. Chưa thử duyệt lại v5 hoặc bản ghi nhận một phần trên giao diện. Xem `KIEM-THU.md`; QA-02 và BASE-03 vẫn mở.
+
+
 > NEWS-05 ngày 04/11: sửa ngày nguồn cũ bị hiển thị thành giờ trong danh sách; kiểm thử mốc UTC hai phía nửa đêm Việt Nam, ngày tương lai/chưa rõ và tin gần đây đạt trong DOM giả. Chưa smoke thay đổi này trên trình duyệt; xem `KIEM-THU.md`.
 
 > DB-01/02 / QA-03 ngày 04/11: các trường hợp MIG-01…05 đã được đối chiếu trong phạm vi fixture; thử thêm đường lui từ backup schema 3 bằng mã 0.3.1. Người dùng không có SQLite cũ nên không áp dụng bước thử bản sao vận hành. Chi tiết và giới hạn tại `KIEM-THU.md`.

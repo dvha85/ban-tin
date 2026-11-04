@@ -1047,7 +1047,10 @@ async function renderVariantPublication(area, variant) {
     const download = node('a', 'button secondary', 'Tải bản đã duyệt (.txt)');
     download.href = `/api/variants/${variant.id}/download`; section.append(download);
   } else {
-    section.append(node('p', 'notice warning', 'Bản hiển thị là lịch sử, không còn đủ điều kiện xuất để đăng. Hãy tạo bản sao và duyệt theo quy tắc hiện tại.'));
+    const guidance = variant.locked_at
+      ? 'Bản hiển thị là lịch sử, chưa đủ điều kiện xuất để đăng. Nếu cần sửa nội dung, hãy tạo bản sao và duyệt lại.'
+      : 'Bản hiển thị là lịch sử, chưa đủ điều kiện xuất để đăng. Hãy kiểm tra cảnh báo phía trên, lưu và duyệt lại phiên bản này.';
+    section.append(node('p', 'notice warning', guidance));
   }
   const metricText = metric => {
     try {

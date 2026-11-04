@@ -171,6 +171,39 @@ test('publication URL fields have a distinct accessible label for each segment',
   assert.deepEqual(inputs.map(input => input['aria-label']), ['Liên kết bài đã đăng cho đoạn 1', 'Liên kết bài đã đăng cho đoạn 2']);
 });
 
+
+test('historical export guidance distinguishes unlocked and locked variants', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), crypto: {randomUUID: () => 'test-key'},
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`api = async path => {
+    if (path.endsWith('/export')) throw new Error('stale policy');
+    if (path.endsWith('/archive')) return {posts: ['historical']};
+    if (path.endsWith('/publications')) return [];
+    throw new Error('Unexpected path');
+  };`, context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  for (const [lockedAt, expected, unexpected] of [
+    [null, 'lưu và duyệt lại phiên bản này', 'tạo bản sao'],
+    ['2026-11-04T00:00:00Z', 'tạo bản sao', 'lưu và duyệt lại phiên bản này'],
+  ]) {
+    context.area = new Element();
+    context.variant = {id: 3, revision: 4, platform: 'x', account_label: 'Thử', locked_at: lockedAt};
+    await vm.runInContext('renderVariantPublication(area, variant)', context);
+    const message = walk(context.area).find(el => el.className === 'notice warning');
+    assert.ok(message);
+    assert.ok(message.textContent.includes(expected), message.textContent);
+    assert.ok(!message.textContent.includes(unexpected), message.textContent);
+    assert.ok(!walk(context.area).some(el => el.tagName === 'a' && el.textContent.includes('Tải bản đã duyệt')));
+    assert.ok(!walk(context.area).some(el => el.tagName === 'button' && el.textContent.includes('Sao chép đoạn')));
+  }
+});
+
 test('network failure marks a mutation outcome as unknown', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
