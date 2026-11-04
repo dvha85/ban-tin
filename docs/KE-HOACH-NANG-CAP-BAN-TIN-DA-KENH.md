@@ -632,6 +632,8 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | 04/11/2026 | FMT-02 / QA-02 | Đang làm | Preview hiển thị cảnh báo khi server trả bản tin gốc đã đổi; test tái hiện trước sửa, test service và DOM giả sau sửa; Python 195/195, JS 44/44 | Chưa smoke trường hợp hai cửa sổ trên trình duyệt |
 
+| 04/11/2026 | DIG-02 / QA-02 | Đang làm | Kho giả trên mã `3212a4f`: nút lưu trữ hiện và mở cảnh báo có tên bản tin; SQLite chỉ có sự kiện tạo | Công cụ bị kẹt tại hộp xác nhận; chưa xác nhận lưu trữ hoặc kiểm tra khôi phục trên trình duyệt |
+
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
 ## 12. Sổ quyết định
