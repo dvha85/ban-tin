@@ -329,7 +329,8 @@ class VariantTests(unittest.TestCase):
                      'source_ids': [item['sources'][0]['source_id']]}]
         split = split_segments('x', segments, self.bulletin)
         self.assertEqual(len(split), 10)
-        self.assertEqual(' '.join(segment['text'] for segment in split), original)
+        self.assertEqual(' '.join(segment['text'].strip() for segment in split), original)
+        self.assertEqual(''.join(segment['text'] for segment in split), original)
         self.assertTrue(all(segment['source_ids'] == segments[0]['source_ids'] for segment in split))
         rendered = render_segments('x', split, self.bulletin)
         self.assertTrue(rendered['valid'])
@@ -371,6 +372,38 @@ class VariantTests(unittest.TestCase):
         approved = self.room.approve_variant(variant['id'], {'revision': variant['revision']})
         self.assertEqual(approved['status'], 'approved')
 
+    def test_split_preserves_boundary_whitespace_in_editable_segments(self):
+        item = self.bulletin['items'][0]
+        segment = {'item_ids': [item['id']], 'source_ids': [item['sources'][0]['source_id']]}
+        for platform in ('x', 'threads'):
+            for boundary in ('\n\n  \t', '\r\n\r\n  \t'):
+                with self.subTest(platform=platform, boundary=repr(boundary)):
+                    original = '  ' + ('A' * 170) + '.' + boundary + ('B' * 170) + '.  '
+                    # Repeat the text for Threads so the result must span posts.
+                    text = original if platform == 'x' else original + boundary + original
+                    result = split_segments(platform, [{**segment, 'text': text}], self.bulletin)
+                    self.assertGreater(len(result), 1)
+                    self.assertEqual(''.join(part['text'] for part in result), text)
+                    self.assertTrue(all(part['source_ids'] == segment['source_ids'] for part in result))
+                    self.assertTrue(render_segments(platform, result, self.bulletin)['valid'])
+
+    def test_split_suggestion_preserves_whitespace_when_saved_and_reopened(self):
+        item = self.bulletin['items'][0]
+        original = '  ' + ('A' * 170) + '.\n\n  ' + ('B' * 170) + '.  '
+        variant = self.room.create_variant(self.bulletin['id'], {'platform': 'x', 'account_label': 'Fixture',
+                                          'bulletin_revision': self.bulletin['revision']})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'segments': [
+            {'text': original, 'item_ids': [item['id']], 'source_ids': [item['sources'][0]['source_id']]}]})
+        suggestion = self.room.split_variant(variant['id'], {'revision': variant['revision']})
+        self.assertEqual(self.room.variant(variant['id'])['segments'][0]['text'], original)
+        self.assertEqual(''.join(part['text'] for part in suggestion['segments']), original)
+        saved = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'segments': suggestion['segments']})
+        reopened = Newsroom(self.room.data_dir).variant(saved['id'])
+        self.assertEqual(''.join(part['text'] for part in reopened['segments']), original)
+        preview = self.room.preview_variant(saved['id'])
+        self.assertEqual([post['text'] for post in preview['posts']],
+                         [post['text'] for post in suggestion['preview']['posts']])
+
     def test_split_preserves_internal_blank_lines(self):
         item = self.bulletin['items'][0]
         original = 'Đoạn đầu.\n\n\n\nĐoạn tiếp theo.'
@@ -381,7 +414,8 @@ class VariantTests(unittest.TestCase):
         first = 'A' * 100 + '.\n\n\n\n' + 'B' * 40 + '.'
         second = 'C' * 100 + '.\n\n\n\n' + 'D' * 40 + '.'
         result = split_segments('x', [{'text': first + ' ' + second, 'item_ids': [item['id']]}], self.bulletin)
-        self.assertEqual([entry['text'] for entry in result], [first, second])
+        self.assertEqual([entry['text'].strip() for entry in result], [first, second])
+        self.assertEqual(''.join(entry['text'] for entry in result), first + ' ' + second)
 
     def test_approved_export_matches_preview_and_changes_invalidate(self):
         variant = self.make_approved('threads')

@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> FMT-03 / TEXT-04 ngày 04/11: đề xuất chia giữ chính xác khoảng trắng trong các trường biên tập; đã thử service, lưu/mở lại và UI X trên kho giả. Renderer vẫn bỏ khoảng trắng đầu/cuối mỗi đoạn khi xem trước/xuất và đã được thông báo trong giao diện, hướng dẫn. Hồi quy Python 200/200 và JavaScript 45/45; QA-02 và BASE-03 vẫn mở. Xem KIEM-THU.md.
+
 
 > APR-01 / FMT-02 ngày 04/11: kho giả có ba phiên bản đã duyệt v4 hiển thị cảnh báo policy cũ và mở được bản lưu lịch sử trên cả Facebook, Threads và X khi chạy server v5; preview X hiện v5. Đã sửa và smoke hướng dẫn vùng xuất: bản chưa khóa được hướng dẫn lưu, kiểm tra và duyệt lại, còn bản đã khóa được hướng dẫn tạo bản sao nếu cần sửa. Đã thử tiếp trên UI kho giả: duyệt lại bản X chưa ghi nhận theo v5 và ghi nhận URL giả đoạn còn lại của bản X 1/2 đã duyệt v4; snapshot v4 được giữ. Chưa bao phủ các kênh và tổ hợp khác. Xem `KIEM-THU.md`; QA-02 và BASE-03 vẫn mở.
 

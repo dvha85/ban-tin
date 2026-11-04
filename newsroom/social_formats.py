@@ -95,7 +95,7 @@ def split_segments(platform, segments, bulletin):
     for segment, post in zip(segments, rendered['posts']):
         # A boundary consists solely of whitespace after punctuation or a
         # paragraph break; no URL, word, or joined character is cut apart.
-        sentences = re.split(r'(?<=[.!?。！？])(?=\s)|(?<=\n)(?=\n)', segment['text'].strip())
+        sentences = re.split(r'(?<=[.!?。！？])(?=\s)|(?<=\n)(?=\n)', segment['text'])
         parts = []
         whitespace = ''
         for part in sentences:
@@ -123,7 +123,7 @@ def split_segments(platform, segments, bulletin):
                     continue
                 if not current.strip():
                     raise ValidationError('Có câu hoặc đoạn quá dài để chia an toàn cùng nguồn; hãy tự viết ngắn lại.')
-                result.append({**segment, 'text': current.strip()})
+                result.append({**segment, 'text': current})
                 if len(result) >= MAX_SEGMENTS:
                     raise ValidationError('Cần quá 20 đoạn; hãy tự biên tập ngắn lại.')
                 current = part
@@ -131,7 +131,7 @@ def split_segments(platform, segments, bulletin):
                 if not count_text(platform, prefix + current.strip() + suffix)[1]:
                     raise ValidationError('Có câu hoặc đoạn quá dài để chia an toàn cùng nguồn; hãy tự viết ngắn lại.')
             if current.strip():
-                result.append({**segment, 'text': current.strip()})
+                result.append({**segment, 'text': current})
         if len(result) > MAX_SEGMENTS:
             raise ValidationError('Cần quá 20 đoạn; hãy tự biên tập ngắn lại.')
         if len(result) == assumed_total:

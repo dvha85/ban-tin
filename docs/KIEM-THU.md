@@ -1,6 +1,15 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
 
+## FMT-03 / TEXT-04: giữ khoảng trắng trong đề xuất chia 04/11/2026
+
+- Trước sửa, đề xuất chia bỏ khoảng trắng đầu/cuối và dấu xuống dòng tại ranh giới các đoạn. Test mới với X và Threads thất bại khi ghép lại các trường nội dung biên tập. Baseline nhóm phiên bản trước bổ sung: 47/47 Python đạt.
+- Đã giữ nguyên toàn bộ chuỗi nguồn trong các trường biên tập của đề xuất; test so sánh ghép chính xác, giữ lựa chọn nguồn, kiểm tra giới hạn và vòng đề xuất → lưu → mở lại. Các test hiện có vẫn kiểm tra nội dung từng đoạn và đánh số 9 → 10, đồng thời bổ sung so sánh ghép nguyên chuỗi. Renderer không đổi: bản xem trước và xuất tiếp tục bỏ khoảng trắng đầu/cuối từng đoạn; thông báo sau chia và hướng dẫn sử dụng nêu rõ để người dùng đối chiếu.
+- Trên trình duyệt tích hợp với server mã đang sửa, kho SQLite giả có bản X chứa hai câu và dòng trống tại ranh giới: chọn đề xuất chia, thấy hai ô và thông báo, lưu, xem trước thấy 2 đoạn 208/280 kèm nguồn. Đọc SQLite chỉ đọc sau khi lưu xác nhận ghép hai trường biên tập khớp chuỗi đầu vào. Chưa kiểm tra Threads qua UI, toàn bộ các loại Unicode hoặc tài khoản nền tảng.
+- Sau sửa: 200/200 Python và 45/45 JavaScript đạt. Kiểm tra bổ sung ở mức Python với ranh giới LF và CRLF đều đạt; chưa xác minh bảo toàn CRLF qua textarea trình duyệt. QA-02 và BASE-03 vẫn mở.
+
+
+
 ## APR-01 / FMT-02: giao diện khi đổi policy v4 sang v5 04/11/2026
 
 

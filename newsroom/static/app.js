@@ -998,7 +998,7 @@ async function renderVariants(container, bulletin) {
     const result = await api(`/api/variants/${variant.id}/split`, {revision: variant.revision, segments: collect()});
     segmentList.replaceChildren(); result.segments.forEach(addSegment);
     app.bulletinDirty = true; area.dataset.dirty = 'true';
-    toast('Đã chia theo ranh giới câu/đoạn. Mục và nguồn được giữ từ đoạn gốc; hãy đối chiếu từng đoạn, bỏ phần không liên quan rồi lưu.');
+    toast('Đã chia theo ranh giới câu/đoạn. Mục và nguồn giữ từ đoạn gốc; hãy đối chiếu, bỏ phần không liên quan rồi lưu. Bản xuất bỏ khoảng trắng đầu/cuối mỗi đoạn; hãy xem trước.');
   });
   const approve = node('button', 'button primary', 'Duyệt phiên bản'); approve.disabled = locked;
   const approvalError = node('p', 'notice warning');
