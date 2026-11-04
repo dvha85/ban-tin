@@ -258,6 +258,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             raw = self.rfile.read(size)
             self._body_consumed = True
+            if len(raw) != size:
+                raise ValueError('Incomplete request body')
             data = json.loads(raw, parse_constant=reject_json_constant, parse_float=finite_json_float)
             if not isinstance(data, dict):
                 raise ValueError()

@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## BASE-02: từ chối request ngắn hơn Content-Length 04/11/2026
+
+- Trước sửa, 31/31 test server hiện có đạt. Test socket mới gửi JSON tạo bản tin hợp lệ nhưng khai báo dài hơn một byte, rồi đóng chiều gửi: server trả 201 và tạo bản tin trên kho giả, dù chưa nhận đủ body.
+- Sau sửa, server kiểm tra số byte thực nhận trước khi phân tích JSON hoặc gọi service. Test mới xác nhận trả 400, không tạo bản tin và request đúng độ dài vẫn tạo thành công. Trường hợp client ngắt hoàn toàn hoặc đọc hết thời gian chờ không được kiểm tra riêng; không suy rộng sang mọi lỗi truyền tải.
+- Hồi quy sau sửa: `python -B -m unittest discover -s tests -q` đạt 201/201 trên các kho thử. BASE-02 vẫn mở cho những phần hợp đồng chưa đối chiếu.
+
 
 ## FMT-03 / TEXT-04: giữ khoảng trắng trong đề xuất chia 04/11/2026
 

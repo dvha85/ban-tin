@@ -54,6 +54,29 @@ class ServerTests(unittest.TestCase):
         headers['Origin'] = 'https://evil.example'
         self.assertEqual(self.request('POST', '/api/articles/import', {}, headers)[0], 403)
 
+    def test_short_request_body_is_rejected_before_mutation(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử độ dài',
+            'url': 'https://example.com/short-body', 'summary': 'Dữ liệu giả.'})
+        body = json.dumps({'article_ids': [article['id']], 'title': 'Bản tin thử'}).encode('utf-8')
+        request_headers = {'Host': f'127.0.0.1:{self.port}', **headers,
+                           'Content-Length': str(len(body) + 1)}
+        request = ('POST /api/bulletins HTTP/1.1\r\n' +
+                   ''.join(f'{name}: {value}\r\n' for name, value in request_headers.items()) +
+                   '\r\n').encode('ascii') + body
+        with socket.create_connection(('127.0.0.1', self.port), timeout=5) as client:
+            client.sendall(request)
+            client.shutdown(socket.SHUT_WR)
+            response = http.client.HTTPResponse(client)
+            response.begin()
+            self.assertEqual(response.status, 400)
+            self.assertIn('error', json.loads(response.read()))
+        self.assertEqual(self.room.bulletins(), [])
+        status, _, response_body = self.request('POST', '/api/bulletins',
+            {'article_ids': [article['id']], 'title': 'Bản tin thử'}, headers)
+        self.assertEqual(status, 201, response_body)
+        self.assertEqual(len(self.room.bulletins()), 1)
+
     def test_bulletin_archive_http_is_reversible_and_checks_revisions(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử lưu trữ',

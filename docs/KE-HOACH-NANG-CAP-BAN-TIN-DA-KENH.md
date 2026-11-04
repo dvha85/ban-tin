@@ -58,6 +58,8 @@
 
 > Bổ sung BASE-02: parser POST từ chối token `NaN`, `Infinity`, `-Infinity` không thuộc JSON và số thực vượt phạm vi hữu hạn trước khi ghi; test HTTP giữ nguyên khả năng dùng các chữ này trong chuỗi và số thực hữu hạn. Chưa bao phủ mọi tổ hợp schema.
 
+> Bổ sung BASE-02: POST từ chối body ngắn hơn `Content-Length` trước khi thực hiện thao tác; test socket trên kho giả tái hiện lỗi cũ và kiểm tra không tạo bản tin sau sửa. Hợp đồng API tổng thể vẫn mở; xem `KIEM-THU.md`.
+
 > Bổ sung BASE-02: tài liệu API mô tả giới hạn văn bản bản tin, mục, khẳng định và nguồn, cùng sự khác nhau của `source_selection` khi tạo và thêm mục. Đây là đối chiếu mã tĩnh; chưa đóng hợp đồng toàn bộ API.
 
 > Bổ sung BASE-02: mô tả thêm giới hạn `segments`, lựa chọn mục/nguồn, revision và thời điểm reset checklist theo mã hiện hành. Chưa xác nhận mọi tổ hợp qua HTTP.
