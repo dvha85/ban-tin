@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## DIG-03 / QA-02: chọn nguồn trong ứng dụng 04/11/2026
+
+- Với tin có hơn ba nguồn, hộp chọn có nhãn cho phép đánh dấu 1–3 nguồn; hủy hoặc Escape dừng thao tác. Áp dụng khi tạo bản tin, thêm mục và sao chép bài cũ. Tin có tối đa ba nguồn giữ cách xử lý cũ; máy chủ vẫn kiểm tra lựa chọn.
+- Test mới thất bại trước sửa do gặp `window.prompt`. Sau sửa, test DOM giả kiểm tra giới hạn 0/4, trả đúng nguồn, hủy, chờ lựa chọn ở cả ba luồng và giữ phiên bản bài cũ khi sao chép. Hồi quy trước sửa: 205/205 Python và 47/47 JavaScript; sau sửa: 205/205 Python và 49/49 JavaScript; kiểm tra cú pháp JavaScript đạt.
+- Edge và SQLite giả: chọn tin bốn nguồn, xác nhận khi chưa chọn được báo lỗi, hủy giữ tin đã chọn, sau đó chọn các nguồn 1, 3, 4 và tạo bản tin; giao diện mục hiển thị đúng ba liên kết đã chọn. Chưa kiểm tra bằng trình đọc màn hình, hoặc smoke luồng thêm mục và sao chép bài cũ trên trình duyệt. Các tình huống rời trang/tải lại có nội dung chưa lưu vẫn để sau theo yêu cầu.
+
 ## DIG-03 / QA-02: biểu mẫu bổ sung nguồn 04/11/2026
 
 - Thay ba `window.prompt` bằng biểu mẫu có nhãn, nút xác nhận và hủy ngay tại mục. Nội dung nguồn đang nhập được tính là chưa lưu; không lưu mục hoặc ghi nguồn khi có các phần khác đang sửa. Khi lỗi, giữ ô nhập; nếu kết quả ghi chưa rõ, yêu cầu đối chiếu bản tin ở thẻ khác. Trường hợp ghi xong nhưng không tải lại danh sách có thông báo riêng.

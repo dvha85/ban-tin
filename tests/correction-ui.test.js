@@ -35,6 +35,98 @@ class Element {
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
 }
 
+test('source picker requires one to three checked sources and supports cancellation', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const body = new Element('body');
+  const make = tag => {
+    const el = new Element(tag);
+    el.showModal = () => { el.open = true; };
+    el.close = () => { el.open = false; el.dispatchEvent({type: 'close'}); };
+    el.remove = () => { body.children = body.children.filter(child => child !== el); };
+    return el;
+  };
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {},
+      prompt() { throw new Error('Unexpected native prompt'); }},
+    document: {body, getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: make, createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.article = {title: 'Tin thử', sources: [1, 2, 3, 4].map(i => ({source_name: `Nguồn ${i}`, url: `https://example.com/${i}`}))};
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  assert.equal(await vm.runInContext('chooseBulletinSources({...article, sources: article.sources.slice(0, 3)})', context), undefined);
+  let pending = vm.runInContext('chooseBulletinSources(article)', context);
+  let dialog = body.children[0];
+  assert.ok(dialog && dialog.open);
+  let all = walk(dialog), checks = all.filter(el => el.tagName === 'input' && el.type === 'checkbox');
+  assert.equal(checks.length, 4);
+  const confirm = all.find(el => el.tagName === 'button' && el.textContent === 'Chọn nguồn');
+  confirm.dispatchEvent({type: 'click'});
+  assert.ok(all.some(el => el.role === 'alert' && el.textContent));
+  checks.forEach(el => { el.checked = true; });
+  confirm.dispatchEvent({type: 'click'});
+  assert.equal(dialog.open, true);
+  checks[1].checked = false;
+  confirm.dispatchEvent({type: 'click'});
+  assert.deepEqual(Array.from(await pending), ['https://example.com/1', 'https://example.com/3', 'https://example.com/4']);
+  assert.equal(body.children.length, 0);
+  pending = vm.runInContext('chooseBulletinSources(article)', context);
+  dialog = body.children[0]; dialog.close();
+  assert.equal(await pending, null);
+  assert.equal(body.children.length, 0);
+});
+
+test('source selection is awaited by create, add, and legacy copy actions', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = [], errors = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    calls, errors, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}, confirm: () => true},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.state = {articles: [{id: 11, title: 'Tin A', sources: []}, {id: 12, title: 'Tin B', sources: []}], bulletin_usage: {}};
+    app.selectedArticles = new Set([11, 12]);
+    app.draft = {id: 8, revision: 3, sources: []};
+    toast = message => errors.push(message); loadState = async () => {}; loadBulletinList = async () => {};
+    view = () => {}; renderVariants = async () => {};
+    api = async (path, body) => { calls.push({path, body});
+      if (path.includes('copy-bulletin')) return {bulletin: null, variant_id: 1};
+      return {id: 7, revision: 4, items: []}; };
+    choices = []; chooseBulletinSources = () => new Promise(resolve => choices.push(resolve));`, context);
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  const click = async el => { el.dispatchEvent({type: 'click'}); await tick(); };
+  const resolveChoice = async value => { context.choices.shift()(value); await tick(); };
+  await click(get('create-bulletin'));
+  assert.equal(vm.runInContext('app.busy', context), true);
+  await resolveChoice(['https://example.com/1']);
+  assert.equal(calls.length, 0);
+  await resolveChoice(null);
+  assert.equal(calls.length, 0);
+  assert.equal(vm.runInContext('app.busy', context), false);
+  assert.equal(vm.runInContext('app.selectedArticles.size', context), 2);
+  await click(get('create-bulletin'));
+  await resolveChoice(['https://example.com/1']);
+  await resolveChoice(['https://example.com/2']);
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[0].body.source_selection)), {'11': ['https://example.com/1'], '12': ['https://example.com/2']});
+  vm.runInContext(`app.bulletin = {id: 7, revision: 4, title: 'Bản thử', edition_date: '', introduction: '', conclusion: '', items: []}; renderBulletin();`, context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const all = walk(get('bulletin-editor'));
+  const select = all.find(el => el.tagName === 'select' && el['aria-label'] === 'Tin muốn thêm vào bản tin');
+  select.value = '11';
+  const add = all.find(el => el.tagName === 'button' && el.textContent === 'Thêm tin vào bản tin');
+  await click(add); await resolveChoice(['https://example.com/3']);
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[1].body)), {revision: 4, article_id: 11, source_selection: ['https://example.com/3']});
+  await click(get('copy-legacy-bulletin'));
+  vm.runInContext('app.draft = {id: 99, revision: 10, sources: []}', context);
+  await resolveChoice(['https://example.com/4']);
+  assert.equal(calls[2].path, '/api/drafts/8/copy-bulletin');
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[2].body)), {revision: 3, source_selection: ['https://example.com/4']});
+  assert.equal(vm.runInContext('app.busy', context), false);
+  assert.ok(!errors.some(message => /Unexpected|error/i.test(message)));
+});
+
 test('inline source form keeps pending fields, blocks unrelated saves, and retains failed input', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

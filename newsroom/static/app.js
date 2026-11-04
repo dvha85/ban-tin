@@ -876,7 +876,7 @@ function renderBulletin(focusVariantSelector = false) {
       await loadState();
       const used = (app.state.bulletin_usage || {})[article.id] || 0;
       if (used && !window.confirm(`Tin “${article.title}” đã dùng trong ${used} bản tin khác. Vẫn thêm để cập nhật?`)) return;
-      const chosen = chooseBulletinSources(article);
+      const chosen = await chooseBulletinSources(article);
       if (chosen === null) return;
       const data = {revision: bulletin.revision, article_id: article.id};
       if (chosen !== undefined) data.source_selection = chosen;
@@ -1310,14 +1310,41 @@ async function renderVariantPublication(area, variant) {
     } else toast('Bản ghi không còn hiệu lực hoặc đã thay đổi. Hãy kiểm tra lịch sử của phiên bản này.', true);
   }
 }
-function chooseBulletinSources(article) {
+async function chooseBulletinSources(article) {
   if (article.sources.length <= 3) return undefined;
-  const answer = window.prompt(`Chọn 1–3 nguồn cho “${article.title}”, nhập số cách nhau bằng dấu phẩy:\n\n${article.sources.map((source, i) => `${i + 1}. ${source.source_name}: ${source.url}`).join('\n')}`);
-  if (answer === null) return null;
-  const indexes = answer.split(',').map(value => value.trim());
-  if (indexes.length < 1 || indexes.length > 3 || indexes.some(value => !/^\d+$/.test(value) || Number(value) < 1 || Number(value) > article.sources.length) || new Set(indexes.map(Number)).size !== indexes.length)
-    throw new Error('Hãy chọn 1–3 số nguồn khác nhau.');
-  return indexes.map(value => article.sources[Number(value) - 1].url);
+  return new Promise((resolve, reject) => {
+    const dialog = node('dialog', 'source-picker');
+    dialog.setAttribute('aria-label', 'Chọn nguồn cho bản tin');
+    dialog.append(node('h2', '', 'Chọn nguồn cho bản tin'),
+      node('p', '', `Chọn từ 1 đến 3 nguồn cho “${article.title}”.`));
+    const checks = article.sources.map(source => {
+      const label = node('label', 'bulletin-check source-picker-row');
+      const check = node('input'); check.type = 'checkbox';
+      const description = node('span');
+      description.append(node('strong', '', source.source_name || source.title || 'Nguồn'),
+        node('span', 'source-picker-url', source.url));
+      label.append(check, description); dialog.append(label);
+      return check;
+    });
+    const error = node('p', 'notice warning'); error.setAttribute('role', 'alert');
+    const confirm = node('button', 'button', 'Chọn nguồn'); confirm.type = 'button';
+    const cancel = node('button', 'button secondary', 'Hủy'); cancel.type = 'button';
+    dialog.append(error, confirm, cancel);
+    let result = null;
+    confirm.addEventListener('click', () => {
+      const selected = article.sources.filter((_, index) => checks[index].checked).map(source => source.url);
+      if (selected.length < 1 || selected.length > 3) {
+        error.textContent = 'Hãy chọn từ 1 đến 3 nguồn.';
+        return;
+      }
+      result = selected; dialog.close();
+    });
+    cancel.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => { dialog.remove(); resolve(result); });
+    document.body.append(dialog);
+    try { dialog.showModal(); checks[0].focus(); }
+    catch (error) { dialog.remove(); reject(error); }
+  });
 }
 bulletinAction($('create-bulletin'), async () => {
   if (!app.selectedArticles.size) return;
@@ -1334,7 +1361,7 @@ bulletinAction($('create-bulletin'), async () => {
   for (const id of selectedIds) {
     const article = app.state.articles.find(row => row.id === id);
     if (!article) throw new Error('Một tin đã chọn không còn trong danh sách. Hãy tải lại và chọn lại.');
-    const chosen = chooseBulletinSources(article);
+    const chosen = await chooseBulletinSources(article);
     if (chosen === null) return;
     if (chosen !== undefined) sourceSelection[String(id)] = chosen;
   }
@@ -1519,12 +1546,14 @@ listen($('copy-legacy-bulletin'), 'click', async () => {
   if (app.dirty || app.reviewDirty || hasPendingPublicationUrl(app.draft, $('post-url')))
     throw new Error('Hãy lưu nội dung và xử lý liên kết đang nhập trước khi tạo bản sao.');
   if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi ở bản tin đang mở trước khi tạo bản sao.');
-  const chosen = chooseBulletinSources(app.draft);
-  if (chosen === null) return;
   await mutation(async () => {
-    const data = {revision: app.draft.revision};
+    const draft = app.draft;
+    const {id, revision} = draft;
+    const chosen = await chooseBulletinSources(draft);
+    if (chosen === null) return;
+    const data = {revision};
     if (chosen !== undefined) data.source_selection = chosen;
-    const result = await api(`/api/drafts/${app.draft.id}/copy-bulletin`, data);
+    const result = await api(`/api/drafts/${id}/copy-bulletin`, data);
     app.bulletin = result.bulletin; app.variantId = result.variant_id; app.bulletinDirty = false;
     renderBulletin(); view('bulletins');
     toast('Đã tạo bản sao chưa duyệt; bản nháp cũ được giữ nguyên.');
