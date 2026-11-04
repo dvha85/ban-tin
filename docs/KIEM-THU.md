@@ -246,7 +246,8 @@ python -m newsroom --collect
 ### 04/11/2026 — Mẫu đầu ra để người dùng xem (REL-01)
 
 - Tạo ba bản tin bằng service trên kho tạm với dữ liệu, xác nhận và URL giả lập; lưu và duyệt từng phiên bản, rồi ghi nguyên các chuỗi từ export vào [mẫu đầu ra](MAU-DAU-RA-GIA-LAP-0.4.md): Facebook và Threads một đoạn, X hai đoạn.
-- Đây là mẫu mới, không phải tệp của ba pilot đo thời gian trước; không chứng minh thao tác giao diện, nguồn thật hay bài đăng. Người dùng vẫn cần đánh giá quy trình và quyết định triển khai.
+- Đây là mẫu mới, không phải tệp của ba pilot đo thời gian trước; không chứng minh thao tác giao diện, nguồn thật hay bài đăng.
+- Ngày 04/11/2026 người dùng phản hồi mẫu phù hợp với quy trình dự kiến; chưa đưa ra quyết định triển khai. Mẫu này không phải tệp gốc của các lượt pilot đo thời gian.
 
 ### 04/11/2026 — Rà hướng dẫn khi mất kết nối (DOC-01 / QA-02)
 
