@@ -34,6 +34,8 @@
 
 > Bổ sung BASE-02: mô tả thêm giới hạn `segments`, lựa chọn mục/nguồn, revision và thời điểm reset checklist theo mã hiện hành. Chưa xác nhận mọi tổ hợp qua HTTP.
 
+> Bổ sung BASE-02: test HTTP trên kho thử xác nhận reset/lưu lại checklist, lưu không đổi, từ chối nguồn sai và revision cũ mà không đổi phiên bản. Phạm vi test không bao phủ mọi tổ hợp của hợp đồng.
+
 > Bổ sung REL-01: ngày 04/11/2026 người dùng xác nhận [mẫu đầu ra giả lập](MAU-DAU-RA-GIA-LAP-0.4.md) mới từ service phù hợp với quy trình dự kiến. Đây không phải tệp của ba pilot cũ và không phải quyết định triển khai; REL-01 tiếp tục mở.
 
 > Đối chiếu BASE-03 ngày 04/11: tài liệu cấu hình twitter-text mô tả trọng số emoji ghép và độ dài URL mặc định 23; Meta trả HTTP 429 khi tra tài liệu Threads API. Chưa có căn cứ đóng gate hoặc thay đổi policy; xem `DOI-CHIEU-NGHIEM-THU-0.4.md`.

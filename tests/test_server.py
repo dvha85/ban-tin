@@ -69,6 +69,43 @@ class ServerTests(unittest.TestCase):
                 self.assertIn('error', json.loads(body))
                 self.assertEqual(self.room.variants(bulletin['id']), [])
 
+    def test_variant_save_contract_over_http(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử hợp đồng lưu',
+            'url': 'https://example.com/save-contract', 'summary': 'Nguồn giả lập.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        item = bulletin['items'][0]
+        variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+            'platform': 'threads', 'account_label': 'Kênh thử'})
+        path = f"/api/variants/{variant['id']}/save"
+        checks = {key: True for key in ('sources', 'facts', 'original', 'rights', 'claims')}
+        segment = {'text': 'Đoạn thử.', 'item_ids': [item['id']]}
+
+        status, _, body = self.request('POST', path, {'revision': variant['revision'],
+            'segments': [segment], 'checks': checks}, headers)
+        self.assertEqual(status, 200, body)
+        saved = json.loads(body)
+        self.assertTrue(all(value is False for value in saved['checks'].values()))
+
+        status, _, body = self.request('POST', path, {'revision': saved['revision'], 'checks': checks}, headers)
+        self.assertEqual(status, 200, body)
+        checked = json.loads(body)
+        self.assertEqual(checked['checks'], checks)
+        status, _, body = self.request('POST', path, {'revision': checked['revision']}, headers)
+        self.assertEqual(status, 200, body)
+        self.assertEqual(json.loads(body), checked)
+
+        for sources in ([], ['nguon-khong-thuoc-muc']):
+            with self.subTest(sources=sources):
+                status, _, body = self.request('POST', path, {'revision': checked['revision'],
+                    'segments': [{**segment, 'source_ids': sources}]}, headers)
+                self.assertEqual(status, 400, body)
+                self.assertEqual(self.room.variant(variant['id']), checked)
+        status, _, body = self.request('POST', path, {'revision': saved['revision'],
+            'segments': [segment]}, headers)
+        self.assertEqual(status, 409, body)
+        self.assertEqual(self.room.variant(variant['id']), checked)
+
     def test_http_approval_blocks_unresolved_item_note_until_reviewed(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin kiểm tra duyệt',

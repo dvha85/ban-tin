@@ -67,6 +67,8 @@ Chi tiết đầu vào đối chiếu với `save_variant` và `render_segments`
 - Khi không có thay đổi nội dung, `checks` nếu gửi phải là object; năm khóa được xác nhận chỉ khi giá trị là boolean `true`, khóa thiếu hoặc giá trị khác trở thành `false`. Khi nội dung, đích, bản tin gốc hoặc policy thay đổi, server bỏ cả năm xác nhận và không dùng các giá trị `checks` gửi cùng. Nếu trạng thái và checklist không đổi, lưu trả phiên bản hiện có mà không tăng revision.
 - `revision` phải là số nguyên khớp revision hiện tại; sai hoặc thiếu trả 409. Sau thay đổi bản tin gốc cần xác nhận `adopt_bulletin_revision: true`; nếu bản sao yêu cầu đối chiếu nguồn thì cần `attribution_reviewed: true`. Đây là hợp đồng theo mã hiện tại, chưa chứng minh mọi tổ hợp qua HTTP.
 
+Test HTTP `test_variant_save_contract_over_http` kiểm tra riêng reset checklist khi sửa, xác nhận lại ở lượt sau, lưu không đổi, nguồn rỗng/không thuộc mục và revision cũ. Các trường hợp bị từ chối giữ nguyên phiên bản trên kho thử; test này không bao phủ toàn bộ tổ hợp hoặc giao diện trình duyệt.
+
 Khi duyệt mới, nguồn được chọn mà có `excerpt_hash` phải khớp SHA-256 của `summary` UTF-8; sai lệch trả 400, nêu thứ tự mục và nguồn trong bản tin, không tạo bản duyệt. Người biên tập cần đối chiếu nguồn, thêm nguồn chính xác và bỏ nguồn sai rồi kiểm tra lại. Mỗi mục phải giữ ít nhất một nguồn; nếu nguồn sai là nguồn duy nhất, cần thêm nguồn đối chiếu phù hợp trước khi bỏ. Khi cần nhập lại cùng URL, bỏ nguồn cũ trước rồi thêm lại URL và kiểm chứng lại mục. Nguồn không có hash vẫn cần kiểm chứng thủ công; hash khớp chỉ chứng minh trích đoạn khớp dấu vết lưu, không chứng minh tính xác thực. Bản duyệt lịch sử không được tự sửa hoặc rà soát lại bởi cổng này.
 
 ## Ghi nhận thủ công và số liệu
