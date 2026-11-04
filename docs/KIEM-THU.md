@@ -271,3 +271,10 @@ python -m newsroom --collect
 - Trên kho thử, `test_variant_save_contract_over_http` thực hiện lưu nội dung cùng checklist, xác nhận lại checklist, lưu không thay đổi, thử nguồn rỗng và nguồn không thuộc mục, rồi thử revision cũ. Kết quả lần lượt là reset checklist, lưu xác nhận, không tăng revision, HTTP 400 và HTTP 409; các lỗi không thay đổi phiên bản.
 - Kiểm thử chọn một kênh và một mục; không bao phủ toàn bộ tổ hợp đầu vào, các đường race hoặc giao diện thật.
 - Hồi quy sau khi thêm test: 183/183 Python và 34/34 JavaScript đạt.
+
+### 04/11/2026 — Thử lại trình duyệt tích hợp (QA-02)
+
+- Sau khi người dùng cho biết chưa khởi động lại Codex, kết nối trình duyệt tích hợp hoạt động trở lại. Đã chuyển từ Hộp tin sang Bản tin và mở bản tin #2 qua giao diện.
+- Xác minh tiến trình cổng 18769 được khởi tạo từ `VariantTests.setUp()` với kho thử và URL giả. Trên kho này đã tạo phiên bản Facebook, lưu tên và nội dung giả, xác nhận và lưu năm mục checklist.
+- Nút duyệt lần lượt báo thiếu tên/nội dung, thiếu checklist, rồi thiếu nội dung, ghi chú và xác nhận kiểm chứng của các mục. Nội dung giả vẫn hiển thị sau khi lưu và khi gặp các thông báo này. Không có bài đăng mạng xã hội.
+- Đây là kiểm tra một nhánh chặn duyệt trên giao diện, chưa kiểm tra thông báo lỗi chi tiết từ server, khôi phục phiên sau khởi động lại, clipboard, bàn phím hoặc các tình huống kết quả ghi không rõ. QA-02 tiếp tục mở.
