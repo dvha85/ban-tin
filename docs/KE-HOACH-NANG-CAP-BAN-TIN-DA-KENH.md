@@ -86,6 +86,8 @@
 
 > Cập nhật tiếp FIX-03: vùng xác nhận bài cũ nằm trên trang; Edge đã thử URL sai miền, trang chủ, đổi URL và ghi nhận URL giả hợp lệ trên kho fixture. Sau sửa hồi quy 164 Python và 29 JavaScript đạt. Chưa xác nhận bản 0.3.1 phát hành độc lập; xem `KIEM-THU.md`.
 
+> Cập nhật 04/11/2026: đã chuẩn bị bản sửa độc lập từ `main` trên nhánh `codex/legacy-url-hotfix-031`, commit `a042339`. Hồi quy 89 Python và 2 JavaScript đạt. Trình duyệt tích hợp đã hiện cảnh báo khi chuyển bài có URL chưa lưu, nhưng công cụ bị kẹt ở hộp thoại; chưa hoàn tất smoke URL-01…04 cho bản này. Mẫu đầu ra 0.4 đã được người dùng xác nhận phù hợp.
+
 - Ngày lập / cập nhật: **03/11/2026**, giờ Việt Nam.
 - Repository: [dvha85/ban-tin](https://github.com/dvha85/ban-tin).
 - Mốc mã nguồn được review: **`a180354e52e98a678d093609f9e8f2d37e6cd0a3`**, nhánh `main`, phiên bản ứng dụng `0.3.0`, dữ liệu schema `3`.
