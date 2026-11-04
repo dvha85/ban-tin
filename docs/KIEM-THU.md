@@ -3,6 +3,11 @@
 
 ## APR-01 / FMT-02: giao diện khi đổi policy v4 sang v5 04/11/2026
 
+
+- Kiểm tra tiếp trên trình duyệt tích hợp với server mã 1b57698 và cùng kho giả: ở phiên bản X chưa ghi nhận, lưu bản duyệt v4 làm bỏ cả năm xác nhận; chọn lại năm ô, lưu và duyệt thành công. Nút tải và sao chép xuất hiện; hộp bản lưu hiển thị policy 2026-11-04-v5.
+- Chuẩn bị bằng service một bản X hai đoạn đã duyệt v4, ghi nhận sẵn URL giả cho đoạn đầu; trên UI v5, trạng thái 1/2 và nội dung bị khóa, bản lịch sử và URL đầu vẫn hiển thị, không có nút sao chép/tải để đăng. Nhập và xác nhận URL giả cho đoạn 2: UI chuyển 2/2, hiển thị cả hai URL và vẫn ghi policy lịch sử v4. Chỉ ghi nhận thông tin vào kho giả, không truy cập hay đăng lên X. Chưa thử policy thay đổi cùng lúc bản tin gốc thay đổi hoặc mọi kênh; QA-02 và BASE-03 vẫn mở.
+
+
 - Trên kho SQLite giả riêng, tạo bằng service ba phiên bản Facebook, Threads và X, mỗi bản một đoạn, đã duyệt theo policy `2026-11-04-v4` và chưa ghi nhận đăng. Chạy server từ mã `a22deb0` với policy v5; trình duyệt tích hợp hiển thị cả ba phiên bản và cảnh báo quy tắc đã đổi, yêu cầu lưu, kiểm tra và xác nhận lại.
 - Với từng kênh, chọn **Xem bản lưu lịch sử**: hộp thoại ghi policy v4 và hiển thị nội dung cùng URL nguồn giả. Vùng xuất của cả ba hiển thị bản lịch sử và không có nút sao chép/tải để đăng. Ở phiên bản X, **Xem trước** hiển thị policy v5 và 59/280 cho đoạn mẫu. Đây là smoke với dữ liệu chuẩn bị sẵn; chưa thử duyệt lại theo v5, phiên bản đã ghi nhận một phần, CRLF qua giao diện hoặc composer thật.
 - Hồi quy sau sửa: 198/198 Python và 45/45 JavaScript đạt. Test DOM giả bổ sung kiểm tra thông báo ở cả hai trạng thái khóa và không hiển thị nút sao chép/tải khi chỉ có bản lịch sử. Test không thay thế kiểm tra toàn bộ giao diện.

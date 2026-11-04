@@ -1,5 +1,7 @@
 # Đối chiếu điều kiện nghiệm thu 0.4
 
+> APR-01 / QA-02: server v5 mã 1b57698 trên kho giả đã thử lưu, xác nhận lại và duyệt lại bản X chưa ghi nhận; bản X khác đã ghi nhận 1/2 theo v4 giữ snapshot lịch sử và ghi nhận thêm URL giả đoạn 2 qua giao diện. Phạm vi, giới hạn và các trạng thái khác xem KIEM-THU.md; QA-02 và BASE-03 vẫn mở.
+
 > MIG-01…05 / QA-03: bổ sung kiểm tra integrity, khóa ngoại, restore DB hỏng và thử khôi phục backup schema 3 bằng mã 0.3.1 trên fixture. Python 190/190 và JavaScript 41/41 đạt. Phần thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng; chưa triển khai. Xem `KIEM-THU.md`.
 
 > Cập nhật sau commit `6c0b631`: trình duyệt tích hợp trên các kho fixture đã thử policy v4, khôi phục phiên sau restart và ngắt phản hồi sau khi ghi nhận URL, số liệu hoặc đính chính. Số liệu thử lại cùng nội dung có một lượt; đính chính đã lưu được đối chiếu ở thẻ khác. Các trường hợp này được tiêm lỗi, không phải kiểm tra mọi lỗi mạng; QA-02 và BASE-03 vẫn mở. Chi tiết tại `KIEM-THU.md`.
