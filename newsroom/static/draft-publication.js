@@ -1,7 +1,7 @@
 'use strict';
 
 function bindPublicationFields(previousDraft, draft, input, publishedLink) {
-  if (!previousDraft || previousDraft.id !== draft.id || draft.status === 'published') input.value = '';
+  if (!previousDraft || previousDraft.id !== draft.id || previousDraft.status !== 'approved' || draft.status !== 'approved') input.value = '';
   if (draft.status === 'published' && draft.post_url) publishedLink.href = draft.post_url;
   else publishedLink.removeAttribute('href');
 }
