@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## DOC-01 / QA-01: lệnh kiểm thử JavaScript 04/11/2026
+
+- Bổ sung `tests/legacy-save-ui.test.js` vào lệnh hiện hành trong README và tài liệu này; trước đó lệnh bỏ sót ba test về lưu bản nháp cũ.
+- Chạy đúng lệnh sáu tệp đã cập nhật: **46/46 test đạt**, không có test bị bỏ qua. Đây là kiểm thử tự động, không thay thế QA trên trình duyệt; cần chạy lại toàn bộ bộ kiểm thử trước phát hành.
+
 ## APR-04 / APPROVE-05: sửa bản tin gốc đồng thời ghi nhận 04/11/2026
 
 - Trước khi bổ sung, nhóm kiểm thử phiên bản đạt 49/49. Test `test_parent_edit_and_record_serialize_in_both_orders` dùng hai luồng trên cùng kho SQLite tạm, giữ transaction đầu khi luồng thứ hai bắt đầu `BEGIN IMMEDIATE`, rồi lần lượt thử cả hai thứ tự.
@@ -293,7 +298,7 @@
 - Test service xác nhận khi sửa bản tin gốc, checklist của biến thể chưa ghi nhận được bỏ ngay và bản đã ghi nhận giữ nguyên snapshot; khi đổi version policy hoặc renderer, không thể duyệt lại bằng checklist cũ. Smoke Edge với cùng kho demo qua server v1 rồi server v2: biến thể Facebook chưa ghi nhận hiển thị cảnh báo và bản lịch sử, không có nút copy/tải để đăng; nút xem bản đã duyệt báo cần duyệt lại. Lưu phiên bản bỏ năm xác nhận, sau đó đánh dấu lại, lưu và duyệt thành công theo v2. Chưa thử tình huống đổi policy của biến thể đã ghi nhận một phần qua giao diện.
 - Checklist từng khẳng định: test service kiểm tra dữ liệu không hợp lệ, lưu/restart, bỏ xác nhận khi đổi nội dung/nguồn và từ chối duyệt mục chưa có bằng chứng/kiểm tra. Trên kho demo mới đã thêm một khẳng định, thấy xác nhận bị bỏ sau khi sửa nội dung rồi đánh dấu và lưu lại thành công. Sau đó dùng Edge tạo, lưu và duyệt thành công một biến thể Facebook từ mục này theo v1 và duyệt lại theo v2; checklist nguồn và quyền đều là xác nhận giả trên dữ liệu `example.com`. Chưa smoke checklist này với các kênh khác.
 - Lượt kiểm tra trước: nút sao chép báo thành công nhưng công cụ không đọc được clipboard; kết quả đó không đủ để kết luận clipboard của người dùng bị lỗi. Lượt Edge và Notepad sau đó đã xác nhận dán một đoạn giả như ghi ở đầu mục này. Chưa kiểm tra đầy đủ bàn phím, ba pilot, mọi chính sách ký tự hoặc kho vận hành.
-- Để chạy: `python -B -m unittest discover -s tests -v` và `node --test tests/draft-state.test.js tests/source-warnings.test.js tests/request-size.test.js tests/inbox-utils.test.js tests/correction-ui.test.js`. Kết quả cụ thể cần ghi lại sau lần chạy cuối trước phát hành.
+- Để chạy: `python -B -m unittest discover -s tests -v` và `node --test tests/draft-state.test.js tests/source-warnings.test.js tests/request-size.test.js tests/inbox-utils.test.js tests/correction-ui.test.js tests/legacy-save-ui.test.js`. Kết quả cụ thể cần ghi lại sau lần chạy cuối trước phát hành.
 
 ## Bản 0.3 — thêm nguồn theo dõi (16/10/2026)
 

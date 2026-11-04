@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> DOC-01 / QA-01 ngày 04/11: sửa lệnh kiểm thử JavaScript trong README và `KIEM-THU.md` để chạy cả ba test lưu bản nháp cũ bị thiếu; lệnh cập nhật đạt 46/46 test. Hai mục vẫn mở cho nghiệm thu và lần chạy cuối trước phát hành.
+
 > FMT-03 / TEXT-04 ngày 04/11: đề xuất chia giữ chính xác khoảng trắng trong các trường biên tập; đã thử service, lưu/mở lại và UI X trên kho giả. Renderer vẫn bỏ khoảng trắng đầu/cuối mỗi đoạn khi xem trước/xuất và đã được thông báo trong giao diện, hướng dẫn. Hồi quy Python 200/200 và JavaScript 45/45; QA-02 và BASE-03 vẫn mở. Xem KIEM-THU.md.
 
 

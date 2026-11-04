@@ -77,7 +77,7 @@ Nút cũ đổi thành **Nhập bài thủ công**: chỉ thêm một bài và g
 
 ```powershell
 python -m unittest discover -s tests -v
-node --test tests/draft-state.test.js tests/source-warnings.test.js tests/request-size.test.js tests/inbox-utils.test.js tests/correction-ui.test.js
+node --test tests/draft-state.test.js tests/source-warnings.test.js tests/request-size.test.js tests/inbox-utils.test.js tests/correction-ui.test.js tests/legacy-save-ui.test.js
 ```
 
 Node.js chỉ cần cho kiểm thử JavaScript; kiểm thử DOM giả không thay thế kiểm tra trên trình duyệt.
