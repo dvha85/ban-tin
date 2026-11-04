@@ -90,6 +90,8 @@
 
 > Bổ sung hotfix `d535012`: xóa URL chưa ghi nhận khi cùng bài bị hủy duyệt; trước khi lưu sửa đổi có URL đang nhập, giao diện cảnh báo khả năng mất URL. Test helper tái hiện lỗi cũ và đạt sau sửa; hồi quy 89 Python, 3 JavaScript đạt. Chưa kiểm tra hộp thoại và chuyển trạng thái này qua UI; FIX-03 vẫn mở.
 
+> Đồng bộ thêm quy tắc trên vào nhánh 0.4: test mới tái hiện lỗi cũ; hồi quy sau sửa 183 Python và 41 JavaScript đạt. Chưa smoke hộp thoại và chuyển trạng thái trên UI; xem `KIEM-THU.md`.
+
 - Ngày lập / cập nhật: **03/11/2026**, giờ Việt Nam.
 - Repository: [dvha85/ban-tin](https://github.com/dvha85/ban-tin).
 - Mốc mã nguồn được review: **`a180354e52e98a678d093609f9e8f2d37e6cd0a3`**, nhánh `main`, phiên bản ứng dụng `0.3.0`, dữ liệu schema `3`.

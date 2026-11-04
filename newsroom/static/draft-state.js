@@ -2,7 +2,7 @@
 
 // Keep the unsaved publication URL attached to the draft being displayed.
 function bindPublicationFields(previousDraft, draft, input, publishedLink) {
-  if (!previousDraft || previousDraft.id !== draft.id || draft.status === 'published') {
+  if (!previousDraft || previousDraft.id !== draft.id || previousDraft.status !== 'approved' || draft.status !== 'approved') {
     input.value = '';
   }
   if (draft.status === 'published' && draft.post_url) publishedLink.href = draft.post_url;

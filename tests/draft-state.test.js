@@ -3,6 +3,18 @@ const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const {bindPublicationFields, hasPendingPublicationUrl, sectionDiffers, withInertTargets, verifiedCopyText, conflictTargetUrl, parseConflictTarget, sourceRelevanceWarning, platformLengthNotice, focusMovedItem, claimConflictDetails, hasOtherPendingChanges, metricFields, metricDisplayFields, parseMetricValues} = require('../newsroom/static/draft-state.js');
 
+test('legacy pending URL is cleared when approval is revoked on the same draft', () => {
+  const input = {value: 'https://www.facebook.com/page/posts/111'};
+  const link = {removeAttribute() {}};
+  const approved = {id: 1, status: 'approved'};
+  const edited = {...approved, status: 'draft'};
+  bindPublicationFields(approved, edited, input, link);
+  assert.equal(input.value, '');
+  bindPublicationFields(edited, approved, input, link);
+  assert.equal(input.value, '');
+  assert.equal(hasPendingPublicationUrl(approved, input), false);
+});
+
 test('metric values preserve channel keys, zero and unknown while rejecting invalid input', () => {
   const fields = metricFields('x');
   assert.deepEqual(parseMetricValues(fields, ['10', '0', '', '3', '4', '5', '', '15']),

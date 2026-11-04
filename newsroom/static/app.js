@@ -438,6 +438,8 @@ function collectDraft() {
 }
 async function saveDraft() {
   if (!app.draft) return;
+  if (app.dirty && hasPendingPublicationUrl(app.draft, $('post-url')) &&
+      !window.confirm('Lưu thay đổi có thể hủy duyệt và xóa URL đang nhập. Hãy sao chép URL nếu cần giữ lại. Bạn muốn tiếp tục lưu?')) return;
   await mutation(async () => {
     const wasApproved = app.draft.status === 'approved';
     const draft = await api(`/api/drafts/${app.draft.id}/save`, collectDraft());
