@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> QA-02 bổ sung: lỗi đọc nội dung phản hồi sau khi nhận header cũng được đánh dấu kết quả ghi chưa rõ; test JavaScript mô phỏng JSON bị cắt và luồng văn bản lỗi. Chưa smoke tình huống này trên trình duyệt; xem `KIEM-THU.md`.
+
 > QA-02 ngày 04/11: trên kho giả, thử ngắt phản hồi sau khi server đã ghi URL; giao diện cảnh báo kết quả chưa rõ và giữ URL, thử lại vẫn chỉ có một đoạn ghi nhận. Đã bổ sung cảnh báo cố định khi `fetch` của thao tác ghi thất bại. Đây là một tình huống tiêm lỗi, QA-02 và BASE-03 vẫn mở; xem `KIEM-THU.md`.
 
 > Kiểm thử 04/11: server fixture cổng 18769 chạy trước các sửa policy v4, vì vậy các lượt UI trước tại cổng này không chứng minh backend mới. Trên server mới dùng checkout hiện tại, giao diện chặn dấu chưa xác minh trong ghi chú rồi duyệt được sau khi sửa và xác nhận lại. Đã thử khôi phục phiên sau restart cùng kho, giữ và chủ động lưu nội dung giả; QA-02 vẫn mở cho kết quả ghi không rõ và các tổ hợp khác. Chi tiết tại `KIEM-THU.md`.

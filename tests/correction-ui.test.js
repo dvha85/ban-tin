@@ -185,6 +185,27 @@ test('network failure marks a mutation outcome as unknown', async () => {
     error => error.outcomeUnknown !== true);
 });
 
+test('unreadable response body marks a mutation outcome as unknown', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  let contentType = 'application/json';
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    requestJson: JSON.stringify,
+    fetch: async () => ({ok: true, headers: {get: () => contentType},
+      json: async () => { throw new SyntaxError('truncated'); }, text: async () => { throw new Error('stream lost'); }}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  await assert.rejects(vm.runInContext("api('/api/variants/3/publications', {url: 'fixture'})", context),
+    error => error.outcomeUnknown === true);
+  await assert.rejects(vm.runInContext("api('/api/state')", context),
+    error => error.outcomeUnknown !== true);
+  contentType = 'text/plain';
+  await assert.rejects(vm.runInContext("api('/api/variants/3/publications', {url: 'fixture'})", context),
+    error => error.outcomeUnknown === true);
+});
+
 test('publication retry reuses its key but a later new recording gets a new key', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

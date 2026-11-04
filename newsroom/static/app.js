@@ -41,7 +41,15 @@ async function api(path, body) {
     throw error;
   }
   const json = (response.headers.get('Content-Type') || '').includes('application/json');
-  const result = json ? await response.json() : await response.text();
+  let result;
+  try {
+    result = json ? await response.json() : await response.text();
+  } catch (_) {
+    if ((response.status === 401 || response.status === 403) && app.state) $('session-recovery').hidden = false;
+    const error = new Error('Không đọc được phản hồi từ Bàn tin. Giữ nội dung chưa lưu và kiểm tra dữ liệu trước khi thử lại.');
+    if (body !== undefined) error.outcomeUnknown = true;
+    throw error;
+  }
   if (!response.ok) {
     if ((response.status === 401 || response.status === 403) && app.state) $('session-recovery').hidden = false;
     const error = new Error(result.error || 'Chưa thực hiện được. Hãy giữ bản đang sửa và thử lại.');
