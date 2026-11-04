@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## BASE-02: kiểu dữ liệu đầu vào đa kênh 04/11/2026
+
+- Test `test_invalid_multichannel_field_types_do_not_change_saved_data` gửi 34 giá trị sai kiểu qua HTTP tại sáu nhóm trường chọn tin, thứ tự mục, `verified`, `claims` và `segments` của save/preview. Các yêu cầu đều trả 400 JSON; bản tin, phiên bản, lịch sử và số bản tin trên kho giả không đổi. Sau bổ sung, toàn bộ Python 195/195 đạt; JavaScript 43/43 đã đạt ở hồi quy trước, mã JavaScript không đổi trong lượt này.
+- Bổ sung mô tả kiểu nguồn, khẳng định, đoạn và preview tại `API-BAN-TIN-DA-KENH.md`, bao gồm khác biệt giữa `source_ids: null` và `source_selection: null`. Phạm vi này không chứng minh mọi trường, tổ hợp dữ liệu hay giao diện; BASE-02 vẫn mở.
+
 ## DIG-02: lưu trữ và khôi phục bản tin 04/11/2026
 
 - Người dùng chọn lưu trữ có thể khôi phục. Trên kho fixture, test `test_archiving_bulletin_preserves_approved_and_recorded_versions` kiểm tra một bản duyệt chưa ghi nhận và một phiên bản đã ghi nhận một đoạn, cùng URL và số liệu 0: lưu trữ và khôi phục giữ nội dung, revision, snapshot duyệt, lịch sử publication, số liệu và thống kê; backup/restore giữ trạng thái lưu trữ và dữ liệu. Không có dữ liệu hay bài đăng thật.

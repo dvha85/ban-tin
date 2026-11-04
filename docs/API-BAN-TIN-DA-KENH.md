@@ -128,6 +128,15 @@ Các trường dưới đây mô tả mã hiện tại, không phải cam kết 
 
 Lịch sử bản tin trả tối đa 100 bản ghi mới nhất, gồm `id`, `entity_type`, `entity_id`, `revision`, `action`, `snapshot`, `at`; `snapshot` là chuỗi JSON. Danh sách publication gồm cả ghi nhận đã hủy hoặc đính chính, vì vậy cần xét `active` và `events`, không đếm toàn bộ phần tử là bài còn hiệu lực.
 
+## Kiểu dữ liệu lồng thường gặp
+
+- `claims` là mảng object `{text: string, evidence: string, checked: boolean}`; `[]` là hợp lệ khi đang soạn nhưng không đủ điều kiện duyệt mục được sử dụng. Mỗi item có `verified` boolean; xác nhận lại sau thay đổi nội dung hoặc nguồn.
+- Với nguồn chụp từ tin hiện hành hoặc thêm thủ công, `source_id`, `url`, `title`, `summary`, `source_name`, `date_kind`, `retrieved_at`, `scope`, `note_kind` là chuỗi; `published_at` là chuỗi hoặc `null`. Nguồn thu thập có thể có thêm dấu vết như `collection_method` và `excerpt_hash`; bản sao từ draft cũ có thể có cấu trúc nguồn khác. Không giả định mọi trường tùy chọn đều hiện diện.
+- Mỗi `segment` có `text` là chuỗi, `item_ids` là mảng ID số nguyên. Nếu bỏ `source_ids` hoặc gửi `null`, renderer dùng mọi nguồn hiện có của các mục đã chọn; muốn chỉ dùng một số nguồn phải gửi mảng ID nguồn dạng chuỗi. Mảng rỗng không đủ nguồn cho mục được sử dụng và bị từ chối. Đây là hành vi khác với `source_selection: null` khi tạo bản tin, vốn bị từ chối.
+- Trong preview, `position`, `length`, `limit` là số nguyên; `valid` là boolean; `item_ids`, `source_ids`, `urls` là mảng. `text` là văn bản đầu ra đầy đủ, còn `body` là nội dung đoạn đã bỏ khoảng trắng đầu/cuối.
+
+Test HTTP `test_invalid_multichannel_field_types_do_not_change_saved_data` kiểm tra 34 trường hợp sai kiểu ở các trường chọn tin, thứ tự, xác nhận mục, claims và segments; mỗi trường hợp trả 400, không thay bản tin, phiên bản hay lịch sử trên fixture. Test này không bao phủ mọi trường hoặc tổ hợp.
+
 ## Giới hạn bằng chứng
 
 Đây là bản đồ route và điều kiện chính đọc từ mã, chưa phải đặc tả đầy đủ mọi trường trả về, tất cả tổ hợp lỗi hoặc hợp đồng đã được người dùng chấp nhận. Bộ đếm Threads là ước lượng; hành vi X thực tế, mọi mẫu URL và emoji mới chưa được xác minh đầy đủ. Xem [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) và [bằng chứng kiểm thử](KIEM-THU.md) trước khi dùng để quyết định phát hành.

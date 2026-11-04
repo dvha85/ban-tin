@@ -90,6 +90,41 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(status, 200, body)
         self.assertFalse(json.loads(body)['archived'])
 
+    def test_invalid_multichannel_field_types_do_not_change_saved_data(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử kiểu dữ liệu',
+            'url': 'https://example.com/http-bad-types', 'summary': 'Dữ liệu giả.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']], 'title': 'Bản tin thử'})
+        item = bulletin['items'][0]
+        variant = self.room.create_variant(bulletin['id'], {
+            'bulletin_revision': bulletin['revision'], 'platform': 'x'})
+        before_bulletin = self.room.bulletin(bulletin['id'])
+        before_variant = self.room.variant(variant['id'])
+        before_history = self.room.bulletin_history(bulletin['id'])
+        invalid = (None, 7, 'sai kiểu', {})
+        cases = [
+            ('/api/bulletins', {'article_ids': [article['id']]}, 'article_ids', invalid + (False, [])),
+            (f"/api/bulletins/{bulletin['id']}/save", {'revision': bulletin['revision']},
+             'item_ids', invalid + (False, [])),
+            (f"/api/bulletins/{bulletin['id']}/items/{item['id']}/save",
+             {'bulletin_revision': bulletin['revision'], 'revision': item['revision']}, 'verified', invalid + ([],)),
+            (f"/api/bulletins/{bulletin['id']}/items/{item['id']}/save",
+             {'bulletin_revision': bulletin['revision'], 'revision': item['revision']}, 'claims', invalid + (False,)),
+            (f"/api/variants/{variant['id']}/save", {'revision': variant['revision']},
+             'segments', invalid + (False, [])),
+            (f"/api/variants/{variant['id']}/preview", {}, 'segments', invalid + (False, [])),
+        ]
+        for path, base, field, invalid_values in cases:
+            for value in invalid_values:
+                with self.subTest(path=path, field=field, value=value):
+                    status, _, body = self.request('POST', path, {**base, field: value}, headers)
+                    self.assertEqual(status, 400, body)
+                    self.assertIn('error', json.loads(body))
+        self.assertEqual(self.room.bulletin(bulletin['id']), before_bulletin)
+        self.assertEqual(self.room.variant(variant['id']), before_variant)
+        self.assertEqual(self.room.bulletin_history(bulletin['id']), before_history)
+        self.assertEqual(len(self.room.bulletins()), 1)
+
     def test_variant_platform_wrong_json_types_are_rejected_without_writes(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử kiểu nền tảng',

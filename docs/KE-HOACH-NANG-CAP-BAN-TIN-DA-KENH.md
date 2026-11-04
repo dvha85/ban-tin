@@ -628,6 +628,8 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | 04/11/2026 | DIG-02 / lưu trữ | Đang làm | Lưu trữ/khôi phục theo lựa chọn người dùng; giữ bản duyệt, ghi nhận và số liệu; test xung đột, backup/restore, HTTP và DOM giả; Python 194/194, JS 43/43 | Chưa smoke giao diện trên trình duyệt; chưa triển khai kho vận hành |
 
+| 04/11/2026 | BASE-02 / kiểu dữ liệu | Đang làm | Test 34 đầu vào sai kiểu qua HTTP không đổi bản tin/phiên bản/lịch sử; mô tả kiểu lồng và hành vi `null`; Python 195/195 | Chưa bao phủ mọi trường và tổ hợp; BASE-02 vẫn mở |
+
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
 ## 12. Sổ quyết định
