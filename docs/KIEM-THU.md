@@ -22,6 +22,15 @@
 - Test `test_invalid_multichannel_field_types_do_not_change_saved_data` gửi 34 giá trị sai kiểu qua HTTP tại sáu nhóm trường chọn tin, thứ tự mục, `verified`, `claims` và `segments` của save/preview. Các yêu cầu đều trả 400 JSON; bản tin, phiên bản, lịch sử và số bản tin trên kho giả không đổi. Sau bổ sung, toàn bộ Python 195/195 đạt; JavaScript 43/43 đã đạt ở hồi quy trước, mã JavaScript không đổi trong lượt này.
 - Bổ sung mô tả kiểu nguồn, khẳng định, đoạn và preview tại `API-BAN-TIN-DA-KENH.md`, bao gồm khác biệt giữa `source_ids: null` và `source_selection: null`. Phạm vi này không chứng minh mọi trường, tổ hợp dữ liệu hay giao diện; BASE-02 vẫn mở.
 
+## APR-04: lưu phiên bản cạnh tranh với ghi nhận URL 04/11/2026
+
+- `test_competing_edit_and_record_keep_approval_and_publication_consistent` thực hiện bốn lần trên SQLite tạm, mỗi lần cho hai luồng lưu nội dung và ghi nhận URL giả bắt đầu với cùng revision. Kiểm tra đúng một thao tác thành công; nếu ghi nhận thắng thì nội dung và snapshot duyệt được giữ, còn nếu lưu thắng thì không có publication và bản sửa không xuất được dưới nhãn đã duyệt. `test_variants.py` đạt 46/46; hồi quy toàn bộ Python 196/196 và JavaScript 44/44 đạt. Kiểm thử chấp nhận cả hai thứ tự nhưng không bảo đảm bộ lập lịch đã chạy cả hai trong một lượt; không thay thế mọi tình huống race hoặc QA qua giao diện.
+
+## SAFE-01 / SAFE-03: bổ sung kiểm tra route lưu trữ và tài nguyên tĩnh 04/11/2026
+
+- Mở rộng danh sách kiểm tra HTTP bảo vệ 15 route POST đa kênh, bao gồm route lưu trữ: thiếu/sai cookie, thiếu/sai CSRF, thiếu/sai Origin và sai Host đều bị từ chối trước khi gọi hàm nghiệp vụ; header hợp lệ được chuyển đến đúng handler giả. Test dùng server và kho tạm, không chứng minh mọi route có thể được bổ sung trong tương lai.
+- Kiểm tra cả bảy tài nguyên tĩnh được cho phép: HTTP 200, kiểu nội dung, `nosniff`, CSP và từ chối Host lạ. Năm đường dẫn không cho phép, gồm traversal thô/mã hóa và `index.html` dưới `/static`, trả 404. `python -B -m unittest discover -s tests -p test_server.py -q`: 31/31 đạt. Chưa thay thế QA trình duyệt hoặc kiểm tra mọi biến thể request.
+
 ## DIG-02: lưu trữ và khôi phục bản tin 04/11/2026
 
 - Xác nhận lưu trữ/khôi phục chuyển vào trang, nêu tên và thao tác; nút Hủy không gửi yêu cầu, tiêu điểm chuyển đến nút xác nhận và trở về nút ban đầu khi hủy. Handler kiểm tra lại thay đổi chưa lưu và ngữ cảnh trước khi gửi. Test DOM giả tái hiện thiếu xác nhận trước sửa, kiểm tra hủy, dữ liệu chưa lưu, ngữ cảnh đổi, kết quả chưa rõ và lỗi tải danh sách. Trước và sau sửa: Python 195/195, JavaScript 44/44 đạt.

@@ -702,6 +702,50 @@ class VariantTests(unittest.TestCase):
             with self.assertRaises(ValidationError):
                 self.room.export_variant(variant['id'])
 
+    def test_competing_edit_and_record_keep_approval_and_publication_consistent(self):
+        # Each pair uses the same revision, as two editor tabs would.
+        for index in range(4):
+            with self.subTest(attempt=index):
+                variant = self.make_approved('x')
+                approved = self.room.export_variant(variant['id'], archive=True)
+                barrier = threading.Barrier(2)
+                edited = [{**variant['segments'][0], 'text': f'Nội dung sửa thử {index}.'}]
+
+                def attempt(operation):
+                    barrier.wait(timeout=5)
+                    try:
+                        if operation == 'edit':
+                            self.room.save_variant(variant['id'], {
+                                'revision': variant['revision'], 'segments': edited})
+                        else:
+                            self.room.record_publication(variant['id'], {
+                                'revision': variant['revision'], 'position': 0,
+                                'url': f'https://x.com/test/status/{987650 + index}',
+                                'idempotency_key': f'edit_record_{index}'})
+                        return operation
+                    except Conflict:
+                        return 'conflict'
+
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    outcomes = list(pool.map(attempt, ('edit', 'record')))
+                self.assertEqual(outcomes.count('conflict'), 1)
+                current = self.room.variant(variant['id'])
+                publications = self.room.publications(variant['id'])
+                if 'record' in outcomes:
+                    self.assertEqual(len(publications), 1)
+                    self.assertTrue(publications[0]['active'])
+                    self.assertEqual(current['segments'], variant['segments'])
+                    self.assertIsNotNone(current['locked_at'])
+                    self.assertEqual(self.room.export_variant(variant['id'], archive=True), approved)
+                else:
+                    self.assertIn('edit', outcomes)
+                    self.assertEqual(publications, [])
+                    self.assertEqual(current['segments'], edited)
+                    self.assertEqual(current['status'], 'draft')
+                    self.assertIsNone(current['locked_at'])
+                    with self.assertRaises(ValidationError):
+                        self.room.export_variant(variant['id'])
+
     def test_record_separate_segments_retry_and_immutable_after_correction(self):
         variant = self.make_approved('x', two=True)
         data = {'revision': variant['revision'], 'position': 0, 'url': 'https://x.com/test/status/123',

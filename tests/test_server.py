@@ -335,6 +335,7 @@ class ServerTests(unittest.TestCase):
         routes = [
             ('/api/bulletins', 'create_bulletin', 201),
             ('/api/bulletins/1/save', 'save_bulletin', 200),
+            ('/api/bulletins/1/archive', 'set_bulletin_archived', 200),
             ('/api/bulletins/1/items', 'change_bulletin_items', 200),
             ('/api/bulletins/1/items/1/save', 'save_bulletin_item', 200),
             ('/api/bulletins/1/variants', 'create_variant', 200),
@@ -364,10 +365,24 @@ class ServerTests(unittest.TestCase):
 
     def test_host_and_static_traversal(self):
         self.assertEqual(self.request('GET', '/', headers={'Host': 'evil.example'})[0], 403)
-        self.assertEqual(self.request('GET', '/static/source-warnings.js')[0], 200)
-        self.assertEqual(self.request('GET', '/static/request-size.js')[0], 200)
-        self.assertEqual(self.request('GET', '/static/inbox-utils.js')[0], 200)
-        self.assertEqual(self.request('GET', '/static/../service.py')[0], 404)
+        for name, content_type in (
+            ('app.js', 'text/javascript'), ('draft-state.js', 'text/javascript'),
+            ('source-warnings.js', 'text/javascript'), ('request-size.js', 'text/javascript'),
+            ('inbox-utils.js', 'text/javascript'), ('app.css', 'text/css'),
+            ('favicon.svg', 'image/svg+xml'),
+        ):
+            with self.subTest(asset=name):
+                status, headers, body = self.request('GET', f'/static/{name}')
+                self.assertEqual(status, 200)
+                self.assertTrue(headers['Content-Type'].startswith(content_type))
+                self.assertEqual(headers['X-Content-Type-Options'], 'nosniff')
+                self.assertIn("default-src 'self'", headers['Content-Security-Policy'])
+                self.assertTrue(body)
+                self.assertEqual(self.request('GET', f'/static/{name}', headers={'Host': 'evil.example'})[0], 403)
+        for path in ('/static/../service.py', '/static/%2e%2e/service.py',
+                     '/static/index.html', '/static/missing.js', '/static/app.js/extra'):
+            with self.subTest(path=path):
+                self.assertEqual(self.request('GET', path)[0], 404)
 
     def test_security_headers_and_import_roundtrip(self):
         headers = self.session()
