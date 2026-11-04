@@ -138,6 +138,8 @@ Thay đường dẫn mẫu bằng đường dẫn của bạn, không chạy ngu
 
 Với bản sao schema 4, restore kiểm tra thêm cấu trúc các bảng bản tin, sự hiện diện của bảng và cột legacy cần thiết, và dữ liệu khóa ngoại trước khi tạo thư mục đích. Nếu báo cấu trúc hoặc khóa ngoại không hợp lệ, giữ nguyên tệp sao lưu để kiểm tra và thử bản sao khác; không sửa trực tiếp tệp gốc chỉ để vượt lỗi. Việc kiểm tra này chưa xác nhận nội dung từng bản tin, toàn bộ ràng buộc legacy hoặc mọi lỗi hệ thống tập tin.
 
+Bản 0.4 đang phát triển cũng kiểm tra cấu trúc và khóa ngoại trước khi hoàn tất nâng cấp và khi mở kho đã ở schema 4. Nếu khi mở có thông báo cấu trúc hoặc khóa ngoại không hợp lệ, giữ nguyên thư mục dữ liệu, dừng các phiên đang dùng kho đó và nhờ kiểm tra bản sao lưu; không tự sửa tệp SQLite để bỏ qua lỗi. Với kho cũ, bản sao lưu trước nâng cấp nằm trong thư mục `backups` nếu bước sao lưu đã hoàn tất.
+
 ## 8. Xử lý các trường hợp thường gặp
 
 | Hiện tượng | Cách xử lý |

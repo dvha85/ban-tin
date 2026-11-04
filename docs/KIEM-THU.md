@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## DB-01/02: xác nhận hợp đồng schema trước khi sử dụng 04/11/2026
+
+- Trước sửa, ba fixture schema 3 có cột legacy bị thiếu, bảng bản tin tồn tại sai cấu trúc hoặc hàng history mồ côi vẫn được nâng mốc lên 4. Test mới tái hiện cả ba trường hợp. Sau sửa, runner tạo bảng trong transaction, kiểm tra cấu trúc bảng/cột legacy cần thiết, cấu trúc và ràng buộc bảng mới cùng `foreign_key_check` trước khi đặt `user_version`; nếu lỗi thì rollback. Test đối chiếu schema, hàng draft/history và version 3 trước/sau; bản backup trước nâng cấp tồn tại và `integrity_check` trả `ok`.
+- Trước sửa, kho đã ở schema 4 thiếu chỉ mục, thiếu cột legacy hoặc có số liệu mồ côi vẫn mở được. Test mới tái hiện ba trường hợp; sau sửa, runner dùng một read transaction để đối chiếu version, cấu trúc và khóa ngoại, dừng khi không hợp lệ. Test xác nhận version, schema, bản tin và số liệu fixture không thay đổi. Kiểm tra có thể tăng thời gian mở theo lượng dữ liệu; không thay `integrity_check` hoặc kiểm tra ngữ nghĩa từng payload.
+- Baseline trước sửa: 12/12 test migration. Sau sửa: 14/14 test migration, toàn bộ 189/189 Python và 41/41 JavaScript đạt. Fixture v1/v2 mô phỏng và fixture v3 tổng hợp vẫn nâng cấp, xuất và khôi phục trong bộ test. Người dùng xác nhận không có dữ liệu SQLite cũ nên không chạy migration trên bản sao vận hành; chưa mô phỏng mọi lỗi hệ thống tệp hoặc kiểm chứng toàn bộ dạng schema lịch sử.
+
 ## MIG-03: khởi động lại schema 4
 
 - Mở rộng `test_migration_preserves_legacy_and_backups_and_is_idempotent`: sau khi nâng cấp fixture schema 3 và tạo một bản tin mới ở schema 4, chụp các hàng trong tất cả bảng người dùng, mở `Newsroom` thêm hai lần rồi đối chiếu toàn bộ hàng, export legacy, version 4, `integrity_check`, `foreign_key_check` và số backup migration. Bộ migration 12/12 đạt; toàn bộ 183 Python và 37 JavaScript đạt. Đây là dữ liệu giả; không chứng minh mọi tình huống mất điện hay hệ thống tệp.

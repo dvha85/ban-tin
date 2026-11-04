@@ -98,6 +98,8 @@
 
 > Bổ sung QA-02: người dùng đã thử Hủy và Đồng ý khi chuyển từ bản tin có tiêu đề chưa lưu sang bản tin khác trên Edge với kho giả; quay lại bản đầu thấy dữ liệu cũ. API xác nhận cả hai revision không đổi. QA-02 còn mở cho các trường hợp khác; chi tiết tại `KIEM-THU.md`.
 
+> Bổ sung DB-01/02: kiểm tra cấu trúc và khóa ngoại trước khi commit migration lên schema 4 và khi mở kho đã ở schema 4. Fixture thiếu cột/chỉ mục, bảng sai cấu trúc hoặc hàng mồ côi bị từ chối; migration lỗi rollback, giữ version và dữ liệu cũ. Hồi quy 189 Python, 41 JavaScript đạt; không áp dụng thử trên dữ liệu vận hành. Xem `KIEM-THU.md`.
+
 - Ngày lập / cập nhật: **03/11/2026**, giờ Việt Nam.
 - Repository: [dvha85/ban-tin](https://github.com/dvha85/ban-tin).
 - Mốc mã nguồn được review: **`a180354e52e98a678d093609f9e8f2d37e6cd0a3`**, nhánh `main`, phiên bản ứng dụng `0.3.0`, dữ liệu schema `3`.

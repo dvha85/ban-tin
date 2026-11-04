@@ -177,6 +177,78 @@ class MigrationV4Tests(unittest.TestCase):
             self.assertEqual(conn.execute('SELECT value FROM sentinel').fetchone()[0], 'unchanged')
             self.assertIsNone(conn.execute("SELECT name FROM sqlite_master WHERE name='new_table'").fetchone())
 
+    def test_migration_rejects_incompatible_structure_before_committing_version(self):
+        fixture = Path(__file__).parent / 'fixtures' / 'legacy-v3.sql'
+        cases = {
+            'missing_legacy_column': 'ALTER TABLE drafts DROP COLUMN approved_hash',
+            'incompatible_v4_table': 'CREATE TABLE bulletins (id INTEGER PRIMARY KEY, revision INTEGER)',
+            'orphan_legacy_row': "INSERT INTO history (draft_id,action,snapshot,at) VALUES (99999,'fixture','{}','time')",
+        }
+        for name, mutation in cases.items():
+            with self.subTest(case=name):
+                target = self.directory / name
+                target.mkdir()
+                db = target / 'bantin.sqlite3'
+                with closing(sqlite3.connect(db)) as conn:
+                    conn.executescript(fixture.read_text(encoding='utf-8'))
+                    conn.execute(mutation)
+                    conn.commit()
+                    before_schema = conn.execute(
+                        "SELECT type,name,tbl_name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name"
+                    ).fetchall()
+                    before_drafts = conn.execute('SELECT * FROM drafts ORDER BY id').fetchall()
+                    before_history = conn.execute('SELECT * FROM history ORDER BY id').fetchall()
+                    self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
+                with self.assertRaisesRegex(ValueError, 'cấu trúc|khóa ngoại'):
+                    Newsroom(target)
+                with closing(sqlite3.connect(db)) as conn:
+                    self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
+                    self.assertEqual(conn.execute(
+                        "SELECT type,name,tbl_name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name"
+                    ).fetchall(), before_schema)
+                    self.assertEqual(conn.execute('SELECT * FROM drafts ORDER BY id').fetchall(), before_drafts)
+                    self.assertEqual(conn.execute('SELECT * FROM history ORDER BY id').fetchall(), before_history)
+                backups = list((target / 'backups').glob('pre-v04-*.sqlite3'))
+                self.assertEqual(len(backups), 1)
+                with closing(sqlite3.connect(backups[0])) as conn:
+                    self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
+                    self.assertEqual(conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
+
+    def test_existing_v4_with_broken_contract_fails_without_writes(self):
+        article = self.room.import_article({'title': 'Tin giả để kiểm tra schema 4',
+            'url': 'https://example.com/v4-contract', 'summary': 'Dữ liệu giả.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']], 'title': 'Bản tin thử'})
+        cases = {
+            'missing_index': 'DROP INDEX active_publication_position',
+            'missing_legacy_column': 'ALTER TABLE drafts DROP COLUMN approved_hash',
+            'orphan': "INSERT INTO publication_metrics (publication_id,observed_at,payload,created_at) VALUES (99999,'t','{}','t')",
+        }
+        for name, mutation in cases.items():
+            with self.subTest(case=name):
+                target = self.directory / f'broken-v4-{name}'
+                target.mkdir()
+                db = target / 'bantin.sqlite3'
+                with closing(sqlite3.connect(self.room.db_path)) as source, closing(sqlite3.connect(db)) as conn:
+                    source.backup(conn)
+                    conn.execute(mutation)
+                    conn.commit()
+                    before_schema = conn.execute(
+                        "SELECT type,name,tbl_name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name"
+                    ).fetchall()
+                    before_bulletins = conn.execute('SELECT * FROM bulletins ORDER BY id').fetchall()
+                    before_metrics = conn.execute('SELECT * FROM publication_metrics ORDER BY id').fetchall()
+                    self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 4)
+                with self.assertRaisesRegex(ValueError, 'cấu trúc|khóa ngoại'):
+                    Newsroom(target)
+                with closing(sqlite3.connect(db)) as conn:
+                    self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 4)
+                    self.assertEqual(conn.execute(
+                        "SELECT type,name,tbl_name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name"
+                    ).fetchall(), before_schema)
+                    self.assertEqual(conn.execute('SELECT * FROM bulletins ORDER BY id').fetchall(), before_bulletins)
+                    self.assertEqual(conn.execute('SELECT * FROM publication_metrics ORDER BY id').fetchall(), before_metrics)
+                    self.assertEqual(before_bulletins[0][0], bulletin['id'])
+
     def test_unversioned_nonempty_database_is_backed_up_before_migration(self):
         destination = self.directory / 'unversioned.sqlite3'
         with closing(sqlite3.connect(destination)) as conn:

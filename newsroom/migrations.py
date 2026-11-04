@@ -149,6 +149,17 @@ def migrate(conn, data_dir):
     if version not in (0, 1, 2, 3, CURRENT_SCHEMA):
         raise RuntimeError('Dữ liệu thuộc phiên bản mới hơn. Không tự hạ cấp.')
     if version == CURRENT_SCHEMA:
+        # Validate an existing v4 store on one read snapshot before startup;
+        # never repair or write to an incompatible store here.
+        try:
+            conn.execute('BEGIN')
+            if conn.execute('PRAGMA user_version').fetchone()[0] != CURRENT_SCHEMA:
+                raise RuntimeError('Phiên bản dữ liệu vừa thay đổi; hãy mở lại ứng dụng.')
+            validate_v4_structure(conn)
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
         return
     original_data_version = conn.execute('PRAGMA data_version').fetchone()[0]
     has_user_tables = conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' LIMIT 1").fetchone() is not None
@@ -170,6 +181,9 @@ def migrate(conn, data_dir):
             raise RuntimeError('Dữ liệu vừa thay đổi trong lúc sao lưu; hãy dừng ứng dụng khác và thử lại.')
         for statement in SCHEMA:
             conn.execute(statement)
+        # Existing tables may make CREATE IF NOT EXISTS a no-op. Validate the
+        # resulting contract before committing the new version marker.
+        validate_v4_structure(conn)
         conn.execute(f'PRAGMA user_version={CURRENT_SCHEMA}')
         conn.commit()
     except Exception:
