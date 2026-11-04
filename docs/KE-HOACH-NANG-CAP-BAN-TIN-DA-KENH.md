@@ -30,6 +30,8 @@
 
 > Bổ sung BASE-02: parser POST từ chối token `NaN`, `Infinity`, `-Infinity` không thuộc JSON và số thực vượt phạm vi hữu hạn trước khi ghi; test HTTP giữ nguyên khả năng dùng các chữ này trong chuỗi và số thực hữu hạn. Chưa bao phủ mọi tổ hợp schema.
 
+> Bổ sung BASE-02: tài liệu API mô tả giới hạn văn bản bản tin, mục, khẳng định và nguồn, cùng sự khác nhau của `source_selection` khi tạo và thêm mục. Đây là đối chiếu mã tĩnh; chưa đóng hợp đồng toàn bộ API.
+
 > Bổ sung REL-01: ngày 04/11/2026 người dùng xác nhận [mẫu đầu ra giả lập](MAU-DAU-RA-GIA-LAP-0.4.md) mới từ service phù hợp với quy trình dự kiến. Đây không phải tệp của ba pilot cũ và không phải quyết định triển khai; REL-01 tiếp tục mở.
 
 > Đối chiếu BASE-03 ngày 04/11: tài liệu cấu hình twitter-text mô tả trọng số emoji ghép và độ dài URL mặc định 23; Meta trả HTTP 429 khi tra tài liệu Threads API. Chưa có căn cứ đóng gate hoặc thay đổi policy; xem `DOI-CHIEU-NGHIEM-THU-0.4.md`.

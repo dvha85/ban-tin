@@ -30,6 +30,17 @@ Tài liệu này mô tả API nội bộ của nhánh phát triển 0.4, chưa p
 
 Các trường mục có thể gửi gồm `title`, `body`, `angle`, `verification_note`, `verified`, `claims`, `add_source`, `remove_source_id`. `claims` gồm tối đa 10 object `{text, evidence, checked}`. `add_source` gồm `url`, `title`, `summary`; mỗi mục giữ 1–3 nguồn và toàn bản tin tối đa 20 URL nguồn khác nhau. Sửa nội dung hoặc nguồn bỏ xác nhận mục và các xác nhận khẳng định; xác nhận lại sau khi lưu. Không nhầm revision bản tin với revision mục.
 
+Các giới hạn dưới đây được đối chiếu với `create_bulletin`, `save_bulletin` và `save_bulletin_item` trong `newsroom/bulletins.py`. Với những trường văn bản này, server kiểm tra độ dài chuỗi Python và ký tự NUL trước khi bỏ khoảng trắng đầu/cuối; đây là giới hạn của ứng dụng, không phải giới hạn byte UTF-8 hay của nền tảng.
+
+| Nhóm | Trường và giới hạn ký tự tối đa |
+| --- | --- |
+| Bản tin | `title`: 180; `introduction`, `conclusion`: 4.000 mỗi trường; `edition_date`: 10, đồng thời phải đúng ngày `YYYY-MM-DD`. |
+| Mục | `title`: 300; `body`: 4.000; `angle`: 1.000; `verification_note`: 3.000. `verified` nếu gửi phải là boolean. |
+| Khẳng định | Tối đa 10; mỗi `text`: 500 và không rỗng sau khi bỏ khoảng trắng; `evidence`: 1.000; `checked` phải là boolean. Để duyệt, khẳng định của mục được sử dụng còn phải có bằng chứng và được xác nhận. |
+| Nguồn thêm thủ công | `title`: 300; `summary`: 3.000; `url` phải qua kiểm tra URL HTTPS và thuộc giới hạn URL của ứng dụng. |
+
+Khi tạo bản tin, `source_selection` là object có khóa ID tin dạng chuỗi, giá trị là mảng URL. Khi thêm một tin qua `/items`, trường cùng tên là mảng URL trực tiếp cho tin đó. Nếu bỏ lựa chọn nguồn, server dùng các nguồn có sẵn và vẫn yêu cầu 1–3 nguồn. Việc gửi lựa chọn sai hoặc vượt giới hạn bị từ chối; không mặc định chọn lại.
+
 ## Phiên bản theo kênh
 
 | Phương thức và đường dẫn | Đầu vào chính | Kết quả / lưu ý |
