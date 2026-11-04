@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## FMT-02 / QA-02: cảnh báo xem trước khi bản tin gốc đã đổi 04/11/2026
+
+- Khi bản tin được sửa ở cửa sổ khác sau lúc mở phiên bản, server trả `needs_update: true` cho preview nhưng hộp xem trước trước đây không hiển thị thông tin đó. Test handler với DOM/API giả tái hiện cảnh báo bị thiếu trước sửa; sau sửa hộp xem trước nhắc sao chép nội dung chưa lưu trước khi mở lại bản tin, rồi kiểm tra trước khi duyệt. Khi `needs_update: false` không hiện cảnh báo này.
+- Test service `test_approved_export_matches_preview_and_changes_invalidate` đối chiếu `needs_update` trước và sau khi sửa bản tin, đồng thời xác nhận export cũ bị chặn. Toàn bộ Python 195/195, JavaScript 44/44 đạt. Chưa smoke tình huống hai cửa sổ qua trình duyệt; đây là cảnh báo bổ sung, không thay cho cổng duyệt/export phía server.
+
 ## BASE-02: kiểu dữ liệu đầu vào đa kênh 04/11/2026
 
 - Test `test_invalid_multichannel_field_types_do_not_change_saved_data` gửi 34 giá trị sai kiểu qua HTTP tại sáu nhóm trường chọn tin, thứ tự mục, `verified`, `claims` và `segments` của save/preview. Các yêu cầu đều trả 400 JSON; bản tin, phiên bản, lịch sử và số bản tin trên kho giả không đổi. Sau bổ sung, toàn bộ Python 195/195 đạt; JavaScript 43/43 đã đạt ở hồi quy trước, mã JavaScript không đổi trong lượt này.

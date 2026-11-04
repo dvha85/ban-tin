@@ -370,8 +370,10 @@ class VariantTests(unittest.TestCase):
         exported = self.room.export_variant(variant['id'])
         self.assertEqual(exported['approval_id'], variant['approval_id'])
         self.assertEqual(exported['posts'], [post['text'] for post in preview['posts']])
+        self.assertFalse(preview['needs_update'])
         self.room.save_bulletin(self.bulletin['id'], {'revision': self.bulletin['revision'], 'title': 'Đổi bản tin'})
         self.assertTrue(self.room.variant(variant['id'])['needs_update'])
+        self.assertTrue(self.room.preview_variant(variant['id'])['needs_update'])
         with self.assertRaises(ValidationError):
             self.room.export_variant(variant['id'])
 

@@ -963,7 +963,8 @@ async function renderVariants(container, bulletin) {
     }
     const result = await api(`/api/variants/${variant.id}/preview`, {segments: collect()});
     const omitted = result.omitted_item_ids.length ? ` Mục không có trong phiên bản: ${result.omitted_item_ids.join(', ')}.` : '';
-    showText('Xem trước phiên bản', result.posts.map(post => `${post.position + 1}. ${post.length}/${post.limit}${post.valid ? '' : ' · CHƯA ĐẠT'}\n${post.text}`).join('\n\n────────────\n\n'), result.warning + omitted, null, false);
+    const changed = result.needs_update ? ' Bản tin gốc đã thay đổi; hãy sao chép nội dung chưa lưu trước khi mở lại bản tin, rồi kiểm tra trước khi duyệt.' : '';
+    showText('Xem trước phiên bản', result.posts.map(post => `${post.position + 1}. ${post.length}/${post.limit}${post.valid ? '' : ' · CHƯA ĐẠT'}\n${post.text}`).join('\n\n────────────\n\n'), result.warning + changed + omitted, null, false);
   });
   const split = node('button', 'button secondary', 'Đề xuất chia đoạn');
   split.disabled = locked || variant.platform === 'facebook';

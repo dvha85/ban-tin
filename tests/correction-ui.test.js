@@ -693,3 +693,39 @@ test('bulletin archive controls preserve unsaved work and show archived entries 
   assert.equal(button('Lưu trữ bản tin'), undefined);
   assert.ok(walk(get('bulletin-editor')).some(el => /khởi động lại.*ứng dụng/i.test(el.textContent)));
 });
+
+test('preview warns if the server sees a newer bulletin revision', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const previews = [];
+  let stale = true;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+    setTimeout, clearTimeout, fetch: () => new Promise(() => {}), previews, isStale: () => stale,
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.container = new Element();
+  vm.runInContext(`app.variantId = 3;
+    api = async path => path.endsWith('/variants') ? [{
+      id: 3, revision: 1, platform: 'x', account_label: 'Kênh thử', status: 'draft',
+      locked_at: null, needs_update: false, policy_stale: false,
+      checks: {}, segments: [{text: 'Tin giả', item_ids: [1], source_ids: ['source-1']}]
+    }] : {warning: 'Bộ đếm chỉ hỗ trợ.', needs_update: isStale(), omitted_item_ids: [],
+          posts: [{position: 0, length: 10, limit: 280, valid: true, text: 'Tin giả'}]};
+    showText = (title, text, warning) => previews.push({title, text, warning});`, context);
+  const bulletin = {id: 7, items: [{id: 1, title: 'Tin giả', sources: [{source_id: 'source-1', url: 'https://example.com/a'}]}]};
+  context.bulletin = bulletin;
+  await vm.runInContext('renderVariants(container, bulletin)', context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const preview = walk(context.container).find(el => el.tagName === 'button' && el.textContent === 'Xem trước');
+  assert.ok(preview);
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  preview.listeners.click[0]({}); await tick();
+  assert.match(previews[0].warning, /bản tin gốc đã thay đổi/i);
+  assert.match(previews[0].warning, /sao chép nội dung chưa lưu trước khi mở lại bản tin/i);
+  assert.match(previews[0].warning, /kiểm tra.*duyệt/i);
+  stale = false;
+  preview.listeners.click[0]({}); await tick();
+  assert.doesNotMatch(previews[1].warning, /bản tin gốc đã thay đổi/i);
+});

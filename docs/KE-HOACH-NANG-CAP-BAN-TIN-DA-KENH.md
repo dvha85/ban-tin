@@ -630,6 +630,8 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | 04/11/2026 | BASE-02 / kiểu dữ liệu | Đang làm | Test 34 đầu vào sai kiểu qua HTTP không đổi bản tin/phiên bản/lịch sử; mô tả kiểu lồng và hành vi `null`; Python 195/195 | Chưa bao phủ mọi trường và tổ hợp; BASE-02 vẫn mở |
 
+| 04/11/2026 | FMT-02 / QA-02 | Đang làm | Preview hiển thị cảnh báo khi server trả bản tin gốc đã đổi; test tái hiện trước sửa, test service và DOM giả sau sửa; Python 195/195, JS 44/44 | Chưa smoke trường hợp hai cửa sổ trên trình duyệt |
+
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
 ## 12. Sổ quyết định
