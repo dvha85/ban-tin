@@ -344,6 +344,36 @@ class VariantTests(unittest.TestCase):
             split_segments('x', segments, self.bulletin)
         self.assertEqual(segments[0]['text'], '😀' * 400)
 
+    def test_split_twenty_post_boundary_and_rejection_preserves_saved_draft(self):
+        item = self.bulletin['items'][0]
+        source_id = item['sources'][0]['source_id']
+        for platform, width in (('x', 160), ('threads', 300)):
+            with self.subTest(platform=platform):
+                # One sentence fits with its source and numbering; two cannot.
+                sentences = [f'{number}: ' + 'a' * width + '.' for number in range(1, 22)]
+                original = ' '.join(sentences[:20])
+                segment = {'text': original, 'item_ids': [item['id']], 'source_ids': [source_id]}
+                result = split_segments(platform, [segment], self.bulletin)
+                self.assertEqual(len(result), 20)
+                self.assertEqual(''.join(part['text'] for part in result), original)
+                preview = render_segments(platform, result, self.bulletin)
+                self.assertTrue(preview['valid'])
+                for index, post in enumerate(preview['posts'], 1):
+                    self.assertTrue(post['text'].startswith(f'{index}/20 '))
+                    self.assertIn(item['sources'][0]['url'], post['text'])
+                too_long = ' '.join(sentences)
+                variant = self.room.create_variant(self.bulletin['id'], {
+                    'platform': platform, 'account_label': 'Kho thử',
+                    'bulletin_revision': self.bulletin['revision']})
+                variant = self.room.save_variant(variant['id'], {
+                    'revision': variant['revision'], 'segments': [{**segment, 'text': too_long}]})
+                with self.assertRaisesRegex(ValidationError, 'quá 20 đoạn'):
+                    self.room.split_variant(variant['id'], {'revision': variant['revision']})
+                reopened = Newsroom(self.room.data_dir).variant(variant['id'])
+                self.assertEqual(reopened['revision'], variant['revision'])
+                self.assertEqual(reopened['segments'], variant['segments'])
+                self.assertEqual(reopened['segments'][0]['text'], too_long)
+
     def test_approval_rejects_used_excerpt_with_mismatched_hash(self):
         import hashlib
         item = self.bulletin['items'][0]

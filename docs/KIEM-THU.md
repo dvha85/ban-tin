@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## FMT-03 / TEXT-05: ranh giới số đoạn 04/11/2026
+
+- Với kho SQLite giả, kiểm thử X và Threads: văn bản gồm 20 câu phải chia thành đúng 20 đoạn; nối các trường biên tập khôi phục chính xác văn bản, mỗi đoạn hợp lệ theo bộ đếm hiện tại, có số thứ tự và URL nguồn. Với 21 câu cùng kích thước, yêu cầu chia bị từ chối; mở lại kho xác nhận revision và các đoạn đã lưu không thay đổi.
+- Trước bổ sung: 50/50 test phiên bản; sau bổ sung: 51/51, toàn bộ 203/203 Python và 46/46 JavaScript đạt. Đây là kiểm thử service với dữ liệu giả và policy nội bộ, chưa chứng minh bộ đếm Threads hay composer nền tảng thật; không thay thế QA giao diện.
+
 ## DOC-01 / QA-01: lệnh kiểm thử JavaScript 04/11/2026
 
 - Bổ sung `tests/legacy-save-ui.test.js` vào lệnh hiện hành trong README và tài liệu này; trước đó lệnh bỏ sót ba test về lưu bản nháp cũ.
