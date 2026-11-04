@@ -145,7 +145,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/':
                 self.respond(200, (STATIC / 'index.html').read_bytes(), 'text/html; charset=utf-8', {
                     'Set-Cookie': f'{self.server.cookie_name}={self.server.session_key}; HttpOnly; SameSite=Strict; Path=/'})
-            elif path in ('/static/app.js', '/static/app.css', '/static/favicon.svg'):
+            elif path in ('/static/app.js', '/static/draft-publication.js', '/static/app.css', '/static/favicon.svg'):
                 filename = path.rsplit('/', 1)[1]
                 content_type = {'js': 'text/javascript; charset=utf-8', 'css': 'text/css; charset=utf-8',
                                 'svg': 'image/svg+xml'}[filename.rsplit('.', 1)[1]]

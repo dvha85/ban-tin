@@ -199,7 +199,7 @@ function renderDrafts() {
   });
 }
 function canLeaveDraft() {
-  return !(app.dirty || app.reviewDirty) || window.confirm('Có thay đổi chưa lưu. Bạn muốn bỏ phần chưa lưu để mở bài khác?');
+  return !(app.dirty || app.reviewDirty || hasPendingPublicationUrl(app.draft, $('post-url'))) || window.confirm('Có thay đổi chưa lưu. Bạn muốn bỏ phần chưa lưu để mở bài khác?');
 }
 async function createDraft(articleId) {
   if (app.busy) return toast('Đang lưu thao tác trước. Vui lòng chờ.');
@@ -222,6 +222,7 @@ async function openDraft(draft) {
   view('drafts');
 }
 async function setDraft(draft) {
+  bindPublicationFields(app.draft, draft, $('post-url'), $('published-link'));
   app.draft = structuredClone(draft);
   const stateIndex = app.state.drafts.findIndex(item => item.id === draft.id);
   if (stateIndex < 0) app.state.drafts.unshift(structuredClone(draft));
@@ -286,7 +287,6 @@ function updateEditorMeta() {
   $('metrics-section').hidden = draft.status !== 'published';
   $('review-summary').textContent = app.dirty ? 'Cần lưu nội dung trước khi kiểm tra và duyệt.' :
     `${draft.title || '(Chưa có tiêu đề)'}\nPage: ${draft.page_name || '(Chưa nhập tên Page)'}\n${labelCategory(draft.category)} · ${draft.body.length} ký tự · ${draft.sources.length} nguồn`;
-  if (draft.post_url) $('published-link').href = draft.post_url;
   $('add-source').disabled = draft.status === 'published' || $('source-fields').children.length >= 8;
 }
 function getSources() {
@@ -556,10 +556,13 @@ listen($('download-export'), 'click', () => {
   if (app.exportId !== null) window.location.assign(`/api/drafts/${app.exportId}/export`);
 });
 listen($('mark-published'), 'click', async () => {
-  if (!window.confirm('Bạn xác nhận đã TỰ đăng đúng bản duyệt lên đúng Page? Ứng dụng chỉ ghi nhận, không kiểm tra Facebook.')) return;
+  if (!app.draft || app.draft.status !== 'approved' || app.dirty) throw new Error('Hãy chọn bản đã duyệt và lưu các thay đổi trước.');
+  const url = $('post-url').value.trim();
+  if (!url) throw new Error('Hãy nhập liên kết bài đã đăng trên Facebook.');
+  if (!window.confirm(`Xác nhận đã tự đăng bài “${app.draft.title}” lên ${app.draft.page_name}?\nLiên kết: ${url}\nỨng dụng chỉ ghi nhận, không kiểm tra Facebook.`)) return;
   await mutation(async () => {
     const draft = await api(`/api/drafts/${app.draft.id}/published`, {
-      revision: app.draft.revision, post_url: $('post-url').value});
+      revision: app.draft.revision, post_url: url});
     await setDraft(draft);
     await loadState();
     toast('Đã ghi nhận lời xác nhận của bạn. Bản nội dung này được giữ nguyên.');
@@ -588,6 +591,6 @@ listen($('save-metrics'), 'click', () => mutation(async () => {
   toast('Đã lưu số liệu do bạn nhập.');
 }));
 window.addEventListener('beforeunload', event => {
-  if (app.dirty || app.reviewDirty) { event.preventDefault(); event.returnValue = ''; }
+  if (app.dirty || app.reviewDirty || hasPendingPublicationUrl(app.draft, $('post-url'))) { event.preventDefault(); event.returnValue = ''; }
 });
 loadState().then(poll).catch(error => toast(error.message, true));

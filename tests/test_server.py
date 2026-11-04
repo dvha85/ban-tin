@@ -57,6 +57,15 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.request('GET', '/', headers={'Host': 'evil.example'})[0], 403)
         self.assertEqual(self.request('GET', '/static/../service.py')[0], 404)
 
+    def test_publication_helper_is_loaded_before_app(self):
+        status, _, page = self.request('GET', '/')
+        self.assertEqual(status, 200)
+        self.assertLess(page.index(b'/static/draft-publication.js'), page.index(b'/static/app.js'))
+        status, headers, script = self.request('GET', '/static/draft-publication.js')
+        self.assertEqual(status, 200)
+        self.assertIn('text/javascript', headers['Content-Type'])
+        self.assertIn(b'bindPublicationFields', script)
+
     def test_security_headers_and_import_roundtrip(self):
         headers = self.session()
         status, response_headers, body = self.request('GET', '/', headers=headers)
