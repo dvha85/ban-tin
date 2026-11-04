@@ -2,6 +2,8 @@
 
 ## QA-02: phản hồi ghi nhận bị ngắt 04/11/2026
 
+- Phản hồi 5xx của POST: test JavaScript mô phỏng 503 trước sửa không gắn cờ kết quả chưa rõ; sau sửa có cờ và thông báo trung tính, GET không mang cờ, 409 vẫn giữ đích xung đột. Các handler ghi nhận/số liệu/đính chính dùng cờ để yêu cầu đối soát. Hồi quy sau sửa đạt 183 Python, 37 JavaScript. Đây là test giả lập response, chưa tiêm 5xx sau commit qua HTTP hay trình duyệt và không chứng minh mọi lỗi hệ thống.
+
 - Smoke trình duyệt tích hợp trên SQLite fixture riêng, server tiêm ngắt socket sau commit: nhập số liệu X 123 lượt xem, 0 lượt thích; cảnh báo hiện và giữ giá trị. Retry cùng nội dung hiển thị một lượt số liệu, với các trường còn lại chưa biết. Sau đó thử đính chính URL giả; cảnh báo hiện và giữ lý do/URL. Phát hiện dòng “đính chính chưa lưu” gây hiểu nhầm khi kết quả chưa rõ: test mới thất bại trước sửa; sau sửa hiển thị “đính chính đang đối soát”, thẻ khác thấy URL mới và một mục lịch sử. Nút bỏ được đổi thành “Bỏ nội dung biểu mẫu”, xác nhận nhãn qua cây giao diện. Hồi quy sau sửa 183 Python, 36 JavaScript đạt. Đây là các trường hợp tiêm lỗi riêng, không chứng minh mọi lỗi mạng hay dữ liệu vận hành.
 
 - PUB-04 / đính chính: mô phỏng lỗi kết quả chưa rõ tại handler giao diện. Trước sửa thông báo số liệu không nói rõ khả năng đã lưu; sau sửa, số liệu và đính chính hiển thị cảnh báo đối soát, giữ đầu vào. Test số liệu kiểm tra retry cùng nội dung dùng cùng khóa, đổi nội dung dùng khóa mới; test đính chính kiểm tra giữ lý do/URL. Đây là test DOM/API giả, chưa smoke cảnh báo trên trình duyệt hoặc thử mọi lỗi mạng. Hồi quy trước và sau sửa đều đạt 183 Python, 36 JavaScript; test cảnh báo mới thất bại trước sửa.

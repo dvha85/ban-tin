@@ -52,7 +52,10 @@ async function api(path, body) {
   }
   if (!response.ok) {
     if ((response.status === 401 || response.status === 403) && app.state) $('session-recovery').hidden = false;
-    const error = new Error(result.error || 'Chưa thực hiện được. Hãy giữ bản đang sửa và thử lại.');
+    const unknown = body !== undefined && response.status >= 500;
+    const error = new Error(unknown ? 'Máy chủ gặp lỗi khi xử lý yêu cầu. Hãy giữ nội dung đang nhập.' :
+      result.error || 'Chưa thực hiện được. Hãy giữ bản đang sửa và thử lại.');
+    if (unknown) error.outcomeUnknown = true;
     error.target = result.target;
     throw error;
   }

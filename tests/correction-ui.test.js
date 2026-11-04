@@ -206,6 +206,25 @@ test('unreadable response body marks a mutation outcome as unknown', async () =>
     error => error.outcomeUnknown === true);
 });
 
+test('server failure marks a mutation outcome as unknown without changing conflict errors', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  let status = 503;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    requestJson: JSON.stringify, fetch: async () => ({ok: false, status, headers: {get: () => 'application/json'},
+      json: async () => ({error: 'Lỗi thử', target: {kind: 'publication'}})}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  await assert.rejects(vm.runInContext("api('/api/variants/3/publications', {url: 'fixture'})", context),
+    error => error.outcomeUnknown === true && error.message.includes('Máy chủ gặp lỗi'));
+  await assert.rejects(vm.runInContext("api('/api/state')", context), error => error.outcomeUnknown !== true);
+  status = 409;
+  await assert.rejects(vm.runInContext("api('/api/variants/3/publications', {url: 'fixture'})", context),
+    error => error.outcomeUnknown !== true && error.target.kind === 'publication');
+});
+
 test('publication retry reuses its key but a later new recording gets a new key', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

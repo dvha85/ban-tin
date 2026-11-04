@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> QA-02: phản hồi HTTP 5xx của thao tác ghi nay được coi là kết quả chưa rõ, để phần ghi nhận/số liệu/đính chính hướng dẫn đối soát. Test JavaScript mô phỏng 503 và 409; chưa smoke 5xx sau commit trên trình duyệt. BASE-03 vẫn mở vì tài liệu kỹ thuật Threads tiếp tục trả 429. Xem `KIEM-THU.md`.
+
 > QA-02 ngày 04/11: trên trình duyệt và kho giả, ngắt phản hồi sau commit số liệu và đính chính; cảnh báo hiển thị, giữ nội dung, retry số liệu không tạo lượt trùng và thẻ khác thấy liên kết đính chính. Đã sửa nhãn đính chính khi kết quả chưa rõ; QA-02 vẫn mở cho các trường hợp còn lại. Chi tiết tại `KIEM-THU.md`.
 
 > QA-02 / PUB-04: bổ sung cảnh báo kết quả chưa rõ cho nhập số liệu và đính chính khi không nhận được phản hồi; giữ nội dung đang nhập để đối soát. Test handler giả và smoke hai trường hợp tiêm lỗi trên trình duyệt đạt; QA-02 vẫn mở. Xem `KIEM-THU.md`.
