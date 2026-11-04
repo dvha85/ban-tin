@@ -634,6 +634,8 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | 04/11/2026 | DIG-02 / QA-02 | Đang làm | Kho giả trên mã `3212a4f`: nút lưu trữ hiện và mở cảnh báo có tên bản tin; SQLite chỉ có sự kiện tạo | Công cụ bị kẹt tại hộp xác nhận; chưa xác nhận lưu trữ hoặc kiểm tra khôi phục trên trình duyệt |
 
+| 04/11/2026 | FMT-02 / QA-02 | Đang làm | Trình duyệt tích hợp, kho giả trên mã `6f9e7dc`: hai thẻ mở cùng bản tin; lưu tiêu đề ở thẻ hai, thẻ một xem trước đoạn chưa lưu và thấy cảnh báo, đóng hộp vẫn giữ nội dung | Chỉ một tình huống đồng thời; QA-02 và xác minh policy nền tảng vẫn mở |
+
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
 ## 12. Sổ quyết định

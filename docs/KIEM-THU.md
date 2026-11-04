@@ -2,6 +2,7 @@
 
 ## FMT-02 / QA-02: cảnh báo xem trước khi bản tin gốc đã đổi 04/11/2026
 
+- Trên trình duyệt tích hợp với server mã `6f9e7dc` và kho minh họa SQLite tạm, mở cùng bản tin ở hai thẻ; thẻ một chọn phiên bản X giả ở revision bản tin 1, thẻ hai sửa tiêu đề và lưu thành revision 2. Thẻ một nhập nội dung đoạn chưa lưu rồi bấm xem trước: hộp xem trước hiện nội dung mới nhập, nguồn giả và cảnh báo sao chép nội dung chưa lưu trước khi mở lại bản tin. Sau khi đóng hộp, nội dung chưa lưu vẫn còn trong ô. Đây là một tình huống UI với dữ liệu giả, không chứng minh mọi tổ hợp đồng thời hoặc toàn bộ QA-02.
 - Khi bản tin được sửa ở cửa sổ khác sau lúc mở phiên bản, server trả `needs_update: true` cho preview nhưng hộp xem trước trước đây không hiển thị thông tin đó. Test handler với DOM/API giả tái hiện cảnh báo bị thiếu trước sửa; sau sửa hộp xem trước nhắc sao chép nội dung chưa lưu trước khi mở lại bản tin, rồi kiểm tra trước khi duyệt. Khi `needs_update: false` không hiện cảnh báo này.
 - Test service `test_approved_export_matches_preview_and_changes_invalidate` đối chiếu `needs_update` trước và sau khi sửa bản tin, đồng thời xác nhận export cũ bị chặn. Toàn bộ Python 195/195, JavaScript 44/44 đạt. Chưa smoke tình huống hai cửa sổ qua trình duyệt; đây là cảnh báo bổ sung, không thay cho cổng duyệt/export phía server.
 
