@@ -278,3 +278,9 @@ python -m newsroom --collect
 - Xác minh tiến trình cổng 18769 được khởi tạo từ `VariantTests.setUp()` với kho thử và URL giả. Trên kho này đã tạo phiên bản Facebook, lưu tên và nội dung giả, xác nhận và lưu năm mục checklist.
 - Nút duyệt lần lượt báo thiếu tên/nội dung, thiếu checklist, rồi thiếu nội dung, ghi chú và xác nhận kiểm chứng của các mục. Nội dung giả vẫn hiển thị sau khi lưu và khi gặp các thông báo này. Không có bài đăng mạng xã hội.
 - Đây là kiểm tra một nhánh chặn duyệt trên giao diện, chưa kiểm tra thông báo lỗi chi tiết từ server, khôi phục phiên sau khởi động lại, clipboard, bàn phím hoặc các tình huống kết quả ghi không rõ. QA-02 tiếp tục mở.
+
+### 04/11/2026 — Bàn phím và cảnh báo chưa lưu (QA-02)
+
+- Trên cùng server fixture cổng 18769, sửa nội dung phiên bản Facebook #2 mà chưa lưu rồi chọn bản tin #1: trình duyệt hiện hộp xác nhận “Bản tin có thay đổi chưa lưu. Bỏ thay đổi và mở bản khác?”. Công cụ bị gián đoạn tại hộp thoại; chưa xác minh được chọn hủy, nội dung sau hủy hay việc chuyển bản tin. Không coi đây là lỗi ứng dụng chỉ từ kết quả đó.
+- Trên tab mới cùng fixture, chọn bản tin #1 rồi dùng phím xuống và Enter trên danh sách phiên bản: giao diện mở phiên bản X và hiển thị hai đoạn. Enter trên nút sao chép đoạn 2 cho thông báo đã sao chép; tuy nhiên API clipboard ảo trả chuỗi rỗng và thao tác dán của công cụ báo clipboard ảo không có dữ liệu. Chưa xác minh được nội dung clipboard trong lượt này hoặc kết luận nguyên nhân thuộc ứng dụng hay công cụ.
+- Đây chỉ là hai thao tác bàn phím và một nhánh cảnh báo; chưa hoàn thành kiểm thử điều hướng bằng bàn phím, clipboard, rời trang hoặc khôi phục phiên. QA-02 tiếp tục mở.
