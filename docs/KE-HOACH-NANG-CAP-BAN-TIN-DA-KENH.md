@@ -677,6 +677,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 04/11/2026 | BASE-03 / FMT-02 | Đang làm | Sửa bộ đếm X giữ cả CR và LF thay vì gộp CRLF; test tái hiện 280/281 và chặn duyệt, tăng policy v5 và giữ archive v4 | Chưa kiểm tra composer X thực tế hoặc quy tắc Threads; policy dùng chung nên bản duyệt cũ ở cả ba kênh cần xem lại |
 | 05/11/2026 | APR-03 / TEXT-01 | Đang làm | Nút tải đối chiếu ID duyệt và toàn bộ đoạn với export hợp lệ, chặn khi có thay đổi chưa lưu hoặc đã phát hiện đổi kho; test DOM giả 51/51, Python 207/207 | Chưa smoke tải tệp trên trình duyệt với mã mới; không loại bỏ thay đổi sau phản hồi export. API tải trực tiếp không có trạng thái giao diện |
 | 05/11/2026 | APR-03 / TEXT-01 / QA-02 | Đang làm | Trình duyệt tích hợp với SQLite giả: tải X hai đoạn, đối chiếu tệp UTF-8 với màn hình; chặn khi tiêu đề chưa lưu và khi thẻ khác sửa bản tin làm hủy duyệt | Chưa thử duyệt lại ở thẻ khác hoặc thay đổi sau phản hồi export; không suy rộng cho mọi trình duyệt hay nền tảng |
+| 05/11/2026 | APR-03 / APPROVE-05 / QA-02 | Đang làm | Hai thẻ trên kho giả: thẻ thứ hai sửa và duyệt lại X; thẻ cũ từ chối tải và sao chép đoạn cũ, thẻ mới tải tệp đúng nội dung và hai nguồn | Chỉ một trường hợp, không loại bỏ thay đổi sau phản hồi export; không suy rộng cho mọi trình duyệt hay nền tảng |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
