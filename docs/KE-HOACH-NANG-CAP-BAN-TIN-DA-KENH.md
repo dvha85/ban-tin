@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> DIG-02 / QA-02 ngày 05/11: chuyển xác nhận bỏ nguồn và bỏ mục vào trang, kiểm tra thay đổi chưa lưu và ngữ cảnh trước khi ghi. Hồi quy đạt; Edge trên kho giả đã thử mở/hủy hai xác nhận. Phạm vi và phần chưa thử tại `KIEM-THU.md`; QA-02 vẫn mở.
+
 > DIG-03 / QA-02 ngày 04/11: chọn 1–3 nguồn trong hộp của ứng dụng cho thao tác tạo bản tin, thêm mục và sao chép bài cũ. Hồi quy và thử tạo bản tin trên Edge với kho giả đạt trong phạm vi ghi tại `KIEM-THU.md`; QA-02 vẫn mở.
 
 > DIG-03 / QA-02 ngày 04/11: thay ba hộp thoại thêm nguồn bằng biểu mẫu trong trang, giữ nội dung khi lỗi và nhắc đối chiếu nếu kết quả ghi chưa rõ. Edge trên kho giả đã thử URL sai, thêm nguồn đúng và đổi thứ tự hai mục; nguồn vẫn thuộc mục ban đầu. Chi tiết và giới hạn tại `KIEM-THU.md`.

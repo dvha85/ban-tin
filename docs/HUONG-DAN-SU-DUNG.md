@@ -10,6 +10,8 @@
 
 Để thêm nguồn cho một mục, chọn **Bổ sung nguồn**, nhập URL HTTPS, tiêu đề và ghi chú trong biểu mẫu, rồi chọn **Xác nhận thêm nguồn**. Khi có lỗi, nội dung vẫn ở trong biểu mẫu; sửa lại hoặc chọn **Hủy thêm nguồn**. Nếu kết nối gián đoạn và chưa rõ nguồn đã được thêm hay chưa, giữ nội dung và kiểm tra bản tin ở thẻ khác trước khi thử lại. Lưu hoặc bỏ các phần đang sửa khác trước khi thêm nguồn.
 
+Để bỏ nguồn hoặc mục, chọn nút tương ứng và đọc tên mục, liên kết trong vùng xác nhận trước khi chọn **Xác nhận bỏ nguồn** hoặc **Xác nhận bỏ mục**. Có thể chọn **Hủy** để giữ nguyên. Hãy lưu hoặc bỏ các thay đổi khác trước; khi mất kết nối và chưa rõ kết quả, kiểm tra bản tin ở thẻ khác trước khi thử lại.
+
 Để dọn danh sách, mở bản tin và chọn **Lưu trữ bản tin**, kiểm tra tên rồi chọn **Xác nhận lưu trữ** hoặc **Hủy lưu trữ** ngay trên trang. Bản tin được ẩn khỏi danh sách mặc định; đánh dấu **Hiện bản tin đã lưu trữ**, mở bản tin và chọn **Khôi phục bản tin**, rồi xác nhận để đưa về danh sách đang làm. Lưu hoặc bỏ thay đổi đang nhập trước khi lưu trữ hoặc khôi phục. Nội dung, bản duyệt, URL, số liệu và lịch sử vẫn được giữ; lưu trữ không khóa chỉnh sửa khi mở lại. Thống kê bao gồm cả bản tin lưu trữ. Nếu mất kết nối và chưa rõ kết quả, kiểm tra lại danh sách trước khi thử lại.
 
 Để ghi số liệu, chọn **Nhập số liệu** ở đúng đoạn đã ghi nhận. Điền từng ô bằng số nguyên không âm; để trống khi chưa biết, vì `0` là giá trị đã biết. Kiểm tra thời điểm quan sát có múi giờ và thêm ghi chú nếu cần, rồi chọn **Lưu số liệu**. Giá trị đang nhập được giữ khi có lỗi; có thể sửa và thử lại hoặc chọn **Bỏ số liệu chưa lưu**. Nếu mất kết nối và chưa rõ kết quả, kiểm tra mục **Số liệu đã lưu** trước khi thử lại, nhất là sau khi tải lại trang.

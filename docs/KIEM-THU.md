@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## DIG-02 / QA-02: xác nhận bỏ nguồn và mục 05/11/2026
+
+- Thay hộp xác nhận trình duyệt bằng vùng xác nhận có tên mục và URL nguồn. Khi mở và khi xác nhận đều kiểm tra nội dung chưa lưu; khi xác nhận đối chiếu lại ngữ cảnh và revision. Nếu kết quả ghi chưa rõ, thông báo kiểm tra ở thẻ khác; nếu ghi thành công nhưng danh sách tải lỗi thì báo riêng. Máy chủ vẫn kiểm tra revision và giới hạn số mục/nguồn.
+- Test handler DOM giả thất bại trước sửa do chưa có xác nhận trong trang. Sau sửa đã thử hủy hai thao tác, chặn nội dung chưa lưu, revision đổi, kết quả ghi chưa rõ, danh sách tải lỗi sau ghi thành công và payload hai thao tác. Hồi quy trước sửa 205/205 Python và 49/49 JavaScript; sau sửa 205/205 Python và 50/50 JavaScript, kiểm tra cú pháp đạt.
+- Edge trên SQLite giả: mở và hủy từng xác nhận, quan sát tên mục/URL và tiêu điểm trở về nút tương ứng. Đọc SQLite chỉ đọc sau đó thấy hai mục còn đủ 2 và 1 nguồn, revision bản tin vẫn 1. Chưa xác nhận thao tác xóa qua giao diện trong lượt này; handler được kiểm tra bằng DOM giả và quy tắc backend có test riêng. Chưa thử trình đọc màn hình hoặc toàn bộ QA-02.
+
 ## DIG-03 / QA-02: chọn nguồn trong ứng dụng 04/11/2026
 
 - Với tin có hơn ba nguồn, hộp chọn có nhãn cho phép đánh dấu 1–3 nguồn; hủy hoặc Escape dừng thao tác. Áp dụng khi tạo bản tin, thêm mục và sao chép bài cũ. Tin có tối đa ba nguồn giữ cách xử lý cũ; máy chủ vẫn kiểm tra lựa chọn.

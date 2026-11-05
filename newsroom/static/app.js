@@ -618,6 +618,56 @@ function markVariantDirty(area, event) {
     app.bulletinDirty = true; area.dataset.dirty = 'true';
   }
 }
+function removalConfirmation(trigger, bulletin, item, source = null) {
+  const snapshot = {bulletinId: bulletin.id, bulletinRevision: bulletin.revision, itemId: item.id,
+    itemRevision: item.revision, itemTitle: item.title, sourceId: source?.source_id, sourceUrl: source?.url};
+  const panel = node('div', 'notice'); panel.hidden = true;
+  panel.setAttribute('role', 'group');
+  panel.setAttribute('aria-label', source ? 'Xác nhận bỏ nguồn' : 'Xác nhận bỏ mục');
+  const message = source ? `Bỏ nguồn ${source.url} khỏi mục “${item.title}”?` :
+    `Bỏ mục “${item.title}” khỏi bản tin này?`;
+  const confirm = node('button', 'button secondary', source ? 'Xác nhận bỏ nguồn' : 'Xác nhận bỏ mục');
+  const cancel = node('button', 'button secondary', source ? 'Hủy bỏ nguồn' : 'Hủy bỏ mục');
+  const checkContext = () => {
+    if (app.bulletin !== bulletin || bulletin.id !== snapshot.bulletinId || bulletin.revision !== snapshot.bulletinRevision ||
+        !bulletin.items.includes(item) || item.id !== snapshot.itemId || item.revision !== snapshot.itemRevision ||
+        item.title !== snapshot.itemTitle || (source && (!item.sources.includes(source) ||
+          source.source_id !== snapshot.sourceId || source.url !== snapshot.sourceUrl))) {
+      panel.hidden = true;
+      throw new Error('Bản tin đã thay đổi. Hãy mở lại và xác nhận thao tác.');
+    }
+    if (app.bulletinDirty || hasPendingBulletinUrl() || hasPendingPublicationEdit())
+      throw new Error('Hãy lưu hoặc bỏ thay đổi trước khi tiếp tục.');
+  };
+  listen(trigger, 'click', () => {
+    if (app.busy || trigger.disabled) return;
+    checkContext(); panel.hidden = false; confirm.focus();
+  });
+  listen(cancel, 'click', () => {
+    if (app.busy || panel.hidden) return;
+    panel.hidden = true; trigger.focus();
+  });
+  bulletinAction(confirm, async () => {
+    if (panel.hidden) return;
+    checkContext();
+    let updated;
+    try {
+      updated = source ? await api(`/api/bulletins/${snapshot.bulletinId}/items/${snapshot.itemId}/save`, {
+        bulletin_revision: snapshot.bulletinRevision, revision: snapshot.itemRevision, remove_source_id: snapshot.sourceId}) :
+        await api(`/api/bulletins/${snapshot.bulletinId}/items`, {revision: snapshot.bulletinRevision, remove_item_id: snapshot.itemId});
+    } catch (error) {
+      if (error.outcomeUnknown) throw new Error('Chưa rõ thao tác đã được lưu hay chưa. Hãy kiểm tra bản tin ở thẻ khác trước khi thử lại.');
+      throw error;
+    }
+    app.bulletin = updated; renderBulletin();
+    const done = source ? 'Đã bỏ nguồn; cần kiểm chứng lại mục.' : 'Đã bỏ mục khỏi bản tin.';
+    try { await loadBulletinList(); }
+    catch (_) { toast(`${done} Chưa tải lại được danh sách bản tin.`, true); return; }
+    toast(done);
+  });
+  panel.append(node('p', '', message), confirm, cancel);
+  return panel;
+}
 function renderBulletin(focusVariantSelector = false) {
   const bulletin = app.bulletin;
   const editor = $('bulletin-editor');
@@ -745,14 +795,8 @@ function renderBulletin(focusVariantSelector = false) {
       if (warnings.length) sources.append(node('p', 'small-note', `Cần kiểm tra: ${warnings.join(' ')} Đây là nhắc biên tập, không đánh giá độ tin cậy.`));
       const removeSource = node('button', 'text-button', 'Bỏ nguồn này');
       removeSource.disabled = item.sources.length <= 1;
-      bulletinAction(removeSource, async () => {
-        if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi bỏ nguồn.');
-        if (!window.confirm(`Bỏ nguồn ${source.url} khỏi mục này?`)) return;
-        app.bulletin = await api(`/api/bulletins/${bulletin.id}/items/${item.id}/save`,
-          {bulletin_revision: bulletin.revision, revision: item.revision, remove_source_id: source.source_id});
-        renderBulletin(); await loadBulletinList(); toast('Đã bỏ nguồn; cần kiểm chứng lại mục.');
-      });
-      sources.append(removeSource);
+      removeSource.setAttribute('aria-label', `Bỏ nguồn ${source.url} khỏi mục ${item.title}`);
+      sources.append(removeSource, removalConfirmation(removeSource, bulletin, item, source));
     });
     section.append(node('p', 'small-note', 'Nguồn đã lưu cho mục:'), sources);
     const checkLabel = node('label', 'bulletin-check');
@@ -824,13 +868,8 @@ function renderBulletin(focusVariantSelector = false) {
     actions.append(addSource);
     const remove = node('button', 'button secondary', 'Bỏ mục khỏi bản tin');
     remove.disabled = bulletin.items.length <= 1;
-    bulletinAction(remove, async () => {
-      if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi bỏ mục.');
-      if (!window.confirm(`Bỏ mục “${item.title}” khỏi bản tin này?`)) return;
-      app.bulletin = await api(`/api/bulletins/${bulletin.id}/items`, {revision: bulletin.revision, remove_item_id: item.id});
-      renderBulletin(); await loadBulletinList(); toast('Đã bỏ mục khỏi bản tin.');
-    });
-    actions.append(remove);
+    remove.setAttribute('aria-label', `Bỏ mục ${item.title} khỏi bản tin`);
+    actions.append(remove, removalConfirmation(remove, bulletin, item));
     for (const [label, delta] of [['↑', -1], ['↓', 1]]) {
       const move = node('button', 'button secondary', label); move.disabled = position + delta < 0 || position + delta >= bulletin.items.length;
       move.dataset.moveDirection = delta < 0 ? 'up' : 'down';

@@ -127,6 +127,60 @@ test('source selection is awaited by create, add, and legacy copy actions', asyn
   assert.ok(!errors.some(message => /Unexpected|error/i.test(message)));
 });
 
+test('removing a source or item requires an in-page confirmation and rechecks pending changes', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = [], messages = [];
+  let outcomeUnknown = false, listFails = false;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    Event: class { constructor(type) { this.type = type; } }, calls, messages, outcomeUnknown: () => outcomeUnknown, listFails: () => listFails,
+    fetch: () => new Promise(() => {}), sourceWarnings: () => [],
+    window: {location: {search: ''}, addEventListener() {}, confirm() { throw new Error('Unexpected native confirm'); }},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.state = {articles: [], bulletin_usage: {}};
+    const source = (id, url) => ({source_id: id, url, title: id, date_kind: 'unknown'});
+    const item = (id, sources) => ({id, article_id: id, revision: 2, title: 'Mục ' + id, body: '', angle: '',
+      verification_note: '', verified: false, claims: [], sources});
+    app.bulletin = {id: 7, revision: 4, title: 'Bản thử', edition_date: '2026-11-04', introduction: '', conclusion: '',
+      items: [item(5, [source('a', 'https://example.com/a'), source('b', 'https://example.com/b')]),
+              item(6, [source('c', 'https://example.com/c')])]};
+    toast = message => messages.push(message); loadBulletinList = async () => { if (listFails()) throw new Error('list'); }; renderVariants = async () => {};
+    api = async (path, body) => { calls.push({path, body}); if (outcomeUnknown()) {
+      const error = new Error('Mất kết nối'); error.outcomeUnknown = true; throw error; } return app.bulletin; };
+    renderBulletin();`, context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const find = (root, text) => walk(root).find(el => el.tagName === 'button' && el.textContent === text);
+  const click = async el => { assert.ok(el); el.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  let editor = get('bulletin-editor');
+  await click(find(editor, 'Bỏ nguồn này'));
+  let confirm = find(editor, 'Xác nhận bỏ nguồn'), cancel = find(editor, 'Hủy bỏ nguồn');
+  assert.ok(confirm && cancel); assert.equal(confirm.focused, true); assert.equal(calls.length, 0);
+  await click(cancel); assert.equal(calls.length, 0);
+  await click(find(editor, 'Bỏ nguồn này'));
+  vm.runInContext('app.bulletinDirty = true', context);
+  await click(confirm); assert.equal(calls.length, 0); assert.match(messages.at(-1), /lưu/i);
+  vm.runInContext('app.bulletinDirty = false', context);
+  vm.runInContext('hasPendingPublicationEdit = () => true', context);
+  await click(confirm); assert.equal(calls.length, 0); assert.match(messages.at(-1), /lưu/i);
+  vm.runInContext('hasPendingPublicationEdit = () => false; app.bulletin.revision = 5', context);
+  await click(confirm); assert.equal(calls.length, 0); assert.match(messages.at(-1), /đã thay đổi/i);
+  vm.runInContext('app.bulletin.revision = 4', context);
+  await click(find(editor, 'Bỏ nguồn này'));
+  outcomeUnknown = true; await click(confirm);
+  assert.equal(calls.length, 1); assert.match(messages.at(-1), /chưa rõ/i);
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[0].body)), {bulletin_revision: 4, revision: 2, remove_source_id: 'a'});
+  outcomeUnknown = false; listFails = true;
+  await click(confirm); assert.equal(calls.length, 2); assert.match(messages.at(-1), /Đã bỏ nguồn.*chưa tải lại/i);
+  editor = get('bulletin-editor'); listFails = false;
+  await click(find(editor, 'Bỏ mục khỏi bản tin'));
+  confirm = find(editor, 'Xác nhận bỏ mục'); cancel = find(editor, 'Hủy bỏ mục');
+  assert.ok(confirm && cancel); await click(cancel); assert.equal(calls.length, 2);
+  await click(find(editor, 'Bỏ mục khỏi bản tin')); await click(confirm);
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[2].body)), {revision: 4, remove_item_id: 5});
+});
+
 test('inline source form keeps pending fields, blocks unrelated saves, and retains failed input', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
