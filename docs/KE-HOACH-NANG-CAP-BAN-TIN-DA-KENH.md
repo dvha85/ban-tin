@@ -727,3 +727,5 @@ Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết q
 - [API bản tin đa kênh](API-BAN-TIN-DA-KENH.md): bản đồ route và điều kiện chính của nhánh phát triển.
 
 Tài liệu này bổ sung roadmap kỹ thuật; không thay thế mô tả chức năng hiện đang có trong README cho tới khi từng mốc thực sự được triển khai và kiểm thử.
+> BASE-02 / VAR-03 / QA-02 ngày 05/11: trên kho giả hai thẻ, sau khi sửa bản tin ở thẻ thứ hai, thao tác tạo bản sao phiên bản X ở thẻ cũ báo xung đột. Đây là một tình huống giao diện; các gate vẫn mở. Xem `KIEM-THU.md`.
+
