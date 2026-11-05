@@ -626,6 +626,37 @@ test('download verifies the displayed approval and all posts and blocks unsaved 
   assert.equal(await saved[0].blob.text(), 'Một\nnguồn\n\n---\n\nHai');
 });
 
+test('retrying packet copy from fallback checks the displayed bulletin revision', async () => {
+  const elements = new Map(), writes = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  get('text-dialog').showModal = () => { get('text-dialog').open = true; };
+  get('dialog-text').select = () => {};
+  let denied = true;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    writes, fetch: () => new Promise(() => {}),
+    navigator: {clipboard: {writeText: async text => { if (denied) throw new Error('denied'); writes.push(text); }}},
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.bulletin = {id: 7, revision: 4}; let packetRevision = 4;
+    api = async () => ({text: 'Tư liệu giả', bulletin_revision: packetRevision}); toast = () => {};`, context);
+  await vm.runInContext('copyBulletinPacket(app.bulletin)', context);
+  assert.equal(get('dialog-text').value, 'Tư liệu giả');
+  assert.match(get('text-dialog-note').textContent, /kiểm tra lại/i);
+  denied = false;
+  vm.runInContext('packetRevision = 5', context);
+  get('copy-dialog').dispatchEvent({type: 'click'});
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(writes, []);
+  assert.match(get('text-dialog-note').textContent, /thay đổi/i);
+  assert.equal(get('dialog-text').value, 'Tư liệu giả');
+  vm.runInContext('packetRevision = 4', context);
+  get('copy-dialog').dispatchEvent({type: 'click'});
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(writes, ['Tư liệu giả']);
+});
+
 test('retrying copy from fallback checks the approval and leaves a visible warning if stale', async () => {
   const elements = new Map(), writes = [], messages = [];
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

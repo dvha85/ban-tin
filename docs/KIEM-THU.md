@@ -2,6 +2,8 @@
 
 ## Gói tư liệu và revision bản tin — 05/11/2026
 
+- Test handler `retrying packet copy from fallback checks the displayed bulletin revision` mô phỏng clipboard bị từ chối, mở hộp thủ công, đổi revision rồi bấm thử lại: không ghi clipboard và hiện cảnh báo, vẫn giữ gói trong ô; nếu revision khớp, thử lại sao chép được. Trước sửa hộp chưa hướng dẫn kiểm tra lại và nút dùng nguyên văn cũ. Bấm Ctrl+C trực tiếp trong ô không thể kiểm tra lại; chưa smoke trường hợp này trên trình duyệt.
+- Hồi quy sau sửa: 213/213 Python, 57/57 JavaScript; `node --check newsroom/static/app.js` đạt. Kiểm thử chạy trên fixture, không sử dụng kho vận hành.
 - Smoke trình duyệt tích hợp trên server mã `99af640`, SQLite fixture riêng: mở cùng bản tin hai mục revision 5 ở hai thẻ; lưu tiêu đề giả ở thẻ hai lên revision 6. Nút sao chép ở thẻ một báo bản tin đã thay đổi; nút ở thẻ hai báo sao chép thành công. Chưa đối chiếu nội dung clipboard, chưa thử các thay đổi trong khi request đang chờ trên trình duyệt. Server fixture đã dừng; QA-02 vẫn mở.
 - Trước sửa, hồi quy `test_bulletins.py` đạt 21/21 và `correction-ui.test.js` đạt 33/33. Test HTTP mới tái hiện phản hồi gói không có revision; sau sửa phản hồi chứa revision của cùng bản tin trong JSON gói, kể cả sau khi sửa tiêu đề. Hàm service trả văn bản cũ vẫn được giữ cho các client nội bộ.
 - Test handler kiểm tra bản tin cũ, thay đổi chưa lưu, chuyển bản tin và đổi kho trong lúc chờ đều không sao chép; trạng thái khớp sao chép đúng gói. Thử dùng DOM giả và HTTP trên SQLite tạm, chưa smoke hai thẻ trong trình duyệt. Revision chỉ đối chiếu tại thời điểm phản hồi; thay đổi xảy ra sau đó không được ngăn.

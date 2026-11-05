@@ -530,7 +530,7 @@ async function copyBulletinPacket(bulletin) {
     throw new Error('Bản tin hoặc kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
   if (result.bulletin_revision !== revision)
     throw new Error('Bản tin đã thay đổi ở cửa sổ khác. Hãy đối chiếu trước khi lấy gói tư liệu.');
-  await copy(result.text);
+  await copy(result.text, () => copyBulletinPacket(bulletin));
 }
 
 async function copy(text, retryAction = null) {

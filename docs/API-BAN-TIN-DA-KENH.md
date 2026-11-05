@@ -34,6 +34,8 @@ Danh sách và chi tiết bản tin trả thêm `archived` (boolean) và `archiv
 
 Giao diện so sánh `bulletin_revision` của gói với bản tin đang hiển thị và kiểm tra thay đổi chưa lưu, chuyển bản tin hoặc thay đổi kho trong khi chờ; nếu không khớp thì không sao chép. Đây là kiểm tra tại lúc nhận phản hồi, không ngăn bản tin thay đổi ngay sau đó. Client cũ vẫn có thể đọc `text` và phải tự đối chiếu revision nếu cần.
 
+Nếu clipboard bị từ chối, nút thử sao chép trong hộp thủ công lấy và đối chiếu lại gói; thao tác Ctrl+C trực tiếp trong ô không kiểm tra revision. Khi bản tin có thể đã thay đổi, đóng hộp và đối chiếu trước khi dùng nội dung.
+
 Các trường mục có thể gửi gồm `title`, `body`, `angle`, `verification_note`, `verified`, `claims`, `add_source`, `remove_source_id`. `claims` gồm tối đa 10 object `{text, evidence, checked}`. `add_source` gồm `url`, `title`, `summary`; mỗi mục giữ 1–3 nguồn và toàn bản tin tối đa 20 URL nguồn khác nhau. Sửa nội dung hoặc nguồn bỏ xác nhận mục và các xác nhận khẳng định; xác nhận lại sau khi lưu. Không nhầm revision bản tin với revision mục.
 
 Các giới hạn dưới đây được đối chiếu với `create_bulletin`, `save_bulletin` và `save_bulletin_item` trong `newsroom/bulletins.py`. Với những trường văn bản này, server kiểm tra độ dài chuỗi Python và ký tự NUL trước khi bỏ khoảng trắng đầu/cuối; đây là giới hạn của ứng dụng, không phải giới hạn byte UTF-8 hay của nền tảng.
