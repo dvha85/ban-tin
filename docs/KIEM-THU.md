@@ -553,3 +553,8 @@ python -m newsroom --collect
 - Đối chiếu hướng dẫn với hành vi kiểm tra lại gói ở `newsroom/static/app.js` và bằng chứng hộp sao chép thủ công đã ghi trong nhật ký. Bổ sung cách thử sao chép lại, xử lý khi bản tin đã đổi và giới hạn của `Ctrl+C` trực tiếp trong ô.
 - Chỉ cập nhật tài liệu, không thay đổi chức năng; chưa rà xong toàn bộ tài liệu theo trạng thái cuối và DOC-01 vẫn mở.
 
+### 05/11/2026 — Gói tư liệu vượt giới hạn trên giao diện (NEWS-06 / QA-02)
+
+- Trình duyệt tích hợp mở server và SQLite fixture riêng, bản tin ba mục được chuẩn bị bằng service với nội dung Unicode dài. Khi chọn **Sao chép gói tư liệu**, giao diện báo gói 74.774 byte vượt 64 KiB, liệt kê ba mục lớn và khuyên rút gọn hoặc chia bản tin; không hiển thị hộp sao chép thành công.
+- Đây là một trường hợp vượt ngưỡng, không phải kiểm tra chính xác biên qua giao diện hoặc kiểm tra request POST quá ngưỡng. Bằng chứng test service cho biên 64 KiB và HTTP cho ngưỡng request được ghi riêng; NEWS-06 và QA-02 chưa được coi là hoàn tất toàn bộ.
+

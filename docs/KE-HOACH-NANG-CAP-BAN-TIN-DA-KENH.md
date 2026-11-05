@@ -729,3 +729,5 @@ Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết q
 Tài liệu này bổ sung roadmap kỹ thuật; không thay thế mô tả chức năng hiện đang có trong README cho tới khi từng mốc thực sự được triển khai và kiểm thử.
 > BASE-02 / VAR-03 / QA-02 ngày 05/11: trên kho giả hai thẻ, sau khi sửa bản tin ở thẻ thứ hai, thao tác tạo bản sao phiên bản X ở thẻ cũ báo xung đột. Đây là một tình huống giao diện; các gate vẫn mở. Xem `KIEM-THU.md`.
 
+> NEWS-06 / QA-02 ngày 05/11: trên kho giả, giao diện báo gói tư liệu Unicode 74.774 byte vượt 64 KiB và chỉ ra các mục lớn. Chưa thử chính xác biên hoặc POST vượt ngưỡng qua giao diện; xem `KIEM-THU.md`.
+
