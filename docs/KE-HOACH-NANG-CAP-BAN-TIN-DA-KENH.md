@@ -1,6 +1,6 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
-> DIG-04 / QA-02 ngày 05/11: nút thử sao chép lại trong hộp thủ công của gói tư liệu kiểm tra lại revision; test handler mô phỏng đổi revision khi hộp mở. Ctrl+C trực tiếp trong ô không kiểm tra lại; xem `KIEM-THU.md`.
+> DIG-04 / QA-02 ngày 05/11: nút thử sao chép lại trong hộp thủ công của gói tư liệu kiểm tra lại revision; test handler và smoke trình duyệt với kho giả đã thử đổi revision khi hộp mở. Ctrl+C trực tiếp trong ô không kiểm tra lại; chưa đối chiếu clipboard ở lượt này. Xem `KIEM-THU.md`.
 
 > DIG-04 / BASE-02 ngày 05/11: API gói tư liệu trả revision từ cùng snapshot; UI từ chối sao chép khi bản tin đang hiển thị cũ hoặc trạng thái trang/kho đổi trong lúc chờ. Test HTTP và handler dùng kho giả; smoke hai thẻ kiểm tra bản cũ bị từ chối và bản mới báo sao chép thành công. Chưa đối chiếu clipboard hoặc thử thay đổi khi request chờ trên trình duyệt; các gate vẫn mở. Xem `KIEM-THU.md`.
 

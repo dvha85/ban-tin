@@ -2,6 +2,7 @@
 
 ## Gói tư liệu và revision bản tin — 05/11/2026
 
+- Smoke trình duyệt tích hợp trên mã `a83766a`, kho SQLite giả: server thử từ chối clipboard bằng `Permissions-Policy`, hộp thủ công hiển thị gói revision 5 và nhắc đối chiếu. Thẻ hai lưu tiêu đề lên revision 6; nút sao chép lại ở hộp thẻ một hiện cảnh báo bản tin thay đổi và vẫn giữ gói revision 5. Chưa đối chiếu clipboard sau nhánh này hoặc kiểm tra mọi trình duyệt; Ctrl+C trực tiếp không được kiểm tra lại. Đã dừng server thử.
 - Test handler `retrying packet copy from fallback checks the displayed bulletin revision` mô phỏng clipboard bị từ chối, mở hộp thủ công, đổi revision rồi bấm thử lại: không ghi clipboard và hiện cảnh báo, vẫn giữ gói trong ô; nếu revision khớp, thử lại sao chép được. Trước sửa hộp chưa hướng dẫn kiểm tra lại và nút dùng nguyên văn cũ. Bấm Ctrl+C trực tiếp trong ô không thể kiểm tra lại; chưa smoke trường hợp này trên trình duyệt.
 - Hồi quy sau sửa: 213/213 Python, 57/57 JavaScript; `node --check newsroom/static/app.js` đạt. Kiểm thử chạy trên fixture, không sử dụng kho vận hành.
 - Smoke trình duyệt tích hợp trên server mã `99af640`, SQLite fixture riêng: mở cùng bản tin hai mục revision 5 ở hai thẻ; lưu tiêu đề giả ở thẻ hai lên revision 6. Nút sao chép ở thẻ một báo bản tin đã thay đổi; nút ở thẻ hai báo sao chép thành công. Chưa đối chiếu nội dung clipboard, chưa thử các thay đổi trong khi request đang chờ trên trình duyệt. Server fixture đã dừng; QA-02 vẫn mở.
