@@ -737,3 +737,5 @@ Tài liệu này bổ sung roadmap kỹ thuật; không thay thế mô tả ch�
 
 > VAR-02 / VAR-04 ngày 05/11: test service tạo bản sao từ bản X đã sửa, giữ nội dung và nguồn; lưu revision cũ bị từ chối, mở lại kho giữ cả bản gốc và bản lưu thắng. 56/56 test phiên bản đạt; chưa mô phỏng hai lượt lưu đồng thời hay qua UI. Xem `KIEM-THU.md`.
 
+> VAR-04 / APR-04 ngày 05/11: hai luồng service lưu cùng revision trên SQLite giả; một lượt thành công, một lượt conflict và mở lại giữ nội dung thắng. Bộ phiên bản 57/57 đạt; chưa thử hai thẻ hoặc mọi loại sửa. Xem `KIEM-THU.md`.
+

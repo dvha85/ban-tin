@@ -578,3 +578,8 @@ python -m newsroom --collect
 - Test service trên SQLite giả tạo bản sao X từ bản đã chỉnh sửa, kiểm tra ID mới, nội dung, mục và nguồn. Bản sao chuyển lựa chọn nguồn mặc định thành danh sách tường minh; phép so sánh toàn bộ cấu trúc ban đầu đã được điều chỉnh theo hành vi đó. Lưu bản sao với revision hiện tại thành công; lượt lưu tiếp theo dùng revision cũ bị conflict. Mở lại kho xác nhận bản gốc và bản lưu thắng được giữ.
 - `python -m unittest discover -s tests -p test_variants.py`: 56/56 đạt. Hai lượt lưu được thực hiện tuần tự để kiểm tra revision, không mô phỏng hai thao tác đồng thời hoặc qua hai thẻ trình duyệt; các gate liên quan vẫn mở.
 
+### 05/11/2026 — Hai lượt lưu cạnh tranh (VAR-04 / APR-04)
+
+- Test service dùng hai luồng và barrier trên SQLite giả, gửi hai nội dung khác nhau cho cùng phiên bản X và cùng revision. Kết quả có đúng một lượt lưu thành công, một lượt conflict; mở lại kho thấy đúng nội dung và revision của lượt thắng.
+- `python -m unittest discover -s tests -p test_variants.py`: 57/57 đạt. Đây là một lượt cạnh tranh ở mức service, không bảo đảm cả hai thứ tự lập lịch, không thử giao diện hai thẻ hay mọi loại thay đổi; QA-02 và APR-04 vẫn mở.
+

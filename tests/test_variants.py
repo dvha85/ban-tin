@@ -872,6 +872,32 @@ class VariantTests(unittest.TestCase):
             with self.assertRaises(ValidationError):
                 self.room.export_variant(variant['id'])
 
+    def test_competing_variant_saves_have_one_winner_and_no_lost_update(self):
+        variant = self.room.create_variant(self.bulletin['id'], {'platform': 'x',
+            'account_label': 'Kênh thử', 'bulletin_revision': self.bulletin['revision']})
+        segment = {'text': 'Nội dung ban đầu.', 'item_ids': [self.bulletin['items'][0]['id']]}
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'segments': [segment]})
+        barrier = threading.Barrier(2)
+
+        def attempt(text):
+            barrier.wait(timeout=5)
+            try:
+                result = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                    'expected_bulletin_revision': self.bulletin['revision'],
+                    'segments': [{**segment, 'text': text}]})
+                return ('saved', text, result)
+            except Conflict:
+                return ('conflict', text, None)
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(attempt, ('Bản sửa thứ nhất.', 'Bản sửa thứ hai.')))
+        self.assertEqual(sorted(result[0] for result in results), ['conflict', 'saved'])
+        winner = next(result for result in results if result[0] == 'saved')
+        reopened = Newsroom(self.room.data_dir).variant(variant['id'])
+        self.assertEqual(reopened, winner[2])
+        self.assertEqual(reopened['segments'][0]['text'], winner[1])
+        self.assertEqual(reopened['revision'], variant['revision'] + 1)
+
     def test_competing_edit_and_record_keep_approval_and_publication_consistent(self):
         # Each pair uses the same revision, as two editor tabs would.
         for index in range(4):
