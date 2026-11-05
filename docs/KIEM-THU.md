@@ -558,3 +558,8 @@ python -m newsroom --collect
 - Trình duyệt tích hợp mở server và SQLite fixture riêng, bản tin ba mục được chuẩn bị bằng service với nội dung Unicode dài. Khi chọn **Sao chép gói tư liệu**, giao diện báo gói 74.774 byte vượt 64 KiB, liệt kê ba mục lớn và khuyên rút gọn hoặc chia bản tin; không hiển thị hộp sao chép thành công.
 - Đây là một trường hợp vượt ngưỡng, không phải kiểm tra chính xác biên qua giao diện hoặc kiểm tra request POST quá ngưỡng. Bằng chứng test service cho biên 64 KiB và HTTP cho ngưỡng request được ghi riêng; NEWS-06 và QA-02 chưa được coi là hoàn tất toàn bộ.
 
+### 05/11/2026 — Rà phạm vi kiến trúc (DOC-01)
+
+- Đối chiếu mô tả phạm vi, luồng và danh sách bảng với `newsroom/migrations.py` và tài liệu API. Sửa phần còn mô tả một Page như phạm vi chung: phân biệt luồng bài cũ với bản tin đa kênh đang phát triển, bổ sung các bảng schema 4 và giới hạn kiểm tra revision của client cũ.
+- Đây là rà soát tĩnh một phần tài liệu; chưa xác nhận toàn bộ tài liệu và hợp đồng, DOC-01 và BASE-02 tiếp tục mở.
+

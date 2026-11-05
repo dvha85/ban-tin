@@ -1,4 +1,4 @@
-# Thiết kế bản 0.3
+# Kiến trúc Bàn tin
 
 ## Phần mở rộng 0.4 đang phát triển
 
@@ -10,13 +10,15 @@
 
 ## Phạm vi
 
-Một người vận hành, một máy Windows, một Facebook Page công khai dưới thương hiệu riêng. Chỉ biên tập và xuất bài chữ. Không có OAuth / Meta SDK / publish worker. Kết nối model dành riêng cho trình duyệt là tùy chọn, mặc định chưa cấu hình; không dùng đăng nhập cá nhân sẵn có.
+Một người vận hành trên một máy Windows. Luồng bài cũ hướng đến một Facebook Page; phần mở rộng 0.4 đang phát triển cho phép biên tập các phiên bản chữ riêng cho Facebook, Threads và X. Nhãn đích do người dùng nhập, không chứng minh quyền quản trị tài khoản. Không có OAuth / Meta SDK / publish worker và ứng dụng không tự đăng. Kết nối model dành riêng cho trình duyệt là tùy chọn, mặc định chưa cấu hình; không dùng đăng nhập cá nhân sẵn có.
 
 Lõi: Python 3.11+, thư viện chuẩn, SQLite WAL, máy chủ HTTP chỉ bind `127.0.0.1`, HTML/CSS/JavaScript cục bộ. Không tải font, ảnh hay mã JavaScript giao diện từ CDN. Công cụ web nằm trong venv riêng (`requirements-web.txt`); Hermes dùng SDK trong môi trường đã cài của nó và hồ sơ tạm mới cho từng lượt. Máy chủ tích hợp chỉ dành cho môi trường cá nhân này, không dùng cho website công khai.
 
 ## Luồng dữ liệu
 
-Danh mục RSS/API → hoặc Crawl4AI cho nguồn web → nếu thực sự cần tương tác: hàng đợi bền vững → **người dùng xác nhận lượt model** → Hermes + Browser Use bị giới hạn → tin ứng viên + các nguồn trùng → bản nháp với ảnh chụp tư liệu → gói văn bản → **người dùng chuyển sang ChatGPT** → **người dùng nhập kết quả** → lưu → kiểm tra → duyệt phiên bản → xuất văn bản → **người dùng tự đăng Facebook** → ghi nhận lời xác nhận đã đăng / số liệu do người dùng nhập.
+Danh mục RSS/API → hoặc Crawl4AI cho nguồn web → nếu thực sự cần tương tác: hàng đợi bền vững → **người dùng xác nhận lượt model** → Hermes + Browser Use bị giới hạn → tin ứng viên và nguồn.
+
+Từ đây, luồng bài cũ tạo bản nháp một bài cho Facebook. Luồng 0.4 tạo bản tin có một hoặc nhiều mục, giữ snapshot nguồn và cho phép tạo phiên bản riêng theo kênh. Người dùng tự biên tập hoặc chuyển gói tư liệu sang công cụ AI rồi nhập lại kết quả; sau đó kiểm chứng, duyệt, xuất và **tự đăng**. URL và số liệu được ghi theo thông tin người dùng nhập, không được ứng dụng xác minh với nền tảng.
 
 Nguồn danh mục dùng adapter đã cấu hình. Khi người dùng thêm website, dò RSS/Atom có giới hạn cùng tên miền trước, không tự dò API. Web chỉ được chọn rõ với phạm vi đường dẫn; tầng AI vẫn cần xác nhận riêng. Lỗi cài đặt/mạng/chặn truy cập không tự chuyển thành lượt AI.
 
@@ -34,7 +36,7 @@ Nguồn danh mục dùng adapter đã cấu hình. Khi người dùng thêm webs
 - `newsroom/static/`: giao diện, không chứa khóa API.
 - `tests/`: kiểm thử không gọi mạng xã hội / API AI.
 
-SQLite gồm `articles`, `article_sources`, `drafts`, `history`, `source_health`, `metrics`, `collection_settings`, `collection_jobs`, `collection_evidence`, `collection_attempts` và `custom_sources` (schema3). Mỗi thao tác mở một kết nối có thời hạn, đóng rõ ràng sau khi dùng để tránh giữ tệp trên Windows. Các thao tác sửa/duyệt dùng `BEGIN IMMEDIATE` + revision để không mất cập nhật giữa hai cửa sổ.
+Schema 3 có `articles`, `article_sources`, `drafts`, `history`, `source_health`, `metrics`, `collection_settings`, `collection_jobs`, `collection_evidence`, `collection_attempts` và `custom_sources`. Schema 4 bổ sung `bulletins`, `bulletin_items`, `content_variants`, `variant_approvals`, `publications`, `publication_events`, `publication_metrics` và `bulletin_history`. Mỗi thao tác mở một kết nối có thời hạn, đóng rõ ràng sau khi dùng để tránh giữ tệp trên Windows. Các thao tác sửa/duyệt dùng `BEGIN IMMEDIATE` + revision để phát hiện xung đột; client cũ không gửi `expected_bulletin_revision` cho một số thao tác phiên bản không có kiểm tra bổ sung đối với bản tin đang hiển thị.
 
 Schema v1/v2 → v3: SQLite backup API tạo bản trước nâng cấp (`pre-v02` cho v1, `pre-v03` cho v2), thêm bảng/index rồi đặt `user_version=3`; không viết lại payload/hash bản nháp. Không tự hạ cấp dữ liệu v3 bằng mã cũ. Muốn khôi phục bản trước, dùng bản sao lưu sang thư mục mới sau khi dừng ứng dụng; không ghi đè DB đang hoạt động.
 
@@ -45,9 +47,9 @@ Schema v1/v2 → v3: SQLite backup API tạo bản trước nâng cấp (`pre-v0
 1. Chuẩn hóa URL bỏ fragment, một số tham số tracking, giữ tham số có ý nghĩa. Trùng URL được gom; tiêu đề chuẩn hóa giống hệt chỉ được gom khi có ngày nguồn cách nhau tối đa 48 giờ. Không dùng nhận diện ngữ nghĩa. Tin khác nhau vẫn có thể bị gom nhầm nếu tiêu đề / ngày giống nhau, nên phải kiểm tra nguồn.
 2. RSS được tải tối đa 3 MB, HTTPS, timeout, chỉ tên miền cố định của từng nguồn. Redirect ngoài miền bị từ chối, không vượt tường phí. Từ chối DTD/entity; trích văn bản bỏ script/style. RSS không tải URL bài viết hoặc ảnh; adapter web có đọc HTML tạm để lấy trích đoạn, không lưu toàn văn vào DB. URL nhập thủ công không được fetch; các ghi chú nhập lại được gắn nhãn thủ công.
 3. Ngày nguồn, loại ngày (đăng/cập nhật/chưa rõ) và ngày lấy tư liệu được giữ riêng. Không lấy ngày fetch giả thành ngày công bố. Ngày hiển thị dùng múi giờ Việt Nam.
-4. Draft có ảnh chụp nguồn; cập nhật RSS về sau không sửa ảnh chụp của draft. Có thể cập nhật nguồn bằng thao tác sửa bản nháp và duyệt lại.
-5. Duyệt gắn hash của tiêu đề, nội dung, góc nhìn, nhóm, Page, nguồn và 5 xác nhận. Sửa nội dung hủy hash và đặt lại xác nhận; chỉ xuất đúng hash. Bài đã ghi nhận đăng là bất biến về nội dung, số liệu là dữ liệu riêng có thể cập nhật.
-6. Đích Page là nhãn do người dùng nhập, không chứng minh quyền quản trị. URL Facebook là lời xác nhận thủ công, không được truy cập để xác minh. Không có external send để retry hay cần đối soát tự động.
+4. Draft cũ và mục bản tin có ảnh chụp nguồn; cập nhật nguồn về sau không sửa ảnh chụp đã lưu. Thay đổi nội dung hoặc nguồn cần được kiểm tra và duyệt lại theo luồng tương ứng.
+5. Bản duyệt gắn hash và các xác nhận; thay đổi liên quan hủy duyệt theo phạm vi. Sau ghi nhận, nội dung phiên bản bị khóa và snapshot được giữ; số liệu là dữ liệu riêng. Bản sao cho phép tiếp tục biên tập.
+6. Đích đăng là nhãn do người dùng nhập, không chứng minh quyền quản trị. URL ghi nhận là thông tin thủ công, không được truy cập để xác minh. Không có external send để retry hay cần đối soát tự động.
 7. Cookie ngẫu nhiên theo phiên tiến trình và cổng, HttpOnly/SameSite=Strict. Tác vụ thay đổi cần cookie + CSRF token + Origin nội bộ; kiểm tra Host chống rebinding, không CORS, CSP ngăn script ngoài/inline và frame. Không có bảo vệ khỏi chương trình chạy cùng tài khoản Windows.
 
    Khi có lỗi phiên, giao diện cho phép lấy lại cookie và token mà không gửi lại thao tác hoặc thay nội dung đang nhập. Trạng thái nền và khôi phục đối chiếu đường dẫn kho ban đầu; nếu phát hiện đường dẫn khác, trang chặn các yêu cầu ghi tiếp theo và yêu cầu sao chép nội dung trước khi tải lại. So sánh đường dẫn không phát hiện kho bị thay thế tại cùng đường dẫn, không hủy yêu cầu đã gửi và không thay thế đối chiếu kết quả chưa rõ.
