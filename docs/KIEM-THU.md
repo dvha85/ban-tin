@@ -593,3 +593,8 @@ python -m newsroom --collect
 - Trình duyệt tích hợp mở cùng phiên bản X đã duyệt trên hai thẻ của server SQLite fixture. Nhập hai nội dung khác nhau; thẻ thứ hai lưu thành công, bản chuyển nháp và các xác nhận được bỏ. Thẻ thứ nhất thử lưu revision cũ thì báo phiên bản đã thay đổi ở cửa sổ khác; nội dung đang nhập vẫn hiện trong ô.
 - Hai lượt được gửi lần lượt, không đồng thời; chưa đối chiếu SQLite sau thao tác hay thử các kênh khác. Kiểm thử service hai lượt cạnh tranh được ghi riêng ở trên; QA-02 và APR-04 vẫn mở.
 
+### 05/11/2026 — Thử đối chiếu clipboard gói tư liệu (DIG-04 / QA-02)
+
+- Trình duyệt tích hợp mở bản tin ba mục trên SQLite fixture riêng, bấm **Sao chép gói tư liệu** và giao diện báo đã sao chép. Công cụ điều khiển đọc clipboard của phiên trả chuỗi rỗng và không thể dán do clipboard ảo không có dữ liệu; chưa đối chiếu được nội dung gói.
+- Kết quả này không đủ xác định clipboard ứng dụng lỗi hay nội dung đã sao chép chính xác. Chưa kiểm tra dán bằng người dùng hoặc trình duyệt khác trong lượt này; QA-02 vẫn mở.
+
