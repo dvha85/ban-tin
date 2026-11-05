@@ -20,7 +20,7 @@
 > APR-01 / FMT-02 ngày 04/11: kho giả có ba phiên bản đã duyệt v4 hiển thị cảnh báo policy cũ và mở được bản lưu lịch sử trên cả Facebook, Threads và X khi chạy server v5; preview X hiện v5. Đã sửa và smoke hướng dẫn vùng xuất: bản chưa khóa được hướng dẫn lưu, kiểm tra và duyệt lại, còn bản đã khóa được hướng dẫn tạo bản sao nếu cần sửa. Đã thử tiếp trên UI kho giả: duyệt lại bản X chưa ghi nhận theo v5 và ghi nhận URL giả đoạn còn lại của bản X 1/2 đã duyệt v4; snapshot v4 được giữ. Chưa bao phủ các kênh và tổ hợp khác. Xem `KIEM-THU.md`; QA-02 và BASE-03 vẫn mở.
 
 
-> NEWS-05 ngày 04/11: sửa ngày nguồn cũ bị hiển thị thành giờ trong danh sách; kiểm thử mốc UTC hai phía nửa đêm Việt Nam, ngày tương lai/chưa rõ và tin gần đây đạt trong DOM giả. Chưa smoke thay đổi này trên trình duyệt; xem `KIEM-THU.md`.
+> NEWS-05 ngày 04/11: sửa ngày nguồn cũ bị hiển thị thành giờ trong danh sách; kiểm thử mốc UTC hai phía nửa đêm Việt Nam, ngày tương lai/chưa rõ và tin gần đây đạt trong DOM giả. Trên trình duyệt với kho giả, đã kiểm tra riêng hai mốc ngày cũ trước và sau nửa đêm; chưa bao phủ mọi bộ lọc hoặc trạng thái ngày. Xem `KIEM-THU.md`.
 
 > DB-01/02 / QA-03 ngày 04/11: các trường hợp MIG-01…05 đã được đối chiếu trong phạm vi fixture; thử thêm đường lui từ backup schema 3 bằng mã 0.3.1. Người dùng không có SQLite cũ nên không áp dụng bước thử bản sao vận hành. Chi tiết và giới hạn tại `KIEM-THU.md`.
 
@@ -653,7 +653,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | 04/11/2026 | DB-01/02 / QA-03 | Hoàn tất trong phạm vi fixture | Nâng cấp schema 1/2 mô phỏng và schema 3; kiểm tra integrity, khóa ngoại, dữ liệu, restore hỏng và đường lui 0.3.1; Python 190/190, JS 41/41 | Không có SQLite cũ để thử bản sao vận hành; backup cũ không chứa công việc sau nâng cấp |
 
-| 04/11/2026 | NEWS-05 / DIG-03 | Đang làm | Sửa hiển thị ngày nguồn cũ theo múi giờ Việt Nam; test tái hiện trước sửa và đạt sau sửa; Python 190/190, JS 42/42 | Chưa smoke thay đổi trên trình duyệt; QA-02 vẫn mở |
+| 04/11/2026 | NEWS-05 / DIG-03 | Đang làm | Sửa hiển thị ngày nguồn cũ theo múi giờ Việt Nam; test tái hiện trước sửa và đạt sau sửa; Python 190/190, JS 42/42 | Tại mốc này chưa smoke trình duyệt; bằng chứng sau đó ở dòng NEWS-05 bên dưới; QA-02 vẫn mở |
 
 | 04/11/2026 | DIG-02 / lưu trữ | Đang làm | Lưu trữ/khôi phục theo lựa chọn người dùng; giữ bản duyệt, ghi nhận và số liệu; test xung đột, backup/restore, HTTP và DOM giả; Python 194/194, JS 43/43 | Chưa smoke giao diện trên trình duyệt; chưa triển khai kho vận hành |
 
