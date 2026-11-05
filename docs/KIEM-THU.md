@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## BASE-03 / QA-02: xem trước Threads policy v6 — 05/11/2026
+
+- Trên trình duyệt tích hợp, server mã `71ee06a` và SQLite fixture ba mục: tạo bản nháp Threads, nhập emoji `👨‍👩‍👧‍👦` và xem trước. Hộp hiển thị policy `2026-11-05-v6`, cảnh báo ước lượng và 99/500 cho emoji, nhãn nguồn cùng ba URL. Đếm chuỗi đầy đủ bằng Python được 99 điểm mã.
+- Đây là một preview chưa lưu hoặc duyệt, không kiểm tra các ranh giới hay bản duyệt v5 trên giao diện; BASE-03 và QA-02 vẫn mở. Không dùng kho vận hành; server fixture đã dừng.
+
 ## BASE-03 / TEXT-03: ước lượng Threads v6 — 05/11/2026
 
 - Kiểm tra thêm trên composer Threads qua Edge với 480 ký tự ASCII làm nền: 😷 tính 1; 👍🏽, 🇻🇳, ❤️ và cặp `𠀀🫨` mỗi mẫu tính 2. Những mẫu này cùng emoji gia đình và hai dạng chữ đã thử phù hợp cách đếm điểm mã Unicode. Không đăng bài; đã xóa nội dung thử khỏi ô soạn.
