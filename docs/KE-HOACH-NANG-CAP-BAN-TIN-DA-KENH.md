@@ -733,3 +733,5 @@ Tài liệu này bổ sung roadmap kỹ thuật; không thay thế mô tả ch�
 
 > SOURCE-02 / APR-01 / QA-02 ngày 05/11: giao diện từ chối duyệt bản nháp X trên kho giả có hash trích đoạn sai, chỉ rõ mục 1 và nguồn 1. Chưa thử sửa rồi duyệt lại qua UI; xem `KIEM-THU.md`.
 
+> VAR-01 ngày 05/11: test service trên kho giả xác nhận sửa nội dung Facebook không thay phiên bản và bản xuất Threads/X đã duyệt, kể cả sau mở lại kho; 55/55 test phiên bản đạt. Chưa thay thế QA giao diện; xem `KIEM-THU.md`.
+

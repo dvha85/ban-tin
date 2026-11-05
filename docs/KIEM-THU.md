@@ -568,3 +568,8 @@ python -m newsroom --collect
 - Trên trình duyệt tích hợp và SQLite fixture riêng, chuẩn bị bản nháp X đã lưu checklist và sửa hash trích đoạn của nguồn được chọn thành giá trị giả không khớp. Bấm **Duyệt phiên bản**, giao diện hiển thị lỗi tại vùng phiên bản và thông báo: hash không khớp trích đoạn ở mục 1, nguồn 1; cần đối chiếu, bổ sung nguồn đúng và bỏ nguồn sai trước khi duyệt.
 - Lượt này kiểm tra một nguồn và một phiên bản X; chưa thử sửa nguồn rồi duyệt lại qua giao diện, chưa đối chiếu trạng thái SQLite sau thao tác hoặc các kênh khác. Test service riêng đã kiểm tra bản nháp không được duyệt và trường hợp hash đúng; QA-02 vẫn mở.
 
+### 05/11/2026 — Độc lập phiên bản đã duyệt (VAR-01)
+
+- Thêm `test_editing_facebook_preserves_other_approved_variants_after_reopen`: tạo ba phiên bản đã duyệt trên SQLite giả, sửa nội dung Facebook, mở lại kho và so sánh toàn bộ phiên bản cùng bản xuất Threads và X với trước khi sửa. Facebook trở về nháp và tăng revision; hai bản còn lại không đổi.
+- `python -m unittest discover -s tests -p test_variants.py`: 55/55 đạt. Đây là test service với một cách sửa nội dung, không thay thế QA giao diện hoặc chứng minh mọi tổ hợp thay đổi; FMT-01 và QA-02 vẫn mở.
+

@@ -144,6 +144,23 @@ class VariantTests(unittest.TestCase):
             'revision': draft['revision'], 'checks': {key: True for key in self.room.CHECKS}})
         return self.room.approve(draft['id'], draft['revision'])
 
+    def test_editing_facebook_preserves_other_approved_variants_after_reopen(self):
+        facebook = self.make_approved('facebook')
+        threads = self.make_approved('threads')
+        x = self.make_approved('x')
+        before = {variant['id']: (self.room.variant(variant['id']), self.room.export_variant(variant['id']))
+                  for variant in (threads, x)}
+        segment = {**facebook['segments'][0], 'text': 'Nội dung Facebook đã chỉnh sửa.'}
+        saved = self.room.save_variant(facebook['id'], {'revision': facebook['revision'], 'segments': [segment]})
+        self.assertEqual(saved['status'], 'draft')
+        self.assertGreater(saved['revision'], facebook['revision'])
+        reopened = Newsroom(self.room.data_dir)
+        self.assertEqual(reopened.variant(facebook['id'])['segments'][0]['text'], segment['text'])
+        for variant_id, (old_variant, old_export) in before.items():
+            with self.subTest(variant_id=variant_id):
+                self.assertEqual(reopened.variant(variant_id), old_variant)
+                self.assertEqual(reopened.export_variant(variant_id), old_export)
+
     def test_archiving_bulletin_preserves_approved_and_recorded_versions(self):
         from newsroom.__main__ import restore
 
