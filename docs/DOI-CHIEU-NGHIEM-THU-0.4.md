@@ -1,5 +1,7 @@
 # Đối chiếu điều kiện nghiệm thu 0.4
 
+> BASE-03 ngày 05/11: đối chiếu bốn mẫu trên composer thực tế của Threads và X qua Edge, không đăng. X khớp bốn giá trị cục bộ; Threads đếm emoji gia đình 7 trong khi hàm ước lượng trả 25. Các mẫu chữ và URL đã thử khớp trên Threads. Đây chưa xác minh quy tắc tổng quát; xem `KIEM-THU.md`.
+
 > DIG-04 / QA-02 ngày 05/11: người dùng gửi nội dung gói từ lượt kiểm tra kho giả với tiêu đề và đủ ba URL theo thứ tự; không xác định ứng dụng dùng để dán. Đây là một lượt đối chiếu, QA-02 vẫn mở. Xem `KIEM-THU.md`.
 
 > QA-01 ngày 05/11: trên commit `92f12d9`, toàn bộ bộ Python đạt 216/216 và sáu tệp JavaScript đạt 57/57. Đây là hồi quy trên fixture; QA giao diện và policy nền tảng vẫn mở. Xem `KIEM-THU.md`.

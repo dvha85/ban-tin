@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## BASE-03 / TEXT-03: đối chiếu composer Threads và X — 05/11/2026
+
+- Người dùng đăng nhập; trên Edge, nhập chuỗi thử vào trình soạn bài của từng nền tảng, không bấm đăng. So sánh số ký tự còn lại trước và sau mẫu, với nền 480 ký tự ASCII cho Threads và 260 cho X. Với URL dùng nền lần lượt 440 và 250 ký tự ASCII cộng một dấu cách.
+- `café` dạng NFC: Threads 4, X 4; `cafe` cộng U+0301: Threads 5, X 4; emoji gia đình `👨‍👩‍👧‍👦`: Threads 7, X 2; URL `https://example.com/very-long-article-url-123456789`: Threads 51, X 23. X có số còn lại tương ứng 16, 16, 18 và 6; Threads tương ứng 16, 15, 13 và 8.
+- Đối chiếu hàm cục bộ: bốn kết quả X đều khớp; Threads khớp hai dạng chữ và URL nhưng ước lượng emoji là 25 thay vì 7. Kết quả này chỉ là quan sát bốn mẫu trên giao diện và tài khoản tại thời điểm thử, không xác định quy tắc tổng quát hay mọi URL, emoji và tổ hợp; BASE-03 vẫn mở. Giữ cảnh báo Threads là ước lượng, có thể đếm thiếu ở các chuỗi khác. Không suy ra bộ đếm đúng chỉ từ bốn mẫu.
+- Đã xóa văn bản thử trong hai ô. Threads còn hiển thị thẻ xem trước URL thử trong trình soạn, không có bài được đăng; X trở về ô trống.
+
 ## FMT-03 / QA-02: chia nội dung Threads dài — 05/11/2026
 
 - Trên trình duyệt tích hợp và SQLite fixture riêng, tạo bản nháp Threads từ ba mục, nhập 12 câu giả giống nhau và chọn đề xuất chia. Giao diện chia thành ba đoạn, mỗi đoạn giữ bốn câu và ba nguồn được chọn; sau khi lưu, preview hiển thị 1/3, 2/3, 3/3, đủ ba URL trên mỗi đoạn và bộ đếm ước lượng 443/500.
