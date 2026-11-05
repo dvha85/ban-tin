@@ -354,13 +354,15 @@ Tách module theo trách nhiệm, không viết toàn bộ tính năng vào `ser
 
 Các mutation phải dùng revision và giao dịch phù hợp, kiểm tra lại dưới khóa. Bật/kiểm tra foreign key trên từng kết nối khi thêm ràng buộc; tránh cascade xóa lịch sử hoặc snapshot đã duyệt. Không đưa nguồn nội dung vào `innerHTML` hoặc thực thi HTML/JS do AI trả về.
 
-### API nội bộ dự kiến
+### API nội bộ: đối chiếu với mã hiện tại
+
+Bảng dưới đây tóm tắt route hiện có, cập nhật theo `newsroom/server.py` ngày 05/11. Hợp đồng chi tiết và các giới hạn chưa kiểm chứng được theo dõi tại [API bản tin đa kênh](API-BAN-TIN-DA-KENH.md); BASE-02 vẫn mở.
 
 | Nhóm | Endpoint / thao tác dự kiến | Hợp đồng |
 | --- | --- | --- |
 | Bản tin | `POST /api/bulletins`, `GET /api/bulletins/:id` | Tạo từ danh sách article đã chọn; trả snapshot có revision |
-| Mục | `POST /api/bulletins/:id/items`, `POST /api/bulletins/:id/reorder` | Lưu/thêm/bỏ có kiểm soát, thứ tự không trùng hoặc mất mục |
-| Tư liệu | `GET /api/bulletins/:id/packet` | Chỉ trả gói văn bản; không gọi model |
+| Mục | `POST /api/bulletins/:id/items`, `POST /api/bulletins/:id/items/:item_id/save`, `POST /api/bulletins/:id/save` | Thêm/bỏ và lưu mục; đổi thứ tự bằng `item_ids` đầy đủ trong yêu cầu lưu bản tin, không có route `/reorder` riêng. |
+| Tư liệu | `GET /api/bulletins/:id/packet` | Trả object gồm `text` và `bulletin_revision` của snapshot dùng tạo gói; không gọi model. |
 | Biến thể | `POST /api/bulletins/:id/variants`, `POST /api/variants/:id/save` | Không ghi đè biến thể khác, revision bắt buộc |
 | Preview | `POST /api/variants/:id/preview` | Tính đầu ra không lưu/duyệt; trả counts, lỗi và policy version |
 | Duyệt/xuất | `POST /api/variants/:id/approve`, `GET /api/variants/:id/export` | Kiểm tra hash và nội dung chính xác; không xuất bản chưa duyệt như bản sẵn đăng |

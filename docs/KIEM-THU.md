@@ -598,3 +598,8 @@ python -m newsroom --collect
 - Trình duyệt tích hợp mở bản tin ba mục trên SQLite fixture riêng, bấm **Sao chép gói tư liệu** và giao diện báo đã sao chép. Công cụ điều khiển đọc clipboard của phiên trả chuỗi rỗng và không thể dán do clipboard ảo không có dữ liệu; chưa đối chiếu được nội dung gói.
 - Kết quả này không đủ xác định clipboard ứng dụng lỗi hay nội dung đã sao chép chính xác. Chưa kiểm tra dán bằng người dùng hoặc trình duyệt khác trong lượt này; QA-02 vẫn mở.
 
+### 05/11/2026 — Đối chiếu bảng API trong kế hoạch (BASE-02 / DOC-01)
+
+- Đọc route trong `newsroom/server.py` và tài liệu API: đổi thứ tự dùng `item_ids` tại route lưu bản tin, không có route `/reorder`; gói tư liệu trả cả `text` và `bulletin_revision`. Đã cập nhật bảng dự kiến cũ trong kế hoạch để trỏ tới hợp đồng hiện tại.
+- Rà soát tĩnh hai nhóm route, không chứng minh mọi trường hoặc tổ hợp lỗi; BASE-02 và DOC-01 vẫn mở. Không sửa chức năng.
+
