@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## FMT-03 / QA-02: chia nội dung Threads dài — 05/11/2026
+
+- Trên trình duyệt tích hợp và SQLite fixture riêng, tạo bản nháp Threads từ ba mục, nhập 12 câu giả giống nhau và chọn đề xuất chia. Giao diện chia thành ba đoạn, mỗi đoạn giữ bốn câu và ba nguồn được chọn; sau khi lưu, preview hiển thị 1/3, 2/3, 3/3, đủ ba URL trên mỗi đoạn và bộ đếm ước lượng 443/500.
+- Đây là một trường hợp câu tiếng Việt và nguồn giả; chưa đối chiếu composer Threads thật, các Unicode hoặc ranh giới khác. Nội dung hiển thị có lưu ý cần loại nguồn không liên quan; việc gán nguồn cần người biên tập đối chiếu. Server fixture đã dừng; QA-02 và BASE-03 vẫn mở.
+
 ## FMT-03 / QA-02: đề xuất chia Threads ngắn — 05/11/2026
 
 - Trên trình duyệt tích hợp và SQLite fixture riêng, tạo phiên bản Threads từ bản tin ba mục, nhập và lưu một câu tiếng Việt ngắn, rồi chọn đề xuất chia. Giao diện giữ nguyên câu trong một đoạn, giữ ba mục và URL nguồn đã chọn, và hiển thị hướng dẫn đối chiếu nguồn cùng lưu ý về khoảng trắng.
