@@ -36,6 +36,37 @@ class Element {
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
 }
 
+test('packet copy rejects stale or changed editor state and copies matching snapshot', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const copies = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+    setTimeout, clearTimeout, copies, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.bulletin = {id: 7, revision: 4};
+    copy = async text => copies.push(text);
+    api = async () => ({text: 'Gói mới', bulletin_revision: 5});`, context);
+  await assert.rejects(vm.runInContext('copyBulletinPacket(app.bulletin)', context), /bản tin.*thay đổi/i);
+  assert.equal(copies.length, 0);
+  vm.runInContext(`api = async () => ({text: 'Không rõ revision'});`, context);
+  await assert.rejects(vm.runInContext('copyBulletinPacket(app.bulletin)', context), /bản tin.*thay đổi/i);
+  vm.runInContext(`api = async () => { app.bulletinDirty = true; return {text: 'Gói cũ', bulletin_revision: 4}; }`, context);
+  await assert.rejects(vm.runInContext('copyBulletinPacket(app.bulletin)', context), /thay đổi/i);
+  vm.runInContext(`app.bulletinDirty = false;
+    api = async () => { app.bulletin = {id: 8, revision: 4}; return {text: 'Gói cũ', bulletin_revision: 4}; }`, context);
+  await assert.rejects(vm.runInContext('copyBulletinPacket(app.bulletin)', context), /thay đổi/i);
+  vm.runInContext(`app.bulletin = {id: 7, revision: 4};
+    api = async () => { app.storeChanged = true; return {text: 'Gói cũ', bulletin_revision: 4}; }`, context);
+  await assert.rejects(vm.runInContext('copyBulletinPacket(app.bulletin)', context), /thay đổi/i);
+  assert.equal(copies.length, 0);
+  vm.runInContext(`app.storeChanged = false; api = async () => ({text: 'Gói đúng', bulletin_revision: 4});`, context);
+  await vm.runInContext('copyBulletinPacket(app.bulletin)', context);
+  assert.deepEqual(copies, ['Gói đúng']);
+});
+
 test('variant actions carry the displayed bulletin revision', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

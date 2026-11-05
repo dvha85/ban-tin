@@ -522,6 +522,17 @@ function showText(title, text, note, exportId = null, canCopy = true) {
   $('copy-dialog').hidden = !canCopy;
   if (!$('text-dialog').open) $('text-dialog').showModal();
 }
+async function copyBulletinPacket(bulletin) {
+  if (app.bulletinDirty || app.storeChanged) throw new Error('Hãy lưu thay đổi và kiểm tra kho trước khi lấy gói tư liệu.');
+  const id = bulletin.id, revision = bulletin.revision;
+  const result = await api(`/api/bulletins/${id}/packet`);
+  if (app.bulletinDirty || app.storeChanged || app.bulletin?.id !== id || app.bulletin?.revision !== revision)
+    throw new Error('Bản tin hoặc kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
+  if (result.bulletin_revision !== revision)
+    throw new Error('Bản tin đã thay đổi ở cửa sổ khác. Hãy đối chiếu trước khi lấy gói tư liệu.');
+  await copy(result.text);
+}
+
 async function copy(text, retryAction = null) {
   try {
     await navigator.clipboard.writeText(text);
@@ -901,10 +912,7 @@ function renderBulletin(focusVariantSelector = false) {
     section.append(actions, sourceForm); editor.append(section);
   });
   const packet = node('button', 'button secondary', 'Sao chép gói tư liệu');
-  listen(packet, 'click', async () => {
-    if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi lấy gói tư liệu.');
-    const result = await api(`/api/bulletins/${bulletin.id}/packet`); await copy(result.text);
-  });
+  listen(packet, 'click', async () => copyBulletinPacket(bulletin));
   editor.append(packet);
   const history = node('button', 'button secondary', 'Xem lịch sử bản tin');
   listen(history, 'click', async () => {

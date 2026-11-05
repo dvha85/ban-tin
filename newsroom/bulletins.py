@@ -403,7 +403,14 @@ class BulletinMixin:
         return result
 
     def bulletin_packet(self, bulletin_id):
+        return self._render_bulletin_packet(self.bulletin(bulletin_id))
+
+    def bulletin_packet_data(self, bulletin_id):
         bulletin = self.bulletin(bulletin_id)
+        return {'text': self._render_bulletin_packet(bulletin), 'bulletin_revision': bulletin['revision']}
+
+    @staticmethod
+    def _render_bulletin_packet(bulletin):
         payload = _json(bulletin)
         text = PACKET_PREFIX + payload + PACKET_SUFFIX
         size = len(text.encode('utf-8'))

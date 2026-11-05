@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> DIG-04 / BASE-02 ngày 05/11: API gói tư liệu trả revision từ cùng snapshot; UI từ chối sao chép khi bản tin đang hiển thị cũ hoặc trạng thái trang/kho đổi trong lúc chờ. Test HTTP và handler dùng kho giả; xem `KIEM-THU.md`. Chưa thử hai thẻ trên trình duyệt; các gate vẫn mở.
+
 > PUB-03/04 ngày 05/11: test service trên SQLite giả thử đính chính URL ở từng nền tảng Facebook, Threads và X, giữ số liệu lượt cũ, khóa và bản duyệt sau mở lại kho; Python 212/212, JavaScript 55/55. Chưa thay thế QA trình duyệt hoặc xác minh URL thực tế; các gate vẫn mở. Xem `KIEM-THU.md`.
 
 > BASE-02 / VAR-03 / QA-02 ngày 05/11: preview cảnh báo khi bản tin đang hiển thị cũ; chia, duyệt và tạo bản sao từ UI gửi revision để server kiểm tra. Test service/HTTP/handler và thử preview/chia trên kho giả đạt; Python 211/211, JavaScript 55/55. Client cũ bỏ trường không có kiểm tra bổ sung; xem `KIEM-THU.md`.

@@ -44,6 +44,24 @@ class ServerTests(unittest.TestCase):
         return {'Cookie': cookie, 'X-CSRF-Token': token,
                 'Origin': f'http://127.0.0.1:{self.port}', 'Content-Type': 'application/json'}
 
+    def test_packet_revision_matches_the_bulletin_inside_http_response(self):
+        from newsroom.bulletins import PACKET_PREFIX, PACKET_SUFFIX
+        headers = self.session()
+        article = self.room.import_article({'title': 'Nguồn giả',
+            'url': 'https://example.com/packet-revision', 'summary': 'Tư liệu thử.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']], 'title': 'Bản đầu'})
+        for title in ('Bản đầu', 'Bản sửa'):
+            if title != bulletin['title']:
+                bulletin = self.room.save_bulletin(bulletin['id'], {'revision': bulletin['revision'], 'title': title})
+            status, _, body = self.request('GET', f"/api/bulletins/{bulletin['id']}/packet", headers=headers)
+            self.assertEqual(status, 200)
+            response = json.loads(body)
+            self.assertTrue(response['text'].startswith(PACKET_PREFIX))
+            self.assertTrue(response['text'].endswith(PACKET_SUFFIX))
+            data = json.loads(response['text'][len(PACKET_PREFIX):-len(PACKET_SUFFIX)])
+            self.assertEqual(response['bulletin_revision'], data['revision'])
+            self.assertEqual((data['revision'], data['title']), (bulletin['revision'], title))
+
     def test_auth_and_csrf_fail_closed(self):
         self.assertEqual(self.request('GET', '/api/state')[0], 401)
         self.assertEqual(self.request('POST', '/api/articles/import', {})[0], 401)

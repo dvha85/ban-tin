@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## Gói tư liệu và revision bản tin — 05/11/2026
+
+- Trước sửa, hồi quy `test_bulletins.py` đạt 21/21 và `correction-ui.test.js` đạt 33/33. Test HTTP mới tái hiện phản hồi gói không có revision; sau sửa phản hồi chứa revision của cùng bản tin trong JSON gói, kể cả sau khi sửa tiêu đề. Hàm service trả văn bản cũ vẫn được giữ cho các client nội bộ.
+- Test handler kiểm tra bản tin cũ, thay đổi chưa lưu, chuyển bản tin và đổi kho trong lúc chờ đều không sao chép; trạng thái khớp sao chép đúng gói. Thử dùng DOM giả và HTTP trên SQLite tạm, chưa smoke hai thẻ trong trình duyệt. Revision chỉ đối chiếu tại thời điểm phản hồi; thay đổi xảy ra sau đó không được ngăn.
+- Sau sửa, Python unittest discover đạt 213/213; sáu tệp JavaScript đạt 56/56, `node --check newsroom/static/app.js` đạt. Một lượt Python trung gian phát hiện fixture tối giản thiếu revision; đã giữ nguyên hợp đồng hàm trả văn bản cũ và chạy lại bộ đầy đủ đạt.
+
 ## Đính chính và số liệu trên ba nền tảng — 05/11/2026
 
 - Test `test_three_platform_correction_preserves_each_publication_metrics_and_lock` tạo riêng một biến thể đã duyệt cho Facebook, Threads và X trên SQLite tạm; ghi URL giả, lưu số lượt xem bằng 0 rồi đính chính sang URL giả khác. Với từng nền tảng, test đối chiếu trạng thái hai lượt, lịch sử sự kiện, số liệu vẫn thuộc lượt cũ, lượt mới chưa có số liệu, khóa nội dung và snapshot xuất lưu trữ sau khi mở lại kho.

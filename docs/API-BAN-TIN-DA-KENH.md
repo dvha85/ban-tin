@@ -20,7 +20,7 @@ Tài liệu này mô tả API nội bộ của nhánh phát triển 0.4, chưa p
 | --- | --- | --- |
 | `GET /api/bulletins` | — | Danh sách bản tin. |
 | `GET /api/bulletins/{id}` | — | Bản tin và `items`, mỗi mục có revision và snapshot nguồn. |
-| `GET /api/bulletins/{id}/packet` | — | Object `text` là gói tư liệu; vượt giới hạn trả lỗi, không cắt nội dung. |
+| `GET /api/bulletins/{id}/packet` | — | Object gồm `text` là gói tư liệu và `bulletin_revision` của chính bản tin trong gói; vượt giới hạn trả lỗi, không cắt nội dung. |
 | `GET /api/bulletins/{id}/history` | — | Lịch sử bản tin. |
 | `GET /api/bulletin-stats` | — | Thống kê bản tin và ghi nhận đa kênh. |
 | `GET /api/legacy-publication-duplicates` | — | Mảng nhóm `{match, drafts}` đối soát bài cũ; mỗi draft có `id`, `url` gốc. `match` là `recognized` hoặc `exact`; chỉ đọc, không sửa dữ liệu. |
@@ -31,6 +31,8 @@ Tài liệu này mô tả API nội bộ của nhánh phát triển 0.4, chưa p
 | `POST /api/bulletins/{id}/items/{item_id}/save` | `bulletin_revision`, revision của mục trong `revision`; các trường cần sửa | Trả toàn bộ bản tin mới, bao gồm revision mới của mục và bản tin. |
 
 Danh sách và chi tiết bản tin trả thêm `archived` (boolean) và `archive_revision` (số nguyên; 0 nếu chưa đổi trạng thái). API danh sách vẫn trả cả bản tin lưu trữ; giao diện ẩn theo cờ trừ khi người dùng chọn hiện. Lưu trữ/khôi phục là thao tác tổ chức, không đổi revision nội dung, bản duyệt hay thống kê và không khóa chỉnh sửa. Gửi cùng trạng thái với `archive_revision` hiện tại là no-op; sau phản hồi chưa rõ phải đọc lại trước khi thử lại. Mã cũ không biết lọc cờ lưu trữ.
+
+Giao diện so sánh `bulletin_revision` của gói với bản tin đang hiển thị và kiểm tra thay đổi chưa lưu, chuyển bản tin hoặc thay đổi kho trong khi chờ; nếu không khớp thì không sao chép. Đây là kiểm tra tại lúc nhận phản hồi, không ngăn bản tin thay đổi ngay sau đó. Client cũ vẫn có thể đọc `text` và phải tự đối chiếu revision nếu cần.
 
 Các trường mục có thể gửi gồm `title`, `body`, `angle`, `verification_note`, `verified`, `claims`, `add_source`, `remove_source_id`. `claims` gồm tối đa 10 object `{text, evidence, checked}`. `add_source` gồm `url`, `title`, `summary`; mỗi mục giữ 1–3 nguồn và toàn bản tin tối đa 20 URL nguồn khác nhau. Sửa nội dung hoặc nguồn bỏ xác nhận mục và các xác nhận khẳng định; xác nhận lại sau khi lưu. Không nhầm revision bản tin với revision mục.
 
