@@ -7,7 +7,7 @@ const app = {state: null, view: 'inbox', category: 'all', articleId: null, draft
   dirty: false, reviewDirty: false, tab: 'packet', csrf: '', busy: false, exportId: null,
   selectedArticles: new Set(), bulletin: null, bulletinDirty: false, variantId: null, publicationKeys: new Map(), conflictTarget: null,
   storeChanged: false};
-let pollTimer, toastTimer;
+let pollTimer, toastTimer, dialogCopyAction = null;
 
 // All external/source/model text is inserted as text or input values, never HTML.
 function node(tag, className, text) {
@@ -513,6 +513,7 @@ function renderSources() {
   }
 }
 function showText(title, text, note, exportId = null, canCopy = true) {
+  dialogCopyAction = null;
   app.exportId = exportId;
   $('text-dialog-title').textContent = title;
   $('dialog-text').value = text;
@@ -521,15 +522,24 @@ function showText(title, text, note, exportId = null, canCopy = true) {
   $('copy-dialog').hidden = !canCopy;
   if (!$('text-dialog').open) $('text-dialog').showModal();
 }
-async function copy(text) {
+async function copy(text, retryAction = null) {
   try {
     await navigator.clipboard.writeText(text);
     toast('Đã sao chép. Bạn có thể dán vào nơi cần dùng.');
   } catch (_) {
-    showText('Sao chép thủ công', text, 'Trình duyệt chưa cho phép clipboard. Chọn ô dưới, nhấn Ctrl+A rồi Ctrl+C.');
+    showText('Sao chép thủ công', text, 'Trình duyệt chưa cho phép clipboard. Chọn ô dưới, nhấn Ctrl+A rồi Ctrl+C.' +
+      (retryAction ? ' Nội dung được kiểm tra lúc mở hộp; nếu có thay đổi ở cửa sổ khác, hãy đóng hộp và kiểm tra lại trước khi sao chép thủ công.' : ''));
+    dialogCopyAction = retryAction;
     $('dialog-text').focus();
     $('dialog-text').select();
   }
+}
+async function copyApprovedVariant(variantId, shown, position) {
+  if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi sao chép bản đã duyệt.');
+  if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
+  const current = await api(`/api/variants/${variantId}/export`);
+  if (app.bulletinDirty || app.storeChanged) throw new Error('Nội dung hoặc kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
+  await copy(verifiedCopyText(shown, current, position), () => copyApprovedVariant(variantId, shown, position));
 }
 
 function updateBulletinSelection() {
@@ -1181,11 +1191,7 @@ async function renderVariantPublication(area, variant) {
     const block = node('div', 'bulletin-block');
     const field = node('textarea'); field.rows = 5; field.readOnly = true; field.value = text;
     const copyButton = node('button', 'button secondary', `Sao chép đoạn ${position + 1}`);
-    bulletinAction(copyButton, async () => {
-      if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi sao chép bản đã duyệt.');
-      const current = await api(`/api/variants/${variant.id}/export`);
-      await copy(verifiedCopyText(output, current, position));
-    });
+    bulletinAction(copyButton, () => copyApprovedVariant(variant.id, output, position));
     block.append(node('h4', '', `Đoạn ${position + 1}`), field);
     if (ready) block.append(copyButton);
     const existing = publications.find(record => record.position === position && record.active);
@@ -1555,7 +1561,17 @@ listen($('export-button'), 'click', async () => {
   showText('Bài đã duyệt — đăng thủ công', text,
     `Đích dự kiến: ${app.draft.page_name}. Tự kiểm tra lại trước khi dán. Nếu sửa nội dung, hãy quay về cập nhật và duyệt lại.`, app.draft.id);
 });
-listen($('copy-dialog'), 'click', () => copy($('dialog-text').value));
+listen($('copy-dialog'), 'click', async () => {
+  const button = $('copy-dialog');
+  if (button.disabled) return;
+  button.disabled = true;
+  try {
+    if (dialogCopyAction) await dialogCopyAction();
+    else await copy($('dialog-text').value);
+  } catch (error) {
+    $('text-dialog-note').textContent = `${error.message} Đóng hộp và kiểm tra lại trước khi sao chép thủ công.`;
+  } finally { button.disabled = false; }
+});
 listen($('download-export'), 'click', () => {
   if (app.exportId !== null) window.location.assign(`/api/drafts/${app.exportId}/export`);
 });

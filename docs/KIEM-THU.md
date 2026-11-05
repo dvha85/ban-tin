@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## APR-03 / QA-02: thử lại sao chép từ hộp thủ công 05/11/2026
+
+- Khi clipboard bị từ chối, hộp sao chép thủ công trước đây cho phép nút **Sao chép nội dung** thử lại trực tiếp văn bản cũ mà không kiểm tra bản duyệt. Test handler mới tái hiện lỗi trước sửa. Sau sửa, nút thử lại kiểm tra trạng thái chưa lưu, kho đã báo thay đổi, export hợp lệ và ID/nội dung đoạn; lỗi được hiển thị trong hộp và giữ văn bản. Hộp văn bản khác không giữ nhầm hành động kiểm tra của bản duyệt.
+- Hồi quy trước sửa: 207/207 Python, 51/51 JavaScript; sau sửa: 207/207 Python, 52/52 JavaScript. Trên trình duyệt tích hợp dùng SQLite giả và server thử chặn clipboard bằng `Permissions-Policy`, mở hộp thủ công từ một đoạn X, rồi sửa bản tin qua service riêng làm hủy duyệt: nút trong hộp hiển thị lỗi ngay trong hộp, giữ đoạn giả. Đây là một nhánh UI; việc cấp lại quyền và duyệt lại được mô phỏng trong test handler, chưa thử hết các trình duyệt hoặc thay đổi sau phản hồi export.
+- Người dùng vẫn có thể dùng Ctrl+C trực tiếp trong ô thủ công; ứng dụng không kiểm tra lại tại thời điểm tổ hợp phím đó. Hộp nhắc đóng và kiểm tra lại nếu có thay đổi ở cửa sổ khác; cần đối chiếu trước khi đăng.
+
 ## APR-03 / TEXT-01: đối chiếu trước khi tải tệp 05/11/2026
 
 - Trước sửa, liên kết tải trực tiếp có thể xuất bản duyệt khác với nội dung đang hiển thị hoặc bỏ qua cảnh báo thay đổi chưa lưu. Test handler mới thất bại trước sửa; sau sửa, nút tải chặn nội dung chưa lưu và kho đã báo thay đổi, lấy export hợp lệ rồi đối chiếu ID duyệt, số đoạn và từng đoạn trước khi tạo tệp UTF-8. Test DOM giả bao gồm từ chối export, thay ID, sửa/thêm đoạn và đối chiếu nội dung tệp giả.

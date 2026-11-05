@@ -484,6 +484,51 @@ test('download verifies the displayed approval and all posts and blocks unsaved 
   assert.equal(await saved[0].blob.text(), 'Một\nnguồn\n\n---\n\nHai');
 });
 
+test('retrying copy from fallback checks the approval and leaves a visible warning if stale', async () => {
+  const elements = new Map(), writes = [], messages = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  get('text-dialog').showModal = () => { get('text-dialog').open = true; };
+  get('dialog-text').select = () => {};
+  let denied = true;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    structuredClone, writes, messages, fetch: () => new Promise(() => {}),
+    navigator: {clipboard: {writeText: async text => { if (denied) throw new Error('denied'); writes.push(text); }}},
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`let current = {approval_id: 21, posts: ['Nội dung đã duyệt']};
+    api = async path => path.endsWith('/publications') ? [] : structuredClone(current);
+    toast = message => messages.push(message);`, context);
+  context.area = new Element();
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const copyButton = walk(context.area).find(el => el.textContent === 'Sao chép đoạn 1');
+  const click = async el => { el.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  await click(copyButton);
+  assert.equal(get('dialog-text').value, 'Nội dung đã duyệt');
+  assert.equal(get('copy-dialog').hidden, false);
+  denied = false;
+  vm.runInContext('current.approval_id = 22', context);
+  await click(get('copy-dialog'));
+  assert.deepEqual(writes, []);
+  assert.match(get('text-dialog-note').textContent, /thay đổi/i);
+  assert.equal(get('dialog-text').value, 'Nội dung đã duyệt');
+  vm.runInContext('current.approval_id = 21', context);
+  vm.runInContext('app.bulletinDirty = true', context);
+  await click(get('copy-dialog'));
+  assert.deepEqual(writes, []); assert.match(get('text-dialog-note').textContent, /lưu/i);
+  vm.runInContext('app.bulletinDirty = false; app.storeChanged = true', context);
+  await click(get('copy-dialog'));
+  assert.deepEqual(writes, []); assert.match(get('text-dialog-note').textContent, /Kho dữ liệu/);
+  vm.runInContext('app.storeChanged = false', context);
+  await click(get('copy-dialog'));
+  assert.deepEqual(writes, ['Nội dung đã duyệt']);
+  vm.runInContext("showText('Khác', 'Nội dung khác', 'Ghi chú')", context);
+  await click(get('copy-dialog'));
+  assert.deepEqual(writes, ['Nội dung đã duyệt', 'Nội dung khác']);
+});
+
 test('network failure marks a mutation outcome as unknown', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

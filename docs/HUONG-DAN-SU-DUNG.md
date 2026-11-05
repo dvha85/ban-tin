@@ -22,7 +22,7 @@ Khi ghi nhận URL, kiểm tra đoạn, kênh và URL trong vùng xác nhận r�
 
 Mở **Lịch sử ghi nhận đã đính chính** để xem URL cũ, lý do, liên kết thay thế và số liệu từng ghi cho lượt cũ. Số liệu thuộc lượt ghi nhận cũ, không tự chuyển sang lượt thay thế.
 
-Nếu trình duyệt từ chối quyền clipboard, hộp **Sao chép thủ công** sẽ hiện nội dung đã chọn sẵn. Nhấn `Ctrl+C`, sau đó chuyển đến nơi cần dán và nhấn `Ctrl+V`; kiểm tra lại cả nội dung và nguồn trước khi đăng. Bạn cũng có thể tải tệp `.txt` của bản duyệt.
+Nếu trình duyệt từ chối quyền clipboard, hộp **Sao chép thủ công** sẽ hiện nội dung đã chọn sẵn. Nhấn `Ctrl+C`, sau đó chuyển đến nơi cần dán và nhấn `Ctrl+V`; kiểm tra lại cả nội dung và nguồn trước khi đăng. Nếu bản tin có thể đã thay đổi ở cửa sổ khác, hãy đóng hộp và mở lại bản duyệt trước khi dùng `Ctrl+C`. Nút **Sao chép nội dung** trong hộp sẽ kiểm tra lại bản duyệt khi thử lại. Bạn cũng có thể tải tệp `.txt` của bản duyệt.
 
 Trong **Bàn biên tập**, nút **Tạo bản sao sang bản tin** sao chép bài cũ đã lưu thành bản tin và phiên bản Facebook chưa duyệt. Bài cũ và lịch sử của nó được giữ nguyên. Nếu bài dài hơn 4.000 ký tự, toàn văn nằm trong phiên bản Facebook; bạn cần viết lại nội dung mục để kiểm chứng trước khi duyệt.
 
