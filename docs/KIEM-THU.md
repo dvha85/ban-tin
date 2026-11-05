@@ -4,6 +4,8 @@
 
 - Trước sửa, liên kết tải trực tiếp có thể xuất bản duyệt khác với nội dung đang hiển thị hoặc bỏ qua cảnh báo thay đổi chưa lưu. Test handler mới thất bại trước sửa; sau sửa, nút tải chặn nội dung chưa lưu và kho đã báo thay đổi, lấy export hợp lệ rồi đối chiếu ID duyệt, số đoạn và từng đoạn trước khi tạo tệp UTF-8. Test DOM giả bao gồm từ chối export, thay ID, sửa/thêm đoạn và đối chiếu nội dung tệp giả.
 - Kiểm thử nền trước sửa: 207/207 Python, 50/50 JavaScript. Sau sửa: 207/207 Python, 51/51 JavaScript. Chưa kiểm tra thao tác tải tệp thực tế trên trình duyệt cho mã mới; việc thay đổi bản duyệt sau phản hồi export vẫn có thể xảy ra. API tải trực tiếp vẫn trả bản duyệt hợp lệ hiện tại và không biết trạng thái giao diện; bảo vệ đối chiếu thuộc nút trên giao diện. Không phát hiện được kho bị thay thế cùng đường dẫn.
+- Bổ sung smoke 05/11: server mới từ commit `6f43c21` với SQLite tạm, hai mục và hai đoạn X giả đã duyệt. Trên trình duyệt tích hợp, sửa tiêu đề chưa lưu rồi chọn tải: hiện thông báo yêu cầu lưu. Khôi phục tiêu đề ban đầu, chọn tải: có tệp `.txt`; đọc UTF-8 thấy hai đoạn, đánh số, dấu phân cách và hai URL giả đúng như nội dung hiển thị. Ở thẻ thứ hai, lưu tiêu đề bản tin giả mới làm phiên bản trở về bản nháp; nút tải ở thẻ đầu báo chỉ xuất được phiên bản đã duyệt.
+- Smoke chỉ bao phủ một bản X và nhánh hủy duyệt khi sửa bản tin; chưa thử trường hợp duyệt lại ở thẻ khác, mọi trình duyệt hoặc thay đổi xảy ra sau phản hồi export. Không thao tác trên kho vận hành. Cảnh báo rời trang/tải lại với nội dung chưa lưu vẫn để sau theo lựa chọn của người dùng.
 
 ## DIG-02 / DIG-03 / QA-02: thêm mục, sao chép và nhãn khi thiếu tiêu đề 05/11/2026
 
