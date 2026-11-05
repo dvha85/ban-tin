@@ -1,8 +1,10 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> BASE-03 / TEXT-03 ngày 05/11: trên composer Threads thật, chuỗi 493 chữ `a` và emoji gia đình cho bộ đếm còn 0; thêm `a` hiện -1 và vô hiệu hóa “Thêm vào thread”. Không đăng bài, đã xóa chuỗi thử. Kết quả phù hợp test biên v6 với chuỗi này, chưa chứng minh toàn bộ quy tắc; xem `KIEM-THU.md`.
+
 > BASE-03 / QA-02 ngày 05/11: đã xem trước bản nháp Threads chứa emoji gia đình và ba URL trên UI kho giả, hiển thị v6 và 99/500 khớp số điểm mã của chuỗi đầy đủ. Đây là một trường hợp; xem `KIEM-THU.md`.
 
-> BASE-03 / TEXT-03 ngày 05/11: đổi ước lượng Threads sang số điểm mã Unicode theo các mẫu đã thử trên composer, policy chung v6; bản duyệt v5 chưa đăng của cả ba kênh cần kiểm tra lại. Hồi quy fixture 218/218 Python và 57/57 JavaScript; chưa xác minh toàn bộ quy tắc hoặc smoke UI v6. Xem `KIEM-THU.md`; BASE-03 và QA-02 vẫn mở.
+> BASE-03 / TEXT-03 ngày 05/11: đổi ước lượng Threads sang số điểm mã Unicode theo các mẫu đã thử trên composer, policy chung v6; bản duyệt v5 chưa đăng của cả ba kênh cần kiểm tra lại. Hồi quy fixture 218/218 Python và 57/57 JavaScript; tại thời điểm đó chưa smoke UI v6 hoặc xác minh toàn bộ quy tắc. Xem `KIEM-THU.md`; BASE-03 và QA-02 vẫn mở.
 
 > DIG-04 / QA-02 ngày 05/11: nút thử sao chép lại trong hộp thủ công của gói tư liệu kiểm tra lại revision; test handler và smoke trình duyệt với kho giả đã thử đổi revision khi hộp mở. Ctrl+C trực tiếp trong ô không kiểm tra lại; chưa đối chiếu clipboard ở lượt này. Xem `KIEM-THU.md`.
 

@@ -1,4 +1,4 @@
-# Bằng chứng kiểm thử — cập nhật 16/10/2026
+# Bằng chứng kiểm thử — cập nhật 05/11/2026
 
 ## BASE-03 / TEXT-03: ranh giới Threads trên composer — 05/11/2026
 
@@ -14,7 +14,7 @@
 
 - Kiểm tra thêm trên composer Threads qua Edge với 480 ký tự ASCII làm nền: 😷 tính 1; 👍🏽, 🇻🇳, ❤️ và cặp `𠀀🫨` mỗi mẫu tính 2. Những mẫu này cùng emoji gia đình và hai dạng chữ đã thử phù hợp cách đếm điểm mã Unicode. Không đăng bài; đã xóa nội dung thử khỏi ô soạn.
 - Trước sửa, toàn bộ hồi quy đạt 216/216 Python, 57/57 JavaScript. Test mới tái hiện năm mẫu emoji bị đếm cao hơn quan sát. Thay thuật toán ước lượng Threads bằng số điểm mã, tăng policy chung lên `2026-11-05-v6`; cập nhật kỳ vọng cũ cho `a😷` từ 5 thành 2. Test mới kiểm tra các mẫu và ranh giới tính toán 500/501; test riêng kiểm tra bản duyệt v5 của cả ba kênh cần xem lại và archive giữ nguyên.
-- Sau sửa: Python 218/218, JavaScript 57/57. Đây là kết quả tự động trên fixture; chưa smoke giao diện ứng dụng với policy v6 hoặc kiểm chứng mọi chuỗi, ranh giới 500/501 trên composer thật. Ước lượng có thể sai cả hai chiều và không là bảo đảm đăng được. BASE-03 và QA-02 vẫn mở.
+- Sau sửa: Python 218/218, JavaScript 57/57. Đây là kết quả tự động trên fixture; tại thời điểm đó chưa smoke giao diện ứng dụng với policy v6 hoặc kiểm chứng mọi chuỗi, ranh giới 500/501 trên composer thật. Các lượt thử sau được ghi ở hai mục phía trên. Ước lượng có thể sai cả hai chiều và không là bảo đảm đăng được. BASE-03 và QA-02 vẫn mở.
 
 ## BASE-03 / TEXT-03: đối chiếu composer Threads và X — 05/11/2026
 
