@@ -583,3 +583,8 @@ python -m newsroom --collect
 - Test service dùng hai luồng và barrier trên SQLite giả, gửi hai nội dung khác nhau cho cùng phiên bản X và cùng revision. Kết quả có đúng một lượt lưu thành công, một lượt conflict; mở lại kho thấy đúng nội dung và revision của lượt thắng.
 - `python -m unittest discover -s tests -p test_variants.py`: 57/57 đạt. Đây là một lượt cạnh tranh ở mức service, không bảo đảm cả hai thứ tự lập lịch, không thử giao diện hai thẻ hay mọi loại thay đổi; QA-02 và APR-04 vẫn mở.
 
+### 05/11/2026 — Hồi quy sau bổ sung kiểm thử (QA-01)
+
+- Trên commit `92f12d9`, `python -B -m unittest discover -s tests -q` đạt 216/216 và lệnh Node gồm sáu tệp trong README đạt 57/57, không bỏ qua test. Các kiểm thử dùng fixture và thư mục tạm.
+- Đây là hồi quy tự động, không thay thế QA trình duyệt hoặc xác minh policy nền tảng. Cần chạy lại sau thay đổi chức năng và trước quyết định phát hành; QA-02, BASE-03 và REL-01 vẫn mở.
+
