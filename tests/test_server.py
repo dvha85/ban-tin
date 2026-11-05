@@ -213,6 +213,41 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(len(self.room.bulletins()), 1)
         self.assertEqual(self.room.draft(draft['id']), draft)
 
+    def test_preview_and_split_response_contract_over_http(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử preview',
+            'url': 'https://example.com/preview-contract', 'summary': 'Nguồn giả lập.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+            'platform': 'threads', 'account_label': 'Kênh thử'})
+        path = f"/api/variants/{variant['id']}"
+        segments = [{'text': 'Một câu giả lập.', 'item_ids': [bulletin['items'][0]['id']]}]
+        history_before = self.room.bulletin_history(bulletin['id'])
+
+        status, _, body = self.request('POST', path + '/preview', {'segments': segments}, headers)
+        self.assertEqual(status, 200, body)
+        preview = json.loads(body)
+        renderer_fields = {'platform', 'policy_version', 'renderer_version', 'posts', 'valid', 'warning'}
+        context_fields = {'needs_update', 'bulletin_revision', 'omitted_item_ids'}
+        self.assertEqual(set(preview), renderer_fields | context_fields)
+        self.assertEqual(preview['bulletin_revision'], bulletin['revision'])
+        self.assertFalse(preview['needs_update'])
+        self.assertEqual(preview['omitted_item_ids'], [])
+        self.assertEqual(preview['posts'][0]['body'], segments[0]['text'])
+
+        status, _, body = self.request('POST', path + '/split', {
+            'revision': variant['revision'], 'expected_bulletin_revision': bulletin['revision'],
+            'segments': segments}, headers)
+        self.assertEqual(status, 200, body)
+        split = json.loads(body)
+        self.assertEqual(set(split), {'segments', 'preview'})
+        self.assertEqual(set(split['preview']), renderer_fields)
+        self.assertEqual(split['preview'], {key: preview[key] for key in renderer_fields})
+        self.assertEqual(split['segments'][0]['text'], segments[0]['text'])
+        self.assertEqual(self.room.variant(variant['id']), variant)
+        self.assertEqual(self.room.bulletin(bulletin['id']), bulletin)
+        self.assertEqual(self.room.bulletin_history(bulletin['id']), history_before)
+
     def test_variant_save_contract_over_http(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử hợp đồng lưu',

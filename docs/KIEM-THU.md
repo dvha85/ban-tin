@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 05/11/2026
 
+## BASE-02: hợp đồng phản hồi preview và split — 05/11/2026
+
+- Bổ sung `test_preview_and_split_response_contract_over_http` trên server và SQLite fixture: kiểm tra các trường renderer, ba trường ngữ cảnh chỉ có trên preview trực tiếp, revision bản tin, danh sách mục bị lược và kết quả chia một đoạn Threads ngắn. Đối chiếu bản tin, phiên bản và lịch sử không đổi sau hai yêu cầu. Sửa tài liệu API từ “hai trường” thành tên của ba trường thực tế.
+- Trước khi thêm test, bộ `test_server.py` đạt 35/35. Sau bổ sung, `python -B -m unittest discover -s tests -q` đạt 219/219 và lệnh sáu tệp JavaScript trong README đạt 57/57. Dữ liệu và URL đều giả; test chỉ bao phủ một đoạn không cần chia, không xác minh mọi dạng chia, lỗi hay hợp đồng API tổng thể. BASE-02 vẫn mở.
+
 ## BASE-03 / TEXT-03: ranh giới Threads trên composer — 05/11/2026
 
 - Trên Threads web qua Edge với tài khoản người dùng, nhập chuỗi thử gồm 493 chữ `a` và emoji gia đình `👨‍👩‍👧‍👦` (7 điểm mã): bộ đếm còn **0**. Thêm một chữ `a`: bộ đếm hiện **-1** màu đỏ và nút “Thêm vào thread” bị vô hiệu hóa; nút “Đăng” hiển thị mờ. Không bấm đăng và đã xóa chuỗi thử khỏi ô soạn.

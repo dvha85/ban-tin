@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> BASE-02 ngày 05/11: bổ sung test HTTP cho trường phản hồi preview/split và xác nhận không ghi dữ liệu với một đoạn giả; sửa tài liệu API cho đúng ba trường ngữ cảnh của preview. Hồi quy 219/219 Python, 57/57 JavaScript. Chưa bao phủ toàn bộ hợp đồng; xem `KIEM-THU.md`.
+
 > BASE-03 / TEXT-03 ngày 05/11: trên composer Threads thật, chuỗi 493 chữ `a` và emoji gia đình cho bộ đếm còn 0; thêm `a` hiện -1 và vô hiệu hóa “Thêm vào thread”. Không đăng bài, đã xóa chuỗi thử. Kết quả phù hợp test biên v6 với chuỗi này, chưa chứng minh toàn bộ quy tắc; xem `KIEM-THU.md`.
 
 > BASE-03 / QA-02 ngày 05/11: đã xem trước bản nháp Threads chứa emoji gia đình và ba URL trên UI kho giả, hiển thị v6 và 99/500 khớp số điểm mã của chuỗi đầy đủ. Đây là một trường hợp; xem `KIEM-THU.md`.
