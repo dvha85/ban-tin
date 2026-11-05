@@ -588,3 +588,8 @@ python -m newsroom --collect
 - Trên commit `92f12d9`, `python -B -m unittest discover -s tests -q` đạt 216/216 và lệnh Node gồm sáu tệp trong README đạt 57/57, không bỏ qua test. Các kiểm thử dùng fixture và thư mục tạm.
 - Đây là hồi quy tự động, không thay thế QA trình duyệt hoặc xác minh policy nền tảng. Cần chạy lại sau thay đổi chức năng và trước quyết định phát hành; QA-02, BASE-03 và REL-01 vẫn mở.
 
+### 05/11/2026 — Hai thẻ sửa cùng phiên bản (VAR-04 / QA-02)
+
+- Trình duyệt tích hợp mở cùng phiên bản X đã duyệt trên hai thẻ của server SQLite fixture. Nhập hai nội dung khác nhau; thẻ thứ hai lưu thành công, bản chuyển nháp và các xác nhận được bỏ. Thẻ thứ nhất thử lưu revision cũ thì báo phiên bản đã thay đổi ở cửa sổ khác; nội dung đang nhập vẫn hiện trong ô.
+- Hai lượt được gửi lần lượt, không đồng thời; chưa đối chiếu SQLite sau thao tác hay thử các kênh khác. Kiểm thử service hai lượt cạnh tranh được ghi riêng ở trên; QA-02 và APR-04 vẫn mở.
+

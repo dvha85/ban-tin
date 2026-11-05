@@ -739,3 +739,5 @@ Tài liệu này bổ sung roadmap kỹ thuật; không thay thế mô tả ch�
 
 > VAR-04 / APR-04 ngày 05/11: hai luồng service lưu cùng revision trên SQLite giả; một lượt thành công, một lượt conflict và mở lại giữ nội dung thắng. Bộ phiên bản 57/57 đạt; chưa thử hai thẻ hoặc mọi loại sửa. Xem `KIEM-THU.md`.
 
+> VAR-04 / QA-02 ngày 05/11: hai thẻ trên kho giả sửa cùng bản X; thẻ lưu sau báo xung đột và giữ nội dung đang nhập. Hai lượt gửi lần lượt, chưa đối chiếu SQLite hoặc các kênh khác; xem `KIEM-THU.md`.
+
