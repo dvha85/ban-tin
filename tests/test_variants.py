@@ -60,6 +60,32 @@ class VariantTests(unittest.TestCase):
             'platform': 'facebook', 'account_label': 'Cũ'})
         self.assertEqual(self.room.save_variant(legacy['id'], {'revision': legacy['revision']}), legacy)
 
+    def test_variant_actions_compare_displayed_parent_revision(self):
+        original = self.bulletin
+        variant = self.make_approved('x')
+        updated = self.room.save_bulletin(original['id'], {'revision': original['revision'], 'title': 'Bản tin mới'})
+        current = self.room.variant(variant['id'])
+        current = self.room.save_variant(current['id'], {'revision': current['revision'],
+            'expected_bulletin_revision': updated['revision'], 'adopt_bulletin_revision': True})
+        current = self.room.save_variant(current['id'], {'revision': current['revision'],
+            'checks': {key: True for key in CHECKS}})
+        current = self.room.approve_variant(current['id'], {'revision': current['revision']})
+        preview = self.room.preview_variant(current['id'], {})
+        self.assertFalse(preview['needs_update'])
+        self.assertEqual(preview['bulletin_revision'], updated['revision'])
+        before_history = self.room.bulletin_history(original['id'])
+        before_variants = self.room.variants(original['id'])
+        request = {'revision': current['revision'], 'expected_bulletin_revision': original['revision']}
+        for action in (self.room.split_variant, self.room.clone_variant, self.room.approve_variant):
+            with self.subTest(action=action.__name__), self.assertRaises(Conflict):
+                action(current['id'], request)
+            self.assertEqual(self.room.variants(original['id']), before_variants)
+            self.assertEqual(self.room.bulletin_history(original['id']), before_history)
+        request['expected_bulletin_revision'] = updated['revision']
+        self.assertTrue(self.room.split_variant(current['id'], request)['preview']['valid'])
+        self.assertEqual(self.room.clone_variant(current['id'], request)['status'], 'draft')
+        self.assertEqual(self.room.approve_variant(current['id'], request)['status'], 'approved')
+
     def test_multichannel_workflow_does_not_make_network_connections(self):
         # Exercise real service methods on a temporary SQLite store while
         # refusing outgoing connections, including the migration of a new store.

@@ -1111,13 +1111,15 @@ async function renderVariants(container, bulletin, focusSelector = false) {
     }
     const result = await api(`/api/variants/${variant.id}/preview`, {segments: collect()});
     const omitted = result.omitted_item_ids.length ? ` Mục không có trong phiên bản: ${result.omitted_item_ids.join(', ')}.` : '';
-    const changed = result.needs_update ? ' Bản tin gốc đã thay đổi; hãy sao chép nội dung chưa lưu trước khi mở lại bản tin, rồi kiểm tra trước khi duyệt.' : '';
+    const staleParentView = Number.isInteger(result.bulletin_revision) && result.bulletin_revision !== bulletin.revision;
+    const changed = result.needs_update || staleParentView ? ' Bản tin gốc đã thay đổi; hãy sao chép nội dung chưa lưu trước khi mở lại bản tin, rồi kiểm tra trước khi duyệt.' : '';
     showText('Xem trước phiên bản', result.posts.map(post => `${post.position + 1}. ${post.length}/${post.limit}${post.valid ? '' : ' · CHƯA ĐẠT'}\n${post.text}`).join('\n\n────────────\n\n'), `${result.warning} Quy tắc đầu ra: ${result.policy_version}.` + changed + omitted, null, false);
   });
   const split = node('button', 'button secondary', 'Đề xuất chia đoạn');
   split.disabled = locked || variant.platform === 'facebook';
   bulletinAction(split, async () => {
-    const result = await api(`/api/variants/${variant.id}/split`, {revision: variant.revision, segments: collect()});
+    const result = await api(`/api/variants/${variant.id}/split`, {revision: variant.revision,
+      expected_bulletin_revision: bulletin.revision, segments: collect()});
     segmentList.replaceChildren(); result.segments.forEach(addSegment);
     app.bulletinDirty = true; area.dataset.dirty = 'true';
     toast('Đã chia theo ranh giới câu/đoạn. Mục và nguồn giữ từ đoạn gốc; hãy đối chiếu, bỏ phần không liên quan rồi lưu. Bản xuất bỏ khoảng trắng đầu/cuối mỗi đoạn; hãy xem trước.');
@@ -1129,7 +1131,7 @@ async function renderVariants(container, bulletin, focusSelector = false) {
     approvalError.hidden = true; approvalError.textContent = '';
     try {
       if (app.bulletinDirty) throw new Error('Hãy lưu phiên bản và xác nhận 5 mục trước khi duyệt.');
-      await api(`/api/variants/${variant.id}/approve`, {revision: variant.revision});
+      await api(`/api/variants/${variant.id}/approve`, {revision: variant.revision, expected_bulletin_revision: bulletin.revision});
     } catch (error) {
       approvalError.textContent = error.message; approvalError.hidden = false;
       throw error;
@@ -1151,7 +1153,8 @@ async function renderVariants(container, bulletin, focusSelector = false) {
   const clone = node('button', 'button secondary', 'Tạo bản sao');
   bulletinAction(clone, async () => {
     if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi tạo bản sao.');
-    const result = await api(`/api/variants/${variant.id}/clone`, {revision: variant.revision}); app.variantId = result.id; renderBulletin(); await loadBulletinList();
+    const result = await api(`/api/variants/${variant.id}/clone`, {revision: variant.revision,
+      expected_bulletin_revision: bulletin.revision}); app.variantId = result.id; renderBulletin(); await loadBulletinList();
   });
   actions.append(save, preview, split, approve, exportButton, archive, clone); area.append(actions, approvalError);
   if (variant.status !== 'draft') await renderVariantPublication(area, variant);

@@ -36,6 +36,36 @@ class Element {
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
 }
 
+test('variant actions carry the displayed bulletin revision', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = [], messages = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+    setTimeout, clearTimeout, calls, messages, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.container = new Element();
+  vm.runInContext(`app.variantId = 3;
+    api = async (path, data) => {
+      if (path.endsWith('/variants')) return [{id: 3, revision: 2, platform: 'x', account_label: 'Kênh thử', status: 'draft',
+        locked_at: null, needs_update: false, policy_stale: false, checks: {},
+        segments: [{text: 'Tin giả', item_ids: [1], source_ids: ['source-1']}]}];
+      calls.push({path, data}); throw new Error('Bản tin đã thay đổi');
+    }; toast = message => messages.push(message);`, context);
+  context.bulletin = {id: 7, revision: 4, items: [{id: 1, title: 'Tin giả', sources: [{source_id: 'source-1', url: 'https://example.com/a'}]}]};
+  await vm.runInContext('renderVariants(container, bulletin)', context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const all = walk(context.container);
+  for (const name of ['Đề xuất chia đoạn', 'Duyệt phiên bản', 'Tạo bản sao']) {
+    const button = all.find(el => el.tagName === 'button' && el.textContent === name);
+    button.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve));
+    assert.equal(calls.at(-1).data.expected_bulletin_revision, 4, name);
+  }
+  assert.equal(calls.length, 3);
+});
+
 test('variant save includes the displayed bulletin revision and keeps text on conflict', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
@@ -1197,9 +1227,9 @@ test('preview warns if the server sees a newer bulletin revision', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
   const previews = [];
-  let stale = true;
+  let stale = true, serverRevision = 5;
   const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
-    setTimeout, clearTimeout, fetch: () => new Promise(() => {}), previews, isStale: () => stale,
+    setTimeout, clearTimeout, fetch: () => new Promise(() => {}), previews, isStale: () => stale, serverRevision: () => serverRevision,
     window: {location: {search: ''}, addEventListener() {}},
     document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
       createElement: tag => new Element(tag), createTextNode: text => text}});
@@ -1210,10 +1240,10 @@ test('preview warns if the server sees a newer bulletin revision', async () => {
       id: 3, revision: 1, platform: 'x', account_label: 'Kênh thử', status: 'draft',
       locked_at: null, needs_update: false, policy_stale: false,
       checks: {}, segments: [{text: 'Tin giả', item_ids: [1], source_ids: ['source-1']}]
-    }] : {warning: 'Bộ đếm chỉ hỗ trợ.', policy_version: 'fixture-policy-v1', needs_update: isStale(), omitted_item_ids: [],
+    }] : {warning: 'Bộ đếm chỉ hỗ trợ.', policy_version: 'fixture-policy-v1', needs_update: isStale(), bulletin_revision: serverRevision(), omitted_item_ids: [],
           posts: [{position: 0, length: 10, limit: 280, valid: true, text: 'Tin giả'}]};
     showText = (title, text, warning) => previews.push({title, text, warning});`, context);
-  const bulletin = {id: 7, items: [{id: 1, title: 'Tin giả', sources: [{source_id: 'source-1', url: 'https://example.com/a'}]}]};
+  const bulletin = {id: 7, revision: 4, items: [{id: 1, title: 'Tin giả', sources: [{source_id: 'source-1', url: 'https://example.com/a'}]}]};
   context.bulletin = bulletin;
   await vm.runInContext('renderVariants(container, bulletin)', context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
@@ -1225,8 +1255,11 @@ test('preview warns if the server sees a newer bulletin revision', async () => {
   assert.match(previews[0].warning, /fixture-policy-v1/);
   assert.match(previews[0].warning, /sao chép nội dung chưa lưu trước khi mở lại bản tin/i);
   assert.match(previews[0].warning, /kiểm tra.*duyệt/i);
-  stale = false;
+  stale = false; serverRevision = 4;
   preview.listeners.click[0]({}); await tick();
   assert.doesNotMatch(previews[1].warning, /bản tin gốc đã thay đổi/i);
   assert.match(previews[1].warning, /fixture-policy-v1/);
+  serverRevision = 5;
+  preview.listeners.click[0]({}); await tick();
+  assert.match(previews[2].warning, /bản tin gốc đã thay đổi/i);
 });

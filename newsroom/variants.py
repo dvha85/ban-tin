@@ -10,6 +10,15 @@ CHECKS = ('sources', 'facts', 'original', 'rights', 'claims')
 UNRESOLVED = re.compile(r'\[(?:CẦN KIỂM TRA|CHƯA XÁC MINH)\]', re.I)
 
 
+def _check_expected_bulletin_revision(data, bulletin):
+    from .service import Conflict
+    if 'expected_bulletin_revision' in data and (
+            type(data['expected_bulletin_revision']) is not int or
+            data['expected_bulletin_revision'] != bulletin['revision']):
+        raise Conflict('Bản tin đang hiển thị đã thay đổi. Hãy sao chép nội dung chưa lưu, '
+                       'mở lại bản tin và kiểm tra trước khi tiếp tục.')
+
+
 def snapshot_hash(snapshot):
     return hashlib.sha256(_json(snapshot).encode('utf-8')).hexdigest()
 
@@ -113,6 +122,7 @@ class VariantMixin:
             conn.execute('BEGIN IMMEDIATE')
             original = self._locked_variant(conn, variant_id, data.get('revision'))
             bulletin = self._bulletin(conn, original['bulletin_id'])
+            _check_expected_bulletin_revision(data, bulletin)
             account = _text(data.get('account_label', original['account_label']), 'Tên tài khoản / Page', 120)
             # Preserve every segment's text. A parent edit may have removed an item
             # or source; never silently substitute another attribution for it.
@@ -153,11 +163,7 @@ class VariantMixin:
             if current['locked_at'] is not None:
                 raise Conflict('Phiên bản đã ghi nhận đăng được giữ nguyên. Hãy tạo bản sao để sửa.')
             bulletin = self._bulletin(conn, current['bulletin_id'])
-            if 'expected_bulletin_revision' in data and (
-                    type(data['expected_bulletin_revision']) is not int or
-                    data['expected_bulletin_revision'] != bulletin['revision']):
-                raise Conflict('Bản tin đang hiển thị đã thay đổi. Hãy sao chép nội dung chưa lưu, '
-                               'mở lại bản tin và kiểm tra trước khi lưu phiên bản.')
+            _check_expected_bulletin_revision(data, bulletin)
             if current['needs_update'] and data.get('adopt_bulletin_revision') is not True:
                 raise Conflict('Bản tin gốc đã đổi. Hãy kiểm tra lại và xác nhận cập nhật phiên bản này.')
             if current.get('attribution_review_required') and data.get('attribution_reviewed') is not True:
@@ -198,6 +204,7 @@ class VariantMixin:
             segments = data.get('segments', variant['segments']) if data is not None else variant['segments']
             result = render_segments(variant['platform'], segments, bulletin)
             result['needs_update'] = variant['needs_update']
+            result['bulletin_revision'] = bulletin['revision']
             result['omitted_item_ids'] = [item['id'] for item in bulletin['items']
                                           if not any(item['id'] in post['item_ids'] for post in result['posts'])]
             return result
@@ -211,6 +218,7 @@ class VariantMixin:
             if variant['locked_at'] is not None or variant['needs_update']:
                 raise Conflict('Phiên bản đã khóa hoặc bản tin gốc đã thay đổi; hãy kiểm tra trước khi chia.')
             bulletin = self._bulletin(conn, variant['bulletin_id'])
+            _check_expected_bulletin_revision(data, bulletin)
             segments = split_segments(variant['platform'], data.get('segments', variant['segments']), bulletin)
             return {'segments': segments, 'preview': render_segments(variant['platform'], segments, bulletin)}
 
@@ -226,6 +234,7 @@ class VariantMixin:
             if variant.get('attribution_review_required'):
                 raise ValidationError('Bản sao cần được kiểm tra lại mục và nguồn trước khi duyệt.')
             bulletin = self._bulletin(conn, variant['bulletin_id'])
+            _check_expected_bulletin_revision(data, bulletin)
             rendered = render_segments(variant['platform'], variant['segments'], bulletin)
             if not variant['account_label'] or not rendered['valid']:
                 raise ValidationError('Cần tên tài khoản và nội dung từng đoạn trong giới hạn.')

@@ -276,6 +276,38 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(json.loads(body)['status'], 'approved')
         self.assertEqual(self.request('GET', path + '/export', headers=headers)[0], 200)
 
+    def test_variant_actions_reject_outdated_displayed_bulletin_over_http(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin giả kiểm tra thẻ cũ',
+            'url': 'https://example.com/stale-actions', 'summary': 'Nguồn giả.'})
+        original = self.room.create_bulletin({'article_ids': [article['id']]})
+        variant = self.room.create_variant(original['id'], {'bulletin_revision': original['revision'],
+            'platform': 'x', 'account_label': 'Kênh giả'})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+            'segments': [{'text': 'Một câu tin giả.', 'item_ids': [original['items'][0]['id']]}]})
+        updated = self.room.save_bulletin(original['id'], {'revision': original['revision'], 'title': 'Đã đổi'})
+        current = self.room.variant(variant['id'])
+        current = self.room.save_variant(current['id'], {'revision': current['revision'],
+            'expected_bulletin_revision': updated['revision'], 'adopt_bulletin_revision': True})
+        path = f"/api/variants/{current['id']}"
+        status, _, body = self.request('POST', path + '/preview', {}, headers)
+        self.assertEqual(status, 200, body)
+        self.assertEqual(json.loads(body)['bulletin_revision'], updated['revision'])
+        self.assertFalse(json.loads(body)['needs_update'])
+        history = self.room.bulletin_history(original['id'])
+        variants = self.room.variants(original['id'])
+        payload = {'revision': current['revision'], 'expected_bulletin_revision': original['revision']}
+        for action in ('split', 'clone', 'approve'):
+            with self.subTest(action=action):
+                status, _, body = self.request('POST', path + '/' + action, payload, headers)
+                self.assertEqual(status, 409, body)
+                self.assertEqual(self.room.variants(original['id']), variants)
+                self.assertEqual(self.room.bulletin_history(original['id']), history)
+        payload['expected_bulletin_revision'] = updated['revision']
+        self.assertEqual(self.request('POST', path + '/split', payload, headers)[0], 200)
+        self.assertEqual(self.request('POST', path + '/approve', payload, headers)[0], 400)
+        self.assertEqual(self.request('POST', path + '/clone', payload, headers)[0], 200)
+
     def test_variant_save_rejects_outdated_displayed_bulletin_over_http(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử bản tin cũ',

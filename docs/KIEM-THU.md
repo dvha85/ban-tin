@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## BASE-02 / VAR-03 / QA-02: xem trước, chia, duyệt và tạo bản sao với bản tin cũ 05/11/2026
+
+- Trước sửa, test tái hiện preview không cảnh báo khi phiên bản đã cập nhật theo bản tin mới ở nơi khác nhưng trang vẫn hiển thị bản tin cũ; test handler cũng cho thấy yêu cầu chia/duyệt/tạo bản sao chưa gửi revision bản tin đang xem.
+- Preview trả thêm revision bản tin thực sự được dùng để dựng; UI cảnh báo nếu khác revision đang hiển thị, kể cả khi `needs_update` là false. UI gửi revision đang hiển thị khi chia, duyệt hoặc tạo bản sao; server trả 409 nếu revision được gửi sai hoặc cũ. Trường vẫn tùy chọn với client cũ, nên client không gửi phải tự đối chiếu.
+- Test service, HTTP và handler kiểm tra từ chối không ghi dữ liệu/lịch sử, hoạt động với revision hiện tại và cảnh báo preview. Hồi quy Python 211/211, JavaScript 55/55. Trình duyệt tích hợp mở bản tin trên SQLite giả; một tiến trình service khác sửa bản tin và cập nhật phiên bản, sau đó trang cũ chọn phiên bản, xem cảnh báo preview và bị chặn chia đoạn. Chưa thử qua UI các tổ hợp duyệt/tạo bản sao, mọi nền tảng hay toàn bộ QA-02.
+
 ## BASE-02 / VAR-03 / QA-02: kiểm tra bản tin đang hiển thị khi lưu phiên bản 05/11/2026
 
 - Trước sửa, test service tái hiện trường hợp bản tin gốc đã đổi, client lấy revision phiên bản mới nhưng vẫn gửi xác nhận dựa trên bản tin đang hiển thị cũ: server chấp nhận lưu. Test handler tái hiện yêu cầu giao diện chưa gửi revision bản tin đang hiển thị.
