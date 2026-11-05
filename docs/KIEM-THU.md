@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## FMT-03 / QA-02: đề xuất chia Threads ngắn — 05/11/2026
+
+- Trên trình duyệt tích hợp và SQLite fixture riêng, tạo phiên bản Threads từ bản tin ba mục, nhập và lưu một câu tiếng Việt ngắn, rồi chọn đề xuất chia. Giao diện giữ nguyên câu trong một đoạn, giữ ba mục và URL nguồn đã chọn, và hiển thị hướng dẫn đối chiếu nguồn cùng lưu ý về khoảng trắng.
+- Đây là trường hợp không cần tách thành nhiều đoạn; chưa kiểm tra chia đoạn dài, lưu sau đề xuất, bộ đếm thực tế của Threads hoặc toàn bộ QA. Server fixture đã dừng, không dùng dữ liệu vận hành.
+
 ## DIG-04 / QA-02: đối chiếu gói tư liệu do người dùng cung cấp — 05/11/2026
 
 - Người dùng gửi nội dung sau yêu cầu sao chép gói từ bản tin ba mục trên SQLite fixture riêng tại cổng 18784. Nội dung có tiêu đề `Bản tin thử nghiệm`, đủ ba mục theo thứ tự và các URL `https://example.com/story-0`, `https://example.com/story-1`, `https://example.com/story-2`.
