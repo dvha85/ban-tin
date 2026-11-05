@@ -417,6 +417,7 @@ Gate: MIG-01…05 đạt trong phạm vi fixture đã ghi; dữ liệu legacy m�
 - [ ] **DIG-02 / P1:** CRUD bản tin/mục, thứ tự, snapshot nguồn, revision và lịch sử.
   - Theo lựa chọn của người dùng, bổ sung lưu trữ có thể khôi phục để ẩn cả bản tin khỏi danh sách đang làm; giữ nội dung, bản duyệt, ghi nhận và lịch sử. Test service, HTTP, DOM giả và smoke lưu trữ/khôi phục trên trình duyệt với kho giả đạt; xem phạm vi tại `KIEM-THU.md`.
 - [ ] **DIG-03 / P1:** Cảnh báo tuổi tin/trích đoạn, ghi chú kiểm chứng riêng, nguồn theo từng mục.
+  - Kho giả trên trình duyệt đã thử chọn nguồn khi thêm mục và sao chép bài cũ; sửa nhãn thiếu tiêu đề theo ID. Phạm vi, kết quả hồi quy và các trường hợp chưa kiểm tra ghi trong `KIEM-THU.md`.
 - [ ] **DIG-04 / P1:** Gói tư liệu nhiều mục và biểu mẫu nhập lại kết quả; hoạt động khi không dùng AI.
 
 Gate: NEWS-01…06 và SOURCE-01…03 đạt; chưa tuyên bố đầu ra đa kênh hoàn chỉnh ở giai đoạn này.

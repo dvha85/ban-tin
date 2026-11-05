@@ -59,6 +59,7 @@ test('source picker requires one to three checked sources and supports cancellat
   let dialog = body.children[0];
   assert.ok(dialog && dialog.open);
   let all = walk(dialog), checks = all.filter(el => el.tagName === 'input' && el.type === 'checkbox');
+  assert.ok(all.some(el => el.textContent.includes('cho “Tin thử”')));
   assert.equal(checks.length, 4);
   const confirm = all.find(el => el.tagName === 'button' && el.textContent === 'Chọn nguồn');
   confirm.dispatchEvent({type: 'click'});
@@ -74,6 +75,11 @@ test('source picker requires one to three checked sources and supports cancellat
   dialog = body.children[0]; dialog.close();
   assert.equal(await pending, null);
   assert.equal(body.children.length, 0);
+  pending = vm.runInContext("chooseBulletinSources({...article, id: 8, title: ''})", context);
+  dialog = body.children[0];
+  assert.ok(walk(dialog).some(el => el.textContent.includes('Bài #8 (chưa đặt tiêu đề)')));
+  dialog.close();
+  assert.equal(await pending, null);
 });
 
 test('source selection is awaited by create, add, and legacy copy actions', async () => {
@@ -154,6 +160,7 @@ test('removing a source or item requires an in-page confirmation and rechecks pe
   const find = (root, text) => walk(root).find(el => el.tagName === 'button' && el.textContent === text);
   const click = async el => { assert.ok(el); el.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
   let editor = get('bulletin-editor');
+  assert.equal(find(editor, 'Bỏ nguồn này')['aria-label'], 'Bỏ nguồn https://example.com/a khỏi mục Mục 5');
   await click(find(editor, 'Bỏ nguồn này'));
   let confirm = find(editor, 'Xác nhận bỏ nguồn'), cancel = find(editor, 'Hủy bỏ nguồn');
   assert.ok(confirm && cancel); assert.equal(confirm.focused, true); assert.equal(calls.length, 0);
@@ -179,6 +186,15 @@ test('removing a source or item requires an in-page confirmation and rechecks pe
   assert.ok(confirm && cancel); await click(cancel); assert.equal(calls.length, 2);
   await click(find(editor, 'Bỏ mục khỏi bản tin')); await click(confirm);
   assert.deepEqual(JSON.parse(JSON.stringify(calls[2].body)), {revision: 4, remove_item_id: 5});
+  vm.runInContext("app.bulletin.items[0].title = ''; renderBulletin();", context);
+  editor = get('bulletin-editor');
+  const unnamedSource = find(editor, 'Bỏ nguồn này');
+  const unnamedItem = find(editor, 'Bỏ mục khỏi bản tin');
+  assert.match(unnamedSource['aria-label'], /#5 \(chưa đặt tiêu đề\)/);
+  assert.match(unnamedItem['aria-label'], /#5 \(chưa đặt tiêu đề\)/);
+  assert.ok(walk(editor).some(el => /Di chuyển mục 1 #5 \(chưa đặt tiêu đề\) xuống/.test(el['aria-label'] || '')));
+  assert.ok(walk(editor).some(el => /Bỏ nguồn .*#5 \(chưa đặt tiêu đề\)/.test(el.textContent)));
+  assert.ok(walk(editor).some(el => /Bỏ mục .*#5 \(chưa đặt tiêu đề\)/.test(el.textContent)));
 });
 
 test('inline source form keeps pending fields, blocks unrelated saves, and retains failed input', async () => {

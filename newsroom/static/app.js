@@ -613,6 +613,9 @@ function hasPendingBulletinUrl(except = null) {
 function hasPendingPublicationEdit() {
   return Boolean($('bulletin-editor').querySelector('[data-pending-publication-edit="true"]'));
 }
+function bulletinItemName(item) {
+  return item.title?.trim() ? item.title : `#${item.id} (chưa đặt tiêu đề)`;
+}
 function markVariantDirty(area, event) {
   if (!event.target.dataset.publicationUrl && !event.target.dataset.metricField && !event.target.dataset.correctionField) {
     app.bulletinDirty = true; area.dataset.dirty = 'true';
@@ -624,8 +627,9 @@ function removalConfirmation(trigger, bulletin, item, source = null) {
   const panel = node('div', 'notice'); panel.hidden = true;
   panel.setAttribute('role', 'group');
   panel.setAttribute('aria-label', source ? 'Xác nhận bỏ nguồn' : 'Xác nhận bỏ mục');
-  const message = source ? `Bỏ nguồn ${source.url} khỏi mục “${item.title}”?` :
-    `Bỏ mục “${item.title}” khỏi bản tin này?`;
+  const itemName = bulletinItemName(item);
+  const message = source ? `Bỏ nguồn ${source.url} khỏi mục “${itemName}”?` :
+    `Bỏ mục “${itemName}” khỏi bản tin này?`;
   const confirm = node('button', 'button secondary', source ? 'Xác nhận bỏ nguồn' : 'Xác nhận bỏ mục');
   const cancel = node('button', 'button secondary', source ? 'Hủy bỏ nguồn' : 'Hủy bỏ mục');
   const checkContext = () => {
@@ -795,7 +799,7 @@ function renderBulletin(focusVariantSelector = false) {
       if (warnings.length) sources.append(node('p', 'small-note', `Cần kiểm tra: ${warnings.join(' ')} Đây là nhắc biên tập, không đánh giá độ tin cậy.`));
       const removeSource = node('button', 'text-button', 'Bỏ nguồn này');
       removeSource.disabled = item.sources.length <= 1;
-      removeSource.setAttribute('aria-label', `Bỏ nguồn ${source.url} khỏi mục ${item.title}`);
+      removeSource.setAttribute('aria-label', `Bỏ nguồn ${source.url} khỏi mục ${bulletinItemName(item)}`);
       sources.append(removeSource, removalConfirmation(removeSource, bulletin, item, source));
     });
     section.append(node('p', 'small-note', 'Nguồn đã lưu cho mục:'), sources);
@@ -868,12 +872,12 @@ function renderBulletin(focusVariantSelector = false) {
     actions.append(addSource);
     const remove = node('button', 'button secondary', 'Bỏ mục khỏi bản tin');
     remove.disabled = bulletin.items.length <= 1;
-    remove.setAttribute('aria-label', `Bỏ mục ${item.title} khỏi bản tin`);
+    remove.setAttribute('aria-label', `Bỏ mục ${bulletinItemName(item)} khỏi bản tin`);
     actions.append(remove, removalConfirmation(remove, bulletin, item));
     for (const [label, delta] of [['↑', -1], ['↓', 1]]) {
       const move = node('button', 'button secondary', label); move.disabled = position + delta < 0 || position + delta >= bulletin.items.length;
       move.dataset.moveDirection = delta < 0 ? 'up' : 'down';
-      move.setAttribute('aria-label', `Di chuyển mục ${position + 1} ${item.title} ${delta < 0 ? 'lên' : 'xuống'}`);
+      move.setAttribute('aria-label', `Di chuyển mục ${position + 1} ${bulletinItemName(item)} ${delta < 0 ? 'lên' : 'xuống'}`);
       bulletinAction(move, async () => {
         if (app.bulletinDirty) throw new Error('Hãy lưu thay đổi trước khi đổi thứ tự.');
         const ids = bulletin.items.map(row => row.id);
@@ -1354,8 +1358,10 @@ async function chooseBulletinSources(article) {
   return new Promise((resolve, reject) => {
     const dialog = node('dialog', 'source-picker');
     dialog.setAttribute('aria-label', 'Chọn nguồn cho bản tin');
+    const title = article.title?.trim() ? article.title :
+      (article.id == null ? 'Bài chưa đặt tiêu đề' : `Bài #${article.id} (chưa đặt tiêu đề)`);
     dialog.append(node('h2', '', 'Chọn nguồn cho bản tin'),
-      node('p', '', `Chọn từ 1 đến 3 nguồn cho “${article.title}”.`));
+      node('p', '', `Chọn từ 1 đến 3 nguồn cho “${title}”.`));
     const checks = article.sources.map(source => {
       const label = node('label', 'bulletin-check source-picker-row');
       const check = node('input'); check.type = 'checkbox';

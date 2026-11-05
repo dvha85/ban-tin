@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## DIG-02 / DIG-03 / QA-02: thêm mục, sao chép và nhãn khi thiếu tiêu đề 05/11/2026
+
+- Trên trình duyệt tích hợp và SQLite giả riêng, thêm một tin có bốn nguồn vào bản tin một mục: chọn nguồn 2 và 4, giao diện mục mới hiện đúng hai URL. Sao chép bản nháp cũ có bốn nguồn, chọn nguồn 1 và 3: bản tin mới hiện đúng hai URL, bản sao Facebook ở trạng thái nháp. Đọc SQLite ở chế độ chỉ đọc xác nhận các URL theo từng mục và bản nháp cũ vẫn ở revision 1. Các thao tác này thực hiện trước sửa nhãn, không truy cập URL nguồn hoặc tài khoản mạng xã hội.
+- Phát hiện bản nháp cũ chưa đặt tiêu đề khiến hộp chọn hiện tên rỗng; mục tạo từ bản nháp đó cũng có nhãn bỏ nguồn và mục rỗng. Bổ sung nhãn thay thế có ID khi thiếu tiêu đề trong hộp chọn, nhãn thao tác và xác nhận; tiêu đề dữ liệu vẫn giữ nguyên. Với tiêu đề hiện có, giữ cách hiển thị trước đó.
+- Kiểm thử handler được mở rộng đã thất bại ở hai chỗ trước sửa và đạt sau sửa. Hồi quy trước sửa: 207/207 Python, 50/50 JavaScript; sau sửa: 207/207 Python, 50/50 JavaScript. Trên trình duyệt tích hợp sau sửa, hộp chọn hiện `Bài #1 (chưa đặt tiêu đề)`; bản tin sao chép hiện nhãn nguồn/mục `#3 (chưa đặt tiêu đề)`, mở cảnh báo bỏ nguồn hiện đúng URL và ID rồi hủy. Chưa xác nhận xóa qua UI hoặc thử trình đọc màn hình; QA-02 vẫn mở, phần rời trang/tải lại có nội dung chưa lưu vẫn để sau.
+
 ## BASE-03 / TEXT-03: URL Unicode và ví dụ X 05/11/2026
 
 - Đối chiếu lại [tài liệu đếm ký tự X](https://docs.x.com/fundamentals/counting-characters): ví dụ bốn dạng emoji, hai dạng NFC/NFD và hai URL cho kết quả tương ứng tại bộ đếm cục bộ. Bổ sung test tính độc lập trọng số của 15 ví dụ URL không thuần ASCII còn lại trong fixture trích URL đã ghim; tính theo NFC, các dải trọng số v3 và URL kỳ vọng, không gọi bộ tách URL khi tính kết quả kỳ vọng. Không có emoji ngoài URL trong 15 ví dụ này.
