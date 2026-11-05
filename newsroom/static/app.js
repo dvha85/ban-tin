@@ -1030,11 +1030,36 @@ async function renderVariants(container, bulletin, focusSelector = false) {
     rows.forEach(row => row.selected.addEventListener('change', updateRelevance));
     updateRelevance();
     const remove = node('button', 'button secondary', 'Bỏ đoạn'); remove.disabled = locked;
+    const confirmation = node('div', 'notice'); confirmation.hidden = true;
+    confirmation.setAttribute('role', 'group');
+    confirmation.setAttribute('aria-label', 'Xác nhận bỏ đoạn');
+    const message = node('p');
+    const confirm = node('button', 'button secondary', 'Xác nhận bỏ đoạn');
+    const cancel = node('button', 'button secondary', 'Hủy bỏ đoạn');
+    let removalSnapshot = null;
     listen(remove, 'click', () => {
+      if (app.busy || remove.disabled) return;
       if (segmentList.children.length <= 1) return toast('Cần giữ ít nhất một đoạn.');
-      block.remove(); app.bulletinDirty = true; area.dataset.dirty = 'true';
+      const position = [...segmentList.children].indexOf(block);
+      removalSnapshot = {position, content: JSON.stringify(block.collect())};
+      message.textContent = `Bỏ đoạn ${position + 1}? Nội dung đang nhập trong đoạn sẽ bị bỏ khi bạn xác nhận.`;
+      confirmation.hidden = false; confirm.focus();
     });
-    block.append(remove); segmentList.append(block);
+    listen(cancel, 'click', () => { confirmation.hidden = true; removalSnapshot = null; remove.focus(); });
+    listen(confirm, 'click', () => {
+      if (app.busy || remove.disabled || confirmation.hidden || !removalSnapshot) return;
+      const position = [...segmentList.children].indexOf(block);
+      if (segmentList.children.length <= 1 || position !== removalSnapshot.position ||
+          JSON.stringify(block.collect()) !== removalSnapshot.content) {
+        confirmation.hidden = true; removalSnapshot = null;
+        throw new Error('Đoạn đã thay đổi. Hãy kiểm tra và xác nhận lại trước khi bỏ.');
+      }
+      block.remove(); app.bulletinDirty = true; area.dataset.dirty = 'true';
+      const next = segmentList.children[position] || segmentList.children[position - 1];
+      next?.querySelector('textarea')?.focus();
+    });
+    confirmation.append(message, confirm, cancel);
+    block.append(remove, confirmation); segmentList.append(block);
     block.collect = () => ({text: body.input.value, item_ids: rows.filter(row => row.selected.checked).map(row => row.id),
       source_ids: rows.filter(row => row.selected.checked).flatMap(row => row.sourceChecks.filter(source => source.check.checked).map(source => source.id))});
   }

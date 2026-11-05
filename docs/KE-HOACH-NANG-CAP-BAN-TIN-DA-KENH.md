@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> FMT-04 / QA-02 ngày 05/11: thêm xác nhận trước khi bỏ đoạn, giữ nội dung khi hủy và yêu cầu xác nhận lại nếu đoạn hoặc nguồn đã đổi. Hồi quy Python 207/207, JavaScript 53/53; smoke trình duyệt kho giả đã thử mở/hủy. Xem `KIEM-THU.md`; QA-02 vẫn mở.
+
 > QA-01 ngày 05/11: chạy lại toàn bộ bộ kiểm thử hiện có trên commit `6df28d1`: 207/207 Python và 52/52 JavaScript đạt; lệnh JavaScript bao gồm cả sáu tệp `*.test.js` hiện có. Đây là bằng chứng tự động trên fixture, chưa đóng QA-02 hay BASE-03; cần chạy lại sau thay đổi chức năng và trước phát hành. Xem `KIEM-THU.md`.
 
 > FMT-02 / QA-02 ngày 05/11: thử hai thẻ trên kho giả, sửa tiêu đề bản tin ở thẻ thứ hai; thẻ thứ nhất xem trước có cảnh báo, giữ nội dung phiên bản chưa lưu và từ chối lưu revision cũ. Chi tiết và giới hạn tại `KIEM-THU.md`; QA-02 vẫn mở.
@@ -455,7 +457,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ### G6 — Nghiệm thu và tài liệu
 
-- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy trên commit `6df28d1`: Python 207/207, JavaScript 52/52; phải chạy lại nếu mã thay đổi và trước phát hành.
+- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Sau sửa xác nhận bỏ đoạn: Python 207/207, JavaScript 53/53; phải chạy lại nếu mã thay đổi và trước phát hành.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.
@@ -685,6 +687,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 05/11/2026 | APR-03 / QA-02 | Đang làm | Nút thử sao chép trong hộp thủ công kiểm tra lại bản duyệt; test handler tái hiện lỗi cũ, Python 207/207 và JS 52/52; trình duyệt tích hợp trên kho giả hiển thị lỗi trong hộp khi duyệt bị hủy | Ctrl+C trực tiếp trong ô không có bước kiểm tra lại; chưa thử mọi trình duyệt hoặc duyệt lại qua UI khi hộp đang mở |
 | 05/11/2026 | FMT-02 / QA-02 | Đang làm | Trình duyệt tích hợp trên kho giả: hai thẻ, lưu tiêu đề bản tin ở thẻ thứ hai; thẻ thứ nhất xem trước cảnh báo, giữ nội dung chưa lưu và từ chối lưu revision cũ; đối chiếu SQLite chỉ đọc | Một phiên bản Facebook nháp và một kiểu sửa; chưa kiểm tra mọi nền tảng hoặc rời trang/tải lại |
 | 05/11/2026 | QA-01 / QA-03 | Hoàn tất trong phạm vi fixture | Trên commit `6df28d1`, Python unittest discover 207/207 và sáu tệp JavaScript 52/52 đạt; fixture migration/restore nằm trong bộ Python | Chạy lại sau thay đổi chức năng và trước phát hành; QA-02, BASE-03 và quyết định triển khai vẫn mở |
+| 05/11/2026 | FMT-04 / QA-02 | Đang làm | Xác nhận bỏ đoạn có kiểm tra nội dung và nguồn; test handler tái hiện trước sửa và đạt sau sửa, Python 207/207, JavaScript 53/53. Trình duyệt kho giả thử mở và hủy | Chưa xác nhận bỏ qua UI hoặc kiểm tra mọi trình duyệt; QA-02 vẫn mở |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 

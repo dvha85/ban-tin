@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## FMT-04 / QA-02: xác nhận trước khi bỏ đoạn 05/11/2026
+
+- Trước sửa, test handler mới tái hiện **Bỏ đoạn** xóa ngay ô đang sửa. Sau sửa, nút mở vùng xác nhận chỉ rõ số đoạn; hủy giữ nội dung và trả tiêu điểm về nút. Nếu nội dung, lựa chọn mục/nguồn hoặc vị trí thay đổi sau khi mở, thao tác bị từ chối và phải xác nhận lại. Sau xác nhận, đoạn chỉ được bỏ khỏi phiên bản đã lưu khi người dùng lưu phiên bản.
+- Test handler kiểm tra hủy, thay nội dung, thay nguồn, xác nhận và giữ đoạn còn lại. Trước sửa test mới thất bại; sau sửa toàn bộ Python 207/207 và JavaScript 53/53 đạt. Trên trình duyệt tích hợp với SQLite giả và một phiên bản X hai đoạn, sửa đoạn thứ nhất, mở xác nhận và chọn hủy: nội dung vẫn còn, tiêu điểm về nút. Chưa thử xác nhận bỏ qua giao diện; không suy rộng sang mọi trình duyệt hoặc QA-02 tổng thể.
+
 ## QA-01: hồi quy toàn bộ bộ kiểm thử hiện có 05/11/2026
 
 - Trên mã commit `6df28d1`, `rtk proxy python -B -m unittest discover -s tests -q` đạt **207/207**. Bộ này gồm các kiểm thử migration schema 1/2 mô phỏng và schema 3 fixture, đối chiếu các hàng legacy và bản xuất, cùng các nhánh lỗi backup, migration và restore. Các cơ sở dữ liệu kiểm thử nằm trong thư mục tạm.

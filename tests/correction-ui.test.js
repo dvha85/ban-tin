@@ -13,7 +13,8 @@ class Element {
     this.classList = {toggle() {}}; this.inert = false; this.isConnected = true;
     this.value = ''; this.textContent = ''; this.disabled = false;
   }
-  append(...children) { this.children.push(...children); }
+  append(...children) { for (const child of children) if (child instanceof Element) child.parentElement = this; this.children.push(...children); }
+  remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter(child => child !== this); this.isConnected = false; }
   replaceChildren(...children) { this.children = children; }
   addEventListener(name, listener) { (this.listeners[name] ||= []).push(listener); }
   dispatchEvent(event) { for (const listener of this.listeners[event.type] || []) listener(event); }
@@ -34,6 +35,54 @@ class Element {
   }
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
 }
+
+test('removing an edited segment requires confirmation and preserves it on cancel or later edits', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const messages = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+    setTimeout, clearTimeout, messages, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.container = new Element();
+  vm.runInContext(`app.variantId = 3;
+    api = async () => [{id: 3, revision: 1, platform: 'x', account_label: 'Kênh thử', status: 'draft',
+      locked_at: null, needs_update: false, policy_stale: false, checks: {},
+      segments: [{text: 'Đoạn đầu', item_ids: [1], source_ids: ['source-1']},
+                 {text: 'Đoạn hai', item_ids: [1], source_ids: ['source-1']}]}];
+    toast = message => messages.push(message);`, context);
+  context.bulletin = {id: 7, items: [{id: 1, title: 'Tin giả', sources: [{source_id: 'source-1', url: 'https://example.com/a'}]}]};
+  await vm.runInContext('renderVariants(container, bulletin)', context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const all = () => walk(context.container);
+  const button = name => all().find(el => el.tagName === 'button' && el.textContent === name);
+  const click = async el => { assert.ok(el); el.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  const firstText = all().find(el => el.tagName === 'textarea' && el.value === 'Đoạn đầu');
+  firstText.value = 'Đoạn đầu chưa lưu';
+  await click(button('Bỏ đoạn'));
+  let confirm = button('Xác nhận bỏ đoạn'), cancel = button('Hủy bỏ đoạn');
+  assert.ok(confirm && cancel); assert.equal(confirm.parentElement.hidden, false);
+  assert.equal(firstText.value, 'Đoạn đầu chưa lưu');
+  await click(cancel);
+  assert.equal(confirm.parentElement.hidden, true); assert.equal(firstText.value, 'Đoạn đầu chưa lưu');
+  await click(button('Bỏ đoạn'));
+  firstText.value = 'Đoạn vừa sửa tiếp';
+  await click(confirm);
+  assert.ok(all().includes(firstText)); assert.match(messages.at(-1), /đã thay đổi/i);
+  await click(button('Bỏ đoạn'));
+  const firstSource = all().find(el => el.tagName === 'label' && el.children.includes('https://example.com/a'))
+    .children.find(el => el instanceof Element && el.type === 'checkbox');
+  firstSource.checked = false;
+  await click(confirm);
+  assert.ok(all().includes(firstText)); assert.match(messages.at(-1), /đã thay đổi/i);
+  await click(button('Bỏ đoạn'));
+  await click(confirm);
+  assert.ok(!all().includes(firstText));
+  assert.ok(all().some(el => el.tagName === 'textarea' && el.value === 'Đoạn hai'));
+  assert.equal(vm.runInContext('app.bulletinDirty', context), true);
+});
 
 test('source picker requires one to three checked sources and supports cancellation', async () => {
   const elements = new Map();
