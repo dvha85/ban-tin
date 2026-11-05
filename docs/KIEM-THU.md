@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## Đính chính và số liệu trên ba nền tảng — 05/11/2026
+
+- Test `test_three_platform_correction_preserves_each_publication_metrics_and_lock` tạo riêng một biến thể đã duyệt cho Facebook, Threads và X trên SQLite tạm; ghi URL giả, lưu số lượt xem bằng 0 rồi đính chính sang URL giả khác. Với từng nền tảng, test đối chiếu trạng thái hai lượt, lịch sử sự kiện, số liệu vẫn thuộc lượt cũ, lượt mới chưa có số liệu, khóa nội dung và snapshot xuất lưu trữ sau khi mở lại kho.
+- Chạy `python -B -m unittest discover -s tests -q`: 212/212 đạt. Chạy sáu tệp JavaScript theo lệnh trong README: 55/55 đạt. Đây là kiểm tra service trên fixture; không xác minh URL thật, giao diện, mọi chỉ số, mọi tổ hợp đính chính hoặc kết quả trên nền tảng. PUB-03/04, BASE-03 và QA-02 tiếp tục mở.
+
 ## BASE-02 / VAR-03 / QA-02: xem trước, chia, duyệt và tạo bản sao với bản tin cũ 05/11/2026
 
 - Trước sửa, test tái hiện preview không cảnh báo khi phiên bản đã cập nhật theo bản tin mới ở nơi khác nhưng trang vẫn hiển thị bản tin cũ; test handler cũng cho thấy yêu cầu chia/duyệt/tạo bản sao chưa gửi revision bản tin đang xem.

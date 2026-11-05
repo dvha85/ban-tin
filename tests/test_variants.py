@@ -1148,6 +1148,38 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(reused['active'], 1)
         self.assertTrue(self.room.variant(first['id'])['locked_at'])
 
+    def test_three_platform_correction_preserves_each_publication_metrics_and_lock(self):
+        cases = (
+            ('facebook', 'https://www.facebook.com/page/posts/1001', 'https://www.facebook.com/page/posts/1002'),
+            ('threads', 'https://threads.net/@page/post/abc1001', 'https://threads.net/@page/post/abc1002'),
+            ('x', 'https://x.com/page/status/1001', 'https://x.com/page/status/1002'),
+        )
+        for platform, old_url, new_url in cases:
+            with self.subTest(platform=platform):
+                variant = self.make_approved(platform)
+                record = self.room.record_publication(variant['id'], {'revision': variant['revision'],
+                    'position': 0, 'url': old_url, 'idempotency_key': f'platform_record_{platform}'})
+                self.room.save_publication_metrics(record['id'], {
+                    'observed_at': '2026-11-03T10:00:00+07:00', 'views': 0})
+                archive = self.room.export_variant(variant['id'], archive=True)
+                current = self.room.variant(variant['id'])
+                result = self.room.correct_publication(record['id'], {'revision': current['revision'],
+                    'url': new_url, 'reason': 'Sửa liên kết nhập nhầm'})
+                records = self.room.publications(variant['id'])
+                self.assertEqual([row['active'] for row in records], [0, 1])
+                self.assertEqual(records[1]['id'], result['replacement_id'])
+                self.assertEqual([event['action'] for event in records[0]['events']], ['reported', 'corrected'])
+                self.assertEqual(json.loads(records[0]['metrics'][0]['payload'])['views'], 0)
+                self.assertEqual(records[1]['metrics'], [])
+                current = self.room.variant(variant['id'])
+                self.assertTrue(current['locked_at'])
+                with self.assertRaises(Conflict):
+                    self.room.save_variant(current['id'], {'revision': current['revision']})
+                self.assertEqual(self.room.publications(variant['id']), records)
+                reopened = Newsroom(Path(self.temp.name))
+                self.assertEqual(reopened.publications(variant['id']), records)
+                self.assertEqual(reopened.export_variant(variant['id'], archive=True), archive)
+
     def test_platform_metrics_keep_optional_values_and_validate_without_partial_writes(self):
         variant = self.make_approved('x')
         record = self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
