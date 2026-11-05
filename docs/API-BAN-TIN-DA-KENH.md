@@ -52,7 +52,7 @@ Khi tạo bản tin, `source_selection` là object có khóa là biểu diễn t
 | `GET /api/bulletins/{id}/variants` | — | Danh sách phiên bản của bản tin. |
 | `POST /api/bulletins/{id}/variants` | `bulletin_revision`, `platform` là chuỗi `facebook`, `threads` hoặc `x`, `account_label` | Tạo phiên bản nháp riêng; không ghi đè phiên bản khác. Kiểu hoặc tên nền tảng không hợp lệ trả 400 và không tạo bản ghi. |
 | `GET /api/variants/{id}` | — | Phiên bản, revision, trạng thái và cờ cần cập nhật. |
-| `POST /api/variants/{id}/save` | `revision`, tùy chọn `account_label`, `segments`, `checks` | Lưu và trả phiên bản; khi bản tin gốc đổi cần `adopt_bulletin_revision: true`; bản sao cần đối chiếu nguồn có thể yêu cầu `attribution_reviewed: true`. |
+| `POST /api/variants/{id}/save` | `revision`, tùy chọn `expected_bulletin_revision`, `account_label`, `segments`, `checks` | Lưu và trả phiên bản; khi bản tin gốc đổi cần `adopt_bulletin_revision: true`; bản sao cần đối chiếu nguồn có thể yêu cầu `attribution_reviewed: true`. |
 | `POST /api/variants/{id}/preview` | Tùy chọn `segments` | Kết quả renderer và các mục bị lược; không lưu. Phiên bản đã khóa xem bằng bản duyệt lịch sử. |
 | `POST /api/variants/{id}/split` | `revision`, tùy chọn `segments` | Đề xuất `segments` và `preview`, không tự lưu. Không chia phiên bản khóa hoặc cần cập nhật. |
 | `POST /api/variants/{id}/approve` | `revision` | Kiểm tra nội dung, nguồn, xác nhận và policy rồi tạo snapshot duyệt. |
@@ -70,6 +70,7 @@ Chi tiết đầu vào đối chiếu với `save_variant` và `render_segments`
 - Mỗi `item_ids` là mảng không rỗng gồm ID nguyên khác nhau, thuộc bản tin. Nếu gửi `source_ids`, đây là mảng ID nguồn dạng chuỗi, không trùng, thuộc các mục đã chọn và có ít nhất một nguồn cho mỗi mục. Nếu bỏ hoặc gửi `null`, renderer dùng mọi nguồn của các mục đó.
 - Khi không có thay đổi nội dung, `checks` nếu gửi phải là object; năm khóa được xác nhận chỉ khi giá trị là boolean `true`, khóa thiếu hoặc giá trị khác trở thành `false`. Khi nội dung, đích, bản tin gốc hoặc policy thay đổi, server bỏ cả năm xác nhận và không dùng các giá trị `checks` gửi cùng. Nếu trạng thái và checklist không đổi, lưu trả phiên bản hiện có mà không tăng revision.
 - `revision` phải là số nguyên khớp revision hiện tại; sai hoặc thiếu trả 409. Sau thay đổi bản tin gốc cần xác nhận `adopt_bulletin_revision: true`; nếu bản sao yêu cầu đối chiếu nguồn thì cần `attribution_reviewed: true`. Đây là hợp đồng theo mã hiện tại, chưa chứng minh mọi tổ hợp qua HTTP.
+- `expected_bulletin_revision`, nếu gửi, phải là số nguyên khớp revision của bản tin hiện tại; nếu sai kiểu hoặc không khớp, server trả 409 trước khi lưu. Giao diện gửi revision của bản tin đang hiển thị để tránh xác nhận dựa trên tư liệu cũ. Trường này vẫn tùy chọn để tương thích client cũ; client bỏ trường không có bảo vệ bổ sung này và phải tự đối chiếu bản tin trước khi chấp nhận cập nhật.
 
 Test HTTP `test_variant_save_contract_over_http` kiểm tra riêng reset checklist khi sửa, xác nhận lại ở lượt sau, lưu không đổi, nguồn rỗng/không thuộc mục và revision cũ. Các trường hợp bị từ chối giữ nguyên phiên bản trên kho thử; test này không bao phủ toàn bộ tổ hợp hoặc giao diện trình duyệt.
 

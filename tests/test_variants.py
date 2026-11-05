@@ -37,6 +37,29 @@ class VariantTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_variant_save_checks_displayed_parent_revision_before_adopting(self):
+        original = self.bulletin
+        variant = self.room.create_variant(original['id'], {'bulletin_revision': original['revision'],
+            'platform': 'x', 'account_label': 'Kênh thử'})
+        updated = self.room.save_bulletin(original['id'], {'revision': original['revision'],
+            'title': 'Bản tin được sửa ở thẻ khác'})
+        current = self.room.variant(variant['id'])
+        history = self.room.bulletin_history(original['id'])
+        self.assertTrue(current['needs_update'])
+        for stale in (original['revision'], None, True, str(updated['revision'])):
+            with self.subTest(expected=stale), self.assertRaises(Conflict):
+                self.room.save_variant(variant['id'], {'revision': current['revision'],
+                    'expected_bulletin_revision': stale, 'adopt_bulletin_revision': True})
+            self.assertEqual(self.room.variant(variant['id']), current)
+            self.assertEqual(self.room.bulletin_history(original['id']), history)
+        adopted = self.room.save_variant(variant['id'], {'revision': current['revision'],
+            'expected_bulletin_revision': updated['revision'], 'adopt_bulletin_revision': True})
+        self.assertEqual(adopted['bulletin_revision'], updated['revision'])
+        self.assertFalse(adopted['needs_update'])
+        legacy = self.room.create_variant(updated['id'], {'bulletin_revision': updated['revision'],
+            'platform': 'facebook', 'account_label': 'Cũ'})
+        self.assertEqual(self.room.save_variant(legacy['id'], {'revision': legacy['revision']}), legacy)
+
     def test_multichannel_workflow_does_not_make_network_connections(self):
         # Exercise real service methods on a temporary SQLite store while
         # refusing outgoing connections, including the migration of a new store.

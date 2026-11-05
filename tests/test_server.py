@@ -276,6 +276,28 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(json.loads(body)['status'], 'approved')
         self.assertEqual(self.request('GET', path + '/export', headers=headers)[0], 200)
 
+    def test_variant_save_rejects_outdated_displayed_bulletin_over_http(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử bản tin cũ',
+            'url': 'https://example.com/stale-display', 'summary': 'Nguồn giả.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        variant = self.room.create_variant(bulletin['id'], {
+            'bulletin_revision': bulletin['revision'], 'platform': 'x', 'account_label': 'Kênh giả'})
+        updated = self.room.save_bulletin(bulletin['id'], {'revision': bulletin['revision'], 'title': 'Đã sửa'})
+        current = self.room.variant(variant['id'])
+        payload = {'revision': current['revision'], 'expected_bulletin_revision': bulletin['revision'],
+                   'adopt_bulletin_revision': True,
+                   'segments': [{'text': 'Nội dung đang soạn', 'item_ids': [bulletin['items'][0]['id']]}]}
+        path = f"/api/variants/{variant['id']}/save"
+        status, _, body = self.request('POST', path, payload, headers)
+        self.assertEqual(status, 409, body)
+        self.assertIn('Bản tin', json.loads(body)['error'])
+        self.assertEqual(self.room.variant(variant['id']), current)
+        payload['expected_bulletin_revision'] = updated['revision']
+        status, _, body = self.request('POST', path, payload, headers)
+        self.assertEqual(status, 200, body)
+        self.assertEqual(json.loads(body)['segments'][0]['text'], 'Nội dung đang soạn')
+
     def test_bulletin_rejects_article_ids_outside_sqlite_range(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử giới hạn ID',

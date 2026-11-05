@@ -1095,7 +1095,8 @@ async function renderVariants(container, bulletin, focusSelector = false) {
   bulletinAction(save, async () => {
     if (hasPendingBulletinUrl() || hasPendingPublicationEdit() || container.previousElementSibling?.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
       throw new Error('Hãy lưu các phần bản tin khác trước.');
-    const saved = await api(`/api/variants/${variant.id}/save`, {revision: variant.revision, account_label: account.input.value,
+    const saved = await api(`/api/variants/${variant.id}/save`, {revision: variant.revision,
+      expected_bulletin_revision: bulletin.revision, account_label: account.input.value,
       segments: collect(), checks: Object.fromEntries(Object.entries(checks).map(([key, value]) => [key, value.checked])),
       adopt_bulletin_revision: adopt.checked, attribution_reviewed: attributionReview.checked});
     app.variantId = saved.id; app.bulletinDirty = false; renderBulletin();

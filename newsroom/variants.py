@@ -153,6 +153,11 @@ class VariantMixin:
             if current['locked_at'] is not None:
                 raise Conflict('Phiên bản đã ghi nhận đăng được giữ nguyên. Hãy tạo bản sao để sửa.')
             bulletin = self._bulletin(conn, current['bulletin_id'])
+            if 'expected_bulletin_revision' in data and (
+                    type(data['expected_bulletin_revision']) is not int or
+                    data['expected_bulletin_revision'] != bulletin['revision']):
+                raise Conflict('Bản tin đang hiển thị đã thay đổi. Hãy sao chép nội dung chưa lưu, '
+                               'mở lại bản tin và kiểm tra trước khi lưu phiên bản.')
             if current['needs_update'] and data.get('adopt_bulletin_revision') is not True:
                 raise Conflict('Bản tin gốc đã đổi. Hãy kiểm tra lại và xác nhận cập nhật phiên bản này.')
             if current.get('attribution_review_required') and data.get('attribution_reviewed') is not True:

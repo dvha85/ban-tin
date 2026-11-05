@@ -36,6 +36,38 @@ class Element {
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
 }
 
+test('variant save includes the displayed bulletin revision and keeps text on conflict', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = [], messages = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+    setTimeout, clearTimeout, calls, messages, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.container = new Element();
+  vm.runInContext(`app.variantId = 3;
+    api = async (path, data) => {
+      if (path.endsWith('/variants')) return [{id: 3, revision: 2, platform: 'x', account_label: 'Kênh thử', status: 'draft',
+        locked_at: null, needs_update: true, policy_stale: false, checks: {},
+        segments: [{text: 'Tin giả', item_ids: [1], source_ids: ['source-1']}]}];
+      calls.push({path, data}); throw new Error('Bản tin đã thay đổi');
+    }; toast = message => messages.push(message);`, context);
+  context.bulletin = {id: 7, revision: 4, items: [{id: 1, title: 'Tin giả', sources: [{source_id: 'source-1', url: 'https://example.com/a'}]}]};
+  await vm.runInContext('renderVariants(container, bulletin)', context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const all = walk(context.container);
+  const text = all.find(el => el.tagName === 'textarea'); text.value = 'Nội dung đang soạn';
+  const save = all.find(el => el.tagName === 'button' && el.textContent === 'Lưu phiên bản');
+  save.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].data.expected_bulletin_revision, 4);
+  assert.equal(calls[0].data.segments[0].text, 'Nội dung đang soạn');
+  assert.equal(text.value, 'Nội dung đang soạn');
+  assert.match(messages.at(-1), /bản tin đã thay đổi/i);
+});
+
 test('removing an edited segment requires confirmation and preserves it on cancel or later edits', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

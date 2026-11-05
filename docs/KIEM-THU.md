@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## BASE-02 / VAR-03 / QA-02: kiểm tra bản tin đang hiển thị khi lưu phiên bản 05/11/2026
+
+- Trước sửa, test service tái hiện trường hợp bản tin gốc đã đổi, client lấy revision phiên bản mới nhưng vẫn gửi xác nhận dựa trên bản tin đang hiển thị cũ: server chấp nhận lưu. Test handler tái hiện yêu cầu giao diện chưa gửi revision bản tin đang hiển thị.
+- Server nay kiểm tra `expected_bulletin_revision` nếu client gửi; sai kiểu hoặc khác revision thực tế trả 409 trước khi ghi. UI gửi revision bản tin đang hiển thị và giữ phần đang soạn khi gặp lỗi. Client cũ bỏ trường vẫn theo hợp đồng cũ và không được bảo vệ bởi kiểm tra bổ sung; không coi đây là bảo vệ cho client ngoài UI mới.
+- Test service và HTTP kiểm tra từ chối revision cũ, không thay phiên bản/lịch sử, lưu thành công với revision đúng và client cũ vẫn hoạt động; test handler kiểm tra payload và giữ nội dung khi lỗi. Hồi quy sau sửa: Python 209/209, JavaScript 54/54. Trình duyệt tích hợp trên SQLite giả: thẻ một mở bản tin, thẻ hai sửa và lưu tiêu đề; thẻ một chọn phiên bản sau thay đổi, nhập nội dung và xác nhận đã kiểm tra nhưng bị chặn khi lưu, nội dung còn trên trang. Thẻ hai có bản tin mới lưu phiên bản thành công. Chỉ thử một trường hợp X và thay đổi tiêu đề; chưa chứng minh mọi tổ hợp hoặc toàn bộ QA-02.
+
 ## FMT-04 / QA-02: xác nhận trước khi bỏ đoạn 05/11/2026
 
 - Trước sửa, test handler mới tái hiện **Bỏ đoạn** xóa ngay ô đang sửa. Sau sửa, nút mở vùng xác nhận chỉ rõ số đoạn; hủy giữ nội dung và trả tiêu điểm về nút. Nếu nội dung, lựa chọn mục/nguồn hoặc vị trí thay đổi sau khi mở, thao tác bị từ chối và phải xác nhận lại. Sau xác nhận, đoạn chỉ được bỏ khỏi phiên bản đã lưu khi người dùng lưu phiên bản.
