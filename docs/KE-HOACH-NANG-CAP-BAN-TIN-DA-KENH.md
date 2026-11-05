@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> QA-01 ngày 05/11: chạy lại toàn bộ bộ kiểm thử hiện có trên commit `6df28d1`: 207/207 Python và 52/52 JavaScript đạt; lệnh JavaScript bao gồm cả sáu tệp `*.test.js` hiện có. Đây là bằng chứng tự động trên fixture, chưa đóng QA-02 hay BASE-03; cần chạy lại sau thay đổi chức năng và trước phát hành. Xem `KIEM-THU.md`.
+
 > FMT-02 / QA-02 ngày 05/11: thử hai thẻ trên kho giả, sửa tiêu đề bản tin ở thẻ thứ hai; thẻ thứ nhất xem trước có cảnh báo, giữ nội dung phiên bản chưa lưu và từ chối lưu revision cũ. Chi tiết và giới hạn tại `KIEM-THU.md`; QA-02 vẫn mở.
 
 > BASE-03 / TEXT-03 ngày 05/11: bổ sung kiểm tra 15 trường hợp URL Unicode và các ví dụ chính thức về emoji, NFC/NFD, URL của X. Bộ đếm Threads và hành vi composer thực tế vẫn chưa được xác minh; BASE-03 tiếp tục mở. Xem `KIEM-THU.md`.
@@ -453,7 +455,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ### G6 — Nghiệm thu và tài liệu
 
-- [ ] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass.
+- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy trên commit `6df28d1`: Python 207/207, JavaScript 52/52; phải chạy lại nếu mã thay đổi và trước phát hành.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.
@@ -550,7 +552,7 @@ Các cải tiến để sau 0.4: tải lại nguồn web đã biết theo yêu c
 - [ ] Văn bản cuối, bộ đếm, preview, copy, `.txt` và approval khớp nhau; không mất nguồn khi chia chuỗi.
 - [ ] Sửa đúng phạm vi hủy duyệt; bài đã ghi nhận bất biến; ghi nhận một phần được xử lý rõ.
 - [ ] Lưu riêng URL và số liệu từng kênh/đoạn; không còn lỗi URL bị giữ từ bản khác.
-- [ ] Legacy giữ nguyên nội dung/hash/export/history; migration và restore schema 4 đạt kiểm thử lỗi.
+- [x] Legacy giữ nguyên nội dung/hash/export/history trong phạm vi fixture; migration và restore schema 4 đạt các kiểm thử lỗi đã ghi. Không có SQLite cũ để thử bản sao vận hành theo xác nhận của người dùng; không suy rộng kết quả fixture cho dữ liệu khác.
 - [ ] Các test hiện có và mới đạt; có bằng chứng QA trình duyệt/clipboard, không chỉ thông báo từ nút copy.
 - [ ] README/hướng dẫn/kiến trúc/kiểm thử cập nhật, phần chưa kiểm chứng được ghi rõ.
 - [ ] Người dùng đã xem kết quả pilot và quyết định triển khai lên kho dữ liệu vận hành.
@@ -682,6 +684,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 05/11/2026 | APR-03 / APPROVE-05 / QA-02 | Đang làm | Hai thẻ trên kho giả: thẻ thứ hai sửa và duyệt lại X; thẻ cũ từ chối tải và sao chép đoạn cũ, thẻ mới tải tệp đúng nội dung và hai nguồn | Chỉ một trường hợp, không loại bỏ thay đổi sau phản hồi export; không suy rộng cho mọi trình duyệt hay nền tảng |
 | 05/11/2026 | APR-03 / QA-02 | Đang làm | Nút thử sao chép trong hộp thủ công kiểm tra lại bản duyệt; test handler tái hiện lỗi cũ, Python 207/207 và JS 52/52; trình duyệt tích hợp trên kho giả hiển thị lỗi trong hộp khi duyệt bị hủy | Ctrl+C trực tiếp trong ô không có bước kiểm tra lại; chưa thử mọi trình duyệt hoặc duyệt lại qua UI khi hộp đang mở |
 | 05/11/2026 | FMT-02 / QA-02 | Đang làm | Trình duyệt tích hợp trên kho giả: hai thẻ, lưu tiêu đề bản tin ở thẻ thứ hai; thẻ thứ nhất xem trước cảnh báo, giữ nội dung chưa lưu và từ chối lưu revision cũ; đối chiếu SQLite chỉ đọc | Một phiên bản Facebook nháp và một kiểu sửa; chưa kiểm tra mọi nền tảng hoặc rời trang/tải lại |
+| 05/11/2026 | QA-01 / QA-03 | Hoàn tất trong phạm vi fixture | Trên commit `6df28d1`, Python unittest discover 207/207 và sáu tệp JavaScript 52/52 đạt; fixture migration/restore nằm trong bộ Python | Chạy lại sau thay đổi chức năng và trước phát hành; QA-02, BASE-03 và quyết định triển khai vẫn mở |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 

@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## QA-01: hồi quy toàn bộ bộ kiểm thử hiện có 05/11/2026
+
+- Trên mã commit `6df28d1`, `rtk proxy python -B -m unittest discover -s tests -q` đạt **207/207**. Bộ này gồm các kiểm thử migration schema 1/2 mô phỏng và schema 3 fixture, đối chiếu các hàng legacy và bản xuất, cùng các nhánh lỗi backup, migration và restore. Các cơ sở dữ liệu kiểm thử nằm trong thư mục tạm.
+- `rtk proxy node --test tests/draft-state.test.js tests/source-warnings.test.js tests/request-size.test.js tests/inbox-utils.test.js tests/correction-ui.test.js tests/legacy-save-ui.test.js` đạt **52/52**, không có test bỏ qua. Đã đối chiếu danh sách này gồm cả sáu tệp `*.test.js` hiện có trong `tests`.
+- Lần chạy này không dùng kho vận hành, không đăng lên mạng xã hội và không chứng minh mọi lỗi hệ thống hoặc quy tắc nền tảng. Cần chạy lại sau thay đổi chức năng và trước phát hành; QA-02, BASE-03 và quyết định triển khai vẫn mở. Không có SQLite cũ để thử bản sao vận hành theo xác nhận của người dùng.
+
 ## FMT-02 / QA-02: xem trước khi bản tin thay đổi ở thẻ khác 05/11/2026
 
 - Trên server từ commit `e33184e` và SQLite giả riêng, tạo bản tin ba mục và phiên bản Facebook nháp. Ở thẻ thứ nhất nhập nội dung phiên bản nhưng chưa lưu; ở thẻ thứ hai sửa tiêu đề bản tin và lưu thành revision 3. Cả hai thẻ dùng trình duyệt tích hợp trên cùng máy; không thao tác kho vận hành.
