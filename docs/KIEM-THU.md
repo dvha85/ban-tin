@@ -548,3 +548,8 @@ python -m newsroom --collect
 - Trình duyệt tích hợp, server và SQLite fixture riêng: mở bản tin revision 5 và phiên bản X đã duyệt ở thẻ thứ nhất; sửa và lưu tiêu đề ở thẻ thứ hai thành revision 6. Bấm Tạo bản sao ở thẻ thứ nhất, giao diện báo “Phiên bản đã thay đổi ở cửa sổ khác. Hãy giữ phần đang sửa và tải lại.”
 - Lượt này chỉ quan sát thông báo cho một phiên bản X và một thay đổi tiêu đề; chưa đối chiếu dữ liệu sau thao tác, chưa thử mọi kênh hay các cuộc đua khác. QA-02 và BASE-02 tiếp tục mở. Kiểm tra cảnh báo rời trang và tải lại được để sau theo lựa chọn của người dùng.
 
+### 05/11/2026 — Rà hướng dẫn gói tư liệu (DOC-01)
+
+- Đối chiếu hướng dẫn với hành vi kiểm tra lại gói ở `newsroom/static/app.js` và bằng chứng hộp sao chép thủ công đã ghi trong nhật ký. Bổ sung cách thử sao chép lại, xử lý khi bản tin đã đổi và giới hạn của `Ctrl+C` trực tiếp trong ô.
+- Chỉ cập nhật tài liệu, không thay đổi chức năng; chưa rà xong toàn bộ tài liệu theo trạng thái cuối và DOC-01 vẫn mở.
+

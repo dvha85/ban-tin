@@ -1,5 +1,7 @@
 # Đối chiếu điều kiện nghiệm thu 0.4
 
+> BASE-02 / VAR-03 / QA-02 ngày 05/11: trên kho giả hai thẻ, sau khi lưu tiêu đề bản tin ở thẻ thứ hai, nút tạo bản sao phiên bản X tại thẻ cũ báo xung đột. Chưa đối chiếu dữ liệu sau thao tác và chưa thử các kênh khác; xem `KIEM-THU.md`. Các gate vẫn mở.
+
 > QA-01 / QA-03 ngày 05/11: hồi quy trên commit `6df28d1` đạt 207/207 Python và 52/52 JavaScript; điều kiện legacy/migration được đánh dấu đạt trong phạm vi fixture, theo lựa chọn bỏ qua bản sao SQLite cũ vì chưa có dữ liệu cũ. Không coi đây là nghiệm thu kho vận hành; xem `KIEM-THU.md`.
 
 > FMT-02 / QA-02 ngày 05/11: thử hai thẻ trên kho giả, thẻ đang soạn hiện cảnh báo xem trước khi thẻ kia đã lưu tiêu đề bản tin, giữ nội dung chưa lưu và từ chối lưu phiên bản cũ. Đây là một tình huống Facebook nháp; xem `KIEM-THU.md`, QA-02 vẫn mở.
