@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## APR-03 / TEXT-01: đối chiếu trước khi tải tệp 05/11/2026
+
+- Trước sửa, liên kết tải trực tiếp có thể xuất bản duyệt khác với nội dung đang hiển thị hoặc bỏ qua cảnh báo thay đổi chưa lưu. Test handler mới thất bại trước sửa; sau sửa, nút tải chặn nội dung chưa lưu và kho đã báo thay đổi, lấy export hợp lệ rồi đối chiếu ID duyệt, số đoạn và từng đoạn trước khi tạo tệp UTF-8. Test DOM giả bao gồm từ chối export, thay ID, sửa/thêm đoạn và đối chiếu nội dung tệp giả.
+- Kiểm thử nền trước sửa: 207/207 Python, 50/50 JavaScript. Sau sửa: 207/207 Python, 51/51 JavaScript. Chưa kiểm tra thao tác tải tệp thực tế trên trình duyệt cho mã mới; việc thay đổi bản duyệt sau phản hồi export vẫn có thể xảy ra. API tải trực tiếp vẫn trả bản duyệt hợp lệ hiện tại và không biết trạng thái giao diện; bảo vệ đối chiếu thuộc nút trên giao diện. Không phát hiện được kho bị thay thế cùng đường dẫn.
+
 ## DIG-02 / DIG-03 / QA-02: thêm mục, sao chép và nhãn khi thiếu tiêu đề 05/11/2026
 
 - Trên trình duyệt tích hợp và SQLite giả riêng, thêm một tin có bốn nguồn vào bản tin một mục: chọn nguồn 2 và 4, giao diện mục mới hiện đúng hai URL. Sao chép bản nháp cũ có bốn nguồn, chọn nguồn 1 và 3: bản tin mới hiện đúng hai URL, bản sao Facebook ở trạng thái nháp. Đọc SQLite ở chế độ chỉ đọc xác nhận các URL theo từng mục và bản nháp cũ vẫn ở revision 1. Các thao tác này thực hiện trước sửa nhãn, không truy cập URL nguồn hoặc tài khoản mạng xã hội.

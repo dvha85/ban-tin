@@ -437,9 +437,51 @@ test('historical export guidance distinguishes unlocked and locked variants', as
     assert.ok(message);
     assert.ok(message.textContent.includes(expected), message.textContent);
     assert.ok(!message.textContent.includes(unexpected), message.textContent);
-    assert.ok(!walk(context.area).some(el => el.tagName === 'a' && el.textContent.includes('Tải bản đã duyệt')));
+    assert.ok(!walk(context.area).some(el => el.textContent.includes('Tải bản đã duyệt')));
     assert.ok(!walk(context.area).some(el => el.tagName === 'button' && el.textContent.includes('Sao chép đoạn')));
   }
+});
+
+test('download verifies the displayed approval and all posts and blocks unsaved changes', async () => {
+  const elements = new Map(), saved = [], messages = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  class TestURL extends URL {}
+  TestURL.createObjectURL = blob => { saved.push({blob}); return 'blob:fixture'; };
+  TestURL.revokeObjectURL = () => {};
+  const context = vm.createContext({...helpers, URL: TestURL, URLSearchParams, Intl, Date, Error, Promise, Blob,
+    setTimeout: (fn, ms) => ms === 30000 ? 0 : setTimeout(fn, ms), clearTimeout,
+    saved, messages, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => { const el = new Element(tag); el.click = () => { saved.at(-1).filename = el.download; }; return el; },
+      createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`let current = {approval_id: 21, posts: ['Một\\nnguồn', 'Hai']}, failExport = false;
+    api = async path => { if (path.endsWith('/publications')) return []; if (failExport) throw new Error('không còn duyệt'); return structuredClone(current); };
+    toast = message => messages.push(message);`, Object.assign(context, {structuredClone}));
+  context.area = new Element();
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const button = walk(context.area).find(el => el.textContent === 'Tải bản đã duyệt (.txt)');
+  assert.equal(button.tagName, 'button');
+  const click = async () => { button.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  vm.runInContext('app.bulletinDirty = true', context);
+  await click(); assert.equal(saved.length, 0); assert.match(messages.at(-1), /lưu/i);
+  vm.runInContext('app.bulletinDirty = false; current.approval_id = 22', context);
+  await click(); assert.equal(saved.length, 0); assert.match(messages.at(-1), /thay đổi/i);
+  vm.runInContext('current.approval_id = 21; app.storeChanged = true', context);
+  await click(); assert.equal(saved.length, 0); assert.match(messages.at(-1), /Kho dữ liệu/);
+  vm.runInContext('app.storeChanged = false; failExport = true', context);
+  await click(); assert.equal(saved.length, 0); assert.match(messages.at(-1), /không còn duyệt/);
+  vm.runInContext('failExport = false', context);
+  vm.runInContext("current.approval_id = 21; current.posts[1] = 'khác'", context);
+  await click(); assert.equal(saved.length, 0);
+  vm.runInContext("current.posts = ['Một\\nnguồn', 'Hai', 'thêm']", context);
+  await click(); assert.equal(saved.length, 0);
+  vm.runInContext("current.posts = ['Một\\nnguồn', 'Hai']", context);
+  await click(); assert.equal(saved.length, 1);
+  assert.equal(saved[0].filename, 'ban-tin-3.txt');
+  assert.equal(await saved[0].blob.text(), 'Một\nnguồn\n\n---\n\nHai');
 });
 
 test('network failure marks a mutation outcome as unknown', async () => {

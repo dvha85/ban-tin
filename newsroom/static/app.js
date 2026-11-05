@@ -1130,8 +1130,24 @@ async function renderVariantPublication(area, variant) {
   section.append(node('h4', '', 'Xuất và ghi nhận đăng thủ công'),
     node('p', 'small-note', 'Ứng dụng không đăng bài và không xác minh bài trên mạng xã hội.'));
   if (ready) {
-    const download = node('a', 'button secondary', 'Tải bản đã duyệt (.txt)');
-    download.href = `/api/variants/${variant.id}/download`; section.append(download);
+    const download = node('button', 'button secondary', 'Tải bản đã duyệt (.txt)');
+    bulletinAction(download, async () => {
+      if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi tải bản đã duyệt.');
+      if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi tải.');
+      const current = await api(`/api/variants/${variant.id}/export`);
+      if (app.bulletinDirty || app.storeChanged) throw new Error('Nội dung hoặc kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi tải.');
+      if (!Array.isArray(output.posts) || !Array.isArray(current.posts) || !output.posts.length ||
+          output.posts.length !== current.posts.length)
+        throw new Error('Bản duyệt đã thay đổi. Hãy tải lại trước khi tải tệp.');
+      let posts;
+      try { posts = output.posts.map((_, position) => verifiedCopyText(output, current, position)); }
+      catch (_) { throw new Error('Bản duyệt đã thay đổi. Hãy tải lại trước khi tải tệp.'); }
+      const objectUrl = URL.createObjectURL(new Blob([posts.join('\n\n---\n\n')], {type: 'text/plain;charset=utf-8'}));
+      try {
+        const link = node('a'); link.href = objectUrl; link.download = `ban-tin-${variant.id}.txt`; link.click();
+      } finally { setTimeout(() => URL.revokeObjectURL(objectUrl), 30000); }
+    });
+    section.append(download);
   } else {
     const guidance = variant.locked_at
       ? 'Bản hiển thị là lịch sử, chưa đủ điều kiện xuất để đăng. Nếu cần sửa nội dung, hãy tạo bản sao và duyệt lại.'
