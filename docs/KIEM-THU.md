@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 05/11/2026
 
+## QA-02 / FMT-01: tiêu điểm sau lưu phiên bản — 05/11/2026
+
+- Trên trình duyệt tích hợp với SQLite fixture riêng, dùng Enter chuyển mục Charlie từ vị trí 3 lên 2 rồi 1; tiêu điểm theo nút lên, sau đó chuyển sang nút xuống tại đầu danh sách. Chọn Facebook bằng bàn phím, nhập nội dung giả, xác nhận bản tin mới và lưu bằng Enter. Trước sửa, tiêu điểm rơi về trang sau khi vùng biên tập dựng lại.
+- Sửa để sau lưu thành công và dựng lại, tiêu điểm về nút lưu nếu thao tác bắt đầu tại nút đó, bản tin/kênh vẫn đang mở và tiêu điểm hiện ở trang; không kéo tiêu điểm khỏi điều khiển khác được chọn trong lúc chờ. Test handler tái hiện lỗi trước sửa và kiểm tra cả hai nhánh sau sửa. Trên cùng kho giả, tải lại trang khi không có nội dung chưa lưu, sửa và lưu Facebook bằng Enter: tiêu điểm về nút lưu; Tab tiếp đến “Xem trước”.
+- Hồi quy trước sửa trên commit `7ba17cb`: 219/219 Python, 57/57 JavaScript. Sau sửa: 219/219 Python, 58/58 JavaScript; `node --check newsroom/static/app.js` đạt. Server fixture dùng backend từ `7ba17cb`, JS được tải lại sau sửa, đã dừng và xóa dữ liệu thử. Chỉ thử một kênh và một luồng bàn phím; chưa thử trình đọc màn hình hoặc toàn bộ QA-02. Trường hợp rời trang/tải lại khi có nội dung chưa lưu vẫn để sau theo lựa chọn người dùng.
+
 ## BASE-02: hợp đồng phản hồi preview và split — 05/11/2026
 
 - Bổ sung `test_preview_and_split_response_contract_over_http` trên server và SQLite fixture: kiểm tra các trường renderer, ba trường ngữ cảnh chỉ có trên preview trực tiếp, revision bản tin, danh sách mục bị lược và kết quả chia một đoạn Threads ngắn. Đối chiếu bản tin, phiên bản và lịch sử không đổi sau hai yêu cầu. Sửa tài liệu API từ “hai trường” thành tên của ba trường thực tế.

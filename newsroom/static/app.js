@@ -561,12 +561,13 @@ function updateBulletinSelection() {
 function bulletinAction(button, action, afterSuccess = null) {
   listen(button, 'click', async () => {
     if (app.busy) throw new Error('Đang xử lý thao tác trước. Vui lòng chờ.');
+    const initiatedWithFocus = document.activeElement === button;
     app.busy = true;
     $('create-bulletin').disabled = true;
     $('clear-bulletin-selection').disabled = true;
     try {
       const result = await withInertTargets([$('bulletin-editor'), $('bulletin-list'), $('show-archived-bulletins'), $('view-inbox'), document.querySelector('.sidebar nav')], action);
-      if (afterSuccess) afterSuccess();
+      if (afterSuccess) afterSuccess(result, initiatedWithFocus);
       return result;
     }
     finally {
@@ -949,7 +950,7 @@ function renderBulletin(focusVariantSelector = false) {
   const variants = node('section', 'bulletin-block');
   variants.append(node('h3', '', 'Phiên bản theo kênh'));
   editor.append(variants);
-  renderVariants(variants, bulletin, focusVariantSelector).catch(error => toast(error.message, true));
+  return renderVariants(variants, bulletin, focusVariantSelector).catch(error => toast(error.message, true));
 }
 function variantStatus(variant) {
   const progress = variant.publication_progress;
@@ -1099,7 +1100,7 @@ async function renderVariants(container, bulletin, focusSelector = false) {
   area.addEventListener('change', event => markVariantDirty(area, event));
   const collect = () => [...segmentList.children].map(block => block.collect());
   const actions = node('div', 'action-row');
-  const save = node('button', 'button secondary', 'Lưu phiên bản'); save.disabled = locked;
+  const save = node('button', 'button secondary', 'Lưu phiên bản'); save.id = 'variant-save'; save.disabled = locked;
   bulletinAction(save, async () => {
     if (hasPendingBulletinUrl() || hasPendingPublicationEdit() || container.previousElementSibling?.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
       throw new Error('Hãy lưu các phần bản tin khác trước.');
@@ -1107,8 +1108,13 @@ async function renderVariants(container, bulletin, focusSelector = false) {
       expected_bulletin_revision: bulletin.revision, account_label: account.input.value,
       segments: collect(), checks: Object.fromEntries(Object.entries(checks).map(([key, value]) => [key, value.checked])),
       adopt_bulletin_revision: adopt.checked, attribution_reviewed: attributionReview.checked});
-    app.variantId = saved.id; app.bulletinDirty = false; renderBulletin();
+    app.variantId = saved.id; app.bulletinDirty = false; await renderBulletin();
     toast('Đã lưu. Nếu vừa sửa nội dung, hãy xác nhận lại 5 mục kiểm tra và lưu lần nữa.');
+  }, (_, initiatedWithFocus) => {
+    const replacement = $('variant-save');
+    if (initiatedWithFocus && app.view === 'bulletins' && app.bulletin === bulletin &&
+        app.variantId === variant.id && document.activeElement === document.body &&
+        replacement?.isConnected && !replacement.disabled) replacement.focus({preventScroll: true});
   });
   const preview = node('button', 'button secondary', locked ? 'Xem trước bản duyệt lịch sử' : 'Xem trước');
   listen(preview, 'click', async () => {

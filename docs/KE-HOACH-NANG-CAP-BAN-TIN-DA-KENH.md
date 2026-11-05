@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> QA-02 / FMT-01 ngày 05/11: sửa mất tiêu điểm sau khi lưu phiên bản; test handler và smoke bàn phím với Facebook trên kho giả đạt trong phạm vi ghi tại `KIEM-THU.md`. Hồi quy 219/219 Python, 58/58 JavaScript. QA-02 vẫn mở.
+
 > BASE-02 ngày 05/11: bổ sung test HTTP cho trường phản hồi preview/split và xác nhận không ghi dữ liệu với một đoạn giả; sửa tài liệu API cho đúng ba trường ngữ cảnh của preview. Hồi quy 219/219 Python, 57/57 JavaScript. Chưa bao phủ toàn bộ hợp đồng; xem `KIEM-THU.md`.
 
 > BASE-03 / TEXT-03 ngày 05/11: trên composer Threads thật, chuỗi 493 chữ `a` và emoji gia đình cho bộ đếm còn 0; thêm `a` hiện -1 và vô hiệu hóa “Thêm vào thread”. Không đăng bài, đã xóa chuỗi thử. Kết quả phù hợp test biên v6 với chuỗi này, chưa chứng minh toàn bộ quy tắc; xem `KIEM-THU.md`.
