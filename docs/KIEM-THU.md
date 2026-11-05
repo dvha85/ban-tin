@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## BASE-03 / TEXT-03: ranh giới Threads trên composer — 05/11/2026
+
+- Trên Threads web qua Edge với tài khoản người dùng, nhập chuỗi thử gồm 493 chữ `a` và emoji gia đình `👨‍👩‍👧‍👦` (7 điểm mã): bộ đếm còn **0**. Thêm một chữ `a`: bộ đếm hiện **-1** màu đỏ và nút “Thêm vào thread” bị vô hiệu hóa; nút “Đăng” hiển thị mờ. Không bấm đăng và đã xóa chuỗi thử khỏi ô soạn.
+- Các kết quả này phù hợp ranh giới 500/501 của bộ đếm v6 đã kiểm tra bằng test tự động. Quan sát chỉ áp dụng cho chuỗi, giao diện và tài khoản đã thử; không chứng minh toàn bộ quy tắc Unicode, URL hay hành vi khi gửi bài. BASE-03 vẫn mở và bộ đếm trong ứng dụng vẫn là ước lượng.
+
 ## BASE-03 / QA-02: xem trước Threads policy v6 — 05/11/2026
 
 - Trên trình duyệt tích hợp, server mã `71ee06a` và SQLite fixture ba mục: tạo bản nháp Threads, nhập emoji `👨‍👩‍👧‍👦` và xem trước. Hộp hiển thị policy `2026-11-05-v6`, cảnh báo ước lượng và 99/500 cho emoji, nhãn nguồn cùng ba URL. Đếm chuỗi đầy đủ bằng Python được 99 điểm mã.
