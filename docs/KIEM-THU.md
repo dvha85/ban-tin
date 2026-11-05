@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## BASE-03 / TEXT-03: URL Unicode và ví dụ X 05/11/2026
+
+- Đối chiếu lại [tài liệu đếm ký tự X](https://docs.x.com/fundamentals/counting-characters): ví dụ bốn dạng emoji, hai dạng NFC/NFD và hai URL cho kết quả tương ứng tại bộ đếm cục bộ. Bổ sung test tính độc lập trọng số của 15 ví dụ URL không thuần ASCII còn lại trong fixture trích URL đã ghim; tính theo NFC, các dải trọng số v3 và URL kỳ vọng, không gọi bộ tách URL khi tính kết quả kỳ vọng. Không có emoji ngoài URL trong 15 ví dụ này.
+- Trước bổ sung 7/7 test conformance đạt; sau bổ sung 9/9, toàn bộ 207/207 Python và 50/50 JavaScript đạt. Phạm vi này không chứng minh mọi URL, emoji sau Unicode 15.1 hoặc composer X thực tế. BASE-03 vẫn mở.
+- [Bộ sưu tập Threads API chính thức của Meta](https://www.postman.com/meta/threads/collection/dht3nzz/threads-api?action=share&creator=34203612) đọc được, nhưng phần đã xem không quy định phép đếm Unicode/emoji; trang tài liệu kỹ thuật trực tiếp vẫn không truy cập được trong lượt này. Không thay policy Threads hoặc coi bộ đếm ước lượng là đã xác minh.
+
 ## DIG-02 / QA-02: xác nhận bỏ nguồn và mục 05/11/2026
 
 - Thay hộp xác nhận trình duyệt bằng vùng xác nhận có tên mục và URL nguồn. Khi mở và khi xác nhận đều kiểm tra nội dung chưa lưu; khi xác nhận đối chiếu lại ngữ cảnh và revision. Nếu kết quả ghi chưa rõ, thông báo kiểm tra ở thẻ khác; nếu ghi thành công nhưng danh sách tải lỗi thì báo riêng. Máy chủ vẫn kiểm tra revision và giới hạn số mục/nguồn.

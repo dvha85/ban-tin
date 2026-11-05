@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> BASE-03 / TEXT-03 ngày 05/11: bổ sung kiểm tra 15 trường hợp URL Unicode và các ví dụ chính thức về emoji, NFC/NFD, URL của X. Bộ đếm Threads và hành vi composer thực tế vẫn chưa được xác minh; BASE-03 tiếp tục mở. Xem `KIEM-THU.md`.
+
 > DIG-02 / QA-02 ngày 05/11: chuyển xác nhận bỏ nguồn và bỏ mục vào trang, kiểm tra thay đổi chưa lưu và ngữ cảnh trước khi ghi. Hồi quy đạt; Edge trên kho giả đã thử mở/hủy hai xác nhận. Phạm vi và phần chưa thử tại `KIEM-THU.md`; QA-02 vẫn mở.
 
 > DIG-03 / QA-02 ngày 04/11: chọn 1–3 nguồn trong hộp của ứng dụng cho thao tác tạo bản tin, thêm mục và sao chép bài cũ. Hồi quy và thử tạo bản tin trên Edge với kho giả đạt trong phạm vi ghi tại `KIEM-THU.md`; QA-02 vẫn mở.

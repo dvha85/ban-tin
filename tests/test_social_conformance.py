@@ -2,6 +2,7 @@
 import json
 import hashlib
 import unittest
+import unicodedata
 from pathlib import Path
 
 from newsroom.social_formats import count_text
@@ -35,6 +36,38 @@ class TwitterTextConformance(unittest.TestCase):
                 # weight with 23 according to the pinned X counting policy.
                 expected = len(case['text']) + sum(23 - len(url) for url in case['expected'])
                 self.assertEqual(count_text('x', case['text'])[0], expected)
+
+    def test_x_count_uses_upstream_non_ascii_url_boundaries(self):
+        path = Path(__file__).parent / 'fixtures' / 'twitter-text-url-extract.json'
+        fixture = json.loads(path.read_text(encoding='utf-8'))
+        cases = [case for case in fixture['groups']['urls'] if not case['text'].isascii()]
+        self.assertEqual(len(cases), 15)
+        # Pinned twitter-text v3 weights: ranges with weight 1; all other code
+        # points have weight 2. The corpus cases have no emoji outside URLs.
+        ranges = ((0, 4351), (8192, 8205), (8208, 8223), (8242, 8247))
+        def weight(text):
+            return sum(1 if any(start <= ord(ch) <= end for start, end in ranges) else 2 for ch in text)
+        for case in cases:
+            with self.subTest(description=case['description']):
+                text = unicodedata.normalize('NFC', case['text'])
+                start = total = 0
+                for url in case['expected']:
+                    url = unicodedata.normalize('NFC', url)
+                    position = text.find(url, start)
+                    self.assertGreaterEqual(position, start)
+                    total += weight(text[start:position]) + 23
+                    start = position + len(url)
+                total += weight(text[start:])
+                self.assertEqual(count_text('x', case['text'])[0], total)
+
+    def test_x_documented_emoji_normalization_and_url_examples(self):
+        # https://docs.x.com/fundamentals/counting-characters (2026-11-05)
+        examples = [('👾', 2), ('🙋🏽', 2), ('👨‍🎤', 2), ('👨‍👩‍👧‍👦', 2),
+                    ('café', 4), ('cafe\u0301', 4), ('https://example.com', 23),
+                    ('https://example.com/very/long/path', 23)]
+        for text, expected in examples:
+            with self.subTest(text=text):
+                self.assertEqual(count_text('x', text), (expected, True))
 
     def test_x_counts_crlf_without_silently_collapsing_two_characters(self):
         # Pinned upstream JS parseTweet normalizes NFC but does not collapse CRLF.
