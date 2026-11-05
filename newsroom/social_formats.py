@@ -2,23 +2,19 @@
 import re
 import unicodedata
 
-from ._vendor.twitter_text import parse_tweet, extract_emojis_with_indices
+from ._vendor.twitter_text import parse_tweet
 from .emoji_x import extract_x_emojis
 
-POLICY_VERSION = '2026-11-04-v5'
+POLICY_VERSION = '2026-11-05-v6'
 RENDERER_VERSION = '1'
 LIMITS = {'facebook': 12000, 'threads': 500, 'x': 280}
 MAX_SEGMENTS = 20
 
 
 def thread_length(text):
-    # Heuristic only: the vendored emoji list predates newer emoji. This does
-    # not establish an upper bound or reproduce Meta's undocumented counting.
-    count = len(text)
-    for match in extract_emojis_with_indices(text):
-        emoji = match['emoji']
-        count += len(emoji.encode('utf-8')) - len(emoji)
-    return count
+    # Code points match the sampled Threads web composer values. Meta's full
+    # counting rules are undocumented here, so this remains an estimate.
+    return len(text)
 
 
 def count_text(platform, text):

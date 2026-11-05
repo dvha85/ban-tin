@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> BASE-03 / TEXT-03 ngày 05/11: đổi ước lượng Threads sang số điểm mã Unicode theo các mẫu đã thử trên composer, policy chung v6; bản duyệt v5 chưa đăng của cả ba kênh cần kiểm tra lại. Hồi quy fixture 218/218 Python và 57/57 JavaScript; chưa xác minh toàn bộ quy tắc hoặc smoke UI v6. Xem `KIEM-THU.md`; BASE-03 và QA-02 vẫn mở.
+
 > DIG-04 / QA-02 ngày 05/11: nút thử sao chép lại trong hộp thủ công của gói tư liệu kiểm tra lại revision; test handler và smoke trình duyệt với kho giả đã thử đổi revision khi hộp mở. Ctrl+C trực tiếp trong ô không kiểm tra lại; chưa đối chiếu clipboard ở lượt này. Xem `KIEM-THU.md`.
 
 > DIG-04 / BASE-02 ngày 05/11: API gói tư liệu trả revision từ cùng snapshot; UI từ chối sao chép khi bản tin đang hiển thị cũ hoặc trạng thái trang/kho đổi trong lúc chờ. Test HTTP và handler dùng kho giả; smoke hai thẻ kiểm tra bản cũ bị từ chối và bản mới báo sao chép thành công. Chưa đối chiếu clipboard hoặc thử thay đổi khi request chờ trên trình duyệt; các gate vẫn mở. Xem `KIEM-THU.md`.
@@ -469,7 +471,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ### G6 — Nghiệm thu và tài liệu
 
-- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Trên `92f12d9`: Python 216/216, JavaScript 57/57; phải chạy lại nếu mã thay đổi và trước phát hành.
+- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Sau thay đổi policy v6: Python 218/218, JavaScript 57/57 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.

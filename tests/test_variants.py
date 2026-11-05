@@ -311,7 +311,7 @@ class VariantTests(unittest.TestCase):
     def test_format_counts_and_source_links(self):
         self.assertEqual(count_text('x', 'english text 日本語 😷 https://example.com')[0], 46)
         self.assertEqual(count_text('x', '🙋🏽👨‍🎤')[0], 4)
-        self.assertEqual(count_text('threads', 'a😷')[0], 5)
+        self.assertEqual(count_text('threads', 'a😷')[0], 2)
         item = self.bulletin['items'][0]
         result = render_segments('x', [{'text': 'x' * 255, 'item_ids': [item['id']]}], self.bulletin)
         self.assertFalse(result['valid'])  # source URL and its label count too
@@ -323,6 +323,17 @@ class VariantTests(unittest.TestCase):
                 self.assertEqual(count_text('x', url), (23, True))
                 self.assertEqual(count_text('x', 'a' * 256 + ' ' + url), (280, True))
                 self.assertEqual(count_text('x', 'a' * 257 + ' ' + url), (281, False))
+
+    def test_threads_estimate_matches_observed_composer_unicode_samples(self):
+        # Observed on the Threads web composer, 2026-11-05; not a complete policy.
+        samples = {'café': 4, 'cafe\u0301': 5, '😷': 1, '👍🏽': 2,
+                   '🇻🇳': 2, '❤️': 2, '👨‍👩‍👧‍👦': 7, '𠀀🫨': 2,
+                   'https://example.com/very-long-article-url-123456789': 51}
+        for sample, length in samples.items():
+            with self.subTest(sample=sample):
+                self.assertEqual(count_text('threads', sample), (length, True))
+                self.assertEqual(count_text('threads', 'a' * (500 - length) + sample), (500, True))
+                self.assertEqual(count_text('threads', 'a' * (501 - length) + sample), (501, False))
 
     def test_approval_requires_each_claim_checked_with_evidence(self):
         item = self.bulletin['items'][0]
@@ -370,6 +381,19 @@ class VariantTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             self.room.export_variant(variant['id'])
         self.assertTrue(self.room.export_variant(variant['id'], archive=True)['archive'])
+
+    def test_v5_approvals_require_review_with_v6_and_keep_archive(self):
+        for platform in ('facebook', 'threads', 'x'):
+            with self.subTest(platform=platform):
+                with patch('newsroom.variants.POLICY_VERSION', '2026-11-04-v5'), \
+                     patch('newsroom.social_formats.POLICY_VERSION', '2026-11-04-v5'):
+                    variant = self.make_approved(platform)
+                    old = self.room.export_variant(variant['id'], archive=True)
+                self.assertTrue(self.room.variant(variant['id'])['policy_stale'])
+                with self.assertRaises(ValidationError):
+                    self.room.export_variant(variant['id'])
+                archived = self.room.export_variant(variant['id'], archive=True)
+                self.assertEqual(archived, old)
 
     def test_approval_rejects_missing_claim_or_evidence_and_unresolved_markers(self):
         cases = [[],
