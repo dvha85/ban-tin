@@ -735,3 +735,5 @@ Tài liệu này bổ sung roadmap kỹ thuật; không thay thế mô tả ch�
 
 > VAR-01 ngày 05/11: test service trên kho giả xác nhận sửa nội dung Facebook không thay phiên bản và bản xuất Threads/X đã duyệt, kể cả sau mở lại kho; 55/55 test phiên bản đạt. Chưa thay thế QA giao diện; xem `KIEM-THU.md`.
 
+> VAR-02 / VAR-04 ngày 05/11: test service tạo bản sao từ bản X đã sửa, giữ nội dung và nguồn; lưu revision cũ bị từ chối, mở lại kho giữ cả bản gốc và bản lưu thắng. 56/56 test phiên bản đạt; chưa mô phỏng hai lượt lưu đồng thời hay qua UI. Xem `KIEM-THU.md`.
+

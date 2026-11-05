@@ -573,3 +573,8 @@ python -m newsroom --collect
 - Thêm `test_editing_facebook_preserves_other_approved_variants_after_reopen`: tạo ba phiên bản đã duyệt trên SQLite giả, sửa nội dung Facebook, mở lại kho và so sánh toàn bộ phiên bản cùng bản xuất Threads và X với trước khi sửa. Facebook trở về nháp và tăng revision; hai bản còn lại không đổi.
 - `python -m unittest discover -s tests -p test_variants.py`: 55/55 đạt. Đây là test service với một cách sửa nội dung, không thay thế QA giao diện hoặc chứng minh mọi tổ hợp thay đổi; FMT-01 và QA-02 vẫn mở.
 
+### 05/11/2026 — Bản sao và revision cũ (VAR-02 / VAR-04)
+
+- Test service trên SQLite giả tạo bản sao X từ bản đã chỉnh sửa, kiểm tra ID mới, nội dung, mục và nguồn. Bản sao chuyển lựa chọn nguồn mặc định thành danh sách tường minh; phép so sánh toàn bộ cấu trúc ban đầu đã được điều chỉnh theo hành vi đó. Lưu bản sao với revision hiện tại thành công; lượt lưu tiếp theo dùng revision cũ bị conflict. Mở lại kho xác nhận bản gốc và bản lưu thắng được giữ.
+- `python -m unittest discover -s tests -p test_variants.py`: 56/56 đạt. Hai lượt lưu được thực hiện tuần tự để kiểm tra revision, không mô phỏng hai thao tác đồng thời hoặc qua hai thẻ trình duyệt; các gate liên quan vẫn mở.
+

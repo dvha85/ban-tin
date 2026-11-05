@@ -161,6 +161,27 @@ class VariantTests(unittest.TestCase):
                 self.assertEqual(reopened.variant(variant_id), old_variant)
                 self.assertEqual(reopened.export_variant(variant_id), old_export)
 
+    def test_clone_edited_variant_and_reject_stale_save_without_overwriting(self):
+        original = self.make_approved('x')
+        edited = self.room.save_variant(original['id'], {'revision': original['revision'],
+            'segments': [{**original['segments'][0], 'text': 'Nội dung đã biên tập.'}]})
+        clone = self.room.clone_variant(edited['id'], {'revision': edited['revision'],
+            'expected_bulletin_revision': self.bulletin['revision']})
+        self.assertNotEqual(clone['id'], edited['id'])
+        self.assertEqual(clone['status'], 'draft')
+        self.assertEqual(clone['segments'][0]['text'], edited['segments'][0]['text'])
+        self.assertEqual(clone['segments'][0]['item_ids'], edited['segments'][0]['item_ids'])
+        self.assertEqual(set(clone['segments'][0]['source_ids']),
+                         {source['source_id'] for item in self.bulletin['items'] for source in item['sources']})
+        winner = self.room.save_variant(clone['id'], {'revision': clone['revision'],
+            'segments': [{**clone['segments'][0], 'text': 'Bản lưu thứ nhất.'}]})
+        with self.assertRaises(Conflict):
+            self.room.save_variant(clone['id'], {'revision': clone['revision'],
+                'segments': [{**clone['segments'][0], 'text': 'Bản lưu revision cũ.'}]})
+        reopened = Newsroom(self.room.data_dir)
+        self.assertEqual(reopened.variant(edited['id']), edited)
+        self.assertEqual(reopened.variant(clone['id']), winner)
+
     def test_archiving_bulletin_preserves_approved_and_recorded_versions(self):
         from newsroom.__main__ import restore
 
