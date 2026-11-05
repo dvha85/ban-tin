@@ -1,5 +1,7 @@
 # Đối chiếu điều kiện nghiệm thu 0.4
 
+> FMT-02 / QA-02 ngày 05/11: thử hai thẻ trên kho giả, thẻ đang soạn hiện cảnh báo xem trước khi thẻ kia đã lưu tiêu đề bản tin, giữ nội dung chưa lưu và từ chối lưu phiên bản cũ. Đây là một tình huống Facebook nháp; xem `KIEM-THU.md`, QA-02 vẫn mở.
+
 > APR-03 / QA-02 ngày 05/11: với một bản X hai đoạn trên kho giả, đã thử tệp UTF-8 qua trình duyệt, chặn tải khi đang sửa và khi bản duyệt bị hủy; sau đó thử riêng hai thẻ, duyệt lại ở thẻ thứ hai khiến thẻ cũ từ chối tải và sao chép đoạn cũ. Tệp ở thẻ mới khớp nội dung và nguồn hiển thị. Chưa kiểm tra mọi trình duyệt, kênh hoặc thay đổi sau phản hồi export; xem `KIEM-THU.md`.
 
 > BASE-03 ngày 05/11: các ví dụ đếm trong tài liệu X và 15 trường hợp URL Unicode của corpus đã ghim khớp bộ đếm cục bộ. Bộ sưu tập Threads API chính thức đọc được nhưng phần đã xem không đặc tả phép đếm Unicode; chưa kiểm chứng composer X/Threads thực tế. Gate vẫn mở; xem `KIEM-THU.md`.

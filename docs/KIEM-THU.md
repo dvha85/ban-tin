@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## FMT-02 / QA-02: xem trước khi bản tin thay đổi ở thẻ khác 05/11/2026
+
+- Trên server từ commit `e33184e` và SQLite giả riêng, tạo bản tin ba mục và phiên bản Facebook nháp. Ở thẻ thứ nhất nhập nội dung phiên bản nhưng chưa lưu; ở thẻ thứ hai sửa tiêu đề bản tin và lưu thành revision 3. Cả hai thẻ dùng trình duyệt tích hợp trên cùng máy; không thao tác kho vận hành.
+- Quay lại thẻ thứ nhất, **Xem trước** hiển thị nội dung đang nhập và cảnh báo bản tin gốc đã thay đổi, hướng dẫn sao chép nội dung trước khi mở lại. Đóng xem trước thấy nội dung vẫn còn trong ô. **Lưu phiên bản** báo phiên bản đã thay đổi ở cửa sổ khác và giữ nội dung trên trang. Đọc SQLite ở chế độ chỉ đọc: bản tin ở revision 3, phiên bản ở revision 2 vẫn có nội dung đã lưu là chuỗi rỗng, ba mục vẫn còn.
+- Chỉ kiểm tra một thay đổi tiêu đề và một phiên bản Facebook nháp; chưa kiểm tra mọi loại thay đổi, nền tảng hoặc cách khôi phục nội dung sau khi rời trang. Kiểm tra cảnh báo rời trang và tải lại khi có nội dung chưa lưu vẫn để sau theo lựa chọn người dùng. QA-02 tiếp tục mở.
+
 ## APR-03 / QA-02: thử lại sao chép từ hộp thủ công 05/11/2026
 
 - Khi clipboard bị từ chối, hộp sao chép thủ công trước đây cho phép nút **Sao chép nội dung** thử lại trực tiếp văn bản cũ mà không kiểm tra bản duyệt. Test handler mới tái hiện lỗi trước sửa. Sau sửa, nút thử lại kiểm tra trạng thái chưa lưu, kho đã báo thay đổi, export hợp lệ và ID/nội dung đoạn; lỗi được hiển thị trong hộp và giữ văn bản. Hộp văn bản khác không giữ nhầm hành động kiểm tra của bản duyệt.

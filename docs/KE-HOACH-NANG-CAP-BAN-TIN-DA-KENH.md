@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> FMT-02 / QA-02 ngày 05/11: thử hai thẻ trên kho giả, sửa tiêu đề bản tin ở thẻ thứ hai; thẻ thứ nhất xem trước có cảnh báo, giữ nội dung phiên bản chưa lưu và từ chối lưu revision cũ. Chi tiết và giới hạn tại `KIEM-THU.md`; QA-02 vẫn mở.
+
 > BASE-03 / TEXT-03 ngày 05/11: bổ sung kiểm tra 15 trường hợp URL Unicode và các ví dụ chính thức về emoji, NFC/NFD, URL của X. Bộ đếm Threads và hành vi composer thực tế vẫn chưa được xác minh; BASE-03 tiếp tục mở. Xem `KIEM-THU.md`.
 
 > DIG-02 / QA-02 ngày 05/11: chuyển xác nhận bỏ nguồn và bỏ mục vào trang, kiểm tra thay đổi chưa lưu và ngữ cảnh trước khi ghi. Hồi quy đạt; Edge trên kho giả đã thử mở/hủy hai xác nhận. Phạm vi và phần chưa thử tại `KIEM-THU.md`; QA-02 vẫn mở.
@@ -679,6 +681,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 | 05/11/2026 | APR-03 / TEXT-01 / QA-02 | Đang làm | Trình duyệt tích hợp với SQLite giả: tải X hai đoạn, đối chiếu tệp UTF-8 với màn hình; chặn khi tiêu đề chưa lưu và khi thẻ khác sửa bản tin làm hủy duyệt | Chưa thử duyệt lại ở thẻ khác hoặc thay đổi sau phản hồi export; không suy rộng cho mọi trình duyệt hay nền tảng |
 | 05/11/2026 | APR-03 / APPROVE-05 / QA-02 | Đang làm | Hai thẻ trên kho giả: thẻ thứ hai sửa và duyệt lại X; thẻ cũ từ chối tải và sao chép đoạn cũ, thẻ mới tải tệp đúng nội dung và hai nguồn | Chỉ một trường hợp, không loại bỏ thay đổi sau phản hồi export; không suy rộng cho mọi trình duyệt hay nền tảng |
 | 05/11/2026 | APR-03 / QA-02 | Đang làm | Nút thử sao chép trong hộp thủ công kiểm tra lại bản duyệt; test handler tái hiện lỗi cũ, Python 207/207 và JS 52/52; trình duyệt tích hợp trên kho giả hiển thị lỗi trong hộp khi duyệt bị hủy | Ctrl+C trực tiếp trong ô không có bước kiểm tra lại; chưa thử mọi trình duyệt hoặc duyệt lại qua UI khi hộp đang mở |
+| 05/11/2026 | FMT-02 / QA-02 | Đang làm | Trình duyệt tích hợp trên kho giả: hai thẻ, lưu tiêu đề bản tin ở thẻ thứ hai; thẻ thứ nhất xem trước cảnh báo, giữ nội dung chưa lưu và từ chối lưu revision cũ; đối chiếu SQLite chỉ đọc | Một phiên bản Facebook nháp và một kiểu sửa; chưa kiểm tra mọi nền tảng hoặc rời trang/tải lại |
 
 Mỗi lần cập nhật nên ghi: task ID; file/commit; lệnh test và kết quả; dữ liệu dùng là fixture/kho thử/bản sao; giới hạn chưa kiểm chứng. Không đưa khóa, cookie, dữ liệu riêng, nội dung bản nháp chưa công bố hoặc DB vào repo công khai.
 
