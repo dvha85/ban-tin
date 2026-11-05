@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 16/10/2026
 
+## DIG-04 / QA-02: đối chiếu gói tư liệu do người dùng cung cấp — 05/11/2026
+
+- Người dùng gửi nội dung sau yêu cầu sao chép gói từ bản tin ba mục trên SQLite fixture riêng tại cổng 18784. Nội dung có tiêu đề `Bản tin thử nghiệm`, đủ ba mục theo thứ tự và các URL `https://example.com/story-0`, `https://example.com/story-1`, `https://example.com/story-2`.
+- Đây là bằng chứng đối chiếu nội dung người dùng cung cấp trong một lượt với dữ liệu giả. Phản hồi không mô tả rõ ứng dụng dùng để dán; chưa chứng minh các nhánh clipboard, trình duyệt hay trạng thái revision khác. QA-02 tiếp tục mở.
+
 ## Gói tư liệu và revision bản tin — 05/11/2026
 
 - Smoke trình duyệt tích hợp trên mã `a83766a`, kho SQLite giả: server thử từ chối clipboard bằng `Permissions-Policy`, hộp thủ công hiển thị gói revision 5 và nhắc đối chiếu. Thẻ hai lưu tiêu đề lên revision 6; nút sao chép lại ở hộp thẻ một hiện cảnh báo bản tin thay đổi và vẫn giữ gói revision 5. Chưa đối chiếu clipboard sau nhánh này hoặc kiểm tra mọi trình duyệt; Ctrl+C trực tiếp không được kiểm tra lại. Đã dừng server thử.

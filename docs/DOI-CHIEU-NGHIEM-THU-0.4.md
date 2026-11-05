@@ -1,5 +1,7 @@
 # Đối chiếu điều kiện nghiệm thu 0.4
 
+> DIG-04 / QA-02 ngày 05/11: người dùng gửi nội dung gói từ lượt kiểm tra kho giả với tiêu đề và đủ ba URL theo thứ tự; không xác định ứng dụng dùng để dán. Đây là một lượt đối chiếu, QA-02 vẫn mở. Xem `KIEM-THU.md`.
+
 > QA-01 ngày 05/11: trên commit `92f12d9`, toàn bộ bộ Python đạt 216/216 và sáu tệp JavaScript đạt 57/57. Đây là hồi quy trên fixture; QA giao diện và policy nền tảng vẫn mở. Xem `KIEM-THU.md`.
 
 > BASE-02 / VAR-03 / QA-02 ngày 05/11: trên kho giả hai thẻ, sau khi lưu tiêu đề bản tin ở thẻ thứ hai, nút tạo bản sao phiên bản X tại thẻ cũ báo xung đột. Chưa đối chiếu dữ liệu sau thao tác và chưa thử các kênh khác; xem `KIEM-THU.md`. Các gate vẫn mở.
