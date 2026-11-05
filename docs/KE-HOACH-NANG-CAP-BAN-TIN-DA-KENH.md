@@ -731,3 +731,5 @@ Tài liệu này bổ sung roadmap kỹ thuật; không thay thế mô tả ch�
 
 > NEWS-06 / QA-02 ngày 05/11: trên kho giả, giao diện báo gói tư liệu Unicode 74.774 byte vượt 64 KiB và chỉ ra các mục lớn. Chưa thử chính xác biên hoặc POST vượt ngưỡng qua giao diện; xem `KIEM-THU.md`.
 
+> SOURCE-02 / APR-01 / QA-02 ngày 05/11: giao diện từ chối duyệt bản nháp X trên kho giả có hash trích đoạn sai, chỉ rõ mục 1 và nguồn 1. Chưa thử sửa rồi duyệt lại qua UI; xem `KIEM-THU.md`.
+

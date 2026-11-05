@@ -563,3 +563,8 @@ python -m newsroom --collect
 - Đối chiếu mô tả phạm vi, luồng và danh sách bảng với `newsroom/migrations.py` và tài liệu API. Sửa phần còn mô tả một Page như phạm vi chung: phân biệt luồng bài cũ với bản tin đa kênh đang phát triển, bổ sung các bảng schema 4 và giới hạn kiểm tra revision của client cũ.
 - Đây là rà soát tĩnh một phần tài liệu; chưa xác nhận toàn bộ tài liệu và hợp đồng, DOC-01 và BASE-02 tiếp tục mở.
 
+### 05/11/2026 — Cảnh báo hash nguồn khi duyệt (SOURCE-02 / APR-01 / QA-02)
+
+- Trên trình duyệt tích hợp và SQLite fixture riêng, chuẩn bị bản nháp X đã lưu checklist và sửa hash trích đoạn của nguồn được chọn thành giá trị giả không khớp. Bấm **Duyệt phiên bản**, giao diện hiển thị lỗi tại vùng phiên bản và thông báo: hash không khớp trích đoạn ở mục 1, nguồn 1; cần đối chiếu, bổ sung nguồn đúng và bỏ nguồn sai trước khi duyệt.
+- Lượt này kiểm tra một nguồn và một phiên bản X; chưa thử sửa nguồn rồi duyệt lại qua giao diện, chưa đối chiếu trạng thái SQLite sau thao tác hoặc các kênh khác. Test service riêng đã kiểm tra bản nháp không được duyệt và trường hợp hash đúng; QA-02 vẫn mở.
+
