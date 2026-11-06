@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## BASE-03 / TEXT-03: bổ sung bộ đối chiếu trọng số X — 06/11/2026
+
+- Tải lại `validate.yml` của twitter-text tại commit `30e2430d90cff3b46393ea54caf511441983c260`, kiểm tra SHA-256 khớp nguồn đã ghim, chuyển toàn bộ 20 mẫu `WeightedTweetsCounterTest` sang JSON và lưu nguồn/giấy phép tại `tests/fixtures/TWITTER-TEXT-README.md`. Test mới đối chiếu kết quả bộ đếm hiện tại: 18 mẫu khớp trọng số và tính hợp lệ gốc. Hai mẫu chuỗi emoji phức hợp có kỳ vọng upstream cũ 16 và 9, còn cấu hình hiện tại tính 7 và 4 do nhận diện cụm emoji; test giữ và kiểm tra riêng cả hai kỳ vọng. Các trường chỉ vị trí không được chuyển vào fixture này.
+- Đã đối chiếu lại [tài liệu X](https://docs.x.com/fundamentals/counting-characters) về trọng số, emoji, URL 23 và NFC. Trang [tài liệu tạo bài Threads](https://developers.facebook.com/documentation/threads/posts) trả 429; [Meta](https://about.fb.com/news/2025/09/attach-text-threads-posts-share-longer-perspectives/) mô tả tệp văn bản đính kèm riêng nhưng không đặc tả phép đếm Unicode. Trên Edge, Threads và X đều hiện màn hình đăng nhập, nên không có lượt đo composer mới hoặc bài đăng; kết quả thử ngày trước được giữ nguyên phạm vi.
+- Bộ fixture là ví dụ tại một commit, không chứng minh mọi chuỗi Unicode, URL hoặc hành vi composer hiện tại. `test_social_conformance.py` đạt 10/10, toàn bộ Python 238/238; không đổi thuật toán hay policy, BASE-03 vẫn mở và Threads vẫn là ước lượng.
+
 ## DIG-04 / QA-02: đóng hộp sao chép khi thử lại đang chờ — 06/11/2026
 
 - Trên trình duyệt tích hợp với một bản tin và nguồn giả, server thử cung cấp bản `app.js` thay riêng lời gọi clipboard bằng hàm giả luôn báo từ chối và ghi số lần gọi. Lượt đầu mở hộp sao chép thủ công; bấm sao chép lại, giữ phản hồi gói tư liệu thứ hai rồi đóng hộp. Khi trả phản hồi, hộp vẫn đóng và tiêu điểm trở lại nút gói tư liệu. Bộ đếm server ghi hai lượt lấy gói nhưng chỉ một lần gọi clipboard giả, tức lượt thử lại không gọi clipboard sau khi hộp đóng.

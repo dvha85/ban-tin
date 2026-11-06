@@ -87,6 +87,31 @@ class TwitterTextConformance(unittest.TestCase):
             with self.subTest(group=case['group'], description=case['description']):
                 self.assertEqual(count_text('x', case['text']), (case['weightedLength'], case['valid']))
 
+    def test_older_weighted_corpus_distinguishes_legacy_emoji_policy(self):
+        path = Path(__file__).parent / 'fixtures' / 'twitter-text-weighted-legacy.json'
+        fixture = json.loads(path.read_text(encoding='utf-8'))
+        self.assertEqual(fixture['source_commit'], '30e2430d90cff3b46393ea54caf511441983c260')
+        self.assertEqual(fixture['source_sha256'], '29fa1be663676f3d0bb0a67f393b32c15d92c5dd10db9be401bf7708d7c5b703')
+        self.assertEqual(fixture['group'], 'WeightedTweetsCounterTest')
+        self.assertEqual(len(fixture['cases']), 20)
+        # This older group predates emoji-sequence discounting. Retain both
+        # original expectations, but compare the current policy separately.
+        differences = {
+            'Count a mix of single byte single word, and double word unicode characters': ((16, True), (7, True)),
+            'Count unicode emoji chars outside the basic multilingual plane with skin tone modifiers': ((9, True), (4, True)),
+        }
+        seen = set()
+        for case in fixture['cases']:
+            with self.subTest(description=case['description']):
+                expected = (case['weightedLength'], case['valid'])
+                actual = count_text('x', case['text'])
+                if case['description'] in differences:
+                    self.assertEqual((expected, actual), differences[case['description']])
+                    seen.add(case['description'])
+                else:
+                    self.assertEqual(actual, expected)
+        self.assertEqual(seen, set(differences))
+
     def test_reference_javascript_310_characterization_for_newer_emoji(self):
         # Values captured from twitter-text 3.1.0 with twemoji-parser 11.0.2;
         # this characterizes that implementation, not live X behavior.

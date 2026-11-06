@@ -13,6 +13,15 @@ The upstream project is licensed under Apache License 2.0; see the adjacent
 `TWITTER-TEXT-APACHE-2.0.txt`. These fixtures exercise the official published
 examples, not every Unicode version or behavior of today's X application.
 
+`twitter-text-weighted-legacy.json` contains the complete 20-case
+`WeightedTweetsCounterTest` group from the same pinned `validate.yml`,
+retrieved and hash-checked on 2026-11-06. The group predates the discounted
+emoji configuration: 18 cases match the current counter, while the two named
+emoji-sequence cases retain upstream expectations (16 and 9) but are checked
+against current results (7 and 4). This difference is intentional, not a
+claim about the behavior of the live X composer. Only description, text,
+weighted length and validity were retained; YAML was converted to JSON.
+
 `twitter-text-url-extract.json` contains the complete `urls`,
 `urls_with_indices`, `urls_with_directional_markers` and
 `tco_urls_with_params` sections (108 examples) from the same commit's
