@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## DOC-01 / REL-01: truy vết ma trận kiểm thử — 06/11/2026
+
+- Tổng hợp từng mã trong mục 8 vào [ma trận bằng chứng](MA-TRAN-BANG-CHUNG-0.4.md), phân biệt test service, HTTP, JavaScript giả, trình duyệt, người dùng và nền tảng thật; mỗi dòng nêu phần chưa kiểm chứng. Script đối chiếu đã kiểm tra đủ 43 ID, các tên test Python được ghi và các liên kết nội bộ trong ma trận đều tồn tại. Đây là kiểm tra tĩnh, không tự chứng minh assertion đủ bao phủ hay thay thế chạy test.
+- Đối chiếu nguồn X nêu cách sao chép liên kết bài và ví dụ đường dẫn bài trong Media Studio; các trang đó không đặc tả mọi alias. Trang Facebook qua công cụ công khai yêu cầu đăng nhập. Không sửa validator dựa trên kết quả này; BASE-03, DOC-01 và REL-01 tiếp tục mở.
+
 ## DIG-02 / QA-02: tiêu điểm sau khi bỏ nguồn hoặc mục — 06/11/2026
 
 - Sau thao tác xác nhận, giao diện dựng lại các điều khiển nên nút xác nhận không còn. Bổ sung đưa tiêu điểm về tiêu đề có nhãn của mục vừa sửa nguồn hoặc mục liền kề còn lại sau khi bỏ mục. Chỉ khôi phục khi thao tác bắt đầu từ nút xác nhận, vẫn ở đúng bản tin và tiêu điểm chưa được chuyển sang điều khiển khác.

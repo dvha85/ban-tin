@@ -496,6 +496,8 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ## 8. Ma trận kiểm thử bắt buộc
 
+Bằng chứng theo từng ID, cấp kiểm thử và các giới hạn còn lại được tổng hợp tại [MA-TRAN-BANG-CHUNG-0.4.md](MA-TRAN-BANG-CHUNG-0.4.md). Đây là truy vết, không thay thế điều kiện đóng gate.
+
 | ID | Tình huống | Kết quả bắt buộc |
 | --- | --- | --- |
 | URL-01 | Ghi URL A, ghi nhận A, mở B đã duyệt | B có ô URL rỗng |
@@ -597,6 +599,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | Ngày | Task/mốc | Trạng thái | Bằng chứng / commit / người thực hiện | Bước tiếp theo |
 | --- | --- | --- | --- | --- |
+| 06/11/2026 | DOC-01 / REL-01 / BASE-02/03 | Đang làm | Lập ma trận liên kết 43 ID mục 8 với test, cấp bằng chứng và hạn chế; kiểm tra tên test Python và đường dẫn cục bộ tồn tại | Đối chiếu hợp đồng API/policy còn thiếu, hoàn tất QA và chốt nghiệm thu với người dùng; xem `MA-TRAN-BANG-CHUNG-0.4.md` |
 | 06/11/2026 | DIG-02 / QA-02 | Đang làm | Bỏ nguồn và bỏ mục bằng Enter trên kho giả; tiêu điểm về mục đang sửa hoặc mục còn lại, Tab tới ô tiêu đề; Python 222/222 và JavaScript 62/62 | Tiếp tục QA toàn luồng, chưa thử trình đọc màn hình; xem `KIEM-THU.md` |
 | 06/11/2026 | NEWS-04 / DIG-02 / QA-02 | Đang làm | Trình duyệt trên kho giả xác nhận bỏ nguồn và bỏ mục vẫn giữ nguồn chung; sửa nhãn số lần sử dụng cũ, test 222/222 Python và 61/61 JavaScript | Tiếp tục QA toàn luồng và các điều kiện còn mở; xem `KIEM-THU.md` |
 | 03/11/2026 | Review hiện trạng | Hoàn tất | Commit nền `a180354`; 88/88 test; probe RSS chỉ đọc; tái hiện URL bằng DOM giả | Giữ làm baseline, không coi là nghiệm thu 0.4 |

@@ -1,5 +1,7 @@
 # Đối chiếu điều kiện nghiệm thu 0.4
 
+> Đối chiếu từng mã của ma trận kiểm thử mục 8, cấp bằng chứng và phần chưa thử: [MA-TRAN-BANG-CHUNG-0.4.md](MA-TRAN-BANG-CHUNG-0.4.md). Ma trận không thay cho kiểm thử hoặc quyết định triển khai.
+
 > Cập nhật 06/11: sau khi bỏ nguồn và bỏ mục bằng bàn phím trên kho giả, tiêu điểm về mục thích hợp và Tab tiếp tới ô tiêu đề; hồi quy 222/222 Python và 62/62 JavaScript. QA-02 tổng thể vẫn mở; phạm vi và giới hạn tại `KIEM-THU.md`.
 
 > Tình trạng mới nhất ngày 05/11: UI kho giả đã xem trước Threads với policy v6; trên composer Threads thật, một chuỗi 500 điểm mã còn 0, thêm một ký tự thì hiện -1. Threads và X cũng đã được đối chiếu với một số mẫu chữ, emoji và URL, không đăng bài. Các quan sát có phạm vi giới hạn; BASE-03 và QA-02 vẫn mở. Chi tiết tại `KIEM-THU.md`.

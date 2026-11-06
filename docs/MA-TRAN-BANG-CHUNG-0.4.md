@@ -1,0 +1,74 @@
+# Ma trận bằng chứng kiểm thử 0.4
+
+Cập nhật 06/11/2026 theo mã `8fdb445`. Bảng này truy vết các tình huống ở mục 8 của [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) tới bằng chứng đã có; **không tự đánh dấu cổng phát hành là hoàn tất**. Xem diễn biến, lệnh, dữ liệu và giới hạn từng lần thử tại [KIEM-THU.md](KIEM-THU.md). Kết quả hồi quy gần nhất trên fixture: 222/222 Python, 62/62 JavaScript; cần chạy lại sau sửa mã và trước phát hành.
+
+Ký hiệu: **S** = service/SQLite giả; **H** = HTTP với server/kho giả; **J** = handler/helper JavaScript và DOM giả; **B** = trình duyệt với kho giả; **U** = người dùng đã thực hiện; **N** = nền tảng thật, không đăng. Tên test là điểm bắt đầu trong tệp được liên kết; không suy ra mọi tổ hợp được kiểm thử chỉ vì có tên trong bảng.
+
+## URL và migration
+
+| ID | Bằng chứng cụ thể | Giới hạn còn lại |
+| --- | --- | --- |
+| URL-01…04 | U/B: người dùng thử bốn bước Edge trên kho giả hotfix 0.3.1; H đối chiếu trạng thái/URL. J: [legacy-save-ui](../tests/legacy-save-ui.test.js), [draft-state](../tests/draft-state.test.js); S: `test_invalid_publication_url_does_not_change_draft_or_counts`. | Bằng chứng hotfix độc lập, không chứng minh toàn bộ giao diện 0.4. |
+| MIG-01 | S: [test_migrations_v4.py](../tests/test_migrations_v4.py), `test_real_v3_fixture_preserves_all_legacy_rows_and_approved_exports`, `test_upgrade_reduced_schema_1_and_2_preserves_legacy_exports`, `test_migration_preserves_legacy_and_backups_and_is_idempotent`. | Schema 1/2 là mô phỏng; không có SQLite cũ để thử bản sao theo xác nhận người dùng. |
+| MIG-02 | S: `test_failed_migration_rolls_back_all_tables_and_version`, `test_backup_failure_leaves_old_version_and_schema_untouched`, `test_concurrent_write_during_backup_aborts_migration`. | Tiêm các lỗi được nêu trong test, không bao phủ mọi lỗi ổ đĩa/mất điện. |
+| MIG-03 | S: `test_migration_preserves_legacy_and_backups_and_is_idempotent` so dữ liệu sau hai lần mở, integrity và một backup trước nâng cấp. | Fixture, không phải dữ liệu vận hành. |
+| MIG-04 | S: `test_restore_rejects_schema4_with_missing_constraints_or_foreign_keys`, `test_restore_rejects_physically_damaged_database_before_creating_destination`, `test_restore_failure_never_removes_other_files_in_destination`; `test_restore_never_overwrites_existing_directory` trong [test_workflow.py](../tests/test_workflow.py). | Chỉ các biến thể hỏng và lỗi được thử; không ghi đè đích có sẵn. |
+| MIG-05 | S: `test_newer_version_fails_closed_and_restore_v4`. | Không khẳng định mọi cơ sở dữ liệu phiên bản tương lai. |
+
+## Bản tin và nguồn
+
+| ID | Bằng chứng cụ thể | Giới hạn còn lại |
+| --- | --- | --- |
+| NEWS-01 | S: [test_bulletins.py](../tests/test_bulletins.py), `test_selection_validation_is_atomic`, `test_item_and_source_limits_at_boundaries_are_atomic`, `test_copy_legacy_is_unapproved_and_preserves_long_text_without_mutating_original`. | Biên và sao chép trên fixture; không suy rộng mọi payload. |
+| NEWS-02 | J: [inbox-utils.test.js](../tests/inbox-utils.test.js), `hidden selections remain counted after a filter`; B: chọn 10/11, chuyển nhóm/tìm và xóa lựa chọn; một lượt khác tạo từ ba lựa chọn gồm tin ẩn. | Chưa thay thế toàn bộ QA bàn phím và trình đọc màn hình. |
+| NEWS-03 | S: `test_reorder_and_packet_preserve_snapshots_after_refresh_restart`; B: đổi thứ tự ba mục, khôi phục backup và restart server trên kho thử. | Không kiểm tra mọi loại sự cố tắt máy. |
+| NEWS-04 | S: `test_removing_item_preserves_shared_source_on_remaining_item`; B: xác nhận bỏ nguồn/bỏ mục với hai mục dùng nguồn chung. | Không chứng minh mọi đường sửa nguồn hoặc đồng thời. |
+| NEWS-05 | S: `test_future_article_state_does_not_claim_recency` trong [test_workflow.py](../tests/test_workflow.py); J: [inbox-utils.test.js](../tests/inbox-utils.test.js), [source-warnings.test.js](../tests/source-warnings.test.js); B: ngày tương lai, ngày cũ qua nửa đêm Việt Nam. | Các mốc và bộ lọc đã thử, không phải mọi múi giờ. |
+| NEWS-06 | H: `test_bulletin_request_utf8_size_boundary_over_http` trong [test_server.py](../tests/test_server.py); S: `test_packet_limit_counts_complete_utf8_output_and_identifies_large_items`; B: báo gói Unicode vượt ngưỡng. | B chưa thử chính xác cả hai biên hoặc POST vượt ngưỡng qua UI. |
+| SOURCE-01 | S: `test_reorder_and_packet_preserve_snapshots_after_refresh_restart`, `test_refresh_without_evidence_does_not_attach_old_hash_to_new_excerpt`; `test_feed_correction_updates_candidate_not_saved_snapshot` trong test_workflow. | Nguồn giả; không kiểm tra nội dung trang thật. |
+| SOURCE-02 | S: `test_refresh_without_evidence_does_not_attach_old_hash_to_new_excerpt`, `test_approval_rejects_used_excerpt_with_mismatched_hash`; B: cảnh báo hash trên nguồn giả như KIEM-THU. | Hash khớp không chứng minh tính xác thực của nguồn. |
+| SOURCE-03 | S: `test_packet_keeps_source_instructions_inside_json_data`; J: source-warnings; B: HTML giả hiển thị thành văn bản và cảnh báo ghi chú ngắn. | Không chứng minh mô hình ngoài tuân theo prompt hoặc mọi dạng HTML an toàn. |
+
+## Biến thể, đầu ra và duyệt
+
+| ID | Bằng chứng cụ thể | Giới hạn còn lại |
+| --- | --- | --- |
+| VAR-01 | S: [test_variants.py](../tests/test_variants.py), `test_editing_facebook_preserves_other_approved_variants_after_reopen`. | Thay đổi Facebook trong fixture; chưa thử mọi trường qua UI. |
+| VAR-02 | S: `test_clone_edited_variant_and_reject_stale_save_without_overwriting`. | Không đồng nghĩa mọi thao tác tạo lại đều đã được thử trên trình duyệt. |
+| VAR-03 | S: `test_parent_edit_resets_checks_of_unlocked_variants_only`, `test_policy_change_after_partial_recording_preserves_snapshot`; H: `test_variant_save_rejects_outdated_displayed_bulletin_over_http`; B: một tình huống hai thẻ. | Client cũ bỏ `expected_bulletin_revision` không có bảo vệ hiển thị bổ sung. |
+| VAR-04 | S: `test_competing_variant_saves_have_one_winner_and_no_lost_update`; B: thử xung đột revision trong phạm vi KIEM-THU. | Không suy rộng mọi trường hoặc mọi thứ tự mạng. |
+| TEXT-01 | S: `test_approved_export_matches_preview_and_changes_invalidate`; H: `test_multichannel_response_contract_and_publication_lifecycle_over_http`; B: tệp, clipboard/fallback đã đối chiếu với dữ liệu giả. | Chưa bao phủ mọi kênh, luồng chia và nội dung Unicode trên mọi trình duyệt. |
+| TEXT-02 | S: `test_x_url_weight_and_boundary`, `test_format_counts_and_source_links`, `test_approval_counts_crlf_in_final_x_post_including_source`, `test_threads_estimate_matches_observed_composer_unicode_samples`. | Threads là ước lượng; 280/281 và 500/501 kiểm tra theo mẫu, không phải toàn bộ chính sách. |
+| TEXT-03 | S: [test_social_conformance.py](../tests/test_social_conformance.py) với corpus/emoji ghim; N: một số mẫu trên composer Threads/X và ranh giới Threads 500/501. | BASE-03 còn mở: chưa chứng minh toàn bộ Unicode, URL, emoji mới hoặc quy tắc Meta. |
+| TEXT-04 | S: `test_split_rechecks_numbering_and_keeps_sources_and_text`, `test_split_rejects_unsplittable_text_without_cutting`, `test_split_preserves_boundary_whitespace_in_editable_segments`; B: một lượt chia X. | Đề xuất chỉ tách tại ranh giới an toàn đã định nghĩa; người biên tập phải rà nguồn và nội dung từng đoạn. |
+| TEXT-05 | S: `test_split_rechecks_numbering_and_keeps_sources_and_text`, `test_split_twenty_post_boundary_and_rejection_preserves_saved_draft`. | Fixture X/Threads, không phải mọi đoạn và URL có thể có. |
+| TEXT-06 | S: `test_v5_approvals_require_review_with_v6_and_keep_archive`, `test_renderer_change_also_requires_review_before_reapproval`, `test_policy_change_after_partial_recording_preserves_snapshot`; B: các tình huống policy cũ được mô tả trong KIEM-THU. | Chưa thử mọi kênh, mọi thay đổi policy và trình duyệt. |
+| APPROVE-01 | S: `test_approval_requires_each_claim_checked_with_evidence`, `test_approval_rejects_missing_claim_or_evidence_and_unresolved_markers`, `test_approval_counts_crlf_in_final_x_post_including_source`. | Một tập điều kiện và fixture, không khẳng định mọi payload. |
+| APPROVE-02 | S: `test_approved_export_matches_preview_and_changes_invalidate`, `test_parent_edit_resets_checks_of_unlocked_variants_only`, `test_noop_saves_do_not_revoke_approval`; [test_workflow.py](../tests/test_workflow.py) có test legacy riêng. | Chưa kiểm thử UI mọi trường và thứ tự thay đổi. |
+| APPROVE-03 | S/H: `test_corrupt_approval_fails_closed_before_read_export_or_record` và test HTTP trong KIEM-THU. | Các dạng hỏng snapshot được tiêm, không thay thế backup. |
+| APPROVE-04 | S: `test_record_separate_segments_retry_and_immutable_after_correction`, `test_cancel_all_preserves_lock_and_history_and_can_record_again`. | Không phải kiểm tra nội dung đã đăng thật. |
+| APPROVE-05 | S: `test_competing_edit_and_approval_have_exactly_one_winner`, `test_competing_edit_and_record_keep_approval_and_publication_consistent`, `test_parent_edit_and_record_serialize_in_both_orders`, `test_export_reads_variant_and_approval_in_one_snapshot`. | Test SQLite có điều phối; không bao phủ mọi lịch trình, lỗi mạng hoặc trình duyệt. |
+| APPROVE-06 | S: `test_policy_change_after_partial_recording_preserves_snapshot`, `test_record_separate_segments_retry_and_immutable_after_correction`; B: policy cũ với bản ghi nhận một phần dùng URL giả. | Phân biệt tiếp tục ghi nhận URL người dùng đã đăng với xuất để đăng tiếp; chưa thử mọi kênh. |
+
+## Nhật ký và an toàn
+
+| ID | Bằng chứng cụ thể | Giới hạn còn lại |
+| --- | --- | --- |
+| POST-01 | S: `test_three_channel_bulletin_survives_backup_restore_with_partial_publication`, `test_record_separate_segments_retry_and_immutable_after_correction`; H: `test_multichannel_response_contract_and_publication_lifecycle_over_http`; B: Facebook/Threads và X trên kho thử. | URL và nội dung giả; không đăng hoặc xác minh nền tảng. |
+| POST-02 | S: `test_social_url_validation_and_manual_metrics`, các test alias Threads; [API](API-BAN-TIN-DA-KENH.md) mô tả allowlist. | Cần chốt BASE-03: chưa chứng minh đầy đủ mẫu URL chính thức/alias; validator không fetch URL. |
+| POST-03 | S: `test_record_separate_segments_retry_and_immutable_after_correction`, `test_legacy_and_variant_competing_for_same_url_have_one_winner`, `test_correction_key_cannot_collide_with_client_recording_key`; J: test retry, hủy và ghi lại trong correction-ui. | Đối chiếu trùng legacy/alias chỉ trong phạm vi nhận diện; kết quả mất mạng thật chưa thử đầy đủ. |
+| POST-04 | J: [draft-state.test.js](../tests/draft-state.test.js), [correction-ui.test.js](../tests/correction-ui.test.js); U/B: URL-01…04 trên hotfix, cảnh báo đổi bản tin trong 0.4 và một số luồng nhập URL đa kênh. | Rời trang/tải lại khi chưa lưu để sau theo lựa chọn người dùng; chưa thử mọi tổ hợp kênh/đoạn. |
+| POST-05 | S: `test_cancel_all_preserves_lock_and_history_and_can_record_again`, `test_three_platform_correction_preserves_each_publication_metrics_and_lock`; B: X giả hủy và ghi lại. | Chưa thử mọi kênh và lỗi kết nối qua UI. |
+| POST-06 | S: `test_platform_metrics_keep_optional_values_and_validate_without_partial_writes`, `test_metric_retry_key_is_idempotent_and_rejects_changed_payload`; H: vòng đời publication; B: nhập/xem số liệu giả trên Facebook/Threads. | Chưa kiểm tra mọi chỉ số và tài khoản nền tảng. |
+| SAFE-01 | H: `test_every_multichannel_post_route_requires_session_csrf_and_origin_before_dispatch`, `test_absolute_form_api_target_requires_the_same_session_and_csrf`. | Ma trận route tường minh phải cập nhật khi thêm endpoint; không chứng minh mọi biến thể HTTP. |
+| SAFE-02 | S: `test_multichannel_workflow_does_not_make_network_connections`; H: `test_no_publish_or_ai_integration_endpoint`. | Test chặn hai API socket trên đường chạy đã thử; không chứng minh toàn bộ tiến trình hay mọi đường chạy đều không có mạng. |
+| SAFE-03 | H: `test_host_and_static_traversal`, `test_home_retains_editor_and_safe_external_link` trong test_server. | Danh sách file và các biến thể traversal được thử, không phải mọi yêu cầu có thể tạo. |
+
+## Việc chưa đủ bằng chứng để đóng 0.4
+
+1. BASE-02: tiếp tục đối chiếu kiểu, trạng thái, lỗi và hợp đồng API; tài liệu [API](API-BAN-TIN-DA-KENH.md) mô tả mã hiện tại nhưng không chứng minh toàn bộ tổ hợp qua HTTP.
+2. BASE-03: duy trì cảnh báo đếm Threads và giới hạn của bộ nhận diện X; đối chiếu URL nền tảng theo nguồn có thể kiểm chứng. [X](https://help.x.com/en/using-x/post-and-moment-url) hướng dẫn sao chép URL bài, nhưng không liệt kê mọi alias; [X Media Studio](https://help.x.com/en/using-twitter/media-studio-faqs.html) có ví dụ `x.com/USERNAME/STATUS/postID`. Hai nguồn này không chứng minh allowlist hiện tại đầy đủ. Tài liệu Facebook truy cập qua công cụ công khai yêu cầu đăng nhập; không suy đoán từ đó.
+3. QA-02: hoàn thiện bàn phím, clipboard, đổi kênh và lỗi chưa lưu theo phạm vi còn thiếu. Người dùng chọn **để sau** việc thử rời trang/tải lại có nội dung chưa lưu.
+4. G6: rà lại tài liệu và toàn bộ checklist mục 10 sau thay đổi cuối; người dùng cần xem kết quả pilot và quyết định riêng về triển khai. Mẫu giả đã được xác nhận phù hợp không phải tệp của ba pilot cũ.
+
+Không thử migration trên bản sao SQLite cũ trong đợt này vì người dùng xác nhận chưa có dữ liệu cũ. Không có bài đăng hay dữ liệu vận hành trong các lượt thử trên.
