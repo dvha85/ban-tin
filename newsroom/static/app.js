@@ -685,11 +685,22 @@ function removalConfirmation(trigger, bulletin, item, source = null) {
       if (error.outcomeUnknown) throw new Error('Chưa rõ thao tác đã được lưu hay chưa. Hãy kiểm tra bản tin ở thẻ khác trước khi thử lại.');
       throw error;
     }
-    app.bulletin = updated; renderBulletin();
+    app.bulletin = updated;
+    if (!source && app.state.bulletin_usage) {
+      const usage = app.state.bulletin_usage;
+      usage[item.article_id] = Math.max(0, (usage[item.article_id] || 0) - 1);
+      renderStories();
+    }
+    renderBulletin();
     const done = source ? 'Đã bỏ nguồn; cần kiểm chứng lại mục.' : 'Đã bỏ mục khỏi bản tin.';
+    const failures = [];
+    if (!source) {
+      try { await loadState(); renderBulletin(); }
+      catch (_) { failures.push('chưa tải lại được số lần sử dụng'); }
+    }
     try { await loadBulletinList(); }
-    catch (_) { toast(`${done} Chưa tải lại được danh sách bản tin.`, true); return; }
-    toast(done);
+    catch (_) { failures.push('chưa tải lại được danh sách bản tin'); }
+    toast(failures.length ? `${done} ${failures.join('; ')}.` : done, !!failures.length);
   });
   panel.append(node('p', '', message), confirm, cancel);
   return panel;

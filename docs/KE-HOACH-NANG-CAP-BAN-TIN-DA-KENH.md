@@ -597,6 +597,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | Ngày | Task/mốc | Trạng thái | Bằng chứng / commit / người thực hiện | Bước tiếp theo |
 | --- | --- | --- | --- | --- |
+| 06/11/2026 | NEWS-04 / DIG-02 / QA-02 | Đang làm | Trình duyệt trên kho giả xác nhận bỏ nguồn và bỏ mục vẫn giữ nguồn chung; sửa nhãn số lần sử dụng cũ, test 222/222 Python và 61/61 JavaScript | Tiếp tục QA toàn luồng và các điều kiện còn mở; xem `KIEM-THU.md` |
 | 03/11/2026 | Review hiện trạng | Hoàn tất | Commit nền `a180354`; 88/88 test; probe RSS chỉ đọc; tái hiện URL bằng DOM giả | Giữ làm baseline, không coi là nghiệm thu 0.4 |
 | 03/11/2026 | Lập kế hoạch nâng cấp | Hoàn tất | Tài liệu này; chưa triển khai chức năng | Xem/chốt phạm vi rồi bắt đầu G0 |
 | 03/11/2026 | FIX-01…03 | Đang làm | Test JS binding và smoke kho thử: URL A không tràn sang B trước/sau ghi nhận, A hiện đúng link; nhánh hủy giữ URL B. Test service từ chối URL rỗng/sai, không đổi draft, history và thống kê | Đối chiếu gate export legacy và kiểm tra lỗi URL trên giao diện |

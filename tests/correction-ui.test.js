@@ -376,6 +376,7 @@ test('removing a source or item requires an in-page confirmation and rechecks pe
       items: [item(5, [source('a', 'https://example.com/a'), source('b', 'https://example.com/b')]),
               item(6, [source('c', 'https://example.com/c')])]};
     toast = message => messages.push(message); loadBulletinList = async () => { if (listFails()) throw new Error('list'); }; renderVariants = async () => {};
+    loadState = async () => {}; renderStories = () => {};
     api = async (path, body) => { calls.push({path, body}); if (outcomeUnknown()) {
       const error = new Error('Mất kết nối'); error.outcomeUnknown = true; throw error; } return app.bulletin; };
     renderBulletin();`, context);
@@ -418,6 +419,43 @@ test('removing a source or item requires an in-page confirmation and rechecks pe
   assert.ok(walk(editor).some(el => /Di chuyển mục 1 #5 \(chưa đặt tiêu đề\) xuống/.test(el['aria-label'] || '')));
   assert.ok(walk(editor).some(el => /Bỏ nguồn .*#5 \(chưa đặt tiêu đề\)/.test(el.textContent)));
   assert.ok(walk(editor).some(el => /Bỏ mục .*#5 \(chưa đặt tiêu đề\)/.test(el.textContent)));
+});
+
+test('removing an item refreshes usage and reports a failed refresh without hiding the saved removal', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const messages = [];
+  let refreshFails = false;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    Event: class { constructor(type) { this.type = type; } }, messages, refreshFails: () => refreshFails,
+    fetch: () => new Promise(() => {}), sourceWarnings: () => [],
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`const item = id => ({id, article_id: id, revision: 1, title: 'Mục ' + id, body: '', angle: '',
+      verification_note: '', verified: false, claims: [], sources: [{source_id: 's' + id, url: 'https://example.com/' + id}]});
+    app.state = {articles: [{id: 5, title: 'Tin 5'}, {id: 6, title: 'Tin 6'}], bulletin_usage: {5: 1, 6: 2}};
+    app.bulletin = {id: 7, revision: 4, title: 'Bản thử', edition_date: '', introduction: '', conclusion: '', items: [item(5), item(6)]};
+    toast = message => messages.push(message); renderVariants = async () => {}; renderStories = () => {};
+    loadBulletinList = async () => {};
+    loadState = async () => { if (refreshFails()) throw new Error('offline'); app.state.bulletin_usage = {5: 0, 6: 2}; };
+    api = async () => ({...app.bulletin, revision: 5, items: [item(6)]}); renderBulletin();`, context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const find = text => walk(get('bulletin-editor')).find(el => el.tagName === 'button' && el.textContent === text);
+  const click = async el => { assert.ok(el); el.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  await click(find('Bỏ mục khỏi bản tin')); await click(find('Xác nhận bỏ mục'));
+  let option = walk(get('bulletin-editor')).find(el => el.tagName === 'option' && el.value === 5);
+  assert.equal(option.textContent, 'Tin 5');
+  assert.match(messages.at(-1), /Đã bỏ mục/);
+  vm.runInContext(`app.state.bulletin_usage[5] = 2; app.bulletin = {id: 7, revision: 4, title: 'Bản thử',
+    edition_date: '', introduction: '', conclusion: '', items: [item(5), item(6)]}; renderBulletin();`, context);
+  refreshFails = true;
+  await click(find('Bỏ mục khỏi bản tin')); await click(find('Xác nhận bỏ mục'));
+  option = walk(get('bulletin-editor')).find(el => el.tagName === 'option' && el.value === 5);
+  assert.match(option.textContent, /đã dùng trong 1 bản tin/);
+  assert.match(messages.at(-1), /Đã bỏ mục.*chưa tải lại.*sử dụng/i);
+  assert.equal(vm.runInContext('app.bulletin.items.length', context), 1);
 });
 
 test('inline source form keeps pending fields, blocks unrelated saves, and retains failed input', async () => {

@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## NEWS-04 / DIG-02 / QA-02: bỏ nguồn, bỏ mục và cập nhật số lần sử dụng — 06/11/2026
+
+- Trên trình duyệt tích hợp với SQLite giả có hai mục Alpha và Bravo cùng dùng một URL nguồn `example.com`, xác nhận bỏ nguồn riêng của Alpha: Alpha còn nguồn chung, Bravo giữ cả hai nguồn. Sau đó xác nhận bỏ Alpha: Bravo và nguồn chung vẫn còn; không thể bỏ mục cuối. Chỉ thao tác dữ liệu giả, không mở URL nguồn hay dùng kho vận hành.
+- Phát hiện sau khi bỏ mục, danh sách thêm tin vẫn hiển thị số lần sử dụng cũ. Luồng thêm vốn tải lại trạng thái trước khi hỏi xác nhận; lỗi quan sát được là nhãn hiển thị. Sửa cập nhật tạm số lần sử dụng sau ghi thành công và tải lại trạng thái; nếu tải lại lỗi, vẫn giữ kết quả đã bỏ và báo số liệu chưa tải lại. Số tạm có thể không phản ánh thay đổi đồng thời ở nơi khác; luồng thêm vẫn kiểm tra lại trạng thái trước khi tiếp tục.
+- Test handler mới thất bại trước sửa vì nhãn còn báo một bản tin, sau sửa kiểm tra số liệu sau tải lại và nhánh tải lỗi khi tin vẫn được dùng ở bản tin khác. Trên kho giả mới, xác nhận bỏ Alpha qua giao diện: danh sách chỉ còn Bravo, nguồn chung vẫn còn và ô thêm tin hiện `Tin giả Alpha` không kèm nhãn cũ. Đây không phải kiểm thử mọi thao tác đồng thời hoặc mọi trình duyệt; QA-02 vẫn mở.
+- Hồi quy JavaScript trước sửa 60/60; sau sửa 61/61 JavaScript, 222/222 Python và `node --check newsroom/static/app.js` đạt.
+
 ## NEWS-05 / DIG-01 / QA-02: ngày tương lai và giới hạn lựa chọn — 06/11/2026
 
 - `rank_article` trước sửa cộng 30 điểm và ghi “trong 48 giờ” cho thời điểm tương lai tới 2 giờ 24 phút. Test tái hiện với ba mốc tương lai, gồm lệch 1 micro giây; sau sửa mọi thời điểm tương lai được cảnh báo và không nhận điểm độ mới. Test giữ các mốc bằng hiện tại, đúng 48 giờ, ngay sau 48 giờ và đúng 7 ngày; test service kiểm tra dữ liệu trả về từ kho giả.
