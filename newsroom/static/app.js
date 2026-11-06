@@ -1714,6 +1714,8 @@ function checkLegacyExportSelection(snapshot) {
       app.draft.revision !== snapshot.revision || app.draft.page_name !== snapshot.page_name)
     throw new Error('Bài hoặc nội dung đã thay đổi. Hãy kiểm tra và mở lại bản xuất.');
 }
+// HTML textarea values normalize CRLF and CR to LF; retain original bytes for export.
+function legacyDisplayedText(snapshot) { return snapshot.text.replace(/\r\n?/g, '\n'); }
 async function verifyLegacyExport(snapshot) {
   checkLegacyExportSelection(snapshot);
   const current = await api(`/api/drafts/${snapshot.id}/approved-export`);
@@ -1726,7 +1728,7 @@ async function copyLegacyExport(snapshot, stillVisible) {
   const text = await verifyLegacyExport(snapshot);
   if (!stillVisible()) throw new Error('Bản xuất đã thay đổi. Hãy mở lại bản xuất.');
   const retry = () => copyLegacyExport(snapshot, () => dialogCopyAction === retry &&
-    $('text-dialog').open && app.exportId === null && $('dialog-text').value === snapshot.text);
+    $('text-dialog').open && app.exportId === null && $('dialog-text').value === legacyDisplayedText(snapshot));
   await copy(text, retry);
 }
 listen($('export-button'), 'click', async () => {
@@ -1750,11 +1752,11 @@ listen($('copy-dialog'), 'click', async () => {
   try {
     if (app.exportId !== null) {
       checkExportStore();
-      if (!legacyExportSnapshot || $('dialog-text').value !== legacyExportSnapshot.text)
+      if (!legacyExportSnapshot || $('dialog-text').value !== legacyDisplayedText(legacyExportSnapshot))
         throw new Error('Bản xuất đã thay đổi. Hãy mở lại bản xuất.');
       const snapshot = legacyExportSnapshot;
       await copyLegacyExport(snapshot, () => legacyExportSnapshot === snapshot &&
-        $('text-dialog').open && app.exportId === snapshot.id && $('dialog-text').value === snapshot.text);
+        $('text-dialog').open && app.exportId === snapshot.id && $('dialog-text').value === legacyDisplayedText(snapshot));
     } else if (dialogCopyAction) await dialogCopyAction();
     else await copy($('dialog-text').value);
   } catch (error) {
@@ -1766,10 +1768,11 @@ listen($('download-export'), 'click', async () => {
     try {
       checkExportStore();
       const snapshot = legacyExportSnapshot;
-      if (!snapshot || $('dialog-text').value !== snapshot.text)
+      if (!snapshot || $('dialog-text').value !== legacyDisplayedText(snapshot))
         throw new Error('Bản xuất đã thay đổi. Hãy mở lại bản xuất.');
       const text = await verifyLegacyExport(snapshot);
-      if (!$('text-dialog').open || legacyExportSnapshot !== snapshot || app.exportId !== snapshot.id || $('dialog-text').value !== text)
+      if (!$('text-dialog').open || legacyExportSnapshot !== snapshot || app.exportId !== snapshot.id ||
+          $('dialog-text').value !== legacyDisplayedText(snapshot))
         throw new Error('Bản xuất đã thay đổi. Hãy mở lại bản xuất.');
       const objectUrl = URL.createObjectURL(new Blob([text], {type: 'text/plain;charset=utf-8'}));
       try {

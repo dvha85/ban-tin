@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## APR-03 / QA-02: xuống dòng bài cũ trong hộp xuất — 06/11/2026
+
+- Sau thay đổi đối chiếu bản xuất, bài cũ chứa CRLF hoặc CR có thể bị từ chối sai: `textarea` hiển thị chúng thành LF, còn dữ liệu duyệt giữ nguyên. UI nay so với dạng hiển thị chuẩn hóa, nhưng vẫn sao chép/tạo tệp từ chuỗi gốc được đối chiếu với server.
+- Test handler mô phỏng textarea chuẩn hóa CRLF và CR: thất bại trước sửa, sau sửa kiểm tra chuỗi sao chép và Blob giữ nguyên xuống dòng gốc; nếu nội dung ô thay đổi thì chặn cả hai thao tác. Test bổ sung kiểm tra clipboard bị từ chối, nút thử lại chặn khi duyệt đổi và sao chép nguyên chuỗi khi hợp lệ. Test cũ tiếp tục kiểm tra khi bản duyệt hoặc kho thay đổi. Hồi quy 237/237 Python và 70/70 JavaScript.
+- Trên trình duyệt tích hợp với kho giả có cả CRLF và CR, mở bản duyệt rồi bấm sao chép và tải: không hiện cảnh báo sai trong hộp. Lượt này chưa đọc lại clipboard hay tệp đã tải trên trình duyệt; bằng chứng giữ byte nằm ở test handler. Đã dừng và dọn kho thử; QA-02 và APR-03 tổng thể vẫn mở.
+
 ## APR-03 / QA-02: bản xuất bài cũ khớp bài được chọn — 06/11/2026
 
 - Trước sửa, khi yêu cầu lấy bài A bị chậm rồi chọn B, hộp có thể ghép nội dung A với tên Page và ID của B. Test handler tái hiện lỗi trước sửa; sau sửa UI đối chiếu ID, revision và Page trước/sau khi lấy dữ liệu. API mới trả nội dung cùng thông tin duyệt từ một bản ghi SQLite đã đọc; API tải cũ vẫn giữ nguyên nội dung và tên tệp.

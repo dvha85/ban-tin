@@ -741,6 +741,66 @@ test('legacy approved export cannot cross an unverified session or changed store
   assert.deepEqual(copies, ['Bài giả', 'Bài giả']); // Manual text remains recoverable.
 });
 
+test('legacy export retains approved CRLF when textarea normalizes displayed line endings', async () => {
+  const elements = new Map(), copies = [], downloads = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  let display = '';
+  Object.defineProperty(get('dialog-text'), 'value', {get: () => display,
+    set: text => { display = text.replace(/\r\n|\r/g, '\n'); }});
+  get('text-dialog').showModal = () => { get('text-dialog').open = true; };
+  class TestURL extends URL {}
+  TestURL.createObjectURL = blob => { downloads.push(blob); return 'blob:fixture'; };
+  TestURL.revokeObjectURL = () => {};
+  const context = vm.createContext({...helpers, URL: TestURL, URLSearchParams, Intl, Date, Error, Promise, Blob,
+    setTimeout: (fn, ms) => ms === 30000 ? 0 : setTimeout(fn, ms), clearTimeout, copies,
+    fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => { const el = new Element(tag); el.click = () => {}; return el; }, createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.draft = {id: 7, revision: 4, page_name: 'Trang thử'};
+    api = async () => ({id: 7, revision: 4, page_name: 'Trang thử', approved_hash: 'hash', text: 'Tiêu đề\\n\\nDòng một\\r\\nDòng hai\\rDòng ba\\n'});
+    copy = async text => copies.push(text);`, context);
+  const click = async id => { get(id).dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  await click('export-button'); await click('copy-dialog'); await click('download-export');
+  const expected = 'Tiêu đề\n\nDòng một\r\nDòng hai\rDòng ba\n';
+  assert.deepEqual(copies, [expected]);
+  assert.equal(downloads.length, 1); assert.equal(await downloads[0].text(), expected);
+  get('dialog-text').value = 'Nội dung đã đổi';
+  await click('copy-dialog'); await click('download-export');
+  assert.deepEqual(copies, [expected]); assert.equal(downloads.length, 1);
+  assert.match(get('text-dialog-note').textContent, /thay đổi/i);
+});
+
+test('legacy manual copy retry checks approval with normalized CRLF display', async () => {
+  const elements = new Map(), copies = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  let display = '';
+  Object.defineProperty(get('dialog-text'), 'value', {get: () => display,
+    set: text => { display = text.replace(/\r\n|\r/g, '\n'); }});
+  get('dialog-text').select = () => {};
+  get('text-dialog').showModal = () => { get('text-dialog').open = true; };
+  let denied = true, changed = false;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    copies, denied: () => denied, changed: () => changed, fetch: () => new Promise(() => {}),
+    navigator: {clipboard: {writeText: async text => { if (denied) throw new Error('denied'); copies.push(text); }}},
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.draft = {id: 7, revision: 4, page_name: 'Trang thử'};
+    api = async () => ({id: 7, revision: changed() ? 5 : 4, page_name: 'Trang thử',
+      approved_hash: 'hash', text: 'Một\\r\\nHai\\rBa'});`, context);
+  const click = async id => { get(id).dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  await click('export-button'); await click('copy-dialog');
+  assert.equal(get('text-dialog-title').textContent, 'Sao chép thủ công');
+  assert.match(get('text-dialog-note').textContent, /kiểm tra/i);
+  denied = false; changed = true;
+  await click('copy-dialog'); assert.deepEqual(copies, []);
+  assert.match(get('text-dialog-note').textContent, /thay đổi/i);
+  changed = false;
+  await click('copy-dialog'); assert.deepEqual(copies, ['Một\r\nHai\rBa']);
+});
+
 test('legacy export does not show the wrong draft after selection changes while loading', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

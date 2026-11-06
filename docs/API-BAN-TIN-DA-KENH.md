@@ -17,6 +17,12 @@ Tài liệu này mô tả API nội bộ của nhánh phát triển 0.4, chưa p
 - Sau mỗi mutation thành công, dùng revision trong phản hồi mới. Nếu 409, giữ trang và nội dung đang soạn; mở bản ghi hiện tại ở thẻ khác để đối chiếu, hoặc sao chép nội dung ra nơi an toàn trước khi tải lại. Không tự ghi đè dữ liệu mới. Khi kết quả yêu cầu trước không rõ, đối chiếu trạng thái/lịch sử trước khi thử lại; riêng retry có khóa phải giữ nguyên payload và khóa theo hợp đồng tương ứng.
 - Riêng 409 do URL đã được ghi nhận có thêm `target`: `{kind: "publication", bulletin_id, variant_id, publication_id, position}` (vị trí từ 0) hoặc `{kind: "legacy_draft", draft_id}`. Trường `error` vẫn có mô tả để client cũ sử dụng. Các 409 khác không nhất thiết có `target`; dữ liệu này chỉ xác định bản ghi nội bộ, không xác minh bài trên nền tảng.
 
+## Bản xuất bài cũ
+
+- `GET /api/drafts/{id}/approved-export` trả JSON `{id, revision, approved_hash, page_name, text}` khi bài ở trạng thái đã duyệt hoặc đã ghi nhận và hash còn hợp lệ; bài không tồn tại hoặc không còn bản duyệt hợp lệ trả 400. Các trường được dựng từ cùng một hàng đã đọc. Giao diện so bản nhận được với bài đang chọn, rồi đọc và đối chiếu lại trước khi sao chép hoặc tạo tệp.
+- `GET /api/drafts/{id}/export` vẫn trả tệp UTF-8 `bai-da-duyet-{id}.txt` theo hợp đồng cũ. Client trực tiếp phải tự xử lý việc dữ liệu đổi sau khi đọc; các bước kiểm tra trong UI không ngăn thay đổi sau phản hồi hoặc Ctrl+C trực tiếp trong ô.
+- Ô văn bản HTML hiển thị xuống dòng CRLF/CR thành LF. Giao diện so nội dung hiển thị theo quy tắc đó, còn nút sao chép và tệp dùng chuỗi gốc của bản duyệt, không tự chuẩn hóa xuống dòng trong nội dung.
+
 ## Bản tin và mục
 
 | Phương thức và đường dẫn | Đầu vào chính | Kết quả / lưu ý |
