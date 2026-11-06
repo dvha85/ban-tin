@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 07/11/2026
 
+## APR-03 / QA-02: bàn phím vùng xuất trên Edge — 07/11/2026
+
+- Trên Edge với server mã `c56f510` và kho SQLite giả riêng, chọn bản X đã duyệt có hai đoạn. Từ ô nội dung bản duyệt đoạn 1, nhấn Tab lần lượt tới nút sao chép đoạn 1, ô URL đoạn 1, nút ghi nhận đoạn 1, ô nội dung bản duyệt đoạn 2 và nút sao chép đoạn 2. Enter trên nút sao chép đoạn 2 hiển thị thông báo đã sao chép; Tab tiếp tới ô URL đoạn 2. Không ghi nhận hay đăng bài.
+- Với bản Facebook giả trên cùng kho, nút sao chép báo thành công nhưng Ctrl+V qua công cụ trình duyệt vào ô lời mở nhận nội dung cũ khác bản duyệt. Đã xóa phần dán thử mà không lưu. Công cụ mở Notepad++ báo `GetCursorPos failed: Access is denied`, nên chưa kiểm tra được clipboard Windows bằng ứng dụng khác trong lượt này. Kết quả không đủ kết luận nguyên nhân thuộc ứng dụng hay công cụ; không coi lượt sao chép là đã đối chiếu clipboard thật.
+- Đây là một chuỗi bàn phím cho một bản X và một lượt sao chép Facebook; chưa kiểm tra trình đọc màn hình, mọi kênh, clipboard hệ điều hành hoặc các luồng chưa lưu khác. Server thử đã dừng; APR-03 và QA-02 vẫn mở.
+
 ## BASE-02 / NEWS-06: mã hóa JSON của POST — 07/11/2026
 
 - Hồi quy trước sửa trên mã `4841d88`: 253/253 Python và 87/87 JavaScript. Test HTTP mới tái hiện JSON UTF-16, UTF-16LE, UTF-32 và UTF-32LE được parser tự nhận và tạo bản tin trên kho giả dù hợp đồng dùng UTF-8.

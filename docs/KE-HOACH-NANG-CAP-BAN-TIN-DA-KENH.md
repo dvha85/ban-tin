@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> APR-03 / QA-02 ngày 07/11: thử Tab qua vùng xuất X hai đoạn và Enter sao chép đoạn 2 trên Edge với kho giả. Lượt dán thử Facebook qua công cụ nhận nội dung cũ; Windows từ chối mở Notepad++ để đối chiếu clipboard hệ điều hành. Chưa xác định nguyên nhân, không coi clipboard thật đã đạt; xem `KIEM-THU.md`.
+
 > BASE-02 / NEWS-06 ngày 07/11: POST phân tích JSON bằng UTF-8 rõ ràng, từ chối UTF-16/32 và byte sai trước khi ghi; vẫn chấp nhận BOM UTF-8. Test HTTP và giới hạn tại `KIEM-THU.md`. Client cũ gửi UTF-16/32 cần đổi sang UTF-8; BASE-02 vẫn mở.
 
 > BASE-03 / TEXT-03 ngày 07/11: đối chiếu thêm sáu mẫu biên trên composer Threads và X đã đăng nhập; bộ đếm cục bộ khớp các mẫu quan sát, gồm emoji ghép và URL. Không đăng bài; phạm vi và giới hạn tại `KIEM-THU.md`. BASE-03 và FMT-02 vẫn mở.
