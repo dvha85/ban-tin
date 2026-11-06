@@ -362,6 +362,44 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.room.publications(second['id']), [])
         self.assertEqual(self.room.variant(second['id']), second)
 
+    def test_facebook_encoded_url_conflict_over_http_keeps_records_unchanged(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử URL Facebook',
+            'url': 'https://example.com/facebook-http-identity', 'summary': 'Nguồn giả.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'body': 'Nội dung thử.', 'verification_note': 'Đối chiếu nguồn giả trên kho kiểm thử.',
+            'claims': [{'text': 'Dữ liệu giả', 'evidence': 'Fixture', 'checked': True}]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'verified': True,
+            'claims': [{**item['claims'][0], 'checked': True}]})
+        variants = []
+        for account in ('Trang giả 1', 'Trang giả 2'):
+            variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+                'platform': 'facebook', 'account_label': account})
+            variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                'segments': [{'text': 'Nội dung thử.', 'item_ids': [item['id']]}]})
+            variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                'checks': {key: True for key in ('sources', 'facts', 'original', 'rights', 'claims')}})
+            variants.append(self.room.approve_variant(variant['id'], {'revision': variant['revision']}))
+        first, second = variants
+        recorded = self.room.record_publication(first['id'], {'revision': first['revision'], 'position': 0,
+            'url': 'https://facebook.com/page/posts/%37%36%30%30%31', 'idempotency_key': 'facebook_http_first'})
+        before = self.room.publications(first['id'])
+        status, _, body = self.request('POST', f"/api/variants/{second['id']}/publications", {
+            'revision': second['revision'], 'position': 0, 'url': 'https://facebook.com/page/posts/76001',
+            'idempotency_key': 'facebook_http_second'}, headers)
+        self.assertEqual(status, 409, body)
+        response = json.loads(body)
+        self.assertIn('mã hóa URL', response['error'])
+        self.assertEqual(response['target']['publication_id'], recorded['id'])
+        self.assertEqual(self.room.publications(first['id']), before)
+        self.assertEqual(self.room.publications(second['id']), [])
+        self.assertEqual(self.room.variant(second['id']), second)
+
     def test_variant_platform_wrong_json_types_are_rejected_without_writes(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử kiểu nền tảng',

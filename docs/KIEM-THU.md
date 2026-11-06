@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## BASE-03 / PUB-02 / QA-02: so trùng URL Facebook mã hóa — 06/11/2026
+
+- Trước sửa, URL Facebook giả `/page/posts/%37%36%30%30%31` và `/page/posts/76001` có thể cùng được ghi nhận. Nay khóa đối chiếu giải mã một lần các ký tự URI không dành riêng theo [RFC 3986 §2.3](https://www.rfc-editor.org/rfc/rfc3986#section-2.3), sau đó áp dụng so không phân biệt hoa thường đã có. Khi chuỗi URL khác nhau nhưng khóa trùng, hệ thống chặn và yêu cầu đối soát; không tự sửa URL cũ. Không giải mã ký tự dành riêng hoặc giải mã hai lần.
+- Test service tái hiện trước sửa, sau sửa kiểm tra ghi nhận, đính chính và hai chiều với bài cũ, giữ nguyên dữ liệu; test HTTP kiểm tra phản hồi 409 và đích đối soát. Trên trình duyệt tích hợp với hai phiên bản Facebook giả, xác nhận ghi URL dạng thường khi bản khác đã ghi URL mã hóa hiển thị cảnh báo có thể trùng và liên kết đối soát; ô nhập giữ URL, thống kê vẫn một đoạn. Không đăng hay truy cập bài Facebook thật.
+- Hồi quy 246/246 Python và 86/86 JavaScript đạt. Đây là quy tắc so sánh URI, không xác minh các alias Facebook khác hoặc khẳng định hai URL cụ thể thực sự trỏ đến cùng bài; không tự rà hay hợp nhất các lượt đa kênh đã có. BASE-03, PUB-02 và QA-02 vẫn mở.
+
 ## APR-03 / APR-04 / QA-02: xem bản duyệt khi đang sửa — 06/11/2026
 
 - Trước sửa, nút **Xem bản đã duyệt** vẫn có thể mở snapshot đã lưu khi nội dung trên trang đang sửa hoặc bắt đầu sửa trong lúc yêu cầu đang chờ. Sau sửa, nút kiểm tra trạng thái chưa lưu trước yêu cầu và khi nhận phản hồi; người dùng được nhắc lưu và kiểm tra lại. Mục **Xem bản lưu lịch sử** tiếp tục có nhãn lịch sử riêng.

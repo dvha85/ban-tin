@@ -336,6 +336,41 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(caught.exception.target['draft_id'], legacy['id'])
         self.assertEqual(self.room.publications(second['id']), [])
 
+    def test_facebook_unreserved_percent_encoding_is_flagged_across_publications_and_legacy(self):
+        first = self.make_approved('facebook')
+        second = self.make_approved('facebook')
+        encoded = 'https://facebook.com/Page/posts/%37%36%30%30%31'
+        plain = 'https://facebook.com/Page/posts/76001'
+        record = self.room.record_publication(first['id'], {'revision': first['revision'], 'position': 0,
+            'url': encoded, 'idempotency_key': 'facebook_encoded_76001'})
+        before = self.room.publications(first['id'])
+        with self.assertRaisesRegex(Conflict, 'có thể trùng') as caught:
+            self.room.record_publication(second['id'], {'revision': second['revision'], 'position': 0,
+                'url': plain, 'idempotency_key': 'facebook_plain_76001'})
+        self.assertEqual(caught.exception.target['publication_id'], record['id'])
+        with self.assertRaisesRegex(ValidationError, 'có thể trùng'):
+            self.room.correct_publication(record['id'], {'revision': self.room.variant(first['id'])['revision'],
+                'reason': 'Đối chiếu URL giả', 'url': plain})
+        self.assertEqual(self.room.publications(first['id']), before)
+        self.assertEqual(self.room.publications(second['id']), [])
+
+        legacy = self.make_approved_legacy()
+        with self.assertRaises(Conflict):
+            self.room.mark_published(legacy['id'], legacy['revision'], plain)
+        self.assertEqual(self.room.draft(legacy['id'])['status'], 'approved')
+        legacy_other = self.make_approved_legacy()
+        self.room.mark_published(legacy_other['id'], legacy_other['revision'], 'https://facebook.com/Page/posts/%37%36%30%30%32')
+        with self.assertRaises(Conflict) as caught:
+            self.room.record_publication(second['id'], {'revision': second['revision'], 'position': 0,
+                'url': 'https://facebook.com/Page/posts/76002', 'idempotency_key': 'facebook_plain_76002'})
+        self.assertEqual(caught.exception.target['draft_id'], legacy_other['id'])
+        self.assertEqual(self.room.publications(second['id']), [])
+
+        self.assertNotEqual(_post_identity('facebook', 'https://facebook.com/page/posts/a%2Fb'),
+                            _post_identity('facebook', 'https://facebook.com/page/posts/a%252Fb'))
+        self.assertNotEqual(_post_identity('facebook', 'https://facebook.com/page/posts/a%2Fb'),
+                            _post_identity('facebook', 'https://facebook.com/page/posts/a/b'))
+
     def test_legacy_and_variant_cannot_claim_same_facebook_post_in_either_order(self):
         legacy = self.make_approved_legacy()
         variant = self.make_approved('facebook')

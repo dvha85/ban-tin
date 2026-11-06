@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> BASE-03 / PUB-02 ngày 06/11: phát hiện và chặn URL Facebook có thể trùng do mã hóa ký tự URI không dành riêng, với cảnh báo đối soát thay vì sửa dữ liệu cũ. Test service/HTTP và UI kho giả đạt; hồi quy 246 Python, 86 JavaScript. Không xác minh mọi alias Facebook; xem `KIEM-THU.md`.
+
 > APR-03 / APR-04 ngày 06/11: ngăn mở hộp bản đã duyệt khi trang có thay đổi chưa lưu, kể cả khi sửa trong lúc yêu cầu chờ. Test handler và một lượt UI với bản X giả đạt; hồi quy 244 Python và 86 JavaScript. Giới hạn tại `KIEM-THU.md`; G4 và QA-02 vẫn mở.
 
 > APR-01 / APR-02 ngày 06/11: đối chiếu chức năng snapshot, checklist, điều kiện chặn và phạm vi hủy duyệt; test mới thử sửa đích, nội dung, nguồn và thứ tự đoạn cùng hai kênh đối chứng, trong đó một kênh đã ghi nhận. Hai mục hoàn tất phạm vi chức năng; G4, policy và QA tổng thể vẫn mở. Xem `KIEM-THU.md`.
