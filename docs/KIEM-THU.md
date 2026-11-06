@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## APR-03 / TEXT-01 / QA-02: đối chiếu hộp sao chép ba kênh — 06/11/2026
+
+- Trên trình duyệt tích hợp với kho giả hai mục, chuẩn bị sẵn ba bản đã duyệt: Facebook một đoạn có hai nguồn, Threads và X mỗi kênh hai đoạn có nguồn riêng. Trong một server fixture, thay riêng lời gọi clipboard của `app.js` bằng lỗi giả để mở hộp **Sao chép thủ công**. Đối chiếu cây accessibility: cả năm hộp hiện nội dung, xuống dòng, số thứ tự và URL giống ô bản duyệt tương ứng trên trang; nội dung thử có tiếng Việt và emoji. Với đoạn X thứ hai, Tab từ ô văn bản đến nút sao chép, Enter thử lại vẫn mở hộp với nội dung cũ và trả tiêu điểm về ô.
+- Ở một lượt riêng không thay lời gọi clipboard, nút Facebook báo đã sao chép, nhưng công cụ đọc clipboard phiên trả chuỗi rỗng và không dán được bằng clipboard ảo. Vì vậy lượt đó **không chứng minh nội dung clipboard thực tế** và cũng chưa đủ để kết luận ứng dụng lỗi. Lượt giả lập kiểm tra nội dung hiển thị và bàn phím, không kiểm tra quyền clipboard thật, byte sao chép, mọi trình duyệt hay mọi tổ hợp Unicode. Không sửa mã ứng dụng hoặc đăng bài; APR-03 và QA-02 vẫn mở.
+- Máy chủ và kho thử đã dừng và dọn; hồi quy gần nhất trên cùng mã ứng dụng là 246/246 Python và 86/86 JavaScript, xem mục bên dưới.
+
 ## BASE-03 / PUB-02 / QA-02: so trùng URL Facebook mã hóa — 06/11/2026
 
 - Trước sửa, URL Facebook giả `/page/posts/%37%36%30%30%31` và `/page/posts/76001` có thể cùng được ghi nhận. Nay khóa đối chiếu giải mã một lần các ký tự URI không dành riêng theo [RFC 3986 §2.3](https://www.rfc-editor.org/rfc/rfc3986#section-2.3), sau đó áp dụng so không phân biệt hoa thường đã có. Khi chuỗi URL khác nhau nhưng khóa trùng, hệ thống chặn và yêu cầu đối soát; không tự sửa URL cũ. Không giải mã ký tự dành riêng hoặc giải mã hai lần.

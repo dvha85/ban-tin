@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> APR-03 / QA-02 ngày 06/11: khi giả lập clipboard từ chối, hộp sao chép thủ công hiển thị đúng năm đoạn thử của ba kênh, gồm nguồn và thứ tự; thử Tab/Enter trên một đoạn X. Công cụ không đọc lại được clipboard phiên ở lượt không giả lập nên chưa đối chiếu được byte thực tế. Xem `KIEM-THU.md`; APR-03 và QA-02 vẫn mở.
+
 > BASE-03 / PUB-02 ngày 06/11: phát hiện và chặn URL Facebook có thể trùng do mã hóa ký tự URI không dành riêng, với cảnh báo đối soát thay vì sửa dữ liệu cũ. Test service/HTTP và UI kho giả đạt; hồi quy 246 Python, 86 JavaScript. Không xác minh mọi alias Facebook; xem `KIEM-THU.md`.
 
 > APR-03 / APR-04 ngày 06/11: ngăn mở hộp bản đã duyệt khi trang có thay đổi chưa lưu, kể cả khi sửa trong lúc yêu cầu chờ. Test handler và một lượt UI với bản X giả đạt; hồi quy 244 Python và 86 JavaScript. Giới hạn tại `KIEM-THU.md`; G4 và QA-02 vẫn mở.
