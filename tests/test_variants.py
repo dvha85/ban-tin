@@ -479,6 +479,29 @@ class VariantTests(unittest.TestCase):
         self.assertTrue(rendered['posts'][-1]['text'].startswith('10/10 '))
         self.assertTrue(all(item['sources'][0]['url'] in post['text'] for post in rendered['posts']))
 
+    def test_split_paragraphs_with_whitespace_and_windows_line_endings(self):
+        item = self.bulletin['items'][0]
+        source = item['sources'][0]
+        boundaries = ('\n \t\n', '\r\n\r\n', '\r\n \t\r\n', '\r\r', '\r\n\n', '\n\r')
+        for platform, width in (('x', 150), ('threads', 270)):
+            for boundary in boundaries:
+                with self.subTest(platform=platform, boundary=repr(boundary)):
+                    original = 'A' * width + ' https://example.com/path?x=1' + boundary + 'B' * width + ' 👨‍👩‍👧‍👦'
+                    segment = {'text': original, 'item_ids': [item['id']], 'source_ids': [source['source_id']]}
+                    result = split_segments(platform, [segment], self.bulletin)
+                    self.assertEqual(len(result), 2)
+                    self.assertEqual(''.join(part['text'] for part in result), original)
+                    self.assertFalse(result[0]['text'].endswith('\r') and result[1]['text'].startswith('\n'))
+                    self.assertTrue(all(part['item_ids'] == [item['id']] and part['source_ids'] == [source['source_id']]
+                                        for part in result))
+                    posts = render_segments(platform, result, self.bulletin)
+                    self.assertTrue(posts['valid'])
+                    self.assertIn('https://example.com/path?x=1', posts['posts'][0]['text'])
+                    self.assertIn('👨‍👩‍👧‍👦', posts['posts'][1]['text'])
+                    self.assertTrue(all(source['url'] in post['text'] for post in posts['posts']))
+        with self.assertRaisesRegex(ValidationError, 'chia an toàn'):
+            split_segments('x', [{'text': 'A' * 160 + '\r\n' + 'B' * 160, 'item_ids': [item['id']]}], self.bulletin)
+
     def test_split_rejects_unsplittable_text_without_cutting(self):
         item = self.bulletin['items'][0]
         segments = [{'text': '😀' * 400, 'item_ids': [item['id']]}]

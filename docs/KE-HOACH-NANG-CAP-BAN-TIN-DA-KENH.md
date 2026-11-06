@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> FMT-03 / TEXT-04 ngày 06/11: nhận diện dòng trống chứa khoảng trắng và xuống dòng CRLF/CR khi đề xuất chia đoạn; kiểm thử X/Threads và UI kho giả đạt trong phạm vi `KIEM-THU.md`. Hồi quy 236/236 Python, 67/67 JavaScript; policy và QA tổng thể vẫn mở.
+
 > QA-02 / APR-03 ngày 06/11: các nút xuất bản duyệt của bài Facebook cũ cũng chặn khi UI đã phát hiện kho đổi hoặc phiên chưa xác định; test handler và UI kho giả đạt. Hồi quy 235/235 Python, 67/67 JavaScript; xem giới hạn tại `KIEM-THU.md`.
 
 > QA-02 / APR-04 ngày 06/11: phiên mới thiếu ID để đối chiếu không được nhận token hoặc gửi ghi; nội dung đang soạn được giữ và có thể thử khôi phục lại. Test handler và UI kho giả đạt; hồi quy 235/235 Python, 66/66 JavaScript. Xem phạm vi tại `KIEM-THU.md`.

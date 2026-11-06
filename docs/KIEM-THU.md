@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## FMT-03 / TEXT-04: chia đoạn qua dòng trống — 06/11/2026
+
+- Trước sửa, hai đoạn dài không có dấu câu có thể bị báo không chia được nếu dòng trống chứa dấu cách/tab hoặc dùng hai CRLF. Bản sửa nhận diện dòng trống với LF, CRLF, CR và một số cách kết hợp, kể cả khoảng trắng trên dòng trống; không cắt giữa CR và LF. Đây là thay đổi đề xuất chia, không đổi renderer, policy hay snapshot đã duyệt.
+- Test `test_split_paragraphs_with_whitespace_and_windows_line_endings` tái hiện lỗi trước sửa; sau sửa kiểm tra sáu dạng ranh giới trên X và Threads, giữ nguyên toàn bộ chuỗi trong các ô biên tập, không cắt CRLF, giữ URL, emoji ghép, mục và nguồn; preview hợp lệ. Một xuống dòng CRLF đơn không bị coi là dòng trống và câu quá dài vẫn yêu cầu tự sửa. Tám test chia đoạn hiện có đạt.
+- Trên trình duyệt tích hợp, kho giả X với hai đoạn không dấu câu ngăn bằng dòng trống chứa dấu cách/tab: đề xuất chia thành hai đoạn; xem trước hiển thị `1/2`, `2/2`, mỗi đoạn 187/280 và nguồn giả, đóng bằng Enter trả tiêu điểm về Xem trước. Đây là một trường hợp UI; CRLF và các dạng còn lại được kiểm tra tại service, không khẳng định mọi dạng Unicode/QA trình duyệt. Server thử đã dừng; không đăng bài.
+- Hồi quy 236/236 Python, 67/67 JavaScript. FMT-03, BASE-03 và QA-02 vẫn mở theo phạm vi toàn kế hoạch.
+
 ## QA-02 / APR-03: chặn xuất bài cũ khi phiên chưa xác định — 06/11/2026
 
 - Khi UI đã phát hiện kho đổi hoặc chưa xác định kho của phiên mới, luồng bài Facebook cũ nay chặn mở bản xuất, nút sao chép và tải `.txt` trong hộp bản duyệt. Nếu trạng thái đổi trong lúc yêu cầu lấy bản xuất đang chờ, không mở hộp sau phản hồi. Hộp sao chép thủ công không gắn bản xuất bài cũ vẫn cho sao chép để người dùng giữ nội dung; thao tác Ctrl+C trực tiếp không bị ứng dụng kiểm soát.

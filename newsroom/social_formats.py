@@ -89,9 +89,12 @@ def split_segments(platform, segments, bulletin):
         raise ValidationError('Hãy nhập nội dung cho từng đoạn trước khi chia.')
     units = []
     for segment, post in zip(segments, rendered['posts']):
-        # A boundary consists solely of whitespace after punctuation or a
-        # paragraph break; no URL, word, or joined character is cut apart.
-        sentences = re.split(r'(?<=[.!?。！？])(?=\s)|(?<=\n)(?=\n)', segment['text'])
+        # A paragraph break can contain spaces/tabs and CR, LF, or CRLF.
+        # Split after a complete line ending, never between CR and LF.
+        # Sentence boundaries still require whitespace after punctuation.
+        sentences = re.split(r'(?<=[.!?。！？])(?=\s)|'
+                             r'(?<=\n)(?=[^\S\r\n]*(?:\r\n|\r|\n))|'
+                             r'(?<=\r)(?!\n)(?=[^\S\r\n]*(?:\r\n|\r|\n))', segment['text'])
         parts = []
         whitespace = ''
         for part in sentences:
