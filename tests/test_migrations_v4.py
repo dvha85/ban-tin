@@ -73,6 +73,25 @@ class MigrationV4Tests(unittest.TestCase):
             self.assertIsNone(conn.execute('PRAGMA foreign_key_check').fetchone())
         self.assertEqual(len(list((self.directory / 'backups').glob('pre-v04-*.sqlite3'))), 1)
 
+    def test_migration_backup_never_overwrites_an_existing_name(self):
+        draft, before_export, _, _ = self.legacy_fixture()
+        folder = self.directory / 'backups'
+        folder.mkdir(exist_ok=True)
+        existing = folder / 'pre-v04-aaaaaaaa.sqlite3'
+        with closing(sqlite3.connect(existing)) as conn:
+            conn.execute('CREATE TABLE sentinel (value TEXT)')
+            conn.execute("INSERT INTO sentinel VALUES ('do not replace')")
+            conn.commit()
+        old_bytes = existing.read_bytes()
+        with patch('newsroom.backup_utils.secrets.token_hex', side_effect=['aaaaaaaa', 'bbbbbbbb']):
+            migrated = Newsroom(self.directory)
+        self.assertEqual(existing.read_bytes(), old_bytes)
+        new_backup = folder / 'pre-v04-bbbbbbbb.sqlite3'
+        self.assertTrue(new_backup.exists())
+        with closing(sqlite3.connect(new_backup)) as conn:
+            self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
+        self.assertEqual(migrated.export(draft['id']), before_export)
+
     def test_restore_rejects_schema4_with_missing_constraints_or_foreign_keys(self):
         changes = {
             'index': 'DROP INDEX active_publication_position',
@@ -281,6 +300,7 @@ class MigrationV4Tests(unittest.TestCase):
             self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)
             self.assertEqual(conn.execute('SELECT value FROM sentinel').fetchone()[0], 'untouched')
             self.assertIsNone(conn.execute("SELECT name FROM sqlite_master WHERE name='bulletins'").fetchone())
+            self.assertEqual(list((self.directory / 'backups').glob('pre-v04-*.sqlite3')), [])
 
     def test_concurrent_write_during_backup_aborts_migration(self):
         destination = self.directory / 'concurrent.sqlite3'
@@ -295,7 +315,7 @@ class MigrationV4Tests(unittest.TestCase):
                     other.commit()
                 return 'fixture'
 
-            with patch('newsroom.migrations.secrets.token_hex', side_effect=other_writer):
+            with patch('newsroom.backup_utils.secrets.token_hex', side_effect=other_writer):
                 with self.assertRaisesRegex(RuntimeError, 'vừa thay đổi'):
                     migrate(conn, self.directory)
             self.assertEqual(conn.execute('PRAGMA user_version').fetchone()[0], 3)

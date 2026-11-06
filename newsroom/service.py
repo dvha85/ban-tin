@@ -1,6 +1,5 @@
 import hashlib
 import json
-import secrets
 import re
 import sqlite3
 import threading
@@ -11,6 +10,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from .config import SOURCES, validate_data_dir
+from .backup_utils import reserved_backup
 from .feeds import canonical_url, fetch_feed, plain_text, rank_article, title_key
 from .collection_service import CollectionMixin
 from .migrations import migrate
@@ -483,14 +483,11 @@ Chỉ phần TIÊU ĐỀ và BÀI ĐĂNG được chuyển vào ô bài đăng; 
         with self.backup_lock:
             folder = self.data_dir / 'backups'
             folder.mkdir(exist_ok=True)
-            target = folder / f"bantin-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{secrets.token_hex(3)}.sqlite3"
-            with self.connection() as source:
-                destination = sqlite3.connect(target)
-                try:
+            prefix = f"bantin-{datetime.now().strftime('%Y%m%d-%H%M%S')}-"
+            with reserved_backup(folder, prefix, 3) as target:
+                with self.connection() as source, closing(sqlite3.connect(target)) as destination:
                     source.backup(destination)
                     check = destination.execute('PRAGMA integrity_check').fetchone()[0]
                     if check != 'ok':
                         raise RuntimeError('Bản sao lưu chưa vượt kiểm tra toàn vẹn.')
-                finally:
-                    destination.close()
             return str(target)

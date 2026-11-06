@@ -1,7 +1,7 @@
 import sqlite3
 import tempfile
 import unittest
-from contextlib import closing
+from contextlib import closing, nullcontext
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
@@ -185,6 +185,46 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(conn.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
         restarted = Newsroom(Path(self.temp.name))
         self.assertEqual(restarted.draft(draft['id'])['body'], draft['body'])
+
+    def test_backup_never_overwrites_an_existing_backup_on_name_collision(self):
+        with patch('newsroom.service.datetime') as clock, patch('newsroom.backup_utils.secrets.token_hex', return_value='aaaaaa'):
+            clock.now.return_value.strftime.return_value = '20261107-000000'
+            first = Path(self.room.backup())
+            before = first.read_bytes()
+        self.valid_draft()
+        with patch('newsroom.service.datetime') as clock, patch('newsroom.backup_utils.secrets.token_hex', side_effect=['aaaaaa', 'bbbbbb']):
+            clock.now.return_value.strftime.return_value = '20261107-000000'
+            second = Path(self.room.backup())
+        self.assertNotEqual(first, second)
+        self.assertEqual(first.read_bytes(), before)
+        with closing(sqlite3.connect(second)) as conn:
+            self.assertEqual(conn.execute('SELECT COUNT(*) FROM drafts').fetchone()[0], 1)
+
+    def test_failed_backup_does_not_leave_an_incomplete_backup(self):
+        folder = self.room.data_dir / 'backups'
+        folder.mkdir(exist_ok=True)
+        sentinel = folder / 'existing.sqlite3'
+        sentinel.write_bytes(b'other backup')
+        class BrokenSource:
+            def backup(self, destination):
+                raise sqlite3.OperationalError('simulated backup failure')
+        with patch.object(self.room, 'connection', return_value=nullcontext(BrokenSource())):
+            with self.assertRaises(sqlite3.OperationalError):
+                self.room.backup()
+        self.assertEqual(list(folder.iterdir()), [sentinel])
+        self.assertEqual(sentinel.read_bytes(), b'other backup')
+
+    def test_backup_aborts_when_all_names_are_taken_without_changing_existing_file(self):
+        folder = self.room.data_dir / 'backups'
+        folder.mkdir(exist_ok=True)
+        existing = folder / 'bantin-20261107-000000-aaaaaa.sqlite3'
+        existing.write_bytes(b'existing backup')
+        with patch('newsroom.service.datetime') as clock, patch('newsroom.backup_utils.secrets.token_hex', return_value='aaaaaa'):
+            clock.now.return_value.strftime.return_value = '20261107-000000'
+            with self.assertRaises(FileExistsError):
+                self.room.backup()
+        self.assertEqual(existing.read_bytes(), b'existing backup')
+        self.assertEqual(list(folder.iterdir()), [existing])
 
     def test_same_headline_different_dates_is_not_merged(self):
         later = dict(self.item, url='https://example.com/another-week',

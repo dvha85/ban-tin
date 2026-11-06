@@ -1,5 +1,4 @@
 """Versioned, additive SQLite migrations for the local newsroom."""
-import secrets
 import sqlite3
 from contextlib import closing
 
@@ -167,11 +166,12 @@ def migrate(conn, data_dir):
         folder = data_dir / 'backups'
         folder.mkdir(exist_ok=True)
         label = {0: 'pre-unversioned', 1: 'pre-v02', 2: 'pre-v03', 3: 'pre-v04'}[version]
-        backup_path = folder / f'{label}-{secrets.token_hex(4)}.sqlite3'
-        with closing(sqlite3.connect(backup_path)) as backup:
-            conn.backup(backup)
-            if backup.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
-                raise RuntimeError('Bản sao lưu trước nâng cấp không toàn vẹn; đã dừng nâng cấp.')
+        from .backup_utils import reserved_backup
+        with reserved_backup(folder, f'{label}-', 4) as backup_path:
+            with closing(sqlite3.connect(backup_path)) as backup:
+                conn.backup(backup)
+                if backup.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
+                    raise RuntimeError('Bản sao lưu trước nâng cấp không toàn vẹn; đã dừng nâng cấp.')
     try:
         conn.execute('BEGIN IMMEDIATE')
         # Recheck under the write lock so another process cannot migrate in parallel.

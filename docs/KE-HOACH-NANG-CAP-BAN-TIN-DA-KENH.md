@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> DB-02 / QA-03 ngày 07/11: sửa sao lưu và sao lưu trước migration để không ghi đè khi tên tệp trùng, dọn tệp chưa hoàn tất khi gặp ngoại lệ nếu có thể. Test dữ liệu giả và giới hạn tại `KIEM-THU.md`; không thao tác kho vận hành.
+
 > APR-03 / QA-02 ngày 06/11: khi giả lập clipboard từ chối, hộp sao chép thủ công hiển thị đúng năm đoạn thử của ba kênh, gồm nguồn và thứ tự; thử Tab/Enter trên một đoạn X. Công cụ không đọc lại được clipboard phiên ở lượt không giả lập nên chưa đối chiếu được byte thực tế. Xem `KIEM-THU.md`; APR-03 và QA-02 vẫn mở.
 
 > BASE-03 / PUB-02 ngày 06/11: phát hiện và chặn URL Facebook có thể trùng do mã hóa ký tự URI không dành riêng, với cảnh báo đối soát thay vì sửa dữ liệu cũ. Test service/HTTP và UI kho giả đạt; hồi quy 246 Python, 86 JavaScript. Không xác minh mọi alias Facebook; xem `KIEM-THU.md`.

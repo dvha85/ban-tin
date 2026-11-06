@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 07/11/2026
 
+## DB-02 / QA-03: tránh ghi đè tệp sao lưu trùng tên — 07/11/2026
+
+- Trên kho giả, test tái hiện trước sửa hai lần sao lưu cùng tên có thể ghi đè tệp trước, và sao lưu lỗi để lại tệp chưa hoàn tất. Test riêng tái hiện cùng vấn đề tên trùng ở sao lưu trước migration schema 3 → 4. Sau sửa, hai đường dùng chế độ tạo tệp độc quyền và thử tên khác nếu trùng; lỗi trong quá trình sao lưu cố gắng dọn tệp vừa tạo, giữ tệp có sẵn. Nếu cả mười tên đều trùng thì dừng, không ghi đè.
+- Test kiểm tra tệp sao lưu có sẵn giữ nguyên byte, tệp mới có dữ liệu tương ứng, dữ liệu/phiên bản legacy giả và bản xuất được giữ, lỗi sao lưu không để lại tệp giả chưa hoàn tất. Đây là kiểm thử fixture với lỗi được tiêm; không thử trên SQLite vận hành, không chứng minh hành vi khi mất điện, kết thúc cưỡng bức hoặc tiến trình khác can thiệp tệp. Không tự xóa các bản sao đã tồn tại.
+- Hồi quy sau sửa đạt 253/253 Python và 87/87 JavaScript. Test mô phỏng ghi đồng thời trong lúc sao lưu trước migration vẫn đạt sau khi cập nhật đường dẫn mock sang helper dùng chung.
+
 ## PUB-02 / POST-03: ghi nhận đồng thời và khóa chống lặp — 07/11/2026
 
 - Test `test_concurrent_recording_keys_are_idempotent_and_global_across_channels` dùng hai luồng trên kho SQLite giả cho từng kênh. Hai yêu cầu cùng khóa/cùng nội dung trả cùng ID, chỉ có một publication và sự kiện, revision tăng một lần và phiên bản được khóa. Hai yêu cầu khác kênh dùng cùng khóa nhưng payload khác có một lượt thành công và một conflict; phiên bản thua và danh sách ghi nhận của nó không đổi.
