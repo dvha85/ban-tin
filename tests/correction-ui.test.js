@@ -1234,6 +1234,31 @@ test('historical export guidance distinguishes unlocked and locked variants', as
   }
 });
 
+test('approved and historical post fields identify their saved state and segment', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`let stale = false; api = async path => {
+    if (path.endsWith('/export') && stale) throw new Error('stale policy');
+    if (path.endsWith('/publications')) return [];
+    return {posts: ['Một', 'Hai']};
+  };`, context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  for (const stale of [false, true]) {
+    context.area = new Element(); context.staleValue = stale;
+    vm.runInContext('stale = staleValue', context);
+    await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+    const all = walk(context.area), fields = all.filter(el => el.tagName === 'textarea');
+    const label = stale ? 'Nội dung lịch sử' : 'Nội dung đã duyệt';
+    assert.deepEqual(fields.map(field => field['aria-label']), [`${label} cho đoạn 1`, `${label} cho đoạn 2`]);
+    if (!stale) assert.ok(all.some(el => /bản đã duyệt được lưu/i.test(el.textContent) && /chưa lưu/i.test(el.textContent)));
+  }
+});
+
 test('download verifies the displayed approval and all posts and blocks unsaved changes', async () => {
   const elements = new Map(), saved = [], messages = [];
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 07/11/2026
 
+## APR-03 / QA-02: nhãn đầu ra đã duyệt và lịch sử — 07/11/2026
+
+- Khu vực xuất nay giải thích các đoạn hiển thị là bản duyệt đã lưu, không phản ánh phần chưa lưu; ô văn bản có tên phân biệt đoạn đã duyệt hoặc đoạn lịch sử và số thứ tự. Hướng dẫn sử dụng cũng làm rõ giới hạn của thao tác chọn văn bản, `Ctrl+C` trực tiếp và cảnh báo URL Facebook mã hóa.
+- Test DOM giả mới thất bại trước sửa do các ô thiếu tên, sau sửa xác nhận nhãn hai đoạn cho cả trạng thái xuất và lịch sử; hai test hiện có về hướng dẫn lịch sử và tải tệp vẫn đạt. Trên trình duyệt tích hợp với bản X hai đoạn đã duyệt và dữ liệu giả, cây accessibility hiện tên riêng cho hai ô và lời nhắc bản đã lưu; Tab từ ô đoạn 1 đến nút sao chép đoạn 1. Chưa thử nhãn lịch sử qua UI, trình đọc màn hình hay mọi kích thước giao diện.
+- Hồi quy sau sửa: 248/248 Python, 87/87 JavaScript và `node --check` đạt. QA-02 và APR-03 vẫn mở; việc đặt tên accessibility không chứng minh trải nghiệm trình đọc màn hình hoàn chỉnh.
+
 ## SOURCE-01 / TEXT-01: hai mục cùng URL nguồn — 07/11/2026
 
 - Test `test_shared_source_url_retains_per_item_attribution_across_channels` tạo hai mục cùng URL nguồn nhưng mỗi mục có ID và ghi chú riêng. Ở cả ba kênh, phiên bản chọn hai mục và hai ID nguồn: preview chỉ in URL một lần nhưng giữ cả hai ID, bản xuất khớp preview, snapshot duyệt giữ ghi chú của từng mục và bản lưu lịch sử giữ quan hệ mục/nguồn sau mở lại kho. Thử bỏ nguồn của một trong hai mục bị từ chối và không đổi phiên bản.

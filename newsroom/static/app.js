@@ -1348,6 +1348,7 @@ async function renderVariantPublication(area, variant) {
   section.append(node('h4', '', 'Xuất và ghi nhận đăng thủ công'),
     node('p', 'small-note', 'Ứng dụng không đăng bài và không xác minh bài trên mạng xã hội.'));
   if (ready) {
+    section.append(node('p', 'small-note', 'Các đoạn bên dưới là bản đã duyệt được lưu; thay đổi chưa lưu trên trang không xuất hiện ở đây. Hãy kiểm tra bản duyệt trước khi tự đăng.'));
     const download = node('button', 'button secondary', 'Tải bản đã duyệt (.txt)');
     bulletinAction(download, async () => {
       if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi tải.');
@@ -1400,6 +1401,7 @@ async function renderVariantPublication(area, variant) {
   output.posts.forEach((text, position) => {
     const block = node('div', 'bulletin-block');
     const field = node('textarea'); field.rows = 5; field.readOnly = true; field.value = text;
+    field.setAttribute('aria-label', `${ready ? 'Nội dung đã duyệt' : 'Nội dung lịch sử'} cho đoạn ${position + 1}`);
     const copyButton = node('button', 'button secondary', `Sao chép đoạn ${position + 1}`);
     bulletinAction(copyButton, () => copyApprovedVariant(variant.id, output, position));
     block.append(node('h4', '', `Đoạn ${position + 1}`), field);
