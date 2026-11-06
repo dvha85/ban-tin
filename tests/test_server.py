@@ -171,6 +171,93 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.room.bulletin_history(bulletin['id']), before_history)
         self.assertEqual(len(self.room.bulletins()), 1)
 
+    def test_publication_fields_reject_invalid_input_without_partial_writes(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin giả kiểm tra nhật ký',
+            'url': 'https://example.com/publication-validation', 'summary': 'Nguồn giả lập.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'body': 'Thông tin giả.', 'verification_note': 'Đối chiếu nguồn giả lập trên fixture.',
+            'claims': [{'text': 'Dữ liệu giả', 'evidence': 'Fixture', 'checked': True}]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'verified': True,
+            'claims': [{**item['claims'][0], 'checked': True}]})
+        variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+            'platform': 'x', 'account_label': 'Kênh giả'})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+            'segments': [{'text': 'Bản tin giả.', 'item_ids': [item['id']]}]})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+            'checks': {key: True for key in ('sources', 'facts', 'original', 'rights', 'claims')}})
+        variant = self.room.approve_variant(variant['id'], {'revision': variant['revision']})
+        record_path = f"/api/variants/{variant['id']}/publications"
+        record = {'revision': variant['revision'], 'position': 0,
+                  'url': 'https://x.com/fixture/status/441', 'idempotency_key': 'invalid_fields_441'}
+
+        def check_invalid(path, payload, status, expected_variant, expected_publications, expected_history):
+            actual, _, body = self.request('POST', path, payload, headers)
+            self.assertEqual(actual, status, body)
+            self.assertIn('error', json.loads(body))
+            self.assertEqual(self.room.bulletin(bulletin['id']), bulletin)
+            self.assertEqual(self.room.variant(variant['id']), expected_variant)
+            self.assertEqual(self.room.publications(variant['id']), expected_publications)
+            self.assertEqual(self.room.bulletin_history(bulletin['id']), expected_history)
+            active = sum(entry['active'] for entry in expected_publications)
+            self.assertEqual(self.room.bulletin_stats(), {'bulletins': 1, 'variants': 1,
+                'recorded_bulletins': int(active > 0), 'recorded_posts': active})
+
+        before_history = self.room.bulletin_history(bulletin['id'])
+        record_cases = {
+            'position': (None, True, -1, 1, 1.5, '0', [], {}),
+            'idempotency_key': (None, True, 1, 'short', 'x' * 101, 'invalid:key'),
+            'url': (None, True, [], {}, '', 'https://example.com/not-x', 'https://x.com/account'),
+            'reported_at': (True, [], {}, 'không phải ngày', '2026-11-06T10:00:00'),
+        }
+        for field, values in record_cases.items():
+            for value in values:
+                with self.subTest(route='record', field=field, value=value):
+                    check_invalid(record_path, {**record, field: value}, 400, variant, [], before_history)
+        for value in (None, True, '1', variant['revision'] - 1):
+            with self.subTest(route='record', field='revision', value=value):
+                check_invalid(record_path, {**record, 'revision': value}, 409, variant, [], before_history)
+
+        status, _, body = self.request('POST', record_path, record, headers)
+        self.assertEqual(status, 200, body)
+        publication = json.loads(body)
+        current = self.room.variant(variant['id'])
+        publications = self.room.publications(variant['id'])
+        history = self.room.bulletin_history(bulletin['id'])
+        correction_path = f"/api/publications/{publication['id']}/corrections"
+        correction = {'revision': current['revision'], 'reason': 'Sửa liên kết giả lập',
+                      'url': 'https://x.com/fixture/status/442'}
+        for field, values in {
+            'reason': (None, False, [], {}, '', 'ab'),
+            'url': (None, False, [], {}, 'https://example.com/not-x', record['url']),
+        }.items():
+            for value in values:
+                with self.subTest(route='correction', field=field, value=value):
+                    check_invalid(correction_path, {**correction, field: value}, 400, current, publications, history)
+        for value in (None, True, '1', current['revision'] - 1):
+            with self.subTest(route='correction', field='revision', value=value):
+                check_invalid(correction_path, {**correction, 'revision': value}, 409, current, publications, history)
+
+        metric_path = f"/api/publications/{publication['id']}/metrics"
+        metric = {'observed_at': '2026-11-06T10:00:00+07:00', 'idempotency_key': 'invalid_metrics_441'}
+        for field in ('views', 'likes', 'saves', 'shares', 'followers', 'minutes', 'replies', 'reposts', 'quotes'):
+            for value in (True, -1, 1.5, 1000000001, '0', [], {}):
+                with self.subTest(route='metrics', field=field, value=value):
+                    check_invalid(metric_path, {**metric, field: value}, 400, current, publications, history)
+        for field, values in {
+            'observed_at': (None, '', True, [], {}, 'không phải ngày', '2026-11-06T10:00:00'),
+            'idempotency_key': (True, 1, [], {}, 'short', 'x' * 101, 'invalid:key'),
+            'note': (None, False, [], {}, 'x' * 1001),
+        }.items():
+            for value in values:
+                with self.subTest(route='metrics', field=field, value=value):
+                    check_invalid(metric_path, {**metric, field: value}, 400, current, publications, history)
+
     def test_variant_platform_wrong_json_types_are_rejected_without_writes(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử kiểu nền tảng',

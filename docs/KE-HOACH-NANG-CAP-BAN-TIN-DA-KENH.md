@@ -487,7 +487,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ### G6 — Nghiệm thu và tài liệu
 
-- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 06/11 sau sửa tiêu điểm: Python 222/222, JavaScript 62/62 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
+- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 06/11 sau bổ sung kiểm tra API: Python 223/223, JavaScript 62/62 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.
@@ -599,6 +599,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | Ngày | Task/mốc | Trạng thái | Bằng chứng / commit / người thực hiện | Bước tiếp theo |
 | --- | --- | --- | --- | --- |
+| 06/11/2026 | BASE-02 / POST-02/05/06 | Đang làm | HTTP kho giả: 128 yêu cầu sai của ghi nhận, đính chính và số liệu trả 400/409; đối chiếu dữ liệu không đổi; Python 223/223, JavaScript 62/62 | Chưa bao phủ mọi payload/kênh hoặc chính sách URL; xem `KIEM-THU.md` và tài liệu API |
 | 06/11/2026 | REL-01 / PILOT | Đang làm | Ba bản nháp giả chuẩn bị bằng service, duyệt qua UI; trích snapshot hash hợp lệ theo policy v6 vào `DAU-RA-PILOT-GIA-LAP-0.4-V6.md`, không có publication | Người dùng xem bản mẫu mới; chưa thay thế tệp pilot cũ hoặc QA đầu-cuối và chưa có quyết định triển khai |
 | 06/11/2026 | DOC-01 / REL-01 / BASE-02/03 | Đang làm | Lập ma trận liên kết 43 ID mục 8 với test, cấp bằng chứng và hạn chế; kiểm tra tên test Python và đường dẫn cục bộ tồn tại | Đối chiếu hợp đồng API/policy còn thiếu, hoàn tất QA và chốt nghiệm thu với người dùng; xem `MA-TRAN-BANG-CHUNG-0.4.md` |
 | 06/11/2026 | DIG-02 / QA-02 | Đang làm | Bỏ nguồn và bỏ mục bằng Enter trên kho giả; tiêu điểm về mục đang sửa hoặc mục còn lại, Tab tới ô tiêu đề; Python 222/222 và JavaScript 62/62 | Tiếp tục QA toàn luồng, chưa thử trình đọc màn hình; xem `KIEM-THU.md` |

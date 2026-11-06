@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## BASE-02 / POST-02/05/06: dữ liệu sai của API nhật ký — 06/11/2026
+
+- Trên server HTTP và SQLite giả, `test_publication_fields_reject_invalid_input_without_partial_writes` thử 128 yêu cầu sai: vị trí, khóa chống lặp, URL, thời gian, revision của ghi nhận; lý do, URL, revision đính chính; cả chín trường số liệu cùng thời gian, khóa và ghi chú. Giá trị sai trả 400, revision sai trả 409; sau từng yêu cầu so lại bản tin, phiên bản, ghi nhận với sự kiện/số liệu, lịch sử và thống kê. Một ghi nhận X giả hợp lệ được tạo để kiểm thử hai route tiếp theo; không truy cập hay đăng lên X.
+- Trước bổ sung, bộ server đạt 37/37. Sau bổ sung, toàn bộ Python đạt 223/223 và JavaScript đạt 62/62. Lượt chạy đầu của test mới chưa tạo được bản duyệt vì ghi chú fixture ngắn hơn 20 ký tự; đã sửa dữ liệu fixture, không thay đổi ứng dụng. Test chỉ bao phủ các giá trị và một kênh nêu trên; BASE-02, BASE-03 và QA-02 vẫn mở.
+
 ## REL-01: đầu ra ba bản giả lập để xem — 06/11/2026
 
 - Trên SQLite tạm mới, dùng service chuẩn bị ba bản tin nháp có 1/2/3 mục, các khẳng định và dấu kiểm giả lập. Trên trình duyệt tích hợp, mở từng bản tin, chọn và duyệt phiên bản Facebook, Threads, X; UI hiển thị lần lượt 0/1, 0/1, 0/2 ghi nhận cùng nội dung và URL giả. Không có bài đăng thật.
