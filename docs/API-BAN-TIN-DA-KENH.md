@@ -5,6 +5,7 @@ Tài liệu này mô tả API nội bộ của nhánh phát triển 0.4, chưa p
 ## Phiên, lỗi và kích thước
 
 - Mở `GET /` để nhận cookie phiên, rồi `GET /api/state` lấy `csrf_token`. Các API dữ liệu cần cookie; POST cần thêm `X-CSRF-Token`, `Origin` hợp lệ và `Content-Type: application/json`. Server ràng buộc Host/Origin vào phiên cục bộ.
+- `GET /api/state` có `store_file_id`: hash từ thiết bị và file ID của tệp SQLite, hoặc `null` nếu không lấy được. UI so sánh giá trị khi cả trạng thái cũ và mới đều có, đồng thời kiểm tra `data_dir`; client/server cũ hoặc trường hợp `null` chỉ dùng đường dẫn. Đây là tín hiệu phát hiện thay tệp, không phải định danh dữ liệu bất biến: không phát hiện ghi đè trên cùng tệp, không ngăn tái sử dụng file ID hay yêu cầu đã gửi.
 - Kiểm tra phiên và CSRF dùng cùng đường dẫn đã phân tích với bộ định tuyến, kể cả khi HTTP request target là URL đầy đủ. Target không phân tích được trả 400; URL đầy đủ không thay thế kiểm tra Host, cookie hoặc Origin.
 - POST yêu cầu JSON object với `Content-Length` xác định, tối đa **128.000 byte** sau mã hóa UTF-8; không nhận `Transfer-Encoding`. Gói tư liệu có giới hạn riêng **65.536 byte** cho toàn bộ văn bản, bao gồm hướng dẫn.
 - Nếu kết nối kết thúc trước khi nhận đủ số byte đã khai báo, POST trả 400 và không thực hiện thao tác, kể cả phần đã nhận là JSON hoàn chỉnh. Nếu hết thời gian chờ khi đọc, yêu cầu cũng bị từ chối; phản hồi có thể không tới được client đã ngắt kết nối.

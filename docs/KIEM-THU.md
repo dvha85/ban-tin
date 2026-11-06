@@ -1,5 +1,13 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## QA-02 / APR-04: nhận biết tệp kho bị thay — 06/11/2026
+
+- `GET /api/state` trả thêm `store_file_id` là hash thiết bị/file ID khi hệ điều hành cung cấp; giao diện so với trạng thái ban đầu khi cập nhật nền hoặc khôi phục phiên. Nếu cả hai ID có giá trị và khác nhau, trang giữ nội dung và chặn các POST sau đó. Định danh tệp không thay đổi schema hay tệp dữ liệu; khi thiếu ID ở một phía giao diện vẫn chỉ so đường dẫn như trước.
+- Kiểm thử Python tạo hai kho SQLite giả, mở lại cùng tệp rồi thay bằng tệp khác tại cùng đường dẫn; đối chiếu ID. Test riêng kiểm tra stat lỗi hoặc file ID bằng 0 trả `null`. Test JavaScript tái hiện trước sửa không phát hiện đổi tệp; sau sửa kiểm tra cả khôi phục phiên và refresh, giữ dữ liệu và không gửi POST; test cũ cũng kiểm tra khôi phục cùng ID.
+- Trình duyệt tích hợp với hai kho giả: sửa tiêu đề ở kho A, dừng server, chuyển tệp kho B vào cùng thư mục và khởi động server mới; thử lưu và khôi phục kết nối. UI báo kho đổi, giữ tiêu đề thử và chặn lần lưu tiếp. Chỉ thử thay tệp sau khi dừng server; không thử tắt điện, ghi đè cùng inode hoặc request đang chạy. Đã dừng và dọn server/kho thử.
+- Phép kiểm tra là tín hiệu hỗ trợ, không xác nhận toàn vẹn hoặc nguồn gốc dữ liệu. File ID có thể thiếu, tái sử dụng hoặc thay đổi tùy hệ thống tệp; file ID giống nhau không phát hiện nội dung bị ghi đè tại chỗ. Theo [tài liệu Python](https://docs.python.org/3/library/os.html#os.stat_result), `st_ino` khác 0 định danh tệp cùng thiết bị khi được cung cấp; [Microsoft](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-file_id_all_extd_dir_information) nêu ID không bảo đảm duy nhất theo thời gian. QA-02/APR-04 vẫn mở.
+- Trước sửa hồi quy gần nhất 233/233 Python, 63/63 JavaScript; sau sửa 235/235 Python, 64/64 JavaScript, `node --check` và `git diff --check` đạt.
+
 ## BASE-03 / PUB-02: cảnh báo URL Facebook khác chữ hoa/thường — 06/11/2026
 
 - [Meta Embeds](https://github.com/facebook/meta-embeds-for-wordpress) minh họa URL Facebook với mã bài gồm chữ hoa/thường; tài liệu nhúng này không xác nhận hai cách viết là cùng hoặc khác bài. [RFC 3986 mục 6.2.2.1](https://www.rfc-editor.org/rfc/rfc3986#section-6.2.2.1) phân biệt quy tắc chung của host và các thành phần khác, nhưng không chứng minh riêng cách Facebook xử lý từng URL.

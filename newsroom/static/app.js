@@ -67,6 +67,12 @@ function markStoreChanged() {
   $('store-changed-warning').hidden = false;
   $('recover-session').hidden = true;
 }
+function differentStore(previous, current) {
+  if (previous.data_dir !== current.data_dir) return true;
+  return typeof previous.store_file_id === 'string' && previous.store_file_id !== '' &&
+    typeof current.store_file_id === 'string' && current.store_file_id !== '' &&
+    previous.store_file_id !== current.store_file_id;
+}
 async function recoverSession() {
   if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
   if (!app.state || typeof app.state.data_dir !== 'string') throw new Error('Không xác định được kho dữ liệu ban đầu. Hãy sao chép nội dung trước khi tải lại.');
@@ -79,7 +85,7 @@ async function recoverSession() {
   } catch (_) { throw new Error('Chưa khôi phục được kết nối. Giữ nội dung đang nhập và thử lại.'); }
   const state = await response.json();
   if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
-  if (state.data_dir !== app.state.data_dir) {
+  if (differentStore(app.state, state)) {
     markStoreChanged();
     throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
   }
@@ -173,7 +179,7 @@ async function loadState() {
   const wasBusy = app.state && app.state.busy;
   const state = await api('/api/state');
   if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
-  if (app.state && state.data_dir !== app.state.data_dir) {
+  if (app.state && differentStore(app.state, state)) {
     markStoreChanged();
     throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
   }

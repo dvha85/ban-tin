@@ -640,10 +640,10 @@ test('session recovery preserves the editor and never retries a mutation automat
   get('session-recovery').hidden = true;
   await assert.rejects(vm.runInContext("api('/api/state')", context), /Phiên hết hạn/);
   assert.equal(get('session-recovery').hidden, false);
-  vm.runInContext(`app.state = {data_dir: 'fixture'}; app.csrf = 'old'; app.bulletinDirty = true;
+  vm.runInContext(`app.state = {data_dir: 'fixture', store_file_id: 'same-file'}; app.csrf = 'old'; app.bulletinDirty = true;
     fetch = async (url, options) => { calls.push([url, options.method]);
       if (url === '/') return {ok: true};
-      return {ok: true, headers: {get: () => 'application/json'}, json: async () => ({data_dir: 'fixture', csrf_token: 'new'})}; };`, context);
+      return {ok: true, headers: {get: () => 'application/json'}, json: async () => ({data_dir: 'fixture', store_file_id: 'same-file', csrf_token: 'new'})}; };`, context);
   get('field-title').value = 'Nội dung chưa lưu';
   await vm.runInContext('recoverSession()', context);
   assert.equal(get('field-title').value, 'Nội dung chưa lưu');
@@ -655,6 +655,34 @@ test('session recovery preserves the editor and never retries a mutation automat
     {ok: true, headers: {get: () => 'application/json'}, json: async () => ({data_dir: 'other', csrf_token: 'bad'})}`, context);
   await assert.rejects(vm.runInContext('recoverSession()', context), /kho dữ liệu/i);
   assert.equal(vm.runInContext('app.csrf', context), 'new');
+});
+
+test('session recovery and refresh reject a replacement file in the same directory', async () => {
+  for (const action of ['recoverSession()', 'loadState()']) {
+    const elements = new Map();
+    const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+    const calls = [];
+    const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+      requestJson: JSON.stringify, fetch: () => new Promise(() => {}), calls,
+      window: {location: {search: ''}, addEventListener() {}},
+      document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+        createElement: tag => new Element(tag), createTextNode: text => text}});
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+    vm.runInContext(`app.state = {data_dir: 'fixture', store_file_id: 'old-file'};
+      app.csrf = 'old-token'; app.bulletinDirty = true;
+      fetch = async (url, options) => { calls.push([url, options.method]);
+        if (url === '/') return {ok: true};
+        return {ok: true, headers: {get: () => 'application/json'},
+          json: async () => ({data_dir: 'fixture', store_file_id: 'new-file', csrf_token: 'new-token'})}; };`, context);
+    get('field-title').value = 'Nội dung chưa lưu';
+    await assert.rejects(vm.runInContext(action, context), /kho dữ liệu/i);
+    assert.equal(get('field-title').value, 'Nội dung chưa lưu');
+    assert.equal(vm.runInContext('app.csrf', context), 'old-token');
+    assert.equal(get('store-changed-warning').hidden, false);
+    assert.equal(get('recover-session').hidden, true);
+    await assert.rejects(vm.runInContext("api('/api/bulletins/1/save', {})", context), /kho dữ liệu/i);
+    assert.ok(calls.every(row => row[1] !== 'POST'));
+  }
 });
 
 test('periodic refresh cannot silently switch the open editor to another data directory', async () => {

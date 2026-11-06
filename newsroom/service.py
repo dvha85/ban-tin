@@ -441,6 +441,17 @@ Chỉ phần TIÊU ĐỀ và BÀI ĐĂNG được chuyển vào ô bài đăng; 
         finally:
             self.refresh_lock.release()
 
+    def store_file_id(self):
+        # A best-effort signal for a different file at the same path. File IDs
+        # can be unavailable or reused and cannot detect in-place overwrites.
+        try:
+            info = self.db_path.stat()
+            if not info.st_ino:
+                return None
+            return hashlib.sha256(f'{info.st_dev}:{info.st_ino}'.encode('ascii')).hexdigest()
+        except OSError:
+            return None
+
     def state(self):
         with self.connection() as conn:
             health = {row['source_id']: dict(row) for row in conn.execute('SELECT * FROM source_health')}
@@ -456,7 +467,7 @@ Chỉ phần TIÊU ĐỀ và BÀI ĐĂNG được chuyển vào ô bài đăng; 
         return {'articles': self.articles(), 'drafts': drafts, 'sources': sources, 'bulletin_usage': bulletin_usage,
                 'features': {'custom_sources': True},
                 'checks': self.CHECKS, 'metrics': metrics, 'busy': self.refresh_lock.locked(),
-                'data_dir': str(self.data_dir), 'demo': self.demo,
+                'data_dir': str(self.data_dir), 'store_file_id': self.store_file_id(), 'demo': self.demo,
                 'collection': self.collection_status(),
                 'stats': {'articles': total, 'drafts': sum(d['status'] == 'draft' for d in drafts),
                           'approved': sum(d['status'] == 'approved' for d in drafts),

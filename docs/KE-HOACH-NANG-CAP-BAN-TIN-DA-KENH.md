@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> QA-02 / APR-04 ngày 06/11: trạng thái nền và khôi phục phiên đối chiếu thêm định danh tệp SQLite khi có ở cả hai phía. Đã thử thay tệp kho giả trong cùng thư mục, giữ tiêu đề chưa lưu và chặn lưu trên trình duyệt. Phạm vi và các trường hợp không phát hiện được xem `KIEM-THU.md`; QA-02 và APR-04 vẫn mở.
+
 > BASE-03 / PUB-02 / QA-02 ngày 06/11: URL Facebook khác chữ hoa/thường nhưng trùng theo khóa nội bộ nay báo có thể trùng và yêu cầu đối soát, vẫn chặn ghi; test service và trình duyệt kho giả đạt. Hồi quy 233/233 Python, 63/63 JavaScript; chưa xác nhận quy tắc của Meta. Xem `KIEM-THU.md`.
 
 > DOC-01 ngày 06/11: rà và cập nhật lối vào README cho quy trình đa kênh, hướng dẫn mục bị lược/nguồn khi chia, kiến trúc snapshot và số hồi quy gần nhất trong đối chiếu nghiệm thu. Rà tĩnh theo mã hiện tại; DOC-01/REL-01 vẫn mở để rà lại trước phát hành. Xem `KIEM-THU.md`.
@@ -108,7 +110,7 @@
 
 > Bổ sung thử mất phản hồi: test đóng socket sau khi server ghi URL giả hoặc số liệu; gửi lại cùng khóa không tạo bản ghi trùng. Đây là lỗi tiêm ở server thử; chưa xác minh luồng mạng và thao tác lại bằng trình duyệt. Chi tiết tại `KIEM-THU.md`.
 
-> Bảo vệ đổi kho: cập nhật trạng thái nền hoặc khôi phục phiên phát hiện đường dẫn kho khác sẽ giữ nội dung và chặn POST tiếp theo. Test handler đạt; chưa thử UI thật, không phát hiện DB bị thay thế trong cùng thư mục hoặc hủy request đã gửi.
+> Bảo vệ đổi kho: cập nhật trạng thái nền hoặc khôi phục phiên phát hiện đường dẫn kho khác sẽ giữ nội dung và chặn POST tiếp theo. Bổ sung ngày 06/11: kiểm tra định danh tệp khi có; thử UI thay tệp cùng thư mục trên kho giả. Không bảo đảm phát hiện ghi đè cùng tệp, file ID thiếu/tái sử dụng hoặc hủy request đã gửi; xem `KIEM-THU.md`.
 
 > Bổ sung race: sau khi phát hiện đổi kho, phản hồi khôi phục phiên hoặc cập nhật nền đến muộn không được ẩn cảnh báo hay thay token. Hai test handler giả đạt; chưa có smoke UI.
 

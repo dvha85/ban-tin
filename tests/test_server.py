@@ -561,6 +561,32 @@ class ServerTests(unittest.TestCase):
             self.assertIn('error', json.loads(body))
         self.assertEqual(self.room.bulletins(), [])
 
+    def test_state_file_identity_distinguishes_replacement_in_same_directory(self):
+        first = self.room.state()['store_file_id']
+        if first is None:
+            self.skipTest('The filesystem does not expose a usable file ID')
+        self.assertIsInstance(first, str)
+        self.assertTrue(first)
+        self.assertEqual(Newsroom(self.room.data_dir).state()['store_file_id'], first)
+        with tempfile.TemporaryDirectory() as other_dir:
+            other = Newsroom(Path(other_dir))
+            second = other.state()['store_file_id']
+            if second is None:
+                self.skipTest('The filesystem does not expose a usable second file ID')
+            self.assertIsInstance(second, str)
+            self.assertNotEqual(first, second)
+            # Both files belong to disposable stores and have no open connections.
+            old_path = self.room.db_path.with_name('previous-fixture.sqlite3')
+            self.room.db_path.replace(old_path)
+            other.db_path.replace(self.room.db_path)
+            self.assertEqual(self.room.state()['store_file_id'], second)
+
+    def test_store_file_identity_is_optional_when_stat_is_unavailable(self):
+        with patch('newsroom.service.Path.stat', side_effect=OSError('unavailable')):
+            self.assertIsNone(self.room.store_file_id())
+        with patch('newsroom.service.Path.stat', return_value=type('Stat', (), {'st_ino': 0})()):
+            self.assertIsNone(self.room.store_file_id())
+
     def test_session_reacquisition_after_server_restart_preserves_revision_guards(self):
         old = self.session()
         article = self.room.import_article({'title': 'Tin giả kiểm tra phiên',
