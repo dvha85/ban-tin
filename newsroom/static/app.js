@@ -574,6 +574,7 @@ function showText(title, text, note, exportId = null, canCopy = true) {
   $('text-dialog-note').textContent = note;
   $('download-export').hidden = exportId === null;
   $('copy-dialog').hidden = !canCopy;
+  $('copy-dialog').disabled = false;
   if (!$('text-dialog').open) $('text-dialog').showModal();
 }
 async function copyBulletinPacket(bulletin, stillVisible = () => true, expectedText = null) {
@@ -1838,7 +1839,7 @@ listen($('copy-dialog'), 'click', async () => {
   } catch (error) {
     if ($('text-dialog').open && generation === textDialogGeneration)
       $('text-dialog-note').textContent = `${error.message} Đóng hộp và kiểm tra lại trước khi sao chép thủ công.`;
-  } finally { button.disabled = false; }
+  } finally { if (generation === textDialogGeneration) button.disabled = false; }
 });
 listen($('download-export'), 'click', async () => {
   if (app.exportId !== null) {

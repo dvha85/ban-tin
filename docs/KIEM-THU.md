@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## APR-03 / APR-04 / QA-02: sao chép lại khi chuyển hộp bản duyệt — 06/11/2026
+
+- Trước sửa, nếu yêu cầu sao chép lại của hộp A còn chờ rồi đóng hộp và mở hộp B, nút sao chép trong B vẫn bị khóa theo yêu cầu A. Nay mở hộp mới đặt lại trạng thái nút; phản hồi cũ chỉ được mở khóa nút khi hộp của nó vẫn là hộp hiện tại.
+- Test handler tái hiện lỗi trước sửa và giữ đồng thời yêu cầu A và B: hộp B mở được nút riêng, sau khi bắt đầu yêu cầu B thì kết thúc A không mở khóa nhầm; B kết thúc mới mở khóa. Hồi quy 238/238 Python, 82/82 JavaScript và `node --check` đạt.
+- Trên trình duyệt tích hợp và kho giả hai phiên bản đã duyệt X/Threads, giả lập clipboard từ chối: giữ phản hồi thử lại X, đóng hộp và chuyển sang Threads. Trước sửa nút sao chép hộp Threads bị khóa; sau sửa nút khả dụng khi X còn chờ. Dùng Tab đặt tiêu điểm vào nút, trả phản hồi X: hộp vẫn có nội dung và nguồn Threads, tiêu điểm còn trên nút. Bộ đếm giả ghi đúng hai lần gọi clipboard ban đầu, không có lần bổ sung của yêu cầu X cũ. Đây là một lịch trình UI dùng clipboard giả, không kiểm tra clipboard hệ điều hành; hai yêu cầu thử lại cùng chờ được kiểm tra ở handler. Server/kho thử đã dọn; QA-02 và APR-04 tổng thể vẫn mở.
+
 ## BASE-03 / TEXT-03: bổ sung bộ đối chiếu trọng số X — 06/11/2026
 
 - Tải lại `validate.yml` của twitter-text tại commit `30e2430d90cff3b46393ea54caf511441983c260`, kiểm tra SHA-256 khớp nguồn đã ghim, chuyển toàn bộ 20 mẫu `WeightedTweetsCounterTest` sang JSON và lưu nguồn/giấy phép tại `tests/fixtures/TWITTER-TEXT-README.md`. Test mới đối chiếu kết quả bộ đếm hiện tại: 18 mẫu khớp trọng số và tính hợp lệ gốc. Hai mẫu chuỗi emoji phức hợp có kỳ vọng upstream cũ 16 và 9, còn cấu hình hiện tại tính 7 và 4 do nhận diện cụm emoji; test giữ và kiểm tra riêng cả hai kỳ vọng. Các trường chỉ vị trí không được chuyển vào fixture này.

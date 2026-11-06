@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> APR-03 / APR-04 / QA-02 ngày 06/11: hộp sao chép mới không bị khóa theo yêu cầu cũ; handler kiểm tra hai yêu cầu cùng chờ, UI kho giả thử X → Threads và tiêu điểm Tab. Hồi quy 238/238 Python, 82/82 JavaScript; chi tiết và giới hạn tại `KIEM-THU.md`.
+
 > BASE-03 / TEXT-03 ngày 06/11: lưu thêm đủ 20 mẫu trọng số X từ nguồn ghim; 18 mẫu khớp, hai mẫu emoji dùng kỳ vọng cũ được kiểm tra riêng. Composer Threads/X hiện yêu cầu đăng nhập; không có lượt đo mới. BASE-03 vẫn mở, xem `KIEM-THU.md`.
 
 > DIG-04 / QA-02 ngày 06/11: thử đóng hộp gói tư liệu trong khi thao tác sao chép lại chờ phản hồi; UI không mở lại hộp và không gọi clipboard giả lần nữa. Đây là một nhánh có tiêm giả lập, không thay thế kiểm tra clipboard thật hay QA tổng thể; chi tiết tại `KIEM-THU.md`.

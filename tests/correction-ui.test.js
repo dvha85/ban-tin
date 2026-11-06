@@ -1338,6 +1338,45 @@ test('fallback variant retry cannot copy after the selected variant changes whil
   assert.equal(get('text-dialog-note').textContent, 'Ghi chú B');
 });
 
+test('a new fallback dialog has independent pending state from an older retry', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  get('text-dialog').showModal = () => { get('text-dialog').open = true; };
+  get('dialog-text').select = () => {};
+  let holdA = false, holdB = false, releaseA, releaseB;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), holdingA: () => holdA, holdingB: () => holdB,
+    waitA: () => new Promise(resolve => { releaseA = resolve; }),
+    waitB: () => new Promise(resolve => { releaseB = resolve; }),
+    navigator: {clipboard: {writeText: async () => { throw new Error('denied'); }}},
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.bulletin = {id: 7, revision: 4}; app.variantId = 3; app.view = 'bulletins';
+    let a = {approval_id: 21, posts: ['Bản giả A']}, b = {approval_id: 22, posts: ['Bản giả B']};
+    api = async path => path.includes('/3/') ? (holdingA() ? await waitA() : a) : (holdingB() ? await waitB() : b);
+    toast = () => {};`, context);
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  await vm.runInContext('copyApprovedVariant(3, a, 0)', context);
+  holdA = true;
+  get('copy-dialog').dispatchEvent({type: 'click'}); await tick();
+  assert.equal(get('copy-dialog').disabled, true);
+  get('text-dialog').open = false;
+  vm.runInContext('app.variantId = 4', context);
+  await vm.runInContext('copyApprovedVariant(4, b, 0)', context);
+  assert.equal(get('dialog-text').value, 'Bản giả B');
+  assert.equal(get('copy-dialog').disabled, false);
+  holdB = true;
+  get('copy-dialog').dispatchEvent({type: 'click'}); await tick();
+  assert.equal(get('copy-dialog').disabled, true);
+  releaseA({approval_id: 21, posts: ['Bản giả A']}); await tick();
+  assert.equal(get('dialog-text').value, 'Bản giả B');
+  assert.equal(get('copy-dialog').disabled, true);
+  releaseB({approval_id: 22, posts: ['Bản giả B']}); await tick();
+  assert.equal(get('copy-dialog').disabled, false);
+});
+
 test('retrying copy from fallback checks the approval and leaves a visible warning if stale', async () => {
   const elements = new Map(), writes = [], messages = [];
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
