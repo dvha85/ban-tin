@@ -431,11 +431,18 @@ function updateEditorMeta() {
     `${draft.title || '(Chưa có tiêu đề)'}\nPage: ${draft.page_name || '(Chưa nhập tên Page)'}\n${labelCategory(draft.category)} · ${draft.body.length} ký tự · ${draft.sources.length} nguồn`;
   $('add-source').disabled = draft.status === 'published' || $('source-fields').children.length >= 8;
 }
+// Inputs remove CR/LF and textareas normalize them to LF. Preserve the stored
+// value when its visible representation is unchanged, including provenance.
+function unchangedDraftField(current, original, multiline = false) {
+  if (typeof original !== 'string') return current;
+  const displayed = multiline ? original.replace(/\r\n?/g, '\n') : original.replace(/[\r\n]/g, '');
+  return current === displayed ? original : current;
+}
 function getSources() {
   return Array.from($('source-fields').children).map(card => ({...card.sourceRecord,
-    title: card.querySelector('[data-source="title"]').value,
-    url: card.querySelector('[data-source="url"]').value,
-    summary: card.querySelector('[data-source="summary"]').value}));
+    title: unchangedDraftField(card.querySelector('[data-source="title"]').value, card.sourceRecord.title),
+    url: unchangedDraftField(card.querySelector('[data-source="url"]').value, card.sourceRecord.url),
+    summary: unchangedDraftField(card.querySelector('[data-source="summary"]').value, card.sourceRecord.summary, true)}));
 }
 function renderSourceFields(sources) {
   $('source-fields').replaceChildren();
@@ -474,8 +481,10 @@ function renderSourceFields(sources) {
 function collectDraft() {
   const checks = {};
   document.querySelectorAll('[data-check]').forEach(check => { checks[check.dataset.check] = check.checked; });
-  return {revision: app.draft.revision, page_name: $('field-page').value, category: $('field-category').value,
-    title: $('field-title').value, body: $('field-body').value, angle: $('field-angle').value,
+  return {revision: app.draft.revision, page_name: unchangedDraftField($('field-page').value, app.draft.page_name), category: $('field-category').value,
+    title: unchangedDraftField($('field-title').value, app.draft.title),
+    body: unchangedDraftField($('field-body').value, app.draft.body, true),
+    angle: unchangedDraftField($('field-angle').value, app.draft.angle, true),
     sources: getSources(), checks};
 }
 async function saveDraft() {

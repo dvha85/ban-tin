@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> APR-02 / QA-02 ngày 06/11: khi lưu bài cũ, giữ xuống dòng gốc ở các trường không sửa để tránh hủy duyệt hoặc mất dấu vết nguồn do chuẩn hóa của biểu mẫu. Test handler và UI kho giả đạt trong phạm vi `KIEM-THU.md`; hồi quy 237/237 Python, 71/71 JavaScript. Lượt dán clipboard chưa đối chiếu được và không được tính là đạt.
+
 > APR-03 / QA-02 ngày 06/11: sửa so sánh xuống dòng trong hộp xuất bài cũ để không chặn sai CRLF/CR, giữ nguyên chuỗi duyệt cho nút sao chép và tệp. Test handler và smoke kho giả đạt trong phạm vi `KIEM-THU.md`; hồi quy 237/237 Python, 70/70 JavaScript.
 
 > APR-03 / QA-02 ngày 06/11: sửa khả năng ghép nội dung bài cũ với Page/ID bài khác khi phản hồi chậm; sao chép và tải đối chiếu lại bản duyệt. Test HTTP, handler và giao diện kho giả đạt trong phạm vi `KIEM-THU.md`; hồi quy 237/237 Python, 68/68 JavaScript. Người dùng sẽ xem mẫu policy v6 sau; quyết định về mẫu vẫn mở.

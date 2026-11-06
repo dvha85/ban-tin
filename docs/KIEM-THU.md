@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## APR-02 / QA-02: lưu bài cũ có xuống dòng CRLF/CR — 06/11/2026
+
+- Trước sửa, HTML input/textarea có thể hiển thị giá trị đã bỏ hoặc chuẩn hóa CR/LF; lưu biểu mẫu dù không sửa đã gửi giá trị khác, có thể hủy duyệt và làm mất dấu vết trích đoạn nguồn. Khi giá trị hiển thị không đổi, UI nay gửi lại chuỗi gốc theo từng trường; khi thực sự sửa thì gửi giá trị mới. Không thay đổi dữ liệu đã lưu hoặc quy tắc server.
+- Test handler mô phỏng cả input đơn dòng và textarea, bao gồm body, góc nhìn, tiêu đề/Page và ghi chú nguồn; tái hiện trước sửa và kiểm tra sau sửa giữ giá trị gốc, evidence, đồng thời vẫn gửi nội dung khi thực sự sửa. Hồi quy 237/237 Python, 71/71 JavaScript.
+- Trên trình duyệt tích hợp, kho giả có body, góc nhìn và ghi chú nguồn chứa CRLF/CR: mở bài đã duyệt và bấm lưu mà không sửa. UI vẫn hiện đã duyệt; đọc lại kho thử xác nhận các trường biên tập, checklist, hash và bản xuất không đổi, revision tăng từ 4 lên 5 theo hành vi lưu hiện tại. Chưa thử mọi trường hoặc tình huống biên qua UI.
+- Sau đó bấm sao chép: UI báo thành công, nhưng dán bằng thao tác bàn phím của công cụ điều khiển đưa ra nội dung clipboard khác, không đối chiếu được với bản xuất. Chưa xác định được nguyên nhân; không tính lượt này là kiểm thử clipboard đạt. Server và kho thử đã dừng/dọn. QA-02 và APR-02 tiếp tục mở.
+
 ## APR-03 / QA-02: xuống dòng bài cũ trong hộp xuất — 06/11/2026
 
 - Sau thay đổi đối chiếu bản xuất, bài cũ chứa CRLF hoặc CR có thể bị từ chối sai: `textarea` hiển thị chúng thành LF, còn dữ liệu duyệt giữ nguyên. UI nay so với dạng hiển thị chuẩn hóa, nhưng vẫn sao chép/tạo tệp từ chuỗi gốc được đối chiếu với server.
