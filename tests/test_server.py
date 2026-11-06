@@ -96,6 +96,39 @@ class ServerTests(unittest.TestCase):
         self.room.save_draft(draft['id'], {'revision': draft['revision'], 'title': 'Tiêu đề đã sửa'})
         self.assertEqual(self.request('GET', path, headers=headers)[0], 400)
 
+    def test_json_request_encoding_is_utf8_before_mutation(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử mã hóa',
+            'url': 'https://example.com/encoding', 'summary': 'Tư liệu giả.'})
+        payload = json.dumps({'article_ids': [article['id']], 'title': 'Bản tin thử'}, ensure_ascii=False)
+
+        def post(raw):
+            conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=5)
+            try:
+                conn.request('POST', '/api/bulletins', raw, headers)
+                response = conn.getresponse()
+                return response.status, response.read()
+            finally:
+                conn.close()
+
+        for encoding in ('utf-16', 'utf-16-le', 'utf-16-be', 'utf-32', 'utf-32-le', 'utf-32-be'):
+            with self.subTest(encoding=encoding):
+                status, body = post(payload.encode(encoding))
+                self.assertEqual(status, 400, body)
+                self.assertIn('error', json.loads(body))
+                self.assertEqual(self.room.bulletins(), [])
+
+        status, body = post(b'{"title":"\xff"}')
+        self.assertEqual(status, 400, body)
+        self.assertEqual(self.room.bulletins(), [])
+
+        for encoding in ('utf-8', 'utf-8-sig'):
+            with self.subTest(encoding=encoding):
+                status, body = post(payload.encode(encoding))
+                self.assertEqual(status, 201, body)
+                self.assertEqual(json.loads(body)['title'], 'Bản tin thử')
+        self.assertEqual(len(self.room.bulletins()), 2)
+
     def test_short_request_body_is_rejected_before_mutation(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử độ dài',

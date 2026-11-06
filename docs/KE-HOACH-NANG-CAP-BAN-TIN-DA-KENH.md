@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> BASE-02 / NEWS-06 ngày 07/11: POST phân tích JSON bằng UTF-8 rõ ràng, từ chối UTF-16/32 và byte sai trước khi ghi; vẫn chấp nhận BOM UTF-8. Test HTTP và giới hạn tại `KIEM-THU.md`. Client cũ gửi UTF-16/32 cần đổi sang UTF-8; BASE-02 vẫn mở.
+
 > BASE-03 / TEXT-03 ngày 07/11: đối chiếu thêm sáu mẫu biên trên composer Threads và X đã đăng nhập; bộ đếm cục bộ khớp các mẫu quan sát, gồm emoji ghép và URL. Không đăng bài; phạm vi và giới hạn tại `KIEM-THU.md`. BASE-03 và FMT-02 vẫn mở.
 
 > DB-02 / QA-03 ngày 07/11: sửa sao lưu và sao lưu trước migration để không ghi đè khi tên tệp trùng, dọn tệp chưa hoàn tất khi gặp ngoại lệ nếu có thể. Test dữ liệu giả và giới hạn tại `KIEM-THU.md`; không thao tác kho vận hành.
@@ -563,7 +565,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ### G6 — Nghiệm thu và tài liệu
 
-- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 06/11 trên mã `bf3be22`: Python 237/237, JavaScript 77/77 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
+- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 07/11 sau sửa giải mã JSON: Python 254/254, JavaScript 87/87 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.

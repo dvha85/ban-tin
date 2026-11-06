@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 07/11/2026
 
+## BASE-02 / NEWS-06: mã hóa JSON của POST — 07/11/2026
+
+- Hồi quy trước sửa trên mã `4841d88`: 253/253 Python và 87/87 JavaScript. Test HTTP mới tái hiện JSON UTF-16, UTF-16LE, UTF-32 và UTF-32LE được parser tự nhận và tạo bản tin trên kho giả dù hợp đồng dùng UTF-8.
+- Sau sửa, server giải mã UTF-8 trước khi phân tích JSON. Test HTTP kiểm tra UTF-16/32 có BOM và dạng LE/BE không BOM, cùng byte UTF-8 không hợp lệ: trả 400 và không tạo bản tin. UTF-8 có và không có BOM vẫn tạo bản tin tiếng Việt; các test HTTP về emoji, surrogate đơn và request bị cắt cũng đạt. Client cũ gửi UTF-16/32 cần đổi sang UTF-8; không thay đổi kích thước body tối đa hoặc hành vi xử lý JSON khác theo chủ ý.
+- Hồi quy sau sửa đạt 254/254 Python và 87/87 JavaScript. Đây là kiểm tra với kho tạm và các trường hợp mã hóa được nêu, không xác nhận mọi payload hoặc toàn bộ hợp đồng API. BASE-02 tiếp tục mở.
+
 ## BASE-03 / TEXT-03: đối chiếu lại bộ đếm trên Edge — 07/11/2026
 
 - Trong composer Threads đã đăng nhập, `a` lặp 499 lần cộng `😀` hiện còn 0; `a` lặp 498 lần cộng `e` và dấu sắc tổ hợp U+0301 cũng còn 0; `a` lặp 499 lần cộng `👨‍👩‍👧‍👦` hiện −6 và nút thêm vào thread bị vô hiệu. Bộ đếm cục bộ lần lượt trả 500, 500 và 506.

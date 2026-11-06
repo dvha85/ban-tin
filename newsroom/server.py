@@ -267,7 +267,10 @@ class Handler(BaseHTTPRequestHandler):
             self._body_consumed = True
             if len(raw) != size:
                 raise ValueError('Incomplete request body')
-            data = json.loads(raw, parse_constant=reject_json_constant, parse_float=finite_json_float)
+            # Decode explicitly so the JSON parser cannot silently accept UTF-16/32.
+            # Preserve support for an optional UTF-8 BOM accepted by the old parser.
+            data = json.loads(raw.decode('utf-8-sig'), parse_constant=reject_json_constant,
+                              parse_float=finite_json_float)
             if not isinstance(data, dict):
                 raise ValueError()
         except (ValueError, UnicodeError, RecursionError, TimeoutError, OSError):
