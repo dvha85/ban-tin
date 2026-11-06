@@ -547,7 +547,7 @@ Gate: APPROVE-01…06 đạt; preview/copy/file/approval tương đương chính
 - [ ] **PUB-01 / P1:** URL validator theo nền tảng và từng đoạn, nhãn đích rõ ràng, trạng thái ghi nhận một phần.
 - [ ] **PUB-02 / P0:** Idempotency, chống URL trùng giữa biến thể và khóa snapshot từ lần ghi nhận đầu tiên.
 - [ ] **PUB-03 / P1:** Đính chính có lịch sử; không lẫn URL khi chuyển bài/kênh/đoạn.
-- [ ] **PUB-04 / P1:** Chỉ số theo publication với thời điểm quan sát và `null` khi chưa biết; thống kê bản tin/lượt đăng tách biệt.
+- [x] **PUB-04 / P1:** Chỉ số theo publication với thời điểm quan sát và `null` khi chưa biết; thống kê bản tin/lượt đăng tách biệt. Test vòng đời ba kênh, HTTP và các lượt UI kho giả được đối chiếu trong `KIEM-THU.md`; hoàn tất phạm vi chức năng, chưa đóng G5 hoặc QA tổng thể.
 
 Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi tài khoản mạng xã hội.
 

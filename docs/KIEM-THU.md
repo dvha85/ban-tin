@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## PUB-04 / POST-06: số liệu và thống kê ba kênh — 06/11/2026
+
+- Test `test_three_channel_metrics_and_dashboard_remain_separate_through_correction_and_archive` tạo hai bản tin, ba phiên bản thuộc bản tin thứ nhất và ghi nhận ba URL giả. Thống kê là hai bản tin, ba phiên bản, một bản tin có ghi nhận và ba đoạn; số liệu ba publication có thời điểm riêng, phân biệt 0 và `null`. Đính chính Facebook giữ số liệu ở lượt cũ và không gắn sang URL thay thế; hai kênh khác không đổi. Sau lưu trữ và mở lại kho, số liệu và thống kê vẫn giữ; hủy lần lượt ba ghi nhận làm số đoạn còn 2 → 1 → 0, số bản tin có ghi nhận còn 0 khi không còn đoạn hiệu lực, trong khi số liệu lịch sử vẫn giữ.
+- Test HTTP hiện có kiểm tra giá trị sai, `null`, retry và lịch sử; các lượt UI trước đã thử nhập số liệu X, Facebook/Threads và đính chính Facebook trên kho giả. PUB-04 được đánh dấu hoàn tất **phạm vi chức năng**. Không tự lấy hoặc xác minh số liệu trên nền tảng; chưa thử mọi đầu vào, lỗi kết nối hay toàn bộ QA giao diện. G5 và QA-02 vẫn mở.
+- Toàn bộ 244 test Python đạt sau khi bổ sung test này; mã ứng dụng không đổi. Lượt JavaScript gần nhất trên cùng mã ứng dụng đạt 85/85, như ghi bên dưới.
+
 ## DIG-04 / APR-04 / QA-02: kết quả clipboard đến muộn — 06/11/2026
 
 - Kết quả sao chép đến muộn chỉ mở lại hộp sao chép thủ công hoặc báo thành công nếu hộp và ngữ cảnh vẫn còn phù hợp; không thể thu hồi một thao tác ghi clipboard đã bắt đầu. Test handler tái hiện trước sửa và sau sửa bao phủ gói tư liệu, bản duyệt và bài cũ; mỗi loại thử đóng hoặc thay hộp, với kết quả thành công hoặc bị từ chối.

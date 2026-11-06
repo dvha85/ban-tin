@@ -1416,6 +1416,72 @@ class VariantTests(unittest.TestCase):
                 self.assertEqual(reopened.publications(variant['id']), records)
                 self.assertEqual(reopened.export_variant(variant['id'], archive=True), archive)
 
+    def test_three_channel_metrics_and_dashboard_remain_separate_through_correction_and_archive(self):
+        variants = {platform: self.make_approved(platform) for platform in ('facebook', 'threads', 'x')}
+        urls = {'facebook': 'https://www.facebook.com/fixture/posts/76001',
+                'threads': 'https://www.threads.com/@fixture/post/Fixture76002',
+                'x': 'https://x.com/fixture/status/76003'}
+        records = {}
+        for platform, variant in variants.items():
+            records[platform] = self.room.record_publication(variant['id'], {
+                'revision': variant['revision'], 'position': 0, 'url': urls[platform],
+                'idempotency_key': f'metrics_channel_{platform}'})
+        self.room.create_bulletin({'article_ids': [self.bulletin['items'][0]['article_id']],
+                                   'title': 'Bản tin khác chưa ghi nhận'})
+        expected_stats = {'bulletins': 2, 'variants': 3, 'recorded_bulletins': 1, 'recorded_posts': 3}
+        self.assertEqual(self.room.bulletin_stats(), expected_stats)
+
+        observations = {
+            'facebook': {'observed_at': '2026-11-06T09:00:00+07:00', 'views': 0, 'likes': None, 'shares': 2},
+            'threads': {'observed_at': '2026-11-06T10:00:00+07:00', 'views': None, 'likes': 4, 'replies': 0},
+            'x': {'observed_at': '2026-11-06T11:00:00+07:00', 'views': 8, 'reposts': 3, 'quotes': None},
+        }
+        saved = {platform: self.room.save_publication_metrics(records[platform]['id'], payload)
+                 for platform, payload in observations.items()}
+        self.assertEqual(saved['facebook']['observed_at'], '2026-11-06T02:00:00+00:00')
+        self.assertEqual((saved['facebook']['views'], saved['facebook']['likes']), (0, None))
+        self.assertEqual((saved['threads']['views'], saved['threads']['likes'], saved['threads']['replies']),
+                         (None, 4, 0))
+        self.assertEqual((saved['x']['views'], saved['x']['reposts'], saved['x']['quotes']), (8, 3, None))
+
+        facebook = variants['facebook']
+        current = self.room.variant(facebook['id'])
+        correction = self.room.correct_publication(records['facebook']['id'], {
+            'revision': current['revision'], 'reason': 'Đính chính liên kết giả',
+            'url': 'https://www.facebook.com/fixture/posts/76004'})
+        self.assertEqual(self.room.bulletin_stats(), expected_stats)
+        facebook_records = self.room.publications(facebook['id'])
+        self.assertFalse(facebook_records[0]['active'])
+        self.assertEqual(facebook_records[1]['id'], correction['replacement_id'])
+        self.assertEqual(facebook_records[1]['metrics'], [])
+        self.assertEqual(json.loads(facebook_records[0]['metrics'][0]['payload'])['views'], 0)
+        before = {platform: self.room.publications(variant['id']) for platform, variant in variants.items()}
+        for platform in ('threads', 'x'):
+            entry = before[platform][0]
+            self.assertEqual(entry['id'], records[platform]['id'])
+            self.assertEqual(entry['metrics'][0]['id'], saved[platform]['id'])
+            self.assertEqual(entry['metrics'][0]['observed_at'], saved[platform]['observed_at'])
+
+        bulletin = self.room.bulletin(self.bulletin['id'])
+        self.room.set_bulletin_archived(bulletin['id'], {'revision': bulletin['revision'],
+            'archive_revision': bulletin['archive_revision'], 'archived': True})
+        reopened = Newsroom(self.room.data_dir)
+        self.assertEqual(reopened.bulletin_stats(), expected_stats)
+        for platform, variant in variants.items():
+            self.assertEqual(reopened.publications(variant['id']), before[platform])
+        active_ids = {'facebook': correction['replacement_id'], 'threads': records['threads']['id'],
+                      'x': records['x']['id']}
+        for remaining, (platform, publication_id) in zip((2, 1, 0), active_ids.items()):
+            variant = reopened.variant(variants[platform]['id'])
+            reopened.correct_publication(publication_id, {'revision': variant['revision'],
+                'reason': 'Hủy ghi nhận giả'})
+            self.assertEqual(reopened.bulletin_stats(), {**expected_stats, 'recorded_posts': remaining,
+                'recorded_bulletins': int(remaining > 0)})
+        for platform, variant in variants.items():
+            old = reopened.publications(variant['id'])[0]
+            self.assertFalse(old['active'])
+            self.assertEqual(old['metrics'][0]['id'], saved[platform]['id'])
+
     def test_platform_metrics_keep_optional_values_and_validate_without_partial_writes(self):
         variant = self.make_approved('x')
         record = self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
