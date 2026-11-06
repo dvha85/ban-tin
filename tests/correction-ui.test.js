@@ -458,6 +458,59 @@ test('removing an item refreshes usage and reports a failed refresh without hidi
   assert.equal(vm.runInContext('app.bulletin.items.length', context), 1);
 });
 
+test('confirmed source and item removals restore keyboard focus without stealing it', async () => {
+  const elements = new Map();
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const get = id => {
+    const existing = elements.get('bulletin-editor');
+    const match = existing && walk(existing).find(el => el.id === id);
+    if (match) return match;
+    if (!elements.has(id)) elements.set(id, new Element());
+    return elements.get(id);
+  };
+  const body = new Element('body'), elsewhere = new Element('button');
+  const document = {body, activeElement: body, getElementById: get, querySelectorAll: () => [],
+    querySelector: () => new Element(), createElement: tag => new Element(tag), createTextNode: text => text};
+  let moveFocus = false;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    Event: class { constructor(type) { this.type = type; } }, document, moveFocus: () => moveFocus, elsewhere,
+    fetch: () => new Promise(() => {}), sourceWarnings: () => [],
+    window: {location: {search: ''}, addEventListener() {}}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`const item = id => ({id, article_id: id, revision: 1, title: 'Mục ' + id, body: '', angle: '',
+      verification_note: '', verified: false, claims: [], sources: [{source_id: 's' + id, url: 'https://example.com/' + id},
+      {source_id: 'shared', url: 'https://example.com/shared'}]});
+    app.view = 'bulletins'; app.state = {articles: [], bulletin_usage: {5: 1, 6: 1}};
+    app.bulletin = {id: 7, revision: 4, title: 'Bản thử', edition_date: '', introduction: '', conclusion: '', items: [item(5), item(6)]};
+    toast = () => {}; renderVariants = async () => {}; renderStories = () => {}; loadState = async () => {};
+    loadBulletinList = async () => {};
+    api = async path => { document.activeElement = moveFocus() ? elsewhere : document.body;
+      if (path.endsWith('/save')) return {...app.bulletin, revision: 5, items: [{...item(5), sources: [item(5).sources[1]]}, item(6)]};
+      return {...app.bulletin, revision: 6, items: [item(6)]}; };
+    renderBulletin();`, context);
+  const find = text => walk(get('bulletin-editor')).find(el => el.tagName === 'button' && el.textContent === text);
+  const click = async el => { assert.ok(el); el.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  await click(find('Bỏ nguồn này'));
+  let confirm = find('Xác nhận bỏ nguồn'); document.activeElement = confirm;
+  await click(confirm);
+  let heading = walk(get('bulletin-editor')).find(el => el.id === 'bulletin-item-heading-5');
+  assert.ok(heading && heading.focused); assert.equal(heading.tabIndex, -1);
+  await click(find('Bỏ mục khỏi bản tin'));
+  confirm = find('Xác nhận bỏ mục'); document.activeElement = confirm; moveFocus = true;
+  await click(confirm);
+  heading = walk(get('bulletin-editor')).find(el => el.id === 'bulletin-item-heading-6');
+  assert.ok(heading); assert.notEqual(heading.focused, true);
+  assert.equal(document.activeElement, elsewhere);
+  vm.runInContext(`app.bulletin = {id: 7, revision: 4, title: 'Bản thử', edition_date: '', introduction: '', conclusion: '',
+    items: [item(5), item(6)]}; renderBulletin();`, context);
+  moveFocus = false;
+  await click(find('Bỏ mục khỏi bản tin'));
+  confirm = find('Xác nhận bỏ mục'); document.activeElement = confirm;
+  await click(confirm);
+  heading = walk(get('bulletin-editor')).find(el => el.id === 'bulletin-item-heading-6');
+  assert.ok(heading && heading.focused);
+});
+
 test('inline source form keeps pending fields, blocks unrelated saves, and retains failed input', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

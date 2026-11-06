@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## DIG-02 / QA-02: tiêu điểm sau khi bỏ nguồn hoặc mục — 06/11/2026
+
+- Sau thao tác xác nhận, giao diện dựng lại các điều khiển nên nút xác nhận không còn. Bổ sung đưa tiêu điểm về tiêu đề có nhãn của mục vừa sửa nguồn hoặc mục liền kề còn lại sau khi bỏ mục. Chỉ khôi phục khi thao tác bắt đầu từ nút xác nhận, vẫn ở đúng bản tin và tiêu điểm chưa được chuyển sang điều khiển khác.
+- Test handler DOM giả thất bại trước sửa; sau sửa kiểm tra bỏ nguồn, bỏ mục và không giành tiêu điểm đã được chuyển nơi khác. Trên trình duyệt tích hợp với SQLite giả: dùng Enter mở và xác nhận bỏ nguồn của Alpha, tiêu điểm về tiêu đề Alpha; dùng Enter bỏ Alpha, tiêu điểm về tiêu đề Bravo; Tab tiếp vào ô tiêu đề Bravo. Không thử trình đọc màn hình, mất mạng thật hoặc các luồng bàn phím khác; QA-02 vẫn mở. Server và kho giả đã dừng, dọn.
+- Hồi quy trước sửa trên `e061672`: 222/222 Python và 61/61 JavaScript. Sau sửa: 222/222 Python, 62/62 JavaScript và `node --check newsroom/static/app.js` đạt.
+
 ## NEWS-04 / DIG-02 / QA-02: bỏ nguồn, bỏ mục và cập nhật số lần sử dụng — 06/11/2026
 
 - Trên trình duyệt tích hợp với SQLite giả có hai mục Alpha và Bravo cùng dùng một URL nguồn `example.com`, xác nhận bỏ nguồn riêng của Alpha: Alpha còn nguồn chung, Bravo giữ cả hai nguồn. Sau đó xác nhận bỏ Alpha: Bravo và nguồn chung vẫn còn; không thể bỏ mục cuối. Chỉ thao tác dữ liệu giả, không mở URL nguồn hay dùng kho vận hành.

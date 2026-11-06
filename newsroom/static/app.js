@@ -701,6 +701,14 @@ function removalConfirmation(trigger, bulletin, item, source = null) {
     try { await loadBulletinList(); }
     catch (_) { failures.push('chưa tải lại được danh sách bản tin'); }
     toast(failures.length ? `${done} ${failures.join('; ')}.` : done, !!failures.length);
+    const nextItem = source ? updated.items.find(row => row.id === snapshot.itemId) :
+      updated.items[Math.min(bulletin.items.indexOf(item), updated.items.length - 1)];
+    return {bulletin: updated, itemId: nextItem?.id};
+  }, (result, initiatedWithFocus) => {
+    if (!initiatedWithFocus || !result?.itemId || app.view !== 'bulletins' || app.bulletin !== result.bulletin ||
+        document.activeElement !== document.body) return;
+    const heading = $(`bulletin-item-heading-${result.itemId}`);
+    if (heading?.isConnected) heading.focus();
   });
   panel.append(node('p', '', message), confirm, cancel);
   return panel;
@@ -789,7 +797,11 @@ function renderBulletin(focusVariantSelector = false) {
   bulletin.items.forEach((item, position) => {
     const section = node('section', 'bulletin-block bulletin-item');
     section.dataset.itemId = String(item.id);
-    section.append(node('h4', '', `Mục ${position + 1}`));
+    const heading = node('h4', '', `Mục ${position + 1}`);
+    heading.id = `bulletin-item-heading-${item.id}`;
+    heading.tabIndex = -1;
+    heading.setAttribute('aria-label', `Mục ${position + 1}: ${bulletinItemName(item)}`);
+    section.append(heading);
     const fields = Object.fromEntries([['title', 'Tiêu đề'], ['body', 'Nội dung'], ['angle', 'Góc nhìn'],
       ['verification_note', 'Ghi chú kiểm chứng']].map(([key, label]) => [key, bulletinField(label, item[key], key !== 'title')]));
     Object.values(fields).forEach(field => section.append(field.wrapper));
