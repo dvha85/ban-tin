@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## APR-03 / QA-02: đối chiếu clipboard và tệp bài cũ — 06/11/2026
+
+- Trên trình duyệt tích hợp với kho giả mới, một bài cũ được duyệt có nội dung chứa CRLF và CR. Mở bản xuất, bấm sao chép rồi đọc clipboard của chính phiên trình duyệt: chuỗi khớp chính xác bản xuất dự kiến, kể cả CRLF/CR và URL nguồn giả. Clipboard của phiên được đặt một chuỗi kiểm thử trước khi bấm để tránh nhầm với nội dung trước đó.
+- Bấm tải `.txt`, lấy đường dẫn do trình duyệt trả về và so từng byte: tệp UTF-8 khớp bản xuất dự kiến 178 byte, bao gồm xuống dòng gốc. Server, SQLite giả và tệp tải thử đã được dọn; không có bài đăng. Đây là một bài cũ, một phiên trình duyệt và một tổ hợp CRLF/CR, không chứng minh mọi trình duyệt, clipboard hệ điều hành hay các luồng đa kênh. QA-02 và APR-03 tổng thể vẫn mở.
+- Lượt trước dùng phím dán qua công cụ đã nhận nội dung khác; lượt này đọc clipboard phiên bằng API của trình duyệt sau khi bấm nút. Không kết luận nguyên nhân của sự khác biệt giữa hai lượt.
+
 ## APR-02 / QA-02: lưu bài cũ có xuống dòng CRLF/CR — 06/11/2026
 
 - Trước sửa, HTML input/textarea có thể hiển thị giá trị đã bỏ hoặc chuẩn hóa CR/LF; lưu biểu mẫu dù không sửa đã gửi giá trị khác, có thể hủy duyệt và làm mất dấu vết trích đoạn nguồn. Khi giá trị hiển thị không đổi, UI nay gửi lại chuỗi gốc theo từng trường; khi thực sự sửa thì gửi giá trị mới. Không thay đổi dữ liệu đã lưu hoặc quy tắc server.
