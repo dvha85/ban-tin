@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## NEWS-05 / DIG-01 / QA-02: ngày tương lai và giới hạn lựa chọn — 06/11/2026
+
+- `rank_article` trước sửa cộng 30 điểm và ghi “trong 48 giờ” cho thời điểm tương lai tới 2 giờ 24 phút. Test tái hiện với ba mốc tương lai, gồm lệch 1 micro giây; sau sửa mọi thời điểm tương lai được cảnh báo và không nhận điểm độ mới. Test giữ các mốc bằng hiện tại, đúng 48 giờ, ngay sau 48 giờ và đúng 7 ngày; test service kiểm tra dữ liệu trả về từ kho giả.
+- Trên trình duyệt tích hợp với 11 tin giả, bộ lọc 7 ngày hiển thị 10 tin và ẩn tin tương lai. Chọn đủ 10, chuyển bộ lọc sang Tất cả: tin tương lai hiện cảnh báo, điểm 20/95 và lý do cần kiểm tra; chọn tin thứ 11 bị từ chối, số chọn giữ 10/10. Chuyển nhóm AI hiện 5 tin đã chọn đang ẩn; tìm `AI 01` hiện 9 tin đã chọn đang ẩn; bỏ tất cả đưa về 0/10 và 0 tin ẩn. Lượt trước đã tạo bản tin từ ba lựa chọn, kể cả các tin ẩn; xem bằng chứng DIG-01/02 bên dưới.
+- Trước sửa: hồi quy `be71447` đạt 220/220 Python, 60/60 JavaScript; test mới thất bại cho ba mốc tương lai. Sau sửa: 222/222 Python, 60/60 JavaScript. Server và SQLite fixture đã dừng và dọn. Đánh dấu DIG-01 hoàn tất trong phạm vi chức năng đã nêu; QA-02 tổng thể và các điều kiện G2 khác vẫn mở.
+
 ## PUB-02 / POST-03 / QA-02: thử lại lượt ghi nhận đã bị hủy — 06/11/2026
 
 - Server có thể trả lại một lượt cũ `active: 0` khi client thử lại cùng khóa sau khi lượt đó bị hủy. Trước sửa, handler giao diện bỏ qua `active` và thông báo ghi nhận thành công; phản hồi thiếu `active` cũng bị coi là thành công và làm mất khóa thử lại. Sau sửa, lượt không còn hiệu lực hiện cảnh báo kiểm tra lịch sử; phản hồi thiếu trạng thái được coi là kết quả chưa rõ, giữ nội dung và khóa để đối soát. Test service xác nhận retry sau hủy trả đúng lượt cũ `active: 0` và không tăng thống kê.

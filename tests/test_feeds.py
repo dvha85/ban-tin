@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from newsroom.feeds import canonical_url, parse_feed, rank_article, safe_url, FeedError
 
@@ -56,6 +56,24 @@ class FeedTests(unittest.TestCase):
         self.assertEqual(result['category'], 'ai')
         self.assertTrue(result['reasons'])
         self.assertGreater(result['score'], 0)
+
+    def test_future_dates_never_receive_recency_points(self):
+        now = datetime(2026, 11, 6, 3, 0, tzinfo=timezone.utc)
+        cases = (
+            (now + timedelta(microseconds=1), 20, 'Ngày nguồn ở tương lai — cần kiểm tra'),
+            (now + timedelta(minutes=30), 20, 'Ngày nguồn ở tương lai — cần kiểm tra'),
+            (now + timedelta(hours=2, minutes=24), 20, 'Ngày nguồn ở tương lai — cần kiểm tra'),
+            (now, 50, 'Nguồn có mốc thời gian trong 48 giờ'),
+            (now - timedelta(days=2), 50, 'Nguồn có mốc thời gian trong 48 giờ'),
+            (now - timedelta(days=2, microseconds=1), 35, 'Nguồn có mốc thời gian trong 7 ngày'),
+            (now - timedelta(days=7), 35, 'Nguồn có mốc thời gian trong 7 ngày'),
+        )
+        for published_at, score, reason in cases:
+            with self.subTest(published_at=published_at):
+                result = rank_article('Thông báo giả', 'Nội dung giả', published_at.isoformat(), now)
+                self.assertEqual(result['score'], score)
+                self.assertIn(reason, result['reasons'])
+        self.assertEqual(rank_article('Thông báo giả', '', None, now)['score'], 20)
 
 
 if __name__ == '__main__':

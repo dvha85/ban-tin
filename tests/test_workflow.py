@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from contextlib import closing
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 from pathlib import Path
 
@@ -44,6 +45,16 @@ class WorkflowTests(unittest.TestCase):
         articles = self.room.articles()
         self.assertEqual(len(articles), 1)
         self.assertEqual(len(articles[0]['sources']), 2)
+
+    def test_future_article_state_does_not_claim_recency(self):
+        timestamp = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
+        self.room.ingest(self.source, [{'title': 'Thông báo giả ở tương lai',
+            'url': 'https://example.com/future-article', 'summary': 'Nội dung giả.',
+            'published_at': timestamp, 'date_kind': 'published'}])
+        article = next(row for row in self.room.state()['articles'] if row['url'] == 'https://example.com/future-article')
+        self.assertEqual(article['score'], 20)
+        self.assertIn('Ngày nguồn ở tương lai — cần kiểm tra', article['reasons'])
+        self.assertNotIn('Nguồn có mốc thời gian trong 48 giờ', article['reasons'])
 
     def test_prompt_has_provenance_limits_and_untrusted_delimiter(self):
         draft = self.room.create_draft(self.article['id'])

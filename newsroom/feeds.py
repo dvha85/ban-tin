@@ -165,14 +165,14 @@ def rank_article(title, summary, published_at, now=None):
         reasons.append('Có từ khóa sản phẩm / ứng dụng')
     if published_at:
         age = (now - datetime.fromisoformat(published_at)).total_seconds() / 86400
-        if -0.1 <= age <= 2:
+        if age < 0:
+            reasons.append('Ngày nguồn ở tương lai — cần kiểm tra')
+        elif age <= 2:
             score += 30
             reasons.append('Nguồn có mốc thời gian trong 48 giờ')
-        elif 2 < age <= 7:
+        elif age <= 7:
             score += 15
             reasons.append('Nguồn có mốc thời gian trong 7 ngày')
-        elif age < -0.1:
-            reasons.append('Ngày nguồn ở tương lai — cần kiểm tra')
     else:
         reasons.append('Chưa rõ ngày đăng nguồn')
     return {'category': 'ai' if ai else 'tools', 'score': score,

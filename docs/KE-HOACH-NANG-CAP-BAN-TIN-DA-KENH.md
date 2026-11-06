@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> NEWS-05 / DIG-01 ngày 06/11: sửa tin có mốc tương lai bị cộng điểm độ mới; kiểm thử biên và smoke Hộp tin đạt. Đã đối chiếu chọn 10/11, lọc, tìm kiếm và bỏ lựa chọn trong kho giả; DIG-01 hoàn tất trong phạm vi chức năng. Hồi quy 222/222 Python, 60/60 JavaScript; xem `KIEM-THU.md`.
+
 > PUB-02 / POST-03 / QA-02 ngày 06/11: thử lại khóa ghi nhận sau khi lượt cũ đã bị hủy không còn báo thành công; phản hồi thiếu trạng thái giữ khóa để đối soát. Test service, handler và thử hai thẻ với lỗi phản hồi giả đạt; hồi quy 220/220 Python, 60/60 JavaScript. Xem `KIEM-THU.md`.
 
 > SAFE-01 ngày 06/11: sửa kiểm tra phiên với HTTP request target dạng URL đầy đủ; kiểm thử cả dạng đường dẫn và URL đầy đủ cho 15 route đa kênh. Chi tiết và phạm vi tại `KIEM-THU.md`.
@@ -447,7 +449,7 @@ Gate: MIG-01…05 đạt trong phạm vi fixture đã ghi; dữ liệu legacy m�
 
 ### G2 — Bản tin tổng hợp
 
-- [ ] **DIG-01 / P1:** UI chọn nhiều tin, giữ lựa chọn khi lọc, đếm và giới hạn lựa chọn.
+- [x] **DIG-01 / P1:** UI chọn nhiều tin, giữ lựa chọn khi lọc, đếm và giới hạn lựa chọn. Đã kiểm tra trên kho giả với 10/11 tin, đổi nhóm, tìm kiếm và bỏ lựa chọn; thử tạo bản tin từ ba tin gồm các lựa chọn bị ẩn được ghi tại `KIEM-THU.md`. QA-02 tổng thể vẫn mở.
 - [ ] **DIG-02 / P1:** CRUD bản tin/mục, thứ tự, snapshot nguồn, revision và lịch sử.
   - Theo lựa chọn của người dùng, bổ sung lưu trữ có thể khôi phục để ẩn cả bản tin khỏi danh sách đang làm; giữ nội dung, bản duyệt, ghi nhận và lịch sử. Test service, HTTP, DOM giả và smoke lưu trữ/khôi phục trên trình duyệt với kho giả đạt; xem phạm vi tại `KIEM-THU.md`.
 - [ ] **DIG-03 / P1:** Cảnh báo tuổi tin/trích đoạn, ghi chú kiểm chứng riêng, nguồn theo từng mục.
