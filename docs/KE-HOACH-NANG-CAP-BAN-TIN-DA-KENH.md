@@ -551,7 +551,7 @@ Gate: APPROVE-01…06 đạt; preview/copy/file/approval tương đương chính
 ### G5 — Nhật ký đa kênh
 
 - [ ] **PUB-01 / P1:** URL validator theo nền tảng và từng đoạn, nhãn đích rõ ràng, trạng thái ghi nhận một phần.
-- [ ] **PUB-02 / P0:** Idempotency, chống URL trùng giữa biến thể và khóa snapshot từ lần ghi nhận đầu tiên.
+- [x] **PUB-02 / P0:** Idempotency, chống URL trùng giữa biến thể và khóa snapshot từ lần ghi nhận đầu tiên. Test cạnh tranh, retry, khóa và đối soát URL được ghi tại `KIEM-THU.md`; hoàn tất phạm vi chức năng của bộ nhận diện hiện hành. BASE-03, G5 và QA tổng thể vẫn mở; các alias chưa nhận diện vẫn cần đối soát thủ công.
 - [x] **PUB-03 / P1:** Đính chính có lịch sử; không lẫn URL khi chuyển bài/kênh/đoạn. Test service/HTTP và các lượt UI với URL giả được đối chiếu trong `KIEM-THU.md`; hoàn tất phạm vi chức năng, chưa đóng G5 hoặc QA tổng thể.
 - [x] **PUB-04 / P1:** Chỉ số theo publication với thời điểm quan sát và `null` khi chưa biết; thống kê bản tin/lượt đăng tách biệt. Test vòng đời ba kênh, HTTP và các lượt UI kho giả được đối chiếu trong `KIEM-THU.md`; hoàn tất phạm vi chức năng, chưa đóng G5 hoặc QA tổng thể.
 

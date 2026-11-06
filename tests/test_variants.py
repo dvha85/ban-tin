@@ -1229,6 +1229,55 @@ class VariantTests(unittest.TestCase):
                     self.assertEqual(self.room.export_variant(variant['id'], archive=True), approved)
                 self.bulletin = self.room.bulletin(bulletin['id'])
 
+    def test_concurrent_recording_keys_are_idempotent_and_global_across_channels(self):
+        urls = {'facebook': ('https://facebook.com/page/posts/81001', 'https://facebook.com/page/posts/81002',
+                             'https://facebook.com/page/posts/81003'),
+                'threads': ('https://threads.com/@page/post/Fixture81001', 'https://threads.com/@page/post/Fixture81002',
+                            'https://threads.com/@page/post/Fixture81003'),
+                'x': ('https://x.com/page/status/81001', 'https://x.com/page/status/81002',
+                      'https://x.com/page/status/81003')}
+        peers = {'facebook': 'threads', 'threads': 'x', 'x': 'facebook'}
+        for platform, (same_url, first_url, _) in urls.items():
+            with self.subTest(platform=platform):
+                variant = self.make_approved(platform)
+                payload = {'revision': variant['revision'], 'position': 0, 'url': same_url,
+                           'idempotency_key': f'concurrent_same_{platform}'}
+                barrier = threading.Barrier(2)
+                def same_request():
+                    barrier.wait(timeout=5)
+                    return self.room.record_publication(variant['id'], payload)
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    copies = list(pool.map(lambda _: same_request(), range(2)))
+                self.assertEqual(copies[0]['id'], copies[1]['id'])
+                records = self.room.publications(variant['id'])
+                self.assertEqual(len(records), 1)
+                self.assertEqual([event['action'] for event in records[0]['events']], ['reported'])
+                current = self.room.variant(variant['id'])
+                self.assertEqual(current['revision'], variant['revision'] + 1)
+                self.assertEqual(current['publication_progress'], {'active': 1, 'total': 1})
+                self.assertIsNotNone(current['locked_at'])
+
+                peer = peers[platform]
+                candidates = [self.make_approved(platform), self.make_approved(peer)]
+                barrier = threading.Barrier(2)
+                def different_request(index):
+                    barrier.wait(timeout=5)
+                    try:
+                        record = self.room.record_publication(candidates[index]['id'], {
+                            'revision': candidates[index]['revision'], 'position': 0,
+                            'url': (first_url, urls[peer][2])[index], 'idempotency_key': f'concurrent_distinct_{platform}'})
+                        return ('recorded', index, record)
+                    except Conflict:
+                        return ('conflict', index, None)
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    outcomes = list(pool.map(different_request, (0, 1)))
+                self.assertCountEqual([outcome[0] for outcome in outcomes], ['recorded', 'conflict'])
+                winner = next(outcome[1] for outcome in outcomes if outcome[0] == 'recorded')
+                loser = 1 - winner
+                self.assertEqual(len(self.room.publications(candidates[winner]['id'])), 1)
+                self.assertEqual(self.room.publications(candidates[loser]['id']), [])
+                self.assertEqual(self.room.variant(candidates[loser]['id']), candidates[loser])
+
     def test_record_separate_segments_retry_and_immutable_after_correction(self):
         variant = self.make_approved('x', two=True)
         data = {'revision': variant['revision'], 'position': 0, 'url': 'https://x.com/test/status/123',

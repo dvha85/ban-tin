@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 07/11/2026
 
+## PUB-02 / POST-03: ghi nhận đồng thời và khóa chống lặp — 07/11/2026
+
+- Test `test_concurrent_recording_keys_are_idempotent_and_global_across_channels` dùng hai luồng trên kho SQLite giả cho từng kênh. Hai yêu cầu cùng khóa/cùng nội dung trả cùng ID, chỉ có một publication và sự kiện, revision tăng một lần và phiên bản được khóa. Hai yêu cầu khác kênh dùng cùng khóa nhưng payload khác có một lượt thành công và một conflict; phiên bản thua và danh sách ghi nhận của nó không đổi.
+- Cùng với các test retry khi phản hồi bị ngắt, khóa snapshot, URL trùng cùng đoạn/biến thể/legacy và các lượt UI đã ghi bên dưới, PUB-02 được đánh dấu hoàn tất **phạm vi chức năng của bộ nhận diện hiện tại**. Việc này không chứng minh mọi URL alias Facebook/Threads được phát hiện, mọi thứ tự mạng, hoặc kết quả khi mạng thật gián đoạn; BASE-03, G5 và QA-02 vẫn mở. Không sửa mã ứng dụng hay gửi yêu cầu đăng bài.
+- Toàn bộ 249 test Python đạt sau bổ sung; JavaScript gần nhất đạt 87/87 trên cùng mã ứng dụng.
+
 ## APR-03 / QA-02: nhãn đầu ra đã duyệt và lịch sử — 07/11/2026
 
 - Khu vực xuất nay giải thích các đoạn hiển thị là bản duyệt đã lưu, không phản ánh phần chưa lưu; ô văn bản có tên phân biệt đoạn đã duyệt hoặc đoạn lịch sử và số thứ tự. Hướng dẫn sử dụng cũng làm rõ giới hạn của thao tác chọn văn bản, `Ctrl+C` trực tiếp và cảnh báo URL Facebook mã hóa.
