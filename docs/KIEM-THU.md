@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## FMT-03 / FMT-04: đối chiếu hoàn tất phạm vi chức năng — 06/11/2026
+
+- FMT-03: test chia theo câu/dòng trống kiểm tra giữ nguyên văn bản biên tập, URL, emoji, ID mục/nguồn và đánh số qua 9→10; test biên 20/21 đoạn kiểm tra từ chối không lưu dở. Test HTTP chia, lưu, duyệt và so từng đoạn preview/export/snapshot/tệp cho X và Threads. Các lượt UI kho giả đã thử X chia/lưu/tải lại, Threads chia/lưu/duyệt, và trường hợp ranh giới dòng trống. Đoạn không chia an toàn vẫn yêu cầu người dùng biên tập; bản xuất bỏ khoảng trắng đầu/cuối từng đoạn như hướng dẫn.
+- FMT-04: test handler kiểm tra hủy/xác nhận bỏ đoạn và ngữ cảnh nội dung hoặc nguồn thay đổi; UI kho giả đã thử hủy, sửa, xác nhận lại, lưu và tải lại. Preview trên UI bản tin ba mục nêu hai mục bị lược và nguồn của mục còn lại; test HTTP đối chiếu ID mục bị lược, test handler kiểm tra cảnh báo khi bản tin đang hiển thị cũ. Sáu test Python và ba test JavaScript liên quan đã chạy lại trên commit `7adb0c0`, đều đạt.
+- Hai mục được đánh dấu hoàn tất **phạm vi chức năng** theo policy hiện tại, tương tự FMT-01; các lượt UI và fixture không bao phủ mọi trình duyệt, nội dung Unicode, lỗi mạng hoặc thay đổi policy. Bộ đếm Threads vẫn là ước lượng; BASE-03, FMT-02, gate G3 và QA-02 vẫn mở. Các mục trước đây ghi FMT-03/04 đang mở phản ánh thời điểm của từng lượt thử.
+
 ## BASE-03 / PUB-01: hướng dẫn liên kết chia sẻ Threads — 06/11/2026
 
 - Trên Threads web đã đăng nhập, menu chia sẻ của một bài công khai đưa một liên kết `/share/...` vào tùy chọn email. Mở liên kết đó trong trình duyệt dẫn tới trang bài dạng `/@tên/post/mã` có query `xmt`. Đây là một ví dụ quan sát được, không khẳng định mọi liên kết chia sẻ có cùng hành vi; không gửi email, đăng hoặc ghi nhận bài thật. Thao tác sao chép trong menu không đọc được clipboard phiên nên không kết luận nội dung của nút sao chép.

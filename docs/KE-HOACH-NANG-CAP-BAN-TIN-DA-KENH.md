@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> FMT-03 / FMT-04 ngày 06/11: đối chiếu lại yêu cầu chức năng với test chia, biên 20 đoạn, preview/nguồn và các lượt UI X/Threads đã ghi; đánh dấu hai mục hoàn tất trong phạm vi chức năng theo policy hiện hành. G3, BASE-03 và QA-02 vẫn mở; xem `KIEM-THU.md`.
+
 > BASE-03 / PUB-01 ngày 06/11: một liên kết Threads `/share/...` quan sát từ menu email chuyển đến URL bài. Khi gặp dạng này, ứng dụng hướng dẫn tự mở và lấy URL bài để đối chiếu; test service/HTTP và thông báo UI kho giả được ghi tại `KIEM-THU.md`. Chưa chứng minh mọi alias; BASE-03 vẫn mở.
 
 > BASE-03 / TEXT-03 / FMT-03 ngày 06/11: sau khi đăng nhập, composer Threads/X khớp bộ đếm cục bộ ở các mẫu biên Unicode và URL dài được ghi tại `KIEM-THU.md`; không đăng. Trên kho giả, UI chia và duyệt bốn đoạn Threads, giữ nguồn. Phạm vi hữu hạn; policy và QA tổng thể vẫn mở.
@@ -524,8 +526,8 @@ Gate: NEWS-01…06 và SOURCE-01…03 đạt; chưa tuyên bố đầu ra đa k�
 
 - [x] **FMT-01 / P1:** Tạo/lưu độc lập các biến thể, đích đăng và quan hệ với revision bản tin; không ghi đè bản đã sửa. Test service và luồng HTTP ba kênh cùng smoke UI trên kho giả được ghi tại `KIEM-THU.md`; policy và QA tổng thể vẫn mở.
 - [ ] **FMT-02 / P1:** Renderer chuẩn phía server và bộ đếm theo policy đã xác minh; UI preview chính chuỗi trả về.
-- [ ] **FMT-03 / P1:** Chia chuỗi theo ranh giới hợp lý, kiểm tra lại numbering/nguồn; trường hợp khó yêu cầu biên tập thủ công.
-- [ ] **FMT-04 / P1:** Xem/sửa từng đoạn, báo mục bị lược khỏi phiên bản ngắn; bảo đảm truy vết nguồn.
+- [x] **FMT-03 / P1:** Chia chuỗi theo ranh giới hợp lý, kiểm tra lại numbering/nguồn; trường hợp khó yêu cầu biên tập thủ công. Test service/HTTP và UI trên kho giả được đối chiếu trong `KIEM-THU.md`; hoàn tất phạm vi chức năng theo policy hiện hành, chưa đóng G3 hoặc QA tổng thể.
+- [x] **FMT-04 / P1:** Xem/sửa từng đoạn, báo mục bị lược khỏi phiên bản ngắn; bảo đảm truy vết nguồn. Test handler/HTTP và các lượt UI kho giả được đối chiếu trong `KIEM-THU.md`; hoàn tất phạm vi chức năng, chưa đóng G3 hoặc QA tổng thể.
 
 Gate: VAR-01…04, TEXT-01…06 đạt; không dùng độ dài body làm bằng chứng bài vừa giới hạn.
 
