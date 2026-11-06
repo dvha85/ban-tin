@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> APR-03 / APR-04 ngày 06/11: ngăn mở hộp bản đã duyệt khi trang có thay đổi chưa lưu, kể cả khi sửa trong lúc yêu cầu chờ. Test handler và một lượt UI với bản X giả đạt; hồi quy 244 Python và 86 JavaScript. Giới hạn tại `KIEM-THU.md`; G4 và QA-02 vẫn mở.
+
 > APR-01 / APR-02 ngày 06/11: đối chiếu chức năng snapshot, checklist, điều kiện chặn và phạm vi hủy duyệt; test mới thử sửa đích, nội dung, nguồn và thứ tự đoạn cùng hai kênh đối chứng, trong đó một kênh đã ghi nhận. Hai mục hoàn tất phạm vi chức năng; G4, policy và QA tổng thể vẫn mở. Xem `KIEM-THU.md`.
 
 > FMT-03 / FMT-04 ngày 06/11: đối chiếu lại yêu cầu chức năng với test chia, biên 20 đoạn, preview/nguồn và các lượt UI X/Threads đã ghi; đánh dấu hai mục hoàn tất trong phạm vi chức năng theo policy hiện hành. G3, BASE-03 và QA-02 vẫn mở; xem `KIEM-THU.md`.

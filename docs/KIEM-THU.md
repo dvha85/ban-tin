@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## APR-03 / APR-04 / QA-02: xem bản duyệt khi đang sửa — 06/11/2026
+
+- Trước sửa, nút **Xem bản đã duyệt** vẫn có thể mở snapshot đã lưu khi nội dung trên trang đang sửa hoặc bắt đầu sửa trong lúc yêu cầu đang chờ. Sau sửa, nút kiểm tra trạng thái chưa lưu trước yêu cầu và khi nhận phản hồi; người dùng được nhắc lưu và kiểm tra lại. Mục **Xem bản lưu lịch sử** tiếp tục có nhãn lịch sử riêng.
+- Test handler mới tái hiện lỗi trước sửa, sau sửa thử phần chưa lưu từ đầu, sửa khi phản hồi chậm và trường hợp không sửa; test hiện có thử đổi phiên bản khi chờ vẫn đạt. Trên trình duyệt tích hợp với một bản X giả đã duyệt, hộp mở bình thường khi chưa sửa; sau sửa đoạn chưa lưu, bấm nút hiện cảnh báo và giữ văn bản đang nhập. Tab từ nút xem bản duyệt đi đến nút xem lịch sử. Lượt UI không trì hoãn phản hồi; nhánh này được thử ở handler. Ô đoạn đã duyệt trên trang vẫn là văn bản có thể tự chọn và sao chép, không kiểm tra lại khi dùng Ctrl+C trực tiếp.
+- Hồi quy sau sửa: 244/244 Python, 86/86 JavaScript, `node --check` và `git diff --check` đạt. Đây là một kênh và một lượt giao diện trên kho giả; APR-03/04 và QA-02 tổng thể vẫn mở.
+
 ## PUB-04 / POST-06: số liệu và thống kê ba kênh — 06/11/2026
 
 - Test `test_three_channel_metrics_and_dashboard_remain_separate_through_correction_and_archive` tạo hai bản tin, ba phiên bản thuộc bản tin thứ nhất và ghi nhận ba URL giả. Thống kê là hai bản tin, ba phiên bản, một bản tin có ghi nhận và ba đoạn; số liệu ba publication có thời điểm riêng, phân biệt 0 và `null`. Đính chính Facebook giữ số liệu ở lượt cũ và không gắn sang URL thay thế; hai kênh khác không đổi. Sau lưu trữ và mở lại kho, số liệu và thống kê vẫn giữ; hủy lần lượt ba ghi nhận làm số đoạn còn 2 → 1 → 0, số bản tin có ghi nhận còn 0 khi không còn đoạn hiệu lực, trong khi số liệu lịch sử vẫn giữ.

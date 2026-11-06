@@ -223,6 +223,41 @@ test('variant approved preview does not open after switching variants while load
   assert.equal(shown.length, 0); assert.match(messages.at(-1), /thay đổi/i);
 });
 
+test('approved variant preview does not open when the bulletin becomes dirty', async () => {
+  const elements = new Map(), shown = [], messages = [], calls = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  let release;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    shown, messages, calls, waitForResponse: () => new Promise(resolve => { release = resolve; }),
+    fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.container = new Element(); context.bulletin = {id: 7, revision: 4, items: []};
+  vm.runInContext(`app.variantId = 3; app.bulletin = bulletin; app.view = 'bulletins';
+    api = async path => { if (path.endsWith('/variants')) return [{id: 3, revision: 2, platform: 'x',
+      account_label: 'A', status: 'draft', locked_at: null, checks: {},
+      segments: [{text: 'Giả', item_ids: [], source_ids: []}]}]; calls.push(path); return await waitForResponse(); };
+    showText = (...args) => shown.push(args); toast = message => messages.push(message);`, context);
+  await vm.runInContext('renderVariants(container, bulletin)', context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const button = walk(context.container).find(el => el.tagName === 'button' && el.textContent === 'Xem bản đã duyệt');
+  const click = async () => { button.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  vm.runInContext('app.bulletinDirty = true', context);
+  await click();
+  assert.equal(calls.length, 0);
+  assert.match(messages.at(-1), /lưu/i);
+  vm.runInContext('app.bulletinDirty = false', context);
+  await click(); assert.equal(calls.length, 1);
+  vm.runInContext('app.bulletinDirty = true', context);
+  release({approval_id: 21, posts: ['Nội dung A']}); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(shown.length, 0);
+  assert.match(messages.at(-1), /thay đổi|lưu/i);
+  vm.runInContext('app.bulletinDirty = false', context);
+  await click(); release({approval_id: 21, posts: ['Nội dung A']}); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(shown.length, 1);
+});
+
 test('variant actions carry the displayed bulletin revision', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

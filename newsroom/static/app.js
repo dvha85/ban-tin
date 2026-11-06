@@ -1311,9 +1311,11 @@ async function renderVariants(container, bulletin, focusSelector = false) {
   const exportButton = node('button', 'button secondary', 'Xem bản đã duyệt');
   listen(exportButton, 'click', async () => {
     checkExportStore(); checkVisibleVariant();
+    if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi xem bản đã duyệt.');
     const generation = textDialogGeneration;
     const result = await api(`/api/variants/${variant.id}/export`);
     checkExportStore(); checkVisibleVariant();
+    if (app.bulletinDirty) throw new Error('Nội dung đã thay đổi. Hãy lưu và kiểm tra lại trước khi xem bản đã duyệt.');
     if (generation !== textDialogGeneration) throw new Error('Hộp hiển thị đã thay đổi. Hãy mở lại bản duyệt.');
     showText('Bản đã duyệt', result.posts.map((post, i) => `Đoạn ${i + 1}\n${post}`).join('\n\n────────────\n\n'), 'Dùng nút sao chép riêng của từng đoạn để tự đăng.', null, false);
   });
