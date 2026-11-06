@@ -4,11 +4,14 @@ import socket
 import tempfile
 import threading
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
 
 from newsroom.server import MAX_BODY, Handler, make_server
 from newsroom.service import Newsroom
+from newsroom.variants import CHECKS, snapshot_hash
 
 
 class ServerTests(unittest.TestCase):
@@ -545,6 +548,99 @@ class ServerTests(unittest.TestCase):
                 status, _, body = self.request('POST', f'{path}/{action}', {
                     'revision': variant['revision'], 'segments': [segment]}, headers)
                 self.assertEqual(status, 200, body)
+
+    def test_concurrent_variant_edit_and_approval_are_atomic_over_http(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử xung đột',
+            'url': 'https://example.com/concurrent-approval', 'summary': 'Nguồn giả lập.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'body': 'Nội dung kiểm thử.', 'verification_note': 'Đã kiểm tra nguồn giả lập đầy đủ.',
+            'claims': [{'text': 'Dữ kiện giả', 'evidence': 'Nguồn giả', 'checked': True}]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'verified': True,
+            'claims': [{**item['claims'][0], 'checked': True}]})
+
+        for first in ('edit', 'approve'):
+            with self.subTest(first=first):
+                variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+                    'platform': 'x', 'account_label': 'Kênh thử'})
+                segment = {'text': 'Văn bản đã kiểm tra.', 'item_ids': [item['id']]}
+                variant = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'segments': [segment]})
+                variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                    'checks': {key: True for key in CHECKS}})
+                history_before = self.room.bulletin_history(bulletin['id'])
+                locked, release, start_second, queued = (threading.Event() for _ in range(4))
+                original_locked = self.room._locked_variant
+                original_connection = self.room.connection
+
+                @contextmanager
+                def traced_connection():
+                    with original_connection() as conn:
+                        def trace(sql):
+                            if start_second.is_set() and sql == 'BEGIN IMMEDIATE':
+                                queued.set()
+                        conn.set_trace_callback(trace)
+                        yield conn
+
+                def hold_first(*args):
+                    result = original_locked(*args)
+                    if not locked.is_set():
+                        locked.set()
+                        if not release.wait(4):
+                            raise AssertionError('First transaction was not released')
+                    return result
+
+                def send(operation):
+                    payload = {'revision': variant['revision'], 'expected_bulletin_revision': bulletin['revision']}
+                    if operation == 'edit':
+                        payload['segments'] = [{**segment, 'text': 'Văn bản sửa ở cửa sổ khác.'}]
+                    return self.request('POST', f"/api/variants/{variant['id']}/" +
+                        ('save' if operation == 'edit' else 'approve'), payload, headers)
+
+                with patch.object(self.room, 'connection', side_effect=traced_connection), \
+                     patch.object(self.room, '_locked_variant', side_effect=hold_first):
+                    with ThreadPoolExecutor(max_workers=2) as pool:
+                        winner = pool.submit(send, first)
+                        try:
+                            self.assertTrue(locked.wait(4), 'First request did not hold its transaction')
+                            start_second.set()
+                            loser = pool.submit(send, 'approve' if first == 'edit' else 'edit')
+                            self.assertTrue(queued.wait(4), 'Second request did not reach BEGIN IMMEDIATE')
+                        finally:
+                            release.set()
+                        winner_status, _, winner_body = winner.result(timeout=5)
+                        loser_status, _, loser_body = loser.result(timeout=5)
+
+                self.assertEqual(winner_status, 200, winner_body)
+                self.assertEqual(loser_status, 409, loser_body)
+                current = self.room.variant(variant['id'])
+                self.assertEqual(current['revision'], variant['revision'] + 1)
+                history = self.room.bulletin_history(bulletin['id'])
+                self.assertEqual(len(history), len(history_before) + 1)
+                self.assertEqual(history[0]['action'], 'saved' if first == 'edit' else 'approved')
+                with self.room.connection() as conn:
+                    approvals = conn.execute('SELECT * FROM variant_approvals WHERE variant_id=?',
+                                             (variant['id'],)).fetchall()
+                status, _, output = self.request('GET', f"/api/variants/{variant['id']}/export", headers=headers)
+                if first == 'edit':
+                    self.assertEqual(current['status'], 'draft')
+                    self.assertEqual(current['segments'][0]['text'], 'Văn bản sửa ở cửa sổ khác.')
+                    self.assertIsNone(current['approval_id'])
+                    self.assertEqual(approvals, [])
+                    self.assertEqual(status, 400, output)
+                else:
+                    self.assertEqual(current['status'], 'approved')
+                    self.assertEqual(len(approvals), 1)
+                    snapshot = json.loads(approvals[0]['snapshot'])
+                    self.assertEqual(snapshot_hash(snapshot), approvals[0]['approved_hash'])
+                    self.assertEqual(snapshot['segments'], [segment])
+                    self.assertEqual(json.loads(history[0]['snapshot']), snapshot)
+                    self.assertEqual(status, 200, output)
+                    self.assertEqual(json.loads(output)['posts'], [snapshot['rendered']['posts'][0]['text']])
 
     def test_variant_save_contract_over_http(self):
         headers = self.session()

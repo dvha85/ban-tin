@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 07/11/2026
 
+## APR-04 / APPROVE-05: sửa và duyệt cạnh tranh qua HTTP — 07/11/2026
+
+- Hồi quy nền của hai test service về sửa/duyệt và sửa bản tin/ghi nhận đạt 2/2. Test HTTP mới dùng hai request cùng revision trên server và SQLite giả; giữ transaction đầu sau khi lấy phiên bản, chờ request thứ hai đến `BEGIN IMMEDIATE`, rồi thả transaction. Thực hiện riêng cả hai thứ tự: lưu trước và duyệt trước.
+- Mỗi thứ tự có một phản hồi 200 và một 409. Khi lưu thắng, nội dung mới được giữ, không có bản duyệt và export bị từ chối. Khi duyệt thắng, snapshot giữ nội dung cũ, hash khớp snapshot, lịch sử khớp và export trả đúng văn bản của snapshot. Mỗi lượt chỉ tăng một revision và thêm một mục lịch sử.
+- Test mới chạy lại ba lần đều đạt; hồi quy sau bổ sung đạt 255/255 Python. Bộ JavaScript gần nhất đạt 87/87 trên cùng mã ứng dụng. Test này điều phối đúng hai lịch trình với một phiên bản X, không mô phỏng mất kết nối, mọi thao tác hay tương tác trình duyệt. Không thay đổi mã ứng dụng; APR-04 và QA-02 tổng thể vẫn mở.
+
 ## APR-03 / QA-02: bàn phím vùng xuất trên Edge — 07/11/2026
 
 - Trên Edge với server mã `c56f510` và kho SQLite giả riêng, chọn bản X đã duyệt có hai đoạn. Từ ô nội dung bản duyệt đoạn 1, nhấn Tab lần lượt tới nút sao chép đoạn 1, ô URL đoạn 1, nút ghi nhận đoạn 1, ô nội dung bản duyệt đoạn 2 và nút sao chép đoạn 2. Enter trên nút sao chép đoạn 2 hiển thị thông báo đã sao chép; Tab tiếp tới ô URL đoạn 2. Không ghi nhận hay đăng bài.
