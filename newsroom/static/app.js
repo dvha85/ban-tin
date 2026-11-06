@@ -1372,8 +1372,14 @@ async function renderVariantPublication(area, variant) {
           if (confirmation.hidden || confirmedUrl !== url.value.trim()) return;
           const key = `${variant.id}:${position}:${value}`;
           if (!app.publicationKeys.has(key)) app.publicationKeys.set(key, crypto.randomUUID());
-          try { await api(`/api/variants/${variant.id}/publications`, {revision: variant.revision, position, url: value,
-            idempotency_key: app.publicationKeys.get(key)}); }
+          let recorded;
+          try {
+            recorded = await api(`/api/variants/${variant.id}/publications`, {revision: variant.revision, position, url: value,
+              idempotency_key: app.publicationKeys.get(key)});
+            if (!recorded || ![0, 1].includes(recorded.active)) {
+              const error = new Error('Phản hồi ghi nhận không đầy đủ.'); error.outcomeUnknown = true; throw error;
+            }
+          }
           catch (error) {
             if (error.outcomeUnknown) {
               conflict.className = 'notice warning'; conflict.setAttribute('role', 'alert');
@@ -1384,7 +1390,13 @@ async function renderVariantPublication(area, variant) {
             showClaimConflict(conflict, error); return;
           }
           app.publicationKeys.delete(key);
-          app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã ghi nhận thông tin do bạn nhập.');
+          app.bulletinDirty = false; renderBulletin();
+          if (recorded.active === 0) {
+            try { await loadBulletinList(); } catch (_) { /* History can still be checked after reopening. */ }
+            toast('Lượt ghi nhận cũ không còn hiệu lực. Hãy kiểm tra lịch sử trước khi ghi nhận lại.', true);
+            return;
+          }
+          await loadBulletinList(); toast('Đã ghi nhận thông tin do bạn nhập.');
         });
         listen(back, 'click', () => { confirmedUrl = null; confirmation.hidden = true; url.focus(); });
         confirmation.append(confirm, back); confirmation.hidden = false;

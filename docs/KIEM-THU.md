@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## PUB-02 / POST-03 / QA-02: thử lại lượt ghi nhận đã bị hủy — 06/11/2026
+
+- Server có thể trả lại một lượt cũ `active: 0` khi client thử lại cùng khóa sau khi lượt đó bị hủy. Trước sửa, handler giao diện bỏ qua `active` và thông báo ghi nhận thành công; phản hồi thiếu `active` cũng bị coi là thành công và làm mất khóa thử lại. Sau sửa, lượt không còn hiệu lực hiện cảnh báo kiểm tra lịch sử; phản hồi thiếu trạng thái được coi là kết quả chưa rõ, giữ nội dung và khóa để đối soát. Test service xác nhận retry sau hủy trả đúng lượt cũ `active: 0` và không tăng thống kê.
+- Trên trình duyệt tích hợp với kho fixture, server cố ý ngắt phản hồi sau commit URL X giả. Thẻ một báo chưa rõ; thẻ hai thấy 1/1 rồi hủy ghi nhận với lý do giả. Thử lại tại thẻ một bằng khóa cũ: hiện cảnh báo lượt cũ không còn hiệu lực, tiến độ 0/1 và lịch sử giữ URL cùng lý do hủy. Không có bài đăng thật; server và kho thử đã dọn.
+- Trước sửa, hồi quy tại `4c93a4d` đạt 220/220 Python và 59/59 JavaScript; test handler mới thất bại ở trường hợp phản hồi thiếu trạng thái. Sau sửa: 220/220 Python, 60/60 JavaScript và `node --check newsroom/static/app.js` đạt. Đây là một tình huống lỗi được tiêm, không chứng minh mọi race hoặc lỗi mạng; QA-02 và PUB-02 vẫn mở.
+
 ## SAFE-01: kiểm tra phiên cho URL đầy đủ trong HTTP — 06/11/2026
 
 - Trên server và SQLite fixture, trước sửa `GET http://127.0.0.1:<port>/api/state` không có cookie trả **200**: kiểm tra phiên chỉ nhìn tiền tố của request target, trong khi định tuyến phân tích URL và dùng phần đường dẫn. Cùng cách kiểm tra được dùng trước POST. Chỉ thử trên server fixture cục bộ.

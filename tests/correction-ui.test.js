@@ -849,7 +849,7 @@ test('publication retry reuses its key but a later new recording gets a new key'
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
   vm.runInContext(`api = async (path, body) => { if (path.endsWith('/publications') && body) {
-    calls.push(body); if (calls.length === 1) throw Object.assign(new Error('Mất kết nối'), {outcomeUnknown: true}); return {}; }
+    calls.push(body); if (calls.length === 1) throw Object.assign(new Error('Mất kết nối'), {outcomeUnknown: true}); return {active: 1}; }
     return path.endsWith('/publications') ? [] : {posts: ['test']}; };
     renderBulletin = () => {}; loadBulletinList = async () => {}; toast = () => {};`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
@@ -870,6 +870,44 @@ test('publication retry reuses its key but a later new recording gets a new key'
   assert.notEqual(calls[1].idempotency_key, calls[2].idempotency_key);
 });
 
+test('retrying a cancelled publication warns and an incomplete response keeps the retry key', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const calls = [], messages = []; let keyCount = 0;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout, calls, messages,
+    fetch: () => new Promise(() => {}), crypto: {randomUUID: () => `key-${++keyCount}`},
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`api = async (path, body) => {
+    if (path.endsWith('/publications') && body) {
+      calls.push(body);
+      if (calls.length === 1) throw Object.assign(new Error('Mất kết nối'), {outcomeUnknown: true});
+      return calls.length === 2 ? {} : {id: 11, active: 0};
+    }
+    return path.endsWith('/publications') ? [] : {posts: ['test']};
+  }; renderBulletin = () => {}; loadBulletinList = async () => {}; toast = message => messages.push(message);`, context);
+  const area = new Element(); get('bulletin-editor').append(area); context.area = area;
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const button = name => walk(area).find(el => el.tagName === 'button' && el.textContent === name);
+  const url = walk(area).find(el => el.dataset.publicationUrl);
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  url.value = 'https://x.com/a/status/123'; button('Ghi nhận đã đăng').listeners.click[0]({}); await tick();
+  button('Xác nhận ghi nhận').listeners.click[0]({}); await tick();
+  button('Xác nhận ghi nhận').listeners.click[0]({}); await tick();
+  assert.equal(url.value, 'https://x.com/a/status/123');
+  assert.ok(walk(area).some(el => !el.hidden && el.textContent.includes('chưa rõ')));
+  assert.equal(calls[0].idempotency_key, calls[1].idempotency_key);
+  assert.equal(vm.runInContext('app.publicationKeys.size', context), 1);
+  button('Xác nhận ghi nhận').listeners.click[0]({}); await tick();
+  assert.equal(calls[1].idempotency_key, calls[2].idempotency_key);
+  assert.equal(vm.runInContext('app.publicationKeys.size', context), 0);
+  assert.match(messages.at(-1), /không còn hiệu lực/i);
+  assert.doesNotMatch(messages.at(-1), /đã ghi nhận thông tin/i);
+});
+
 test('publication confirmation identifies destination and invalidates when URL changes', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
@@ -880,7 +918,7 @@ test('publication confirmation identifies destination and invalidates when URL c
     document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
-  vm.runInContext(`api = async (path, body) => path.endsWith('/publications') ? (body ? (calls.push(body), {}) : []) : {posts: ['test']};
+  vm.runInContext(`api = async (path, body) => path.endsWith('/publications') ? (body ? (calls.push(body), {active: 1}) : []) : {posts: ['test']};
     renderBulletin = () => {}; loadBulletinList = async () => {}; toast = () => {};`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
   await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Kênh thử'})", context);

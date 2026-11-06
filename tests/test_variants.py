@@ -1085,6 +1085,9 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(current['status'], 'partially_recorded')
         self.assertEqual(self.room.bulletin_stats()['recorded_posts'], 1)
         self.assertIsNotNone(current['locked_at'])
+        retry = self.room.record_publication(variant['id'], data)
+        self.assertEqual((retry['id'], retry['active']), (first['id'], 0))
+        self.assertEqual(self.room.bulletin_stats()['recorded_posts'], 1)
         with self.assertRaises(Conflict):
             self.room.save_variant(variant['id'], {'revision': current['revision']})
 

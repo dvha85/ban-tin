@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> PUB-02 / POST-03 / QA-02 ngày 06/11: thử lại khóa ghi nhận sau khi lượt cũ đã bị hủy không còn báo thành công; phản hồi thiếu trạng thái giữ khóa để đối soát. Test service, handler và thử hai thẻ với lỗi phản hồi giả đạt; hồi quy 220/220 Python, 60/60 JavaScript. Xem `KIEM-THU.md`.
+
 > SAFE-01 ngày 06/11: sửa kiểm tra phiên với HTTP request target dạng URL đầy đủ; kiểm thử cả dạng đường dẫn và URL đầy đủ cho 15 route đa kênh. Chi tiết và phạm vi tại `KIEM-THU.md`.
 
 > QA-02 / FMT-01 ngày 06/11: sửa vùng biên tập bị khóa sau POST lưu thành công khi GET danh sách phiên bản chậm; test handler và thử trình duyệt với phản hồi trì hoãn 25 giây đạt. Hồi quy 219/219 Python, 59/59 JavaScript; phạm vi và giới hạn tại `KIEM-THU.md`.
