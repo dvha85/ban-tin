@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> PUB-02 / PUB-03 / QA-02 ngày 06/11: phân biệt ghi nhận/đính chính đã lưu với lỗi tải lại danh sách sau đó; test handler và hai nhánh trên kho giả đạt theo `KIEM-THU.md`. Hồi quy 237/237 Python, 78/78 JavaScript; QA tổng thể vẫn mở.
+
 > DOC-01 / REL-01 / QA-01 ngày 06/11: cập nhật hướng dẫn, kiến trúc và bảng đối chiếu; kiểm tra 61 liên kết tệp cục bộ trong tám tài liệu, không kiểm tra neo. Hồi quy trên `bf3be22`: 237/237 Python, 77/77 JavaScript. DOC-01/REL-01, policy và QA tổng thể vẫn mở; xem `KIEM-THU.md`.
 
 > FMT-02 / APR-04 / QA-02 ngày 06/11: không mở kết quả xem trước cũ nếu đoạn/nguồn hoặc hộp hiển thị thay đổi trong lúc chờ; test handler và trình duyệt kho giả đạt theo phạm vi `KIEM-THU.md`. Hồi quy 237/237 Python, 77/77 JavaScript.

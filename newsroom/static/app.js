@@ -1465,7 +1465,10 @@ async function renderVariantPublication(area, variant) {
           }
           try { await api(`/api/publications/${existing.id}/corrections`, {revision: variant.revision, reason: reason.value, url: url.value}); }
           catch (error) { showClaimConflict(errors, error, {reason: reason.value, url: url.value}); return; }
-          app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã lưu đính chính.');
+          app.bulletinDirty = false; renderBulletin();
+          try { await loadBulletinList(); }
+          catch (_) { toast('Đã lưu đính chính nhưng chưa tải lại được danh sách. Hãy mở lại để kiểm tra lịch sử.', true); return; }
+          toast('Đã lưu đính chính.');
         });
         const discard = node('button', 'button secondary', 'Bỏ nội dung biểu mẫu');
         listen(discard, 'click', () => {
@@ -1524,7 +1527,9 @@ async function renderVariantPublication(area, variant) {
             toast('Lượt ghi nhận cũ không còn hiệu lực. Hãy kiểm tra lịch sử trước khi ghi nhận lại.', true);
             return;
           }
-          await loadBulletinList(); toast('Đã ghi nhận thông tin do bạn nhập.');
+          try { await loadBulletinList(); }
+          catch (_) { toast('Đã ghi nhận thông tin nhưng chưa tải lại được danh sách. Hãy mở lại để kiểm tra lịch sử.', true); return; }
+          toast('Đã ghi nhận thông tin do bạn nhập.');
         });
         listen(back, 'click', () => { confirmedUrl = null; confirmation.hidden = true; url.focus(); });
         confirmation.append(confirm, back); confirmation.hidden = false;

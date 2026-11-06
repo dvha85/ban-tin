@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## PUB-02 / PUB-03 / QA-02: đã lưu nhưng tải danh sách thất bại — 06/11/2026
+
+- Trước sửa, sau khi server xác nhận ghi nhận hoặc đính chính thành công, lỗi tải lại danh sách chỉ hiện lỗi chung, dễ khiến người dùng tưởng chưa lưu. UI nay báo rõ thao tác đã lưu nhưng danh sách chưa tải lại được và hướng dẫn mở lại kiểm tra lịch sử. Nếu phản hồi ghi chưa rõ, thông báo đối soát cũ vẫn được giữ; thay đổi này không tự gửi lại hoặc ghi thêm.
+- Test handler tái hiện lỗi tải danh sách sau phản hồi thành công cho cả hai thao tác và kiểm tra thông báo phân biệt với kết quả chưa rõ. Test retry cùng mã, ghi nhận đã hủy và lỗi đính chính vẫn đạt. Hồi quy 237/237 Python, 78/78 JavaScript; `node --check` đạt.
+- Trên trình duyệt tích hợp, server kho giả được tiêm lỗi một lần ở bước tải thống kê sau ghi: ghi nhận URL X giả và đính chính URL Threads giả đều hiện thông báo đã lưu nhưng chưa tải lại danh sách. Đọc lại kho thấy một ghi nhận X hiệu lực; Threads giữ lượt cũ với sự kiện đính chính và lượt thay thế hiệu lực. Đây là hai nhánh lỗi có tiêm, không phải lỗi mạng thật; chưa thử mọi kênh hoặc lỗi tải vùng chi tiết. Server và kho thử đã dọn, không đăng bài.
+
 ## DOC-01 / REL-01 / QA-01: đối chiếu tài liệu và hồi quy — 06/11/2026
 
 - Trên mã `bf3be22`, chạy `python -B -m unittest discover -s tests -q` đạt 237/237 và `node --test tests/*.test.js` đạt 77/77. Các kiểm thử chạy với fixture; cần chạy lại sau thay đổi chức năng và trước phát hành.
