@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## APR-03 / APR-04 / QA-02: chuyển ngữ cảnh khi đang lấy nội dung — 06/11/2026
+
+- Khi xem trước, xem bản đã duyệt hoặc lịch sử của phiên bản, UI kiểm tra bản tin, revision, phiên bản và vùng đang hiển thị trước/sau phản hồi; bản đã duyệt còn kiểm tra trạng thái phiên/kho. Nếu người dùng chuyển ngữ cảnh trong lúc chờ, không mở hộp cũ. Test handler tái hiện trước sửa việc đổi phiên bản vẫn mở bản A.
+- Nút thử sao chép lại trong hộp thủ công của phiên bản và gói tư liệu kiểm tra hộp còn mở và vẫn là hộp cũ trước/sau phản hồi. Phiên bản còn kiểm tra bản tin/revision/kênh đang chọn và bản duyệt; gói tư liệu so cả nội dung với bản đã hiển thị. Lỗi từ thao tác cũ không ghi đè thông báo của hộp mới. Test handler tái hiện trước sửa việc đóng hộp hoặc đổi kênh trong lúc chờ vẫn sao chép, và kiểm tra gói đổi nội dung cùng revision bị từ chối.
+- Trên trình duyệt tích hợp với kho giả hai kênh: giữ phản hồi xem bản duyệt X, chuyển sang Threads rồi trả phản hồi; Threads vẫn được chọn và hiện cảnh báo, không mở hộp X. Lượt thử không tạo được nhánh clipboard bị từ chối: nút báo sao chép thành công dù server thử gửi chính sách hạn chế clipboard. Do đó nhánh đóng hộp khi thử lại chỉ có bằng chứng handler, không tính là đã thử UI. Đã dừng và dọn kho giả, không đăng bài.
+- Hồi quy 237/237 Python, 76/76 JavaScript, `node --check` đạt. Các kiểm tra thực hiện trước lời gọi clipboard, không thu hồi thao tác ghi clipboard đã bắt đầu, không ngăn dữ liệu thay đổi sau phản hồi, và không kiểm soát Ctrl+C trực tiếp. QA-02/APR-03/APR-04 tổng thể vẫn mở.
+
 ## FMT-02 / APR-02 / QA-02: giữ nguyên dữ liệu biểu mẫu đa kênh — 06/11/2026
 
 - Trước sửa, trình duyệt chuẩn hóa CRLF/CR ở ô nhập có thể khiến lưu bản tin, mục hoặc phiên bản không sửa lại gửi chuỗi khác, làm mất kiểm chứng/duyệt; xem trước hoặc đề xuất chia cũng có thể dùng chuỗi khác. UI nay gửi lại chuỗi gốc khi giá trị hiển thị không đổi, gồm tiêu đề, lời mở/kết, mục, khẳng định, đích và đoạn; khi người dùng sửa, gửi giá trị mới.

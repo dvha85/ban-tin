@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> APR-03 / APR-04 / QA-02 ngày 06/11: kiểm tra lại bản tin/kênh khi phản hồi xem bản duyệt đến muộn và khi thử sao chép trong hộp thủ công; handler và một lượt đổi X→Threads trên kho giả đạt. Hồi quy 237/237 Python, 76/76 JavaScript; nhánh clipboard bị từ chối chưa thử được trên UI ở lượt này, xem `KIEM-THU.md`.
+
 > FMT-02 / APR-02 / QA-02 ngày 06/11: biểu mẫu đa kênh giữ chuỗi CRLF/CR và cấu trúc lựa chọn nguồn khi không sửa, tránh hủy kiểm chứng/duyệt sai; test handler và UI kho giả đạt trong phạm vi `KIEM-THU.md`. Hồi quy 237/237 Python, 73/73 JavaScript.
 
 > APR-03 / QA-02 ngày 06/11: trên trình duyệt tích hợp, đối chiếu clipboard phiên và tệp UTF-8 với một bản duyệt bài cũ chứa CRLF/CR; cả hai khớp chuỗi/byte bản giả. Phạm vi và giới hạn tại `KIEM-THU.md`; QA tổng thể vẫn mở.

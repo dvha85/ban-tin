@@ -7,7 +7,7 @@ const app = {state: null, view: 'inbox', category: 'all', articleId: null, draft
   dirty: false, reviewDirty: false, tab: 'packet', csrf: '', busy: false, exportId: null,
   selectedArticles: new Set(), bulletin: null, bulletinDirty: false, variantId: null, publicationKeys: new Map(), conflictTarget: null,
   storeChanged: false, storeFileId: null, sessionUnverified: false};
-let pollTimer, toastTimer, dialogCopyAction = null, legacyExportSnapshot = null;
+let pollTimer, toastTimer, dialogCopyAction = null, legacyExportSnapshot = null, textDialogGeneration = 0;
 
 // All external/source/model text is inserted as text or input values, never HTML.
 function node(tag, className, text) {
@@ -564,6 +564,7 @@ function renderSources() {
   }
 }
 function showText(title, text, note, exportId = null, canCopy = true) {
+  textDialogGeneration++;
   dialogCopyAction = null;
   legacyExportSnapshot = null;
   app.exportId = exportId;
@@ -574,17 +575,22 @@ function showText(title, text, note, exportId = null, canCopy = true) {
   $('copy-dialog').hidden = !canCopy;
   if (!$('text-dialog').open) $('text-dialog').showModal();
 }
-async function copyBulletinPacket(bulletin) {
+async function copyBulletinPacket(bulletin, stillVisible = () => true, expectedText = null) {
   if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi sao chép.');
   if (app.bulletinDirty || app.storeChanged) throw new Error('Hãy lưu thay đổi và kiểm tra kho trước khi lấy gói tư liệu.');
+  if (!stillVisible()) throw new Error('Hộp sao chép đã thay đổi. Hãy kiểm tra lại.');
   const id = bulletin.id, revision = bulletin.revision;
   const result = await api(`/api/bulletins/${id}/packet`);
   if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi sao chép.');
-  if (app.bulletinDirty || app.storeChanged || app.bulletin?.id !== id || app.bulletin?.revision !== revision)
+  if (app.bulletinDirty || app.storeChanged || app.bulletin?.id !== id || app.bulletin?.revision !== revision || !stillVisible())
     throw new Error('Bản tin hoặc kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
   if (result.bulletin_revision !== revision)
     throw new Error('Bản tin đã thay đổi ở cửa sổ khác. Hãy đối chiếu trước khi lấy gói tư liệu.');
-  await copy(result.text, () => copyBulletinPacket(bulletin));
+  if (expectedText !== null && result.text !== expectedText)
+    throw new Error('Gói tư liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
+  const retry = () => copyBulletinPacket(bulletin, () => dialogCopyAction === retry && $('text-dialog').open &&
+    $('dialog-text').value === result.text.replace(/\r\n?/g, '\n'), result.text);
+  await copy(result.text, retry);
 }
 
 async function copy(text, retryAction = null) {
@@ -599,14 +605,25 @@ async function copy(text, retryAction = null) {
     $('dialog-text').select();
   }
 }
-async function copyApprovedVariant(variantId, shown, position) {
+async function copyApprovedVariant(variantId, shown, position, selection = null, stillVisible = () => true) {
   if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi sao chép.');
   if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi sao chép bản đã duyệt.');
   if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
+  selection ||= app.bulletin ? {id: app.bulletin.id, revision: app.bulletin.revision} : null;
+  const checkSelection = () => {
+    if (!selection || app.view !== 'bulletins' || app.bulletin?.id !== selection.id ||
+        app.bulletin?.revision !== selection.revision || app.variantId !== variantId || !stillVisible())
+      throw new Error('Bản tin, phiên bản hoặc hộp sao chép đã thay đổi. Hãy kiểm tra và thử lại.');
+  };
+  checkSelection();
   const current = await api(`/api/variants/${variantId}/export`);
   if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi sao chép.');
   if (app.bulletinDirty || app.storeChanged) throw new Error('Nội dung hoặc kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
-  await copy(verifiedCopyText(shown, current, position), () => copyApprovedVariant(variantId, shown, position));
+  checkSelection();
+  const text = verifiedCopyText(shown, current, position);
+  const retry = () => copyApprovedVariant(variantId, shown, position, selection, () =>
+    dialogCopyAction === retry && $('text-dialog').open && $('dialog-text').value === text.replace(/\r\n?/g, '\n'));
+  await copy(text, retry);
 }
 
 function updateBulletinSelection() {
@@ -1078,6 +1095,11 @@ async function renderVariants(container, bulletin, focusSelector = false) {
     selector.focus({preventScroll: true});
   const variant = variants.find(row => row.id === app.variantId);
   if (!variant) return;
+  const checkVisibleVariant = () => {
+    if (app.view !== 'bulletins' || app.bulletin?.id !== bulletin.id ||
+        app.bulletin?.revision !== bulletin.revision || app.variantId !== variant.id || !area.isConnected)
+      throw new Error('Bản tin hoặc phiên bản đã thay đổi. Hãy kiểm tra và mở lại.');
+  };
   const locked = !!variant.locked_at;
   const history = locked ? await api(`/api/variants/${variant.id}/archive`) : null;
   if (!container.isConnected) return;
@@ -1207,12 +1229,14 @@ async function renderVariants(container, bulletin, focusSelector = false) {
   });
   const preview = node('button', 'button secondary', locked ? 'Xem trước bản duyệt lịch sử' : 'Xem trước');
   listen(preview, 'click', async () => {
+    checkVisibleVariant();
     if (locked) {
       showText('Bản duyệt lịch sử', history.rendered_posts.map(post => `${post.position + 1}. ${post.length}/${post.limit}\n${post.text}`).join('\n\n────────────\n\n'),
         `Văn bản và bộ đếm tại policy ${history.policy_version}; không xác nhận phù hợp với quy tắc hiện hành.`, null, false);
       return;
     }
     const result = await api(`/api/variants/${variant.id}/preview`, {segments: collect()});
+    checkVisibleVariant();
     const staleParentView = Number.isInteger(result.bulletin_revision) && result.bulletin_revision !== bulletin.revision;
     const sameParentView = Number.isInteger(result.bulletin_revision) && result.bulletin_revision === bulletin.revision;
     const omittedNames = result.omitted_item_ids.map(id => {
@@ -1249,12 +1273,16 @@ async function renderVariants(container, bulletin, focusSelector = false) {
   });
   const exportButton = node('button', 'button secondary', 'Xem bản đã duyệt');
   listen(exportButton, 'click', async () => {
+    checkExportStore(); checkVisibleVariant();
     const result = await api(`/api/variants/${variant.id}/export`);
+    checkExportStore(); checkVisibleVariant();
     showText('Bản đã duyệt', result.posts.map((post, i) => `Đoạn ${i + 1}\n${post}`).join('\n\n────────────\n\n'), 'Dùng nút sao chép riêng của từng đoạn để tự đăng.', null, false);
   });
   const archive = node('button', 'button secondary', 'Xem bản lưu lịch sử');
   listen(archive, 'click', async () => {
+    checkVisibleVariant();
     const result = await api(`/api/variants/${variant.id}/archive`);
+    checkVisibleVariant();
     showText('Bản lưu lịch sử', result.posts.map((post, i) => `Đoạn ${i + 1}\n${post}`).join('\n\n────────────\n\n'),
       `Lịch sử theo policy ${result.policy_version}; không xem là bản sẵn sàng đăng khi quy tắc hiện hành đã thay đổi.`, null, false);
   });
@@ -1763,6 +1791,7 @@ listen($('export-button'), 'click', async () => {
 listen($('copy-dialog'), 'click', async () => {
   const button = $('copy-dialog');
   if (button.disabled) return;
+  const generation = textDialogGeneration;
   button.disabled = true;
   try {
     if (app.exportId !== null) {
@@ -1775,11 +1804,13 @@ listen($('copy-dialog'), 'click', async () => {
     } else if (dialogCopyAction) await dialogCopyAction();
     else await copy($('dialog-text').value);
   } catch (error) {
-    $('text-dialog-note').textContent = `${error.message} Đóng hộp và kiểm tra lại trước khi sao chép thủ công.`;
+    if ($('text-dialog').open && generation === textDialogGeneration)
+      $('text-dialog-note').textContent = `${error.message} Đóng hộp và kiểm tra lại trước khi sao chép thủ công.`;
   } finally { button.disabled = false; }
 });
 listen($('download-export'), 'click', async () => {
   if (app.exportId !== null) {
+    const generation = textDialogGeneration;
     try {
       checkExportStore();
       const snapshot = legacyExportSnapshot;
@@ -1794,7 +1825,8 @@ listen($('download-export'), 'click', async () => {
         const link = node('a'); link.href = objectUrl; link.download = `bai-da-duyet-${snapshot.id}.txt`; link.click();
       } finally { setTimeout(() => URL.revokeObjectURL(objectUrl), 30000); }
     } catch (error) {
-      $('text-dialog-note').textContent = `${error.message} Đóng hộp và kiểm tra lại trước khi tải hoặc sao chép thủ công.`;
+      if ($('text-dialog').open && generation === textDialogGeneration)
+        $('text-dialog-note').textContent = `${error.message} Đóng hộp và kiểm tra lại trước khi tải hoặc sao chép thủ công.`;
     }
   }
 });

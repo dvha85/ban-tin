@@ -103,7 +103,7 @@ test('packet copy rejects stale or changed editor state and copies matching snap
   vm.runInContext(`app.storeChanged = false;
     api = async () => { app.sessionUnverified = true; return {text: 'Gói cũ', bulletin_revision: 4}; }`, context);
   await assert.rejects(vm.runInContext('copyBulletinPacket(app.bulletin)', context), /chưa xác định/i);
-  vm.runInContext('app.sessionUnverified = false', context);
+  vm.runInContext("app.sessionUnverified = false; app.variantId = 3; app.view = 'bulletins'", context);
   await assert.rejects(vm.runInContext('copyApprovedVariant(3, {}, 0)', context), /chưa xác định/i);
   assert.equal(copies.length, 0);
   vm.runInContext(`app.sessionUnverified = false; api = async () => ({text: 'Gói đúng', bulletin_revision: 4});`, context);
@@ -132,7 +132,7 @@ test('variant preview split and save preserve unchanged CRLF and accept real edi
   context.bulletin = {id: 7, revision: 4, items: [
     {id: 1, title: 'Tin A', sources: [{source_id: 's', url: 'https://example.com/a'}]},
     {id: 2, title: 'Tin B', sources: [{source_id: 's2', url: 'https://example.com/b'}]}]};
-  vm.runInContext(`app.variantId = 3; api = async (path, data) => {
+  vm.runInContext(`app.variantId = 3; app.bulletin = bulletin; app.view = 'bulletins'; api = async (path, data) => {
       if (path.endsWith('/variants')) return [{id: 3, revision: 2, platform: 'x', account_label: 'Trang\\r\\nA', status: 'draft',
         locked_at: null, needs_update: false, policy_stale: false, checks: {},
         segments: [{text: 'Một\\r\\nHai\\rBa', item_ids: [2, 1], source_ids: ['s2', 's']},
@@ -159,6 +159,31 @@ test('variant preview split and save preserve unchanged CRLF and accept real edi
   await click('Lưu phiên bản');
   assert.deepEqual(Array.from(calls.at(-1).data.segments[0].item_ids), [1]);
   assert.deepEqual(Array.from(calls.at(-1).data.segments[0].source_ids), ['s']);
+});
+
+test('variant approved preview does not open after switching variants while loading', async () => {
+  const elements = new Map(), shown = [], messages = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  let release;
+  const waiting = new Promise(resolve => { release = resolve; });
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    shown, messages, waiting, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.container = new Element(); context.bulletin = {id: 7, revision: 4, items: []};
+  vm.runInContext(`app.variantId = 3; app.bulletin = bulletin; app.view = 'bulletins';
+    api = async path => path.endsWith('/variants') ? [{id: 3, revision: 2, platform: 'x', account_label: 'A', status: 'draft',
+      locked_at: null, checks: {}, segments: [{text: 'Giả', item_ids: [], source_ids: []}]}] : await waiting;
+    showText = (...args) => shown.push(args); toast = message => messages.push(message);`, context);
+  await vm.runInContext('renderVariants(container, bulletin)', context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const button = walk(context.container).find(el => el.tagName === 'button' && el.textContent === 'Xem bản đã duyệt');
+  button.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve));
+  vm.runInContext('app.variantId = 4', context);
+  release({approval_id: 21, posts: ['Nội dung A']}); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(shown.length, 0); assert.match(messages.at(-1), /thay đổi/i);
 });
 
 test('variant actions carry the displayed bulletin revision', async () => {
@@ -784,6 +809,7 @@ test('session recovery and refresh reject a replacement file in the same directo
 test('legacy approved export cannot cross an unverified session or changed store', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  get('text-dialog').open = true;
   get('text-dialog').showModal = () => { get('text-dialog').open = true; };
   const requests = [], shown = [], copies = [], downloads = [], messages = [];
   class TestURL extends URL {}
@@ -1196,8 +1222,8 @@ test('retrying packet copy from fallback checks the displayed bulletin revision'
     document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
-  vm.runInContext(`app.bulletin = {id: 7, revision: 4}; let packetRevision = 4;
-    api = async () => ({text: 'Tư liệu giả', bulletin_revision: packetRevision}); toast = () => {};`, context);
+  vm.runInContext(`app.bulletin = {id: 7, revision: 4}; let packetRevision = 4, packetText = 'Tư liệu giả';
+    api = async () => ({text: packetText, bulletin_revision: packetRevision}); toast = () => {};`, context);
   await vm.runInContext('copyBulletinPacket(app.bulletin)', context);
   assert.equal(get('dialog-text').value, 'Tư liệu giả');
   assert.match(get('text-dialog-note').textContent, /kiểm tra lại/i);
@@ -1209,9 +1235,70 @@ test('retrying packet copy from fallback checks the displayed bulletin revision'
   assert.match(get('text-dialog-note').textContent, /thay đổi/i);
   assert.equal(get('dialog-text').value, 'Tư liệu giả');
   vm.runInContext('packetRevision = 4', context);
+  vm.runInContext("packetText = 'Tư liệu khác'", context);
+  get('copy-dialog').dispatchEvent({type: 'click'});
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(writes, []); assert.match(get('text-dialog-note').textContent, /thay đổi/i);
+  vm.runInContext("packetText = 'Tư liệu giả'", context);
   get('copy-dialog').dispatchEvent({type: 'click'});
   await new Promise(resolve => setImmediate(resolve));
   assert.deepEqual(writes, ['Tư liệu giả']);
+});
+
+test('fallback packet retry cannot copy after its dialog closes while waiting', async () => {
+  const elements = new Map(), writes = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  get('text-dialog').showModal = () => { get('text-dialog').open = true; };
+  get('dialog-text').select = () => {};
+  let denied = true, hold = false, release;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), holding: () => hold,
+    waitForResponse: () => new Promise(resolve => { release = resolve; }),
+    navigator: {clipboard: {writeText: async text => { if (denied) throw new Error('denied'); writes.push(text); }}},
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.bulletin = {id: 7, revision: 4};
+    api = async () => holding() ? await waitForResponse() : {text: 'Gói giả', bulletin_revision: 4}; toast = () => {};`, context);
+  await vm.runInContext('copyBulletinPacket(app.bulletin)', context);
+  denied = false; hold = true;
+  get('copy-dialog').dispatchEvent({type: 'click'});
+  await new Promise(resolve => setImmediate(resolve));
+  get('text-dialog').open = false;
+  release({text: 'Gói giả', bulletin_revision: 4});
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(writes, []);
+});
+
+test('fallback variant retry cannot copy after the selected variant changes while waiting', async () => {
+  const elements = new Map(), writes = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  get('text-dialog').showModal = () => { get('text-dialog').open = true; };
+  get('dialog-text').select = () => {};
+  let denied = true, hold = false, release;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), holding: () => hold,
+    waitForResponse: () => new Promise(resolve => { release = resolve; }),
+    navigator: {clipboard: {writeText: async text => { if (denied) throw new Error('denied'); writes.push(text); }}},
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.bulletin = {id: 7, revision: 4}; app.variantId = 3; app.view = 'bulletins';
+    let shown = {approval_id: 21, posts: ['Bản giả A']};
+    api = async () => holding() ? await waitForResponse() : shown; toast = () => {};`, context);
+  await vm.runInContext('copyApprovedVariant(3, shown, 0)', context);
+  denied = false; hold = true;
+  get('copy-dialog').dispatchEvent({type: 'click'});
+  await new Promise(resolve => setImmediate(resolve));
+  get('text-dialog').open = false;
+  vm.runInContext('app.variantId = 4', context);
+  vm.runInContext("showText('Bản mới', 'Nội dung B', 'Ghi chú B')", context);
+  release({approval_id: 21, posts: ['Bản giả A']});
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(writes, []);
+  assert.equal(get('text-dialog-note').textContent, 'Ghi chú B');
 });
 
 test('retrying copy from fallback checks the approval and leaves a visible warning if stale', async () => {
@@ -1227,7 +1314,8 @@ test('retrying copy from fallback checks the approval and leaves a visible warni
     document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
-  vm.runInContext(`let current = {approval_id: 21, posts: ['Nội dung đã duyệt']};
+  vm.runInContext(`app.bulletin = {id: 7, revision: 4}; app.variantId = 3; app.view = 'bulletins';
+    let current = {approval_id: 21, posts: ['Nội dung đã duyệt']};
     api = async path => path.endsWith('/publications') ? [] : structuredClone(current);
     toast = message => messages.push(message);`, context);
   context.area = new Element();
@@ -1905,6 +1993,7 @@ test('preview warns if the server sees a newer bulletin revision', async () => {
     {id: 2, title: 'Tin chưa đưa vào', sources: []},
     {id: 3, title: 'Tin chưa đưa vào', sources: []}]};
   context.bulletin = bulletin;
+  vm.runInContext("app.bulletin = bulletin; app.view = 'bulletins'", context);
   await vm.runInContext('renderVariants(container, bulletin)', context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   const preview = walk(context.container).find(el => el.tagName === 'button' && el.textContent === 'Xem trước');
