@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> QA-02 / APR-03 ngày 06/11: các nút xuất bản duyệt của bài Facebook cũ cũng chặn khi UI đã phát hiện kho đổi hoặc phiên chưa xác định; test handler và UI kho giả đạt. Hồi quy 235/235 Python, 67/67 JavaScript; xem giới hạn tại `KIEM-THU.md`.
+
 > QA-02 / APR-04 ngày 06/11: phiên mới thiếu ID để đối chiếu không được nhận token hoặc gửi ghi; nội dung đang soạn được giữ và có thể thử khôi phục lại. Test handler và UI kho giả đạt; hồi quy 235/235 Python, 66/66 JavaScript. Xem phạm vi tại `KIEM-THU.md`.
 
 > QA-02 / APR-04 ngày 06/11: giữ định danh tệp đã biết khi một lần cập nhật thiếu ID; test handler và trình duyệt kho giả thử thiếu ID rồi thay tệp đạt. Hồi quy 235/235 Python, 65/65 JavaScript; giới hạn tại `KIEM-THU.md`.

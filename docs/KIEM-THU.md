@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## QA-02 / APR-03: chặn xuất bài cũ khi phiên chưa xác định — 06/11/2026
+
+- Khi UI đã phát hiện kho đổi hoặc chưa xác định kho của phiên mới, luồng bài Facebook cũ nay chặn mở bản xuất, nút sao chép và tải `.txt` trong hộp bản duyệt. Nếu trạng thái đổi trong lúc yêu cầu lấy bản xuất đang chờ, không mở hộp sau phản hồi. Hộp sao chép thủ công không gắn bản xuất bài cũ vẫn cho sao chép để người dùng giữ nội dung; thao tác Ctrl+C trực tiếp không bị ứng dụng kiểm soát.
+- Test `legacy approved export cannot cross an unverified session or changed store` thất bại trước sửa; sau sửa kiểm tra hai trạng thái, thay đổi trong lúc chờ, ba nút xuất/copy/tải và hoạt động trở lại khi kết nối hợp lệ; cũng kiểm tra sao chép thủ công không gắn bản xuất. Trên trình duyệt kho giả, sau khi restart server với ID tạm thiếu, khôi phục chưa thành công và nút mở bản duyệt báo bị chặn; sau khi ID khớp xuất hiện, khôi phục và mở bản duyệt thành công. Lượt UI không thử tải hoặc đối chiếu clipboard; server/kho thử đã dọn.
+- Hồi quy 235/235 Python, 67/67 JavaScript, `node --check` đạt. Chặn này thuộc giao diện, không ngăn client khác hoặc URL tải trực tiếp; file ID không bảo đảm phát hiện mọi trường hợp thay dữ liệu. QA-02/APR-03 vẫn mở.
+
 ## QA-02 / APR-04: không nhận phiên mới khi thiếu định danh kho — 06/11/2026
 
 - Trước sửa, khôi phục phiên có thể nhận token mới chỉ vì đường dẫn giống nhau, kể cả khi một phía không có `store_file_id`. Nay khi token phiên đổi, ứng dụng chỉ nhận token nếu đối chiếu được ID tệp cũ/mới; nếu thiếu thì giữ nguyên nội dung, hiển thị thông báo thường trực và chặn POST cùng thao tác sao chép/tải đầu ra đa kênh. Cập nhật nền không tự bỏ trạng thái chờ; có thể thử **Khôi phục kết nối** lại. Nếu ID hiện lại và khớp, người dùng tự kiểm tra rồi lưu; nếu ID cũ chưa từng có, cần sao chép nội dung thủ công và tải lại trang.

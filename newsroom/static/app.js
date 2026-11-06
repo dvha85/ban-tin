@@ -86,6 +86,10 @@ function markSessionUnverified() {
   $('session-recovery').hidden = false;
   $('session-unverified-warning').hidden = false;
 }
+function checkExportStore() {
+  if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi xuất.');
+  if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi xuất.');
+}
 async function recoverSession() {
   if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
   if (!app.state || typeof app.state.data_dir !== 'string') throw new Error('Không xác định được kho dữ liệu ban đầu. Hãy sao chép nội dung trước khi tải lại.');
@@ -1704,7 +1708,9 @@ listen($('approve-button'), 'click', async () => {
   });
 });
 listen($('export-button'), 'click', async () => {
+  checkExportStore();
   const text = await api(`/api/drafts/${app.draft.id}/export`);
+  checkExportStore();
   showText('Bài đã duyệt — đăng thủ công', text,
     `Đích dự kiến: ${app.draft.page_name}. Tự kiểm tra lại trước khi dán. Nếu sửa nội dung, hãy quay về cập nhật và duyệt lại.`, app.draft.id);
 });
@@ -1713,6 +1719,7 @@ listen($('copy-dialog'), 'click', async () => {
   if (button.disabled) return;
   button.disabled = true;
   try {
+    if (app.exportId !== null) checkExportStore();
     if (dialogCopyAction) await dialogCopyAction();
     else await copy($('dialog-text').value);
   } catch (error) {
@@ -1720,7 +1727,10 @@ listen($('copy-dialog'), 'click', async () => {
   } finally { button.disabled = false; }
 });
 listen($('download-export'), 'click', () => {
-  if (app.exportId !== null) window.location.assign(`/api/drafts/${app.exportId}/export`);
+  if (app.exportId !== null) {
+    checkExportStore();
+    window.location.assign(`/api/drafts/${app.exportId}/export`);
+  }
 });
 let legacyPublishConfirmation = null;
 function resetLegacyPublicationConfirmation() {

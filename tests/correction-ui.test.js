@@ -690,6 +690,44 @@ test('session recovery and refresh reject a replacement file in the same directo
   }
 });
 
+test('legacy approved export cannot cross an unverified session or changed store', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const requests = [], shown = [], copies = [], downloads = [], messages = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    requests, shown, copies, downloads, messages, fetch: () => new Promise(() => {}),
+    window: {location: {search: '', assign: url => downloads.push(url)}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.draft = {id: 7, revision: 4, page_name: 'Trang thử'}; app.exportId = 7;
+    let changeDuringExport = false;
+    api = async path => { requests.push(path); if (changeDuringExport) app.sessionUnverified = true; return 'Bài giả'; };
+    showText = (...args) => shown.push(args); copy = async text => copies.push(text);
+    toast = message => messages.push(message);`, context);
+  const click = async id => { get(id).dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  get('dialog-text').value = 'Bài giả';
+  for (const flag of ['sessionUnverified', 'storeChanged']) {
+    vm.runInContext(`app.${flag} = true`, context);
+    await click('export-button'); await click('copy-dialog'); await click('download-export');
+    assert.equal(requests.length, 0); assert.equal(shown.length, 0);
+    assert.equal(copies.length, 0); assert.equal(downloads.length, 0);
+    assert.match(get('text-dialog-note').textContent, /kho|chưa xác định/i);
+    vm.runInContext(`app.${flag} = false`, context);
+  }
+  vm.runInContext('changeDuringExport = true', context);
+  await click('export-button');
+  assert.equal(requests.length, 1); assert.equal(shown.length, 0);
+  assert.match(messages.at(-1), /chưa xác định/i);
+  vm.runInContext('app.sessionUnverified = false; changeDuringExport = false', context);
+  await click('export-button'); await click('copy-dialog'); await click('download-export');
+  assert.equal(shown.length, 1); assert.deepEqual(copies, ['Bài giả']);
+  assert.deepEqual(downloads, ['/api/drafts/7/export']);
+  vm.runInContext('app.exportId = null; app.sessionUnverified = true', context);
+  await click('copy-dialog');
+  assert.deepEqual(copies, ['Bài giả', 'Bài giả']); // Manual text remains recoverable.
+});
+
 test('a new session without a comparable store identity cannot authorize writes', async () => {
   for (const initialId of ['old-file', null]) {
     for (const missing of [null, undefined, '']) {
