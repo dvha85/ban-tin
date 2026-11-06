@@ -24,6 +24,8 @@ Nếu sửa đoạn, đổi mục/nguồn hoặc chuyển phiên bản trong khi
 
 Khi ghi nhận URL, kiểm tra đoạn, kênh và URL trong vùng xác nhận rồi chọn **Xác nhận ghi nhận**. Có thể quay lại chỉnh URL; sửa URL sẽ đóng xác nhận cũ. Nếu kết nối bị gián đoạn, kiểm tra trạng thái và lịch sử trước khi thử lại.
 
+Nếu ứng dụng báo đã ghi nhận hoặc đã lưu đính chính nhưng chưa tải lại được danh sách hay phiên bản, thông tin bạn vừa nhập đã được lưu; hãy mở lại để kiểm tra lịch sử. Nếu kết quả ghi chưa rõ vì kết nối bị gián đoạn, đối chiếu lịch sử trước khi thử lại.
+
 Nếu URL Facebook được báo **có thể trùng** do khác chữ hoa/thường, mở bản ghi được chỉ dẫn để đối soát. Ứng dụng vẫn chặn ghi trong trường hợp này, kể cả khi hai URL có thể là bài khác; không tự coi cảnh báo là xác minh trên Facebook.
 
 Để sửa một liên kết đã ghi nhận, chọn **Đính chính liên kết** tại đoạn đó, nhập lý do và URL thay thế. Để trống URL nếu muốn hủy ghi nhận trong ứng dụng. Đọc nội dung, đánh dấu xác nhận rồi chọn **Lưu đính chính**; chỉnh lý do hoặc URL sau khi xác nhận sẽ yêu cầu xác nhận lại. Lịch sử ghi nhận cũ được giữ, và thao tác này không sửa hay xóa bài trên mạng xã hội. Khi có lỗi, dữ liệu đang nhập được giữ để sửa hoặc bỏ.

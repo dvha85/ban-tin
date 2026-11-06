@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## FMT-04 / QA-02: xác nhận bỏ đoạn — 06/11/2026
+
+- Trình duyệt tích hợp với SQLite giả, một bản nháp X có hai đoạn và một nguồn: mở xác nhận bỏ đoạn 2 rồi hủy, hai đoạn vẫn còn. Mở lại xác nhận, sửa nội dung đoạn 2 rồi bấm xác nhận cũ: ứng dụng báo đoạn đã thay đổi và giữ cả hai đoạn. Mở xác nhận lần nữa rồi đồng ý: đoạn 2 biến mất trên trang, tiêu điểm về đoạn 1. Trước khi lưu, kho vẫn có hai đoạn ở revision 2; sau **Lưu phiên bản**, kho có một đoạn ở revision 3. Tải lại trang sau khi lưu và mở phiên bản: đoạn 1 cùng lựa chọn mục/nguồn còn hiển thị.
+- Đây là một luồng trên trình duyệt tích hợp và kho tạm; không kiểm tra mọi kênh, thay đổi nguồn trong lúc xác nhận, lỗi mạng hay trình đọc màn hình. Không thực hiện kiểm tra rời trang/tải lại khi có nội dung chưa lưu mà người dùng đã chọn để sau. QA tổng thể và FMT-04 vẫn theo dõi trong kế hoạch.
+
 ## BASE-02: định danh mục và nguồn trong đoạn qua HTTP — 06/11/2026
 
 - Trên hai bản tin trong kho giả, thử `save`, `preview`, `split` với mục thuộc bản tin khác, mục trùng, ID boolean/số thực/chuỗi/vượt 64-bit, nguồn thuộc bản tin khác và nguồn trùng. Mỗi yêu cầu trả HTTP 400; hai bản tin, phiên bản và lịch sử của bản tin đang sửa không đổi. Cùng ba thao tác chấp nhận đoạn có ID hợp lệ. Bộ Python đầy đủ đạt 239/239. Kiểm thử này bổ sung bằng chứng về quan hệ mục/nguồn trong payload, chưa bao phủ mọi trường, mọi lỗi hoặc toàn bộ hợp đồng API; BASE-02 vẫn mở.

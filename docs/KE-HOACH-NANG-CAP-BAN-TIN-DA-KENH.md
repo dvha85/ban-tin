@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> FMT-04 / QA-02 ngày 06/11: trên kho giả, thử hủy, từ chối xác nhận bỏ đoạn đã đổi, xác nhận lại, lưu và tải lại; đối chiếu trước/sau lưu và nguồn đoạn còn lại. Phạm vi tại `KIEM-THU.md`; QA tổng thể vẫn mở.
+
 > BASE-02 ngày 06/11: kiểm thử HTTP ba thao tác lưu/xem trước/chia với ID mục, nguồn sai hoặc thuộc bản tin khác; giữ nguyên dữ liệu, đồng thời thử đầu vào hợp lệ. Phạm vi chi tiết tại `KIEM-THU.md`; hợp đồng tổng thể vẫn mở.
 
 > QA-02 ngày 06/11: sửa CSS checkbox bị kéo rộng khiến dấu chọn xa nhãn; hồi quy JavaScript 83/83 trước và sau. Edge trên kho giả kiểm tra bố cục các ô bản tin, Tab và Space trong phạm vi `KIEM-THU.md`; QA tổng thể vẫn mở.
