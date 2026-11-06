@@ -1,6 +1,6 @@
 # Ma trận bằng chứng kiểm thử 0.4
 
-Cập nhật 06/11/2026 sau sửa URL userinfo rỗng. Bảng này truy vết các tình huống ở mục 8 của [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) tới bằng chứng đã có; **không tự đánh dấu cổng phát hành là hoàn tất**. Xem diễn biến, lệnh, dữ liệu và giới hạn từng lần thử tại [KIEM-THU.md](KIEM-THU.md). Kết quả hồi quy gần nhất trên fixture: 228/228 Python, 63/63 JavaScript; cần chạy lại sau sửa mã và trước phát hành.
+Cập nhật 06/11/2026 sau bổ sung luồng HTTP ba kênh. Bảng này truy vết các tình huống ở mục 8 của [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) tới bằng chứng đã có; **không tự đánh dấu cổng phát hành là hoàn tất**. Xem diễn biến, lệnh, dữ liệu và giới hạn từng lần thử tại [KIEM-THU.md](KIEM-THU.md). Kết quả hồi quy gần nhất trên fixture: 229/229 Python, 63/63 JavaScript; cần chạy lại sau sửa mã và trước phát hành.
 
 Ký hiệu: **S** = service/SQLite giả; **H** = HTTP với server/kho giả; **J** = handler/helper JavaScript và DOM giả; **B** = trình duyệt với kho giả; **U** = người dùng đã thực hiện; **N** = nền tảng thật, không đăng. Tên test là điểm bắt đầu trong tệp được liên kết; không suy ra mọi tổ hợp được kiểm thử chỉ vì có tên trong bảng.
 
@@ -33,11 +33,11 @@ Ký hiệu: **S** = service/SQLite giả; **H** = HTTP với server/kho giả; *
 
 | ID | Bằng chứng cụ thể | Giới hạn còn lại |
 | --- | --- | --- |
-| VAR-01 | S: [test_variants.py](../tests/test_variants.py), `test_editing_facebook_preserves_other_approved_variants_after_reopen`. | Thay đổi Facebook trong fixture; chưa thử mọi trường qua UI. |
+| VAR-01 | S: [test_variants.py](../tests/test_variants.py), `test_editing_facebook_preserves_other_approved_variants_after_reopen`; H: `test_three_channels_are_independent_and_export_exact_preview_over_http`. | Thay đổi Facebook trong fixture; chưa thử mọi trường qua UI. |
 | VAR-02 | S: `test_clone_edited_variant_and_reject_stale_save_without_overwriting`. | Không đồng nghĩa mọi thao tác tạo lại đều đã được thử trên trình duyệt. |
 | VAR-03 | S: `test_parent_edit_resets_checks_of_unlocked_variants_only`, `test_policy_change_after_partial_recording_preserves_snapshot`; H: `test_variant_save_rejects_outdated_displayed_bulletin_over_http`; B: một tình huống hai thẻ. | Client cũ bỏ `expected_bulletin_revision` không có bảo vệ hiển thị bổ sung. |
 | VAR-04 | S: `test_competing_variant_saves_have_one_winner_and_no_lost_update`; B: thử xung đột revision trong phạm vi KIEM-THU. | Không suy rộng mọi trường hoặc mọi thứ tự mạng. |
-| TEXT-01 | S: `test_approved_export_matches_preview_and_changes_invalidate`; H: `test_multichannel_response_contract_and_publication_lifecycle_over_http`; B: tệp, clipboard/fallback đã đối chiếu với dữ liệu giả. | Chưa bao phủ mọi kênh, luồng chia và nội dung Unicode trên mọi trình duyệt. |
+| TEXT-01 | S: `test_approved_export_matches_preview_and_changes_invalidate`; H: `test_multichannel_response_contract_and_publication_lifecycle_over_http`, `test_three_channels_are_independent_and_export_exact_preview_over_http`; B: tệp, clipboard/fallback đã đối chiếu với dữ liệu giả. | Chưa bao phủ mọi kênh, luồng chia và nội dung Unicode trên mọi trình duyệt. |
 | TEXT-02 | S: `test_x_url_weight_and_boundary`, `test_format_counts_and_source_links`, `test_approval_counts_crlf_in_final_x_post_including_source`, `test_threads_estimate_matches_observed_composer_unicode_samples`. | Threads là ước lượng; 280/281 và 500/501 kiểm tra theo mẫu, không phải toàn bộ chính sách. |
 | TEXT-03 | S: [test_social_conformance.py](../tests/test_social_conformance.py) với corpus/emoji ghim; N: một số mẫu trên composer Threads/X và ranh giới Threads 500/501. | BASE-03 còn mở: chưa chứng minh toàn bộ Unicode, URL, emoji mới hoặc quy tắc Meta. |
 | TEXT-04 | S: `test_split_rechecks_numbering_and_keeps_sources_and_text`, `test_split_rejects_unsplittable_text_without_cutting`, `test_split_preserves_boundary_whitespace_in_editable_segments`; B: một lượt chia X. | Đề xuất chỉ tách tại ranh giới an toàn đã định nghĩa; người biên tập phải rà nguồn và nội dung từng đoạn. |

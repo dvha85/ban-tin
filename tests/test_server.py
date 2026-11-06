@@ -848,6 +848,108 @@ class ServerTests(unittest.TestCase):
         groups = json.loads(body)
         self.assertEqual([entry['id'] for entry in groups[0]['drafts']], [draft['id'] for draft in drafts])
 
+    def test_three_channels_are_independent_and_export_exact_preview_over_http(self):
+        headers = self.session()
+
+        def post(path, payload, expected=200):
+            status, _, body = self.request('POST', path, payload, headers)
+            self.assertEqual(status, expected, body)
+            return json.loads(body)
+
+        def get(path, expected=200):
+            status, response_headers, body = self.request('GET', path, headers=headers)
+            self.assertEqual(status, expected, body)
+            return response_headers, body
+
+        articles = []
+        for index in range(3):
+            articles.append(post('/api/articles/import', {'title': f'Tin giả hợp đồng số {index}',
+                'url': f'https://example.com/three-channel-{index}', 'summary': 'Ghi chú giả để kiểm thử.'}))
+        bulletin = post('/api/bulletins', {'article_ids': [article['id'] for article in articles],
+            'title': 'Bản tin ba kênh giả'}, expected=201)
+        for original in bulletin['items']:
+            item = next(row for row in bulletin['items'] if row['id'] == original['id'])
+            item_path = f"/api/bulletins/{bulletin['id']}/items/{item['id']}/save"
+            bulletin = post(item_path, {'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'body': 'Nội dung giả đã biên tập.', 'verification_note': 'Đối chiếu nguồn giả trên kho thử.',
+                'claims': [{'text': 'Thông tin giả', 'evidence': 'Fixture', 'checked': True}]})
+            item = next(row for row in bulletin['items'] if row['id'] == original['id'])
+            bulletin = post(item_path, {'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'verified': True, 'claims': [{**item['claims'][0], 'checked': True}]})
+
+        items = bulletin['items']
+        segments = {
+            'facebook': [{'text': 'Facebook giả: ba mục.', 'item_ids': [item['id'] for item in items],
+                          'source_ids': [item['sources'][0]['source_id'] for item in items]}],
+            'threads': [{'text': 'Threads giả: hai mục.', 'item_ids': [item['id'] for item in items[:2]],
+                         'source_ids': [item['sources'][0]['source_id'] for item in items[:2]]}],
+            'x': [{'text': 'Đoạn X giả thứ nhất.', 'item_ids': [items[0]['id']],
+                   'source_ids': [items[0]['sources'][0]['source_id']]},
+                  {'text': 'Đoạn X giả thứ hai.', 'item_ids': [items[2]['id']],
+                   'source_ids': [items[2]['sources'][0]['source_id']]}],
+        }
+        approved = {}
+        exports = {}
+        for platform in ('facebook', 'threads', 'x'):
+            variant = post(f"/api/bulletins/{bulletin['id']}/variants", {
+                'bulletin_revision': bulletin['revision'], 'platform': platform, 'account_label': f'Kênh giả {platform}'})
+            variant_path = f"/api/variants/{variant['id']}"
+            variant = post(variant_path + '/save', {'revision': variant['revision'],
+                'expected_bulletin_revision': bulletin['revision'], 'segments': segments[platform]})
+            preview = post(variant_path + '/preview', {'segments': segments[platform]})
+            self.assertTrue(preview['valid'])
+            self.assertEqual(preview['bulletin_revision'], bulletin['revision'])
+            self.assertFalse(preview['needs_update'])
+            selected = {item_id for segment in segments[platform] for item_id in segment['item_ids']}
+            self.assertEqual(preview['omitted_item_ids'], [item['id'] for item in items if item['id'] not in selected])
+            for position, (rendered, segment) in enumerate(zip(preview['posts'], segments[platform])):
+                self.assertEqual(rendered['item_ids'], segment['item_ids'])
+                self.assertEqual(rendered['source_ids'], segment['source_ids'])
+                urls = [item['sources'][0]['url'] for item in items if item['id'] in segment['item_ids']]
+                self.assertEqual(rendered['urls'], urls)
+                prefix = f'{position + 1}/{len(segments[platform])} ' if len(segments[platform]) > 1 else ''
+                self.assertEqual(rendered['text'], prefix + segment['text'] + '\n\nNguồn: ' + ' '.join(urls))
+                self.assertTrue(rendered['valid'])
+            variant = post(variant_path + '/save', {'revision': variant['revision'],
+                'expected_bulletin_revision': bulletin['revision'],
+                'checks': {key: True for key in ('sources', 'facts', 'original', 'rights', 'claims')}})
+            variant = post(variant_path + '/approve', {'revision': variant['revision'],
+                'expected_bulletin_revision': bulletin['revision']})
+            self.assertEqual(variant['status'], 'approved')
+            _, export_body = get(variant_path + '/export')
+            exported = json.loads(export_body)
+            _, archive_body = get(variant_path + '/archive')
+            archive = json.loads(archive_body)
+            expected_posts = [post['text'] for post in preview['posts']]
+            self.assertEqual(exported['posts'], expected_posts)
+            self.assertEqual([post['text'] for post in archive['rendered_posts']], expected_posts)
+            self.assertEqual(exported['approval_id'], archive['approval_id'])
+            self.assertEqual(exported['policy_version'], preview['policy_version'])
+            download_headers, downloaded = get(variant_path + '/download')
+            self.assertIn('text/plain; charset=utf-8', download_headers['Content-Type'])
+            self.assertEqual(downloaded, '\n\n---\n\n'.join(expected_posts).encode('utf-8'))
+            approved[platform] = variant
+            exports[platform] = exported
+            if platform == 'facebook':
+                # The first channel is usable without creating the other two.
+                self.assertEqual(len(json.loads(get(f"/api/bulletins/{bulletin['id']}/variants")[1])), 1)
+
+        self.assertTrue(exports['x']['posts'][0].startswith('1/2 '))
+        self.assertTrue(exports['x']['posts'][1].startswith('2/2 '))
+        facebook = approved['facebook']
+        changed_segments = [{**segments['facebook'][0], 'text': 'Facebook giả đã chỉnh sửa.'}]
+        changed = post(f"/api/variants/{facebook['id']}/save", {'revision': facebook['revision'],
+            'expected_bulletin_revision': bulletin['revision'], 'segments': changed_segments})
+        self.assertEqual(changed['status'], 'draft')
+        self.assertFalse(any(changed['checks'].values()))
+        self.assertEqual(self.request('GET', f"/api/variants/{facebook['id']}/export", headers=headers)[0], 400)
+        for platform in ('threads', 'x'):
+            path = f"/api/variants/{approved[platform]['id']}"
+            self.assertEqual(json.loads(get(path)[1]), approved[platform])
+            self.assertEqual(json.loads(get(path + '/export')[1]), exports[platform])
+        self.assertEqual(json.loads(get('/api/bulletin-stats')[1]), {
+            'bulletins': 1, 'variants': 3, 'recorded_bulletins': 0, 'recorded_posts': 0})
+
     def test_multichannel_response_contract_and_publication_lifecycle_over_http(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin giả lập hợp đồng HTTP',

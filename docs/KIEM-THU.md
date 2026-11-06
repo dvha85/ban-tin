@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## BASE-02 / FMT-01 / TEXT-01: ba kênh qua HTTP — 06/11/2026
+
+- Test `test_three_channels_are_independent_and_export_exact_preview_over_http` dùng server và SQLite tạm: nhập ba tin qua HTTP, tạo bản tin, lưu nội dung và xác nhận giả cho từng mục. Tạo Facebook trước và xuất được khi chưa có kênh khác; sau đó tạo Threads và X độc lập. Không gọi hoặc đăng lên mạng xã hội.
+- Với mỗi kênh, đối chiếu mục/nguồn đã chọn và văn bản cuối với chuỗi kỳ vọng, rồi so preview, export, snapshot duyệt và bytes tệp UTF-8; X có hai đoạn được đánh số và chọn nguồn riêng. Sau khi sửa Facebook, bản đó trở về nháp, không xuất được; trạng thái, revision và export Threads/X giữ nguyên. Các giá trị, URL và xác nhận đều giả lập.
+- Đây là một luồng HTTP, không chứng minh mọi Unicode, policy nền tảng, clipboard hoặc UI. Trước bổ sung hồi quy 228/228 Python, 63/63 JavaScript; sau bổ sung 229/229 Python, 63/63 JavaScript. Sau khi tăng assertion đối chiếu chuỗi kỳ vọng, chạy lại riêng test mới đạt. FMT-01 và điều kiện tạo/độc lập ba kênh ở mục 10 được đánh dấu đạt trong phạm vi chức năng này; BASE-03 và QA-02 tổng thể vẫn mở.
+
 ## SAFE-01/02 / POST-02 / QA-02: URL có thông tin đăng nhập rỗng — 06/11/2026
 
 - Trước sửa, `safe_url` kiểm tra giá trị tên/mật khẩu bằng tính đúng-sai, nên `https://@example.com/...` và `https://:@example.com/...` được chấp nhận và bị bỏ phần userinfo khi chuẩn hóa. Sau sửa, từ chối mọi userinfo kể cả rỗng; `@` trong đường dẫn hoặc query vẫn hợp lệ. Bộ kiểm tra được dùng chung cho nhập thủ công, nguồn theo dõi, bài legacy và ghi nhận đa kênh; không viết lại các URL hoặc dữ liệu đã lưu.

@@ -82,6 +82,8 @@ Test HTTP `test_variant_save_contract_over_http` kiểm tra riêng reset checkli
 
 Test HTTP `test_preview_and_split_response_contract_over_http` đối chiếu tên các trường của preview và split với một đoạn Threads giả, kiểm tra revision và mục bị lược, so sánh kết quả renderer và xác nhận bản tin, phiên bản, lịch sử không đổi. Test không bao phủ mọi cách chia hoặc mọi trường hợp lỗi.
 
+Test HTTP `test_three_channels_are_independent_and_export_exact_preview_over_http` đi từ nhập ba tin và biên tập từng mục qua HTTP đến tạo, duyệt và tải ba kênh; đối chiếu văn bản kỳ vọng, mục/nguồn, preview, export, snapshot và bytes UTF-8. Sau khi sửa Facebook, Threads/X giữ nguyên phiên bản và export. Đây là dữ liệu giả, không xác minh policy hoặc đăng bài trên nền tảng.
+
 Khi duyệt mới, nguồn được chọn mà có `excerpt_hash` phải khớp SHA-256 của `summary` UTF-8; sai lệch trả 400, nêu thứ tự mục và nguồn trong bản tin, không tạo bản duyệt. Người biên tập cần đối chiếu nguồn, thêm nguồn chính xác và bỏ nguồn sai rồi kiểm tra lại. Mỗi mục phải giữ ít nhất một nguồn; nếu nguồn sai là nguồn duy nhất, cần thêm nguồn đối chiếu phù hợp trước khi bỏ. Khi cần nhập lại cùng URL, bỏ nguồn cũ trước rồi thêm lại URL và kiểm chứng lại mục. Nguồn không có hash vẫn cần kiểm chứng thủ công; hash khớp chỉ chứng minh trích đoạn khớp dấu vết lưu, không chứng minh tính xác thực. Bản duyệt lịch sử không được tự sửa hoặc rà soát lại bởi cổng này.
 
 ## Ghi nhận thủ công và số liệu

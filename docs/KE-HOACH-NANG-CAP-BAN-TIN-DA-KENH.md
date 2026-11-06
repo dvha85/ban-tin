@@ -460,7 +460,7 @@ Gate: NEWS-01…06 và SOURCE-01…03 đạt; chưa tuyên bố đầu ra đa k�
 
 ### G3 — Đầu ra từng nền tảng
 
-- [ ] **FMT-01 / P1:** Tạo/lưu độc lập các biến thể, đích đăng và quan hệ với revision bản tin; không ghi đè bản đã sửa.
+- [x] **FMT-01 / P1:** Tạo/lưu độc lập các biến thể, đích đăng và quan hệ với revision bản tin; không ghi đè bản đã sửa. Test service và luồng HTTP ba kênh cùng smoke UI trên kho giả được ghi tại `KIEM-THU.md`; policy và QA tổng thể vẫn mở.
 - [ ] **FMT-02 / P1:** Renderer chuẩn phía server và bộ đếm theo policy đã xác minh; UI preview chính chuỗi trả về.
 - [ ] **FMT-03 / P1:** Chia chuỗi theo ranh giới hợp lý, kiểm tra lại numbering/nguồn; trường hợp khó yêu cầu biên tập thủ công.
 - [ ] **FMT-04 / P1:** Xem/sửa từng đoạn, báo mục bị lược khỏi phiên bản ngắn; bảo đảm truy vết nguồn.
@@ -487,7 +487,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ### G6 — Nghiệm thu và tài liệu
 
-- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 06/11 sau sửa URL userinfo rỗng và thông báo nhập thủ công: Python 228/228, JavaScript 63/63 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
+- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 06/11 sau bổ sung luồng HTTP ba kênh: Python 229/229, JavaScript 63/63 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.
@@ -582,7 +582,7 @@ Các cải tiến để sau 0.4: tải lại nguồn web đã biết theo yêu c
 
 - [x] Tạo được bản tin từ ít nhất ba bài nguồn, giữ thứ tự và truy vết nguồn từng mục qua restart. Đã kiểm tra với dữ liệu giả và bản sao khôi phục; xem `KIEM-THU.md`.
 - [ ] Biên tập được hoàn toàn thủ công hoặc qua gói tư liệu AI thủ công, không phát sinh model call.
-- [ ] Tạo được ba biến thể độc lập; có thể chỉ chọn một kênh để sử dụng.
+- [x] Tạo được ba biến thể độc lập; có thể chỉ chọn một kênh để sử dụng. Đã đối chiếu luồng HTTP và smoke UI trên kho giả; xem `KIEM-THU.md`. Điều kiện về policy nền tảng và QA tổng thể vẫn mở.
 - [ ] Văn bản cuối, bộ đếm, preview, copy, `.txt` và approval khớp nhau; không mất nguồn khi chia chuỗi.
 - [ ] Sửa đúng phạm vi hủy duyệt; bài đã ghi nhận bất biến; ghi nhận một phần được xử lý rõ.
 - [ ] Lưu riêng URL và số liệu từng kênh/đoạn; không còn lỗi URL bị giữ từ bản khác.
@@ -599,6 +599,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | Ngày | Task/mốc | Trạng thái | Bằng chứng / commit / người thực hiện | Bước tiếp theo |
 | --- | --- | --- | --- | --- |
+| 06/11/2026 | BASE-02 / FMT-01 / TEXT-01 | Hoàn tất FMT-01 trong phạm vi chức năng | Ba kênh từ nhập tin tới duyệt/xuất qua HTTP; so nội dung, nguồn, snapshot và tệp, sửa Facebook không đổi Threads/X; Python 229/229, JS 63/63 | BASE-02, policy, clipboard và QA tổng thể vẫn mở; xem `KIEM-THU.md` |
 | 06/11/2026 | SAFE-01/02 / POST-02 / QA-02 | Đang làm | Chặn URL có userinfo rỗng trong bộ kiểm tra chung; sửa thông báo ngay trong hộp nhập thủ công, smoke kho giả; Python 228/228, JS 63/63 | Tiếp tục đối chiếu URL/policy và QA, chưa thử lỗi mạng thật; xem `KIEM-THU.md` |
 | 06/11/2026 | BASE-03 / PUB-02 / QA-02 | Đang làm | Sửa so trùng shortcode Threads có mã hóa ký tự URI không dành riêng; test service/HTTP và UI kho giả; Python 225/225, JS 62/62 | Chưa xác minh URL thực tế, các alias khác hoặc toàn bộ QA; bản cũ không tự hợp nhất |
 | 06/11/2026 | BASE-02 / POST-02/05/06 | Đang làm | HTTP kho giả: 128 yêu cầu sai của ghi nhận, đính chính và số liệu trả 400/409; đối chiếu dữ liệu không đổi; Python 223/223, JavaScript 62/62 | Chưa bao phủ mọi payload/kênh hoặc chính sách URL; xem `KIEM-THU.md` và tài liệu API |
