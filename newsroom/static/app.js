@@ -1061,9 +1061,9 @@ function renderBulletin(focusVariantSelector = false, quietErrors = false) {
     return false;
   });
 }
-function refreshAfterPublication(message, warning = false) {
+function refreshAfterPublication(message, warning = false, focusVariantSelector = false) {
   let detail;
-  try { detail = Promise.resolve(renderBulletin(false, true)).then(result => result !== false, () => false); }
+  try { detail = Promise.resolve(renderBulletin(focusVariantSelector, true)).then(result => result !== false, () => false); }
   catch (_) { detail = Promise.resolve(false); }
   const list = Promise.resolve().then(() => loadBulletinList()).then(result => result === false ? null : true, () => false);
   toast(`${message} Đang tải lại dữ liệu.`, warning);
@@ -1491,7 +1491,9 @@ async function renderVariantPublication(area, variant) {
           try { await api(`/api/publications/${existing.id}/corrections`, {revision: variant.revision, reason: reason.value, url: url.value}); }
           catch (error) { showClaimConflict(errors, error, {reason: reason.value, url: url.value}); return; }
           app.bulletinDirty = false;
-          refreshAfterPublication('Đã lưu đính chính.');
+          return true;
+        }, (saved, initiatedWithFocus) => {
+          if (saved) refreshAfterPublication('Đã lưu đính chính.', false, initiatedWithFocus);
         });
         const discard = node('button', 'button secondary', 'Bỏ nội dung biểu mẫu');
         listen(discard, 'click', () => {

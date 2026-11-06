@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## PUB-03 / QA-02: đính chính ba kênh và tiêu điểm sau lưu — 06/11/2026
+
+- Trên Edge với kho giả có ba phiên bản một đoạn được duyệt, ghi nhận và gắn số liệu bằng service: đính chính URL Facebook `1001` sang `1002`, hủy lượt `1002` rồi ghi lại `1001` qua giao diện. Tổng số đoạn hiệu lực hiển thị 3 → 2 → 3. Đọc lại kho xác nhận hai lượt Facebook trước giữ lịch sử và số liệu gốc 100 lượt xem/0 lượt thích, lượt ghi lại hiệu lực; snapshot ba kênh cùng publication/số liệu Threads và X không đổi. Đây là URL và dữ liệu giả, không kiểm tra bài thật hay tất cả lỗi mạng.
+- Trước sửa, lưu đính chính bằng Enter làm mất tiêu điểm khỏi vùng biên tập khi giao diện dựng lại. Sau sửa, nếu nút lưu đang có tiêu điểm khi bắt đầu thao tác, giao diện yêu cầu trả tiêu điểm về ô chọn phiên bản sau khi phần đó được dựng lại; chỉ thực hiện nếu vẫn ở cùng bản tin và tiêu điểm hiện là `body`. Nếu một phần tử khác trong trang đang có tiêu điểm thì không chuyển tiêu điểm. Trên cùng kho giả sau khi tải mã mới, đính chính Facebook `1001` sang `1003` bằng Enter: viền tiêu điểm hiện tại ô chọn phiên bản; Tab tiếp đến ô nền tảng phiên bản mới.
+- Test handler tái hiện trước sửa, sau sửa kiểm tra yêu cầu khôi phục đối với thao tác có và không có tiêu điểm; test chọn phiên bản hiện có kiểm tra không giành tiêu điểm đã chuyển đi. Hồi quy 238/238 Python, 83/83 JavaScript và `node --check` đạt. Lượt UI không kiểm tra trình đọc màn hình, mọi kênh hoặc các tình huống lỗi tải phiên bản; QA-02 tổng thể vẫn mở. Kho và server thử đã dọn.
+
 ## APR-03 / APR-04 / QA-02: sao chép lại khi chuyển hộp bản duyệt — 06/11/2026
 
 - Trước sửa, nếu yêu cầu sao chép lại của hộp A còn chờ rồi đóng hộp và mở hộp B, nút sao chép trong B vẫn bị khóa theo yêu cầu A. Nay mở hộp mới đặt lại trạng thái nút; phản hồi cũ chỉ được mở khóa nút khi hộp của nó vẫn là hộp hiện tại.

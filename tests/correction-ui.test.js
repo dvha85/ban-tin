@@ -1592,6 +1592,37 @@ test('successful publication and correction report saved when refresh fails', as
   }
 });
 
+test('saving a correction requests keyboard focus on the refreshed variant selector', async () => {
+  const elements = new Map(), focusRequests = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const body = new Element('body');
+  const document = {body, activeElement: body, getElementById: get, querySelectorAll: () => [],
+    querySelector: () => new Element(), createElement: tag => new Element(tag), createTextNode: text => text};
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+    setTimeout, clearTimeout, focusRequests, fetch: () => new Promise(() => {}), document,
+    window: {location: {search: ''}, addEventListener() {}}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.view = 'bulletins'; app.bulletin = {id: 7, revision: 4}; app.variantId = 3;
+    api = async (path, data) => path.endsWith('/corrections') ? {corrected_id: 11, replacement_id: 12} :
+      path.endsWith('/publications') ? [{id: 11, position: 0, active: 1, url: 'https://x.com/a/status/123', metrics: []}] : {posts: ['Nội dung giả']};
+    renderBulletin = async focus => { focusRequests.push(focus); return true; };
+    loadBulletinList = async () => {}; toast = () => {};`, context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  for (const keyboard of [true, false]) {
+    context.area = new Element(); get('bulletin-editor').replaceChildren(context.area);
+    await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+    const button = name => walk(context.area).find(el => el.tagName === 'button' && el.textContent === name);
+    button('Đính chính liên kết').dispatchEvent({type: 'click'}); await tick();
+    const field = name => walk(context.area).find(el => el.dataset.correctionField === name);
+    field('reason').value = 'Sửa liên kết giả'; field('url').value = 'https://x.com/a/status/456';
+    field('confirm').checked = true;
+    const save = button('Lưu đính chính'); document.activeElement = keyboard ? save : body;
+    save.dispatchEvent({type: 'click'}); await tick();
+    assert.equal(focusRequests.at(-1), keyboard);
+  }
+});
+
 test('a late bulletin list response cannot replace a newer list or raise a stale error', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
