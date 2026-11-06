@@ -1151,8 +1151,13 @@ async function renderVariants(container, bulletin, focusSelector = false) {
       return;
     }
     const result = await api(`/api/variants/${variant.id}/preview`, {segments: collect()});
-    const omitted = result.omitted_item_ids.length ? ` Mục không có trong phiên bản: ${result.omitted_item_ids.join(', ')}.` : '';
     const staleParentView = Number.isInteger(result.bulletin_revision) && result.bulletin_revision !== bulletin.revision;
+    const sameParentView = Number.isInteger(result.bulletin_revision) && result.bulletin_revision === bulletin.revision;
+    const omittedNames = result.omitted_item_ids.map(id => {
+      const item = sameParentView ? bulletin.items.find(candidate => candidate.id === id) : null;
+      return item?.title?.trim() ? `#${id} — ${item.title}` : `#${id}`;
+    });
+    const omitted = omittedNames.length ? ` Mục không có trong phiên bản: ${omittedNames.join(', ')}.` : '';
     const changed = result.needs_update || staleParentView ? ' Bản tin gốc đã thay đổi; hãy sao chép nội dung chưa lưu trước khi mở lại bản tin, rồi kiểm tra trước khi duyệt.' : '';
     showText('Xem trước phiên bản', result.posts.map(post => `${post.position + 1}. ${post.length}/${post.limit}${post.valid ? '' : ' · CHƯA ĐẠT'}\n${post.text}`).join('\n\n────────────\n\n'), `${result.warning} Quy tắc đầu ra: ${result.policy_version}.` + changed + omitted, null, false);
   });

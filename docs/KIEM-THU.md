@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## FMT-04 / QA-02: nhận diện mục bị lược khi xem trước — 06/11/2026
+
+- Hộp xem trước hiển thị mã và tiêu đề các mục không có trong phiên bản khi revision bản tin trên trang khớp revision server dùng để dựng. Nếu revision khác hoặc thiếu, chỉ hiển thị mã; vẫn giữ cảnh báo bản tin đã thay đổi khi có bằng chứng revision khác. Mã cũng giúp phân biệt các mục trùng tiêu đề; cảnh báo nằm ngoài nội dung bài.
+- Test handler `preview warns if the server sees a newer bulletin revision` thất bại trước sửa vì chỉ hiện mã, sau sửa đạt với hai tiêu đề trùng, mã không tìm thấy và revision cũ; kiểm tra cảnh báo không lẫn vào nội dung xem trước. Hồi quy sau sửa: 230/230 Python, 63/63 JavaScript; `node --check` đạt.
+- Trình duyệt tích hợp trên server/SQLite giả: bản tin ba mục, phiên bản X chọn mục đầu và một nguồn; xem trước hiển thị `#2 — Tin thu 1`, `#3 — Tin thu 2`, nội dung chỉ kèm `https://example.com/story-0`. Nhấn Enter trên nút Đóng trả tiêu điểm về Xem trước. Đã dừng server thử; không đăng bài. Đây là một tình huống với một đoạn; chưa xác nhận toàn bộ chia đoạn hay QA đa trình duyệt, FMT-04 và QA-02 vẫn mở.
+
 ## DIG-02/03/04 / BASE-02: vòng đời bản tin qua HTTP — 06/11/2026
 
 - Test `test_bulletin_editorial_lifecycle_and_restart_over_http` trên server và SQLite giả: nhập ba tin, tạo bản tin, lưu nội dung/ghi chú/khẳng định, xác nhận rồi thêm và bỏ nguồn; kiểm tra thay nguồn bỏ xác nhận. Cập nhật lại nguồn trong Hộp tin và xác nhận trích đoạn ứng viên đã đổi nhưng snapshot bản tin vẫn nguyên. Đổi thứ tự, thử revision cũ trả 409 không đổi bản tin/lịch sử, thêm và bỏ mục, lưu trữ/khôi phục.

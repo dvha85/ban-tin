@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> FMT-04 / QA-02 ngày 06/11: xem trước nêu tên và mã mục bị lược khi revision khớp; kiểm thử handler và thử một phiên bản X trên kho giả đạt. Hồi quy 230/230 Python, 63/63 JavaScript; FMT-04 và QA-02 vẫn mở. Xem `KIEM-THU.md`.
+
 > NEWS-05 / DIG-01 ngày 06/11: sửa tin có mốc tương lai bị cộng điểm độ mới; kiểm thử biên và smoke Hộp tin đạt. Đã đối chiếu chọn 10/11, lọc, tìm kiếm và bỏ lựa chọn trong kho giả; DIG-01 hoàn tất trong phạm vi chức năng. Hồi quy 222/222 Python, 60/60 JavaScript; xem `KIEM-THU.md`.
 
 > PUB-02 / POST-03 / QA-02 ngày 06/11: thử lại khóa ghi nhận sau khi lượt cũ đã bị hủy không còn báo thành công; phản hồi thiếu trạng thái giữ khóa để đối soát. Test service, handler và thử hai thẻ với lỗi phản hồi giả đạt; hồi quy 220/220 Python, 60/60 JavaScript. Xem `KIEM-THU.md`.
