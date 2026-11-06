@@ -1,6 +1,6 @@
 # Ma trận bằng chứng kiểm thử 0.4
 
-Cập nhật 06/11/2026 sau bổ sung luồng HTTP ba kênh. Bảng này truy vết các tình huống ở mục 8 của [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) tới bằng chứng đã có; **không tự đánh dấu cổng phát hành là hoàn tất**. Xem diễn biến, lệnh, dữ liệu và giới hạn từng lần thử tại [KIEM-THU.md](KIEM-THU.md). Kết quả hồi quy gần nhất trên fixture: 229/229 Python, 63/63 JavaScript; cần chạy lại sau sửa mã và trước phát hành.
+Cập nhật 06/11/2026 sau bổ sung vòng đời HTTP bản tin. Bảng này truy vết các tình huống ở mục 8 của [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) tới bằng chứng đã có; **không tự đánh dấu cổng phát hành là hoàn tất**. Xem diễn biến, lệnh, dữ liệu và giới hạn từng lần thử tại [KIEM-THU.md](KIEM-THU.md). Kết quả hồi quy gần nhất trên fixture: 230/230 Python, 63/63 JavaScript; cần chạy lại sau sửa mã và trước phát hành.
 
 Ký hiệu: **S** = service/SQLite giả; **H** = HTTP với server/kho giả; **J** = handler/helper JavaScript và DOM giả; **B** = trình duyệt với kho giả; **U** = người dùng đã thực hiện; **N** = nền tảng thật, không đăng. Tên test là điểm bắt đầu trong tệp được liên kết; không suy ra mọi tổ hợp được kiểm thử chỉ vì có tên trong bảng.
 
@@ -21,11 +21,11 @@ Ký hiệu: **S** = service/SQLite giả; **H** = HTTP với server/kho giả; *
 | --- | --- | --- |
 | NEWS-01 | S: [test_bulletins.py](../tests/test_bulletins.py), `test_selection_validation_is_atomic`, `test_item_and_source_limits_at_boundaries_are_atomic`, `test_copy_legacy_is_unapproved_and_preserves_long_text_without_mutating_original`. | Biên và sao chép trên fixture; không suy rộng mọi payload. |
 | NEWS-02 | J: [inbox-utils.test.js](../tests/inbox-utils.test.js), `hidden selections remain counted after a filter`; B: chọn 10/11, chuyển nhóm/tìm và xóa lựa chọn; một lượt khác tạo từ ba lựa chọn gồm tin ẩn. | Chưa thay thế toàn bộ QA bàn phím và trình đọc màn hình. |
-| NEWS-03 | S: `test_reorder_and_packet_preserve_snapshots_after_refresh_restart`; B: đổi thứ tự ba mục, khôi phục backup và restart server trên kho thử. | Không kiểm tra mọi loại sự cố tắt máy. |
+| NEWS-03 | S: `test_reorder_and_packet_preserve_snapshots_after_refresh_restart`; H: `test_bulletin_editorial_lifecycle_and_restart_over_http`; B: đổi thứ tự ba mục, khôi phục backup và restart server trên kho thử. | Không kiểm tra mọi loại sự cố tắt máy. |
 | NEWS-04 | S: `test_removing_item_preserves_shared_source_on_remaining_item`; B: xác nhận bỏ nguồn/bỏ mục với hai mục dùng nguồn chung. | Không chứng minh mọi đường sửa nguồn hoặc đồng thời. |
 | NEWS-05 | S: `test_future_article_state_does_not_claim_recency` trong [test_workflow.py](../tests/test_workflow.py); J: [inbox-utils.test.js](../tests/inbox-utils.test.js), [source-warnings.test.js](../tests/source-warnings.test.js); B: ngày tương lai, ngày cũ qua nửa đêm Việt Nam. | Các mốc và bộ lọc đã thử, không phải mọi múi giờ. |
 | NEWS-06 | H: `test_bulletin_request_utf8_size_boundary_over_http` trong [test_server.py](../tests/test_server.py); S: `test_packet_limit_counts_complete_utf8_output_and_identifies_large_items`; B: báo gói Unicode vượt ngưỡng. | B chưa thử chính xác cả hai biên hoặc POST vượt ngưỡng qua UI. |
-| SOURCE-01 | S: `test_reorder_and_packet_preserve_snapshots_after_refresh_restart`, `test_refresh_without_evidence_does_not_attach_old_hash_to_new_excerpt`; `test_feed_correction_updates_candidate_not_saved_snapshot` trong test_workflow. | Nguồn giả; không kiểm tra nội dung trang thật. |
+| SOURCE-01 | S: `test_reorder_and_packet_preserve_snapshots_after_refresh_restart`, `test_refresh_without_evidence_does_not_attach_old_hash_to_new_excerpt`; `test_feed_correction_updates_candidate_not_saved_snapshot` trong test_workflow; H: `test_bulletin_editorial_lifecycle_and_restart_over_http`. | Nguồn giả; không kiểm tra nội dung trang thật. |
 | SOURCE-02 | S: `test_refresh_without_evidence_does_not_attach_old_hash_to_new_excerpt`, `test_approval_rejects_used_excerpt_with_mismatched_hash`; B: cảnh báo hash trên nguồn giả như KIEM-THU. | Hash khớp không chứng minh tính xác thực của nguồn. |
 | SOURCE-03 | S: `test_packet_keeps_source_instructions_inside_json_data`; J: source-warnings; B: HTML giả hiển thị thành văn bản và cảnh báo ghi chú ngắn. | Không chứng minh mô hình ngoài tuân theo prompt hoặc mọi dạng HTML an toàn. |
 

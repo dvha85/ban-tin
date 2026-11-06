@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## DIG-02/03/04 / BASE-02: vòng đời bản tin qua HTTP — 06/11/2026
+
+- Test `test_bulletin_editorial_lifecycle_and_restart_over_http` trên server và SQLite giả: nhập ba tin, tạo bản tin, lưu nội dung/ghi chú/khẳng định, xác nhận rồi thêm và bỏ nguồn; kiểm tra thay nguồn bỏ xác nhận. Cập nhật lại nguồn trong Hộp tin và xác nhận trích đoạn ứng viên đã đổi nhưng snapshot bản tin vẫn nguyên. Đổi thứ tự, thử revision cũ trả 409 không đổi bản tin/lịch sử, thêm và bỏ mục, lưu trữ/khôi phục.
+- Test đối chiếu gói tư liệu với bản tin và revision; đối chiếu các sự kiện và snapshot trong lịch sử. Sau đó dừng server, tạo server và `Newsroom` mới trong cùng tiến trình với kho thử, mở phiên mới và xác nhận bản tin, gói, lịch sử giữ nguyên. Lượt UI trước đã thử dừng/mở lại tiến trình riêng và lưu trữ/khôi phục; bằng chứng tương ứng ở các mục dưới đây.
+- Kết hợp test cảnh báo nguồn trong `source-warnings.test.js`, test service không kết nối mạng ở đường được thử và lượt người dùng đối chiếu gói ba URL, đánh dấu DIG-02/03/04 và điều kiện biên tập thủ công/gói tư liệu đạt trong phạm vi chức năng trên fixture. Không suy ra mọi đường chạy đều không kết nối mạng; kiểm tra rời trang khi chưa lưu đã được người dùng chọn để sau. G2/QA-02 và policy nền tảng vẫn mở.
+- Trước bổ sung: 229/229 Python, 63/63 JavaScript. Sau bổ sung: 230/230 Python, 63/63 JavaScript. Không dùng kho vận hành hoặc đăng bài.
+
 ## BASE-02 / FMT-01 / TEXT-01: ba kênh qua HTTP — 06/11/2026
 
 - Test `test_three_channels_are_independent_and_export_exact_preview_over_http` dùng server và SQLite tạm: nhập ba tin qua HTTP, tạo bản tin, lưu nội dung và xác nhận giả cho từng mục. Tạo Facebook trước và xuất được khi chưa có kênh khác; sau đó tạo Threads và X độc lập. Không gọi hoặc đăng lên mạng xã hội.

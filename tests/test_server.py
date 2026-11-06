@@ -848,6 +848,114 @@ class ServerTests(unittest.TestCase):
         groups = json.loads(body)
         self.assertEqual([entry['id'] for entry in groups[0]['drafts']], [draft['id'] for draft in drafts])
 
+    def test_bulletin_editorial_lifecycle_and_restart_over_http(self):
+        from newsroom.bulletins import PACKET_PREFIX, PACKET_SUFFIX
+        headers = self.session()
+
+        def post(path, payload, expected=200):
+            status, _, body = self.request('POST', path, payload, headers)
+            self.assertEqual(status, expected, body)
+            return json.loads(body)
+
+        def get(path):
+            status, _, body = self.request('GET', path, headers=headers)
+            self.assertEqual(status, 200, body)
+            return json.loads(body)
+
+        articles = [post('/api/articles/import', {'title': f'Tin giả vòng đời {n}',
+            'url': f'https://example.com/bulletin-lifecycle-{n}', 'summary': f'Nguồn giả ban đầu {n}.'})
+            for n in range(3)]
+        bulletin = post('/api/bulletins', {'article_ids': [articles[0]['id'], articles[1]['id']],
+            'title': 'Bản tin vòng đời giả'}, expected=201)
+        path = f"/api/bulletins/{bulletin['id']}"
+        first_id, second_id = (item['id'] for item in bulletin['items'])
+        first = bulletin['items'][0]
+        original_source = dict(first['sources'][0])
+        item_path = f'{path}/items/{first_id}/save'
+        bulletin = post(item_path, {'bulletin_revision': bulletin['revision'], 'revision': first['revision'],
+            'body': 'Nội dung giả do người biên tập nhập.', 'verification_note': 'Ghi chú đối chiếu riêng của người biên tập.',
+            'claims': [{'text': 'Dữ kiện giả lập', 'evidence': 'Ghi chú fixture', 'checked': True}]})
+        first = bulletin['items'][0]
+        self.assertFalse(first['verified'])
+        self.assertFalse(first['claims'][0]['checked'])
+        self.assertEqual(first['sources'][0], original_source)
+        bulletin = post(item_path, {'bulletin_revision': bulletin['revision'], 'revision': first['revision'],
+            'verified': True, 'claims': [{**first['claims'][0], 'checked': True}]})
+        first = bulletin['items'][0]
+        self.assertTrue(first['verified'])
+        self.assertTrue(first['claims'][0]['checked'])
+        bulletin = post(item_path, {'bulletin_revision': bulletin['revision'], 'revision': first['revision'],
+            'add_source': {'url': 'https://example.com/shared-lifecycle', 'title': 'Nguồn giả bổ sung',
+                           'summary': 'Ghi chú nguồn giả bổ sung.'}})
+        first = bulletin['items'][0]
+        extra_source = first['sources'][1]
+        self.assertEqual(first['sources'][0], original_source)
+        self.assertFalse(first['verified'])
+        self.assertFalse(first['claims'][0]['checked'])
+
+        # Updating the inbox candidate must not rewrite the bulletin snapshot.
+        refreshed = post('/api/articles/import', {'title': articles[0]['title'], 'url': articles[0]['url'],
+            'summary': 'Tư liệu hộp tin giả đã thay đổi.'})
+        self.assertEqual(refreshed['id'], articles[0]['id'])
+        self.assertEqual(refreshed['sources'][0]['summary'], 'Tư liệu hộp tin giả đã thay đổi.')
+        self.assertEqual(get(path)['items'][0]['sources'][0], original_source)
+        before_revision = bulletin['revision']
+        bulletin = post(path + '/save', {'revision': before_revision, 'item_ids': [second_id, first_id]})
+        self.assertEqual([item['id'] for item in bulletin['items']], [second_id, first_id])
+        self.assertEqual([item['position'] for item in bulletin['items']], [0, 1])
+        self.assertEqual(bulletin['revision'], before_revision + 1)
+        before_history = get(path + '/history')
+        status, _, _ = self.request('POST', path + '/save', {'revision': before_revision,
+            'item_ids': [first_id, second_id]}, headers)
+        self.assertEqual(status, 409)
+        self.assertEqual(get(path), bulletin)
+        self.assertEqual(get(path + '/history'), before_history)
+
+        bulletin = post(path + '/items', {'revision': bulletin['revision'], 'article_id': articles[2]['id']})
+        third_id = bulletin['items'][2]['id']
+        bulletin = post(path + '/items', {'revision': bulletin['revision'], 'remove_item_id': second_id})
+        self.assertEqual([item['id'] for item in bulletin['items']], [first_id, third_id])
+        self.assertEqual(bulletin['items'][0]['sources'][1], extra_source)
+        item = bulletin['items'][0]
+        bulletin = post(item_path, {'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'remove_source_id': extra_source['source_id']})
+        self.assertEqual(bulletin['items'][0]['sources'], [original_source])
+        self.assertEqual(bulletin['items'][0]['verification_note'], 'Ghi chú đối chiếu riêng của người biên tập.')
+        archive = post(path + '/archive', {'revision': bulletin['revision'],
+            'archive_revision': bulletin['archive_revision'], 'archived': True})
+        self.assertTrue(archive['archived'])
+        self.assertEqual(archive['revision'], bulletin['revision'])
+        bulletin = post(path + '/archive', {'revision': archive['revision'],
+            'archive_revision': archive['archive_revision'], 'archived': False})
+        self.assertFalse(bulletin['archived'])
+        self.assertEqual(bulletin['revision'], archive['revision'])
+        packet = get(path + '/packet')
+        self.assertEqual(packet['bulletin_revision'], bulletin['revision'])
+        self.assertTrue(packet['text'].startswith(PACKET_PREFIX))
+        self.assertTrue(packet['text'].endswith(PACKET_SUFFIX))
+        self.assertEqual(json.loads(packet['text'][len(PACKET_PREFIX):-len(PACKET_SUFFIX)]), bulletin)
+        history = get(path + '/history')
+        self.assertEqual([event['action'] for event in history].count('bulletin_archived'), 1)
+        self.assertEqual([event['action'] for event in history].count('bulletin_unarchived'), 1)
+        self.assertEqual([event['action'] for event in history].count('items_changed'), 2)
+        self.assertTrue(any(event['entity_type'] == 'item' and event['entity_id'] == first_id
+                            and json.loads(event['snapshot'])['verification_note'] ==
+                            'Ghi chú đối chiếu riêng của người biên tập.' for event in history))
+
+        # Stop the server and reopen the same isolated store with a new session.
+        self.server.shutdown()
+        self.server.server_close()
+        self.thread.join()
+        self.room = Newsroom(Path(self.temp.name))
+        self.server = make_server(self.room, port=0)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        self.port = self.server.server_address[1]
+        headers = self.session()
+        self.assertEqual(get(path), bulletin)
+        self.assertEqual(get(path + '/packet'), packet)
+        self.assertEqual(get(path + '/history'), history)
+
     def test_three_channels_are_independent_and_export_exact_preview_over_http(self):
         headers = self.session()
 

@@ -153,6 +153,8 @@ Lịch sử bản tin trả tối đa 100 bản ghi mới nhất, gồm `id`, `e
 
 Test HTTP `test_invalid_multichannel_field_types_do_not_change_saved_data` kiểm tra 34 trường hợp sai kiểu ở các trường chọn tin, thứ tự, xác nhận mục, claims và segments; mỗi trường hợp trả 400, không thay bản tin, phiên bản hay lịch sử trên fixture. Test này không bao phủ mọi trường hoặc tổ hợp.
 
+Test HTTP `test_bulletin_editorial_lifecycle_and_restart_over_http` đi qua chỉnh mục/nguồn, thay ứng viên Hộp tin, đổi thứ tự, từ chối revision cũ, thêm/bỏ mục, lưu trữ/khôi phục, gói tư liệu và lịch sử. Sau đó tạo server và đối tượng dữ liệu mới trong cùng tiến trình, mở phiên mới và so kết quả trên cùng SQLite giả. Test không thay thế thử restart cả tiến trình, mọi lỗi lưu trữ hoặc toàn bộ giao diện.
+
 ## Giới hạn bằng chứng
 
 Đây là bản đồ route và điều kiện chính đọc từ mã, chưa phải đặc tả đầy đủ mọi trường trả về, tất cả tổ hợp lỗi hoặc hợp đồng đã được người dùng chấp nhận. Bộ đếm Threads là ước lượng; hành vi X thực tế, mọi mẫu URL và emoji mới chưa được xác minh đầy đủ. Xem [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) và [bằng chứng kiểm thử](KIEM-THU.md) trước khi dùng để quyết định phát hành.
