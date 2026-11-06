@@ -1,5 +1,7 @@
 # Đối chiếu điều kiện nghiệm thu 0.4
 
+> Ngày 06/11 đã lưu [ba đầu ra giả lập policy v6](DAU-RA-PILOT-GIA-LAP-0.4-V6.md) trích từ snapshot duyệt sau thao tác UI. Các bản nháp được chuẩn bị sẵn bằng service; đây không phải tệp của ba pilot cũ hoặc lượt thử đầu-cuối mới. Người dùng chưa xác nhận xem bộ này hay quyết định triển khai.
+
 > Đối chiếu từng mã của ma trận kiểm thử mục 8, cấp bằng chứng và phần chưa thử: [MA-TRAN-BANG-CHUNG-0.4.md](MA-TRAN-BANG-CHUNG-0.4.md). Ma trận không thay cho kiểm thử hoặc quyết định triển khai.
 
 > Cập nhật 06/11: sau khi bỏ nguồn và bỏ mục bằng bàn phím trên kho giả, tiêu điểm về mục thích hợp và Tab tiếp tới ô tiêu đề; hồi quy 222/222 Python và 62/62 JavaScript. QA-02 tổng thể vẫn mở; phạm vi và giới hạn tại `KIEM-THU.md`.
@@ -59,7 +61,7 @@ Ngày cập nhật bảng đối chiếu: 05/11/2026. Đối chiếu mục 10 c�
 | Legacy giữ nội dung/hash/export/history; migration và restore vượt test lỗi | Fixture schema 3 từ mã cũ và fixture schema 1/2 mô phỏng trong `tests/test_migrations_v4.py`; test lỗi backup/migration/restore, cấu trúc schema 4 và restore liên thông ba kênh; thử phục hồi backup schema 3 rồi mở bằng mã 0.3.1 trên fixture. | Không áp dụng thử trên bản sao SQLite cũ trong đợt này vì người dùng xác nhận chưa có dữ liệu cũ; fixture 1/2 không phải snapshot lịch sử. Chưa kiểm chứng mọi payload hoặc lỗi hệ thống tập tin. |
 | Test đạt và có QA trình duyệt/clipboard | Hồi quy ngày 06/11: 222/222 Python và 62/62 JavaScript đạt; đã có bằng chứng dán clipboard và fallback trên Edge với dữ liệu giả. Trình duyệt tích hợp đã kiểm tra một số thao tác bàn phím, ngắt phản hồi và hộp gói tư liệu như ghi trong `KIEM-THU.md`. | QA-02 chưa hoàn tất toàn bộ bàn phím, tab, trạng thái chưa lưu và các luồng mới. Cần chạy lại hồi quy sau mỗi thay đổi chức năng và trước phát hành. |
 | README, hướng dẫn, kiến trúc, kiểm thử cập nhật | `README.md`, `docs/HUONG-DAN-SU-DUNG.md`, `docs/KIEN-TRUC.md`, `docs/KIEM-THU.md` và `docs/API-BAN-TIN-DA-KENH.md` đã có nội dung cho 0.4. | Cần rà soát lại tính nhất quán theo trạng thái cuối trước phát hành, bao gồm policy và kết quả QA còn mở. |
-| Người dùng xem pilot và quyết định triển khai | Ba lượt pilot fixture đã ghi thời gian và vấn đề trong `KIEM-THU.md`. Ngày 04/11/2026 người dùng xác nhận [mẫu đầu ra giả lập](MAU-DAU-RA-GIA-LAP-0.4.md) cho ba kênh phù hợp với quy trình dự kiến. | Mẫu mới không phải tệp của ba pilot cũ; xác nhận này không phải quyết định triển khai lên kho vận hành. Các điều kiện QA và chính sách còn mở. |
+| Người dùng xem pilot và quyết định triển khai | Ba lượt pilot fixture đã ghi thời gian và vấn đề trong `KIEM-THU.md`. Ngày 04/11/2026 người dùng xác nhận [mẫu đầu ra giả lập](MAU-DAU-RA-GIA-LAP-0.4.md) cho ba kênh phù hợp với quy trình dự kiến. Ngày 06/11 có thêm [đầu ra giả lập policy v6](DAU-RA-PILOT-GIA-LAP-0.4-V6.md) trích từ các snapshot duyệt qua UI. | Cả hai bộ mẫu không phải tệp của ba pilot cũ; bộ v6 bắt đầu từ bản nháp chuẩn bị sẵn. Chưa có phản hồi xem bộ v6 hoặc quyết định triển khai lên kho vận hành. Các điều kiện QA và chính sách còn mở. |
 
 ## Các việc tiếp theo có phụ thuộc bên ngoài
 

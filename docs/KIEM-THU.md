@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## REL-01: đầu ra ba bản giả lập để xem — 06/11/2026
+
+- Trên SQLite tạm mới, dùng service chuẩn bị ba bản tin nháp có 1/2/3 mục, các khẳng định và dấu kiểm giả lập. Trên trình duyệt tích hợp, mở từng bản tin, chọn và duyệt phiên bản Facebook, Threads, X; UI hiển thị lần lượt 0/1, 0/1, 0/2 ghi nhận cùng nội dung và URL giả. Không có bài đăng thật.
+- Sau khi dừng server thử, đọc SQLite ở chế độ chỉ đọc: ba snapshot được duyệt theo `2026-11-05-v6` có hash hợp lệ, tổng số đoạn 1/1/2, không có bản ghi publication. Trích nguyên văn nội dung trong snapshot vào [đầu ra giả lập v6](DAU-RA-PILOT-GIA-LAP-0.4-V6.md); số đếm lấy từ renderer đã lưu trong cùng snapshot. Đã đối chiếu văn bản với phần xuất hiển thị trên trình duyệt. Sau đó dọn kho tạm.
+- Đây là các bản nháp **chuẩn bị sẵn bằng service**, không tính là ba pilot đầu-cuối mới hoặc tệp gốc của các pilot đo thời gian trước; các checkbox không có nghĩa đã kiểm chứng nguồn thật. Người dùng chưa xác nhận xem bộ v6 này hoặc quyết định triển khai. BASE-03, QA-02 và REL-01 vẫn mở.
+
 ## DOC-01 / REL-01: truy vết ma trận kiểm thử — 06/11/2026
 
 - Tổng hợp từng mã trong mục 8 vào [ma trận bằng chứng](MA-TRAN-BANG-CHUNG-0.4.md), phân biệt test service, HTTP, JavaScript giả, trình duyệt, người dùng và nền tảng thật; mỗi dòng nêu phần chưa kiểm chứng. Script đối chiếu đã kiểm tra đủ 43 ID, các tên test Python được ghi và các liên kết nội bộ trong ma trận đều tồn tại. Đây là kiểm tra tĩnh, không tự chứng minh assertion đủ bao phủ hay thay thế chạy test.

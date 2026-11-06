@@ -599,6 +599,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | Ngày | Task/mốc | Trạng thái | Bằng chứng / commit / người thực hiện | Bước tiếp theo |
 | --- | --- | --- | --- | --- |
+| 06/11/2026 | REL-01 / PILOT | Đang làm | Ba bản nháp giả chuẩn bị bằng service, duyệt qua UI; trích snapshot hash hợp lệ theo policy v6 vào `DAU-RA-PILOT-GIA-LAP-0.4-V6.md`, không có publication | Người dùng xem bản mẫu mới; chưa thay thế tệp pilot cũ hoặc QA đầu-cuối và chưa có quyết định triển khai |
 | 06/11/2026 | DOC-01 / REL-01 / BASE-02/03 | Đang làm | Lập ma trận liên kết 43 ID mục 8 với test, cấp bằng chứng và hạn chế; kiểm tra tên test Python và đường dẫn cục bộ tồn tại | Đối chiếu hợp đồng API/policy còn thiếu, hoàn tất QA và chốt nghiệm thu với người dùng; xem `MA-TRAN-BANG-CHUNG-0.4.md` |
 | 06/11/2026 | DIG-02 / QA-02 | Đang làm | Bỏ nguồn và bỏ mục bằng Enter trên kho giả; tiêu điểm về mục đang sửa hoặc mục còn lại, Tab tới ô tiêu đề; Python 222/222 và JavaScript 62/62 | Tiếp tục QA toàn luồng, chưa thử trình đọc màn hình; xem `KIEM-THU.md` |
 | 06/11/2026 | NEWS-04 / DIG-02 / QA-02 | Đang làm | Trình duyệt trên kho giả xác nhận bỏ nguồn và bỏ mục vẫn giữ nguồn chung; sửa nhãn số lần sử dụng cũ, test 222/222 Python và 61/61 JavaScript | Tiếp tục QA toàn luồng và các điều kiện còn mở; xem `KIEM-THU.md` |
