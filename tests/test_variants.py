@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
 
-from newsroom.publications import normalize_post_url
+from newsroom.publications import _post_identity, normalize_post_url
 from newsroom.service import Conflict, Newsroom, ValidationError
 from newsroom.social_formats import count_text, render_segments, split_segments
 from newsroom.variants import CHECKS, snapshot_hash
@@ -1206,6 +1206,35 @@ class VariantTests(unittest.TestCase):
                     'url': 'https://threads.net' + second_path, 'idempotency_key': f'thread_second_{index}'})
             self.assertEqual(caught.exception.target['publication_id'], record['id'])
             self.assertEqual(self.room.publications(second['id']), [])
+
+    def test_threads_percent_encoded_unreserved_shortcode_is_detected_as_duplicate(self):
+        cases = (
+            ('/@one/post/%41bc%5F12', '/t/Abc_12'),
+            ('/t/XyZ_456', '/@two/post/X%79Z_456'),
+        )
+        for index, (first_path, duplicate_path) in enumerate(cases):
+            with self.subTest(first=first_path, duplicate=duplicate_path):
+                first = self.make_approved('threads')
+                second = self.make_approved('threads')
+                old = self.room.record_publication(first['id'], {'revision': first['revision'], 'position': 0,
+                    'url': 'https://threads.com' + first_path, 'idempotency_key': f'encoded_first_{index}'})
+                before = self.room.publications(first['id'])
+                current = self.room.variant(first['id'])
+                with self.assertRaises(ValidationError):
+                    self.room.correct_publication(old['id'], {'revision': current['revision'],
+                        'reason': 'Kiểm tra cùng liên kết', 'url': 'https://threads.net' + duplicate_path})
+                self.assertEqual(self.room.publications(first['id']), before)
+                with self.assertRaises(Conflict) as caught:
+                    self.room.record_publication(second['id'], {'revision': second['revision'], 'position': 0,
+                        'url': 'https://threads.net' + duplicate_path, 'idempotency_key': f'encoded_second_{index}'})
+                self.assertEqual(caught.exception.target['publication_id'], old['id'])
+                self.assertEqual(self.room.publications(second['id']), [])
+                self.assertEqual(self.room.publications(first['id']), before)
+                self.assertEqual(Newsroom(self.room.data_dir).publications(first['id']), before)
+        self.assertNotEqual(_post_identity('threads', 'https://threads.com/t/Abc_12'),
+                            _post_identity('threads', 'https://threads.com/t/abc_12'))
+        self.assertNotEqual(_post_identity('threads', 'https://threads.com/@a/post/a%2Fb'),
+                            _post_identity('threads', 'https://threads.com/@a/post/a%252Fb'))
 
     def test_threads_alias_correction_conflicts_and_release_preserve_history(self):
         first = self.make_approved('threads')

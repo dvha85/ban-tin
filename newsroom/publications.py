@@ -2,11 +2,23 @@
 import hashlib
 import json
 import re
+import string
 from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 
 from .bulletins import _json, _now, _text
 from .feeds import canonical_url
+
+_UNRESERVED_URI_CHARS = frozenset(string.ascii_letters + string.digits + '-._~')
+
+
+def _normalize_unreserved_percent_encoding(value):
+    # RFC 3986 permits decoding only unreserved octets for URI comparison.
+    # Keep reserved octets and malformed escapes untouched; never decode twice.
+    def replace(match):
+        character = chr(int(match.group(1), 16))
+        return character if character in _UNRESERVED_URI_CHARS else match.group(0)
+    return re.sub(r'%([0-9A-Fa-f]{2})', replace, value)
 
 
 def normalize_post_url(platform, value):
@@ -50,7 +62,7 @@ def _post_identity(platform, url):
     if platform == 'x':
         return ('x', parts.path.rsplit('/', 1)[-1])
     if platform == 'threads':
-        return ('threads', parts.path.rsplit('/', 1)[-1])
+        return ('threads', _normalize_unreserved_percent_encoding(parts.path.rsplit('/', 1)[-1]))
     return ('facebook', parts.path.casefold(), parts.query)
 
 

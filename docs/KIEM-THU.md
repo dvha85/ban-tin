@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## BASE-03 / PUB-02: đối chiếu shortcode Threads mã hóa — 06/11/2026
+
+- Trước sửa, test tái hiện hai chiều `/@user/post/%41bc%5F12` ↔ `/t/Abc_12` và `/t/XyZ_456` ↔ `/@user/post/X%79Z_456`: bản ghi có thể không bị nhận là trùng, kể cả khi đính chính sang cách biểu diễn còn lại. Dữ liệu, URL và xác nhận là giả.
+- Khi so trùng, giải mã **một lần** các byte `%XX` thuộc tập URI không dành riêng ASCII, theo [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986); giữ nguyên `%2F`, `%25`, phân biệt hoa/thường, không viết lại URL hoặc lịch sử. Đây là cách so sánh bảo thủ theo chuẩn URI, không phải bằng chứng Meta công nhận URL mã hóa cụ thể hoặc mọi shortcode là duy nhất. Bản ghi trùng đã tồn tại không được tự hợp nhất.
+- Test service kiểm tra hai thứ tự, đính chính cùng liên kết, từ chối ghi trùng, giữ URL/sự kiện sau mở lại, phân biệt hoa/thường và không giải mã hai lần; test HTTP kiểm tra 409 có đích đối soát và 400 khi đính chính cùng liên kết. Trên trình duyệt kho giả, thử URL `/t/Abc_12` khi bản trước lưu `%41bc%5F12`: UI chỉ bản ghi cũ và giữ URL đang nhập. Đọc SQLite chỉ đọc sau khi dừng server thấy đúng một ghi nhận và một sự kiện, URL mã hóa được giữ nguyên; kho thử đã dọn.
+- Trước sửa: nhóm phiên bản 59/59 đạt, test mới thất bại ở cả hai chiều. Sau sửa: 225/225 Python và 62/62 JavaScript đạt. Chưa thử alias khác, nội dung thật hoặc nền tảng thật; BASE-03 và QA-02 vẫn mở.
+
 ## BASE-02 / POST-02/05/06: dữ liệu sai của API nhật ký — 06/11/2026
 
 - Trên server HTTP và SQLite giả, `test_publication_fields_reject_invalid_input_without_partial_writes` thử 128 yêu cầu sai: vị trí, khóa chống lặp, URL, thời gian, revision của ghi nhận; lý do, URL, revision đính chính; cả chín trường số liệu cùng thời gian, khóa và ghi chú. Giá trị sai trả 400, revision sai trả 409; sau từng yêu cầu so lại bản tin, phiên bản, ghi nhận với sự kiện/số liệu, lịch sử và thống kê. Một ghi nhận X giả hợp lệ được tạo để kiểm thử hai route tiếp theo; không truy cập hay đăng lên X.

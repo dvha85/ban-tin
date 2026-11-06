@@ -258,6 +258,48 @@ class ServerTests(unittest.TestCase):
                 with self.subTest(route='metrics', field=field, value=value):
                     check_invalid(metric_path, {**metric, field: value}, 400, current, publications, history)
 
+    def test_threads_encoded_shortcode_conflicts_over_http_without_rewriting_history(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử liên kết Threads',
+            'url': 'https://example.com/threads-http-identity', 'summary': 'Nguồn giả.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'body': 'Nội dung thử.', 'verification_note': 'Đối chiếu nguồn giả trên kho kiểm thử.',
+            'claims': [{'text': 'Dữ liệu giả', 'evidence': 'Fixture', 'checked': True}]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'verified': True,
+            'claims': [{**item['claims'][0], 'checked': True}]})
+        variants = []
+        for account in ('Kênh giả 1', 'Kênh giả 2'):
+            variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+                'platform': 'threads', 'account_label': account})
+            variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                'segments': [{'text': 'Nội dung thử.', 'item_ids': [item['id']]}]})
+            variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                'checks': {key: True for key in ('sources', 'facts', 'original', 'rights', 'claims')}})
+            variants.append(self.room.approve_variant(variant['id'], {'revision': variant['revision']}))
+        first, second = variants
+        original = self.room.record_publication(first['id'], {'revision': first['revision'], 'position': 0,
+            'url': 'https://threads.com/@fixture/post/%41bc%5F12', 'idempotency_key': 'encoded_http_first'})
+        before = self.room.publications(first['id'])
+        self.assertIn('%41bc%5F12', before[0]['url'])
+        data = {'revision': second['revision'], 'position': 0, 'url': 'https://threads.net/t/Abc_12',
+                'idempotency_key': 'encoded_http_second'}
+        status, _, body = self.request('POST', f"/api/variants/{second['id']}/publications", data, headers)
+        self.assertEqual(status, 409, body)
+        self.assertEqual(json.loads(body)['target'], {'kind': 'publication', 'bulletin_id': bulletin['id'],
+            'variant_id': first['id'], 'publication_id': original['id'], 'position': 0})
+        current = self.room.variant(first['id'])
+        status, _, body = self.request('POST', f"/api/publications/{original['id']}/corrections", {
+            'revision': current['revision'], 'reason': 'Kiểm tra liên kết', 'url': data['url']}, headers)
+        self.assertEqual(status, 400, body)
+        self.assertEqual(self.room.publications(first['id']), before)
+        self.assertEqual(self.room.publications(second['id']), [])
+        self.assertEqual(self.room.variant(second['id']), second)
+
     def test_variant_platform_wrong_json_types_are_rejected_without_writes(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử kiểu nền tảng',

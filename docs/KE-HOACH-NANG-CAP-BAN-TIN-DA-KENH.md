@@ -136,7 +136,7 @@
 
 > Bổ sung PUB-03/BASE-02: đính chính từ chối `url` sai kiểu thay vì hiểu nhầm là hủy; test service và HTTP giữ nguyên bản ghi/revision, chuỗi rỗng vẫn hủy. Xem `KIEM-THU.md`.
 
-> Bổ sung BASE-03: mẫu URL Threads đầy đủ trong mã rộng hơn mẫu `/t/` và có thể nhận đoạn mã hóa phần trăm; đã sửa mô tả API và thêm test đặc tả hành vi. Chưa chứng minh tính hợp lệ hoặc trùng lặp trên Meta; tiếp tục đối soát thủ công.
+> Bổ sung BASE-03: mẫu URL Threads đầy đủ trong mã rộng hơn mẫu `/t/` và có thể nhận đoạn mã hóa phần trăm. Ngày 06/11 đã bổ sung so trùng sau giải mã một lần nhóm ký tự URI không dành riêng; các dạng khác vẫn cần đối soát. Chưa chứng minh tính hợp lệ hoặc duy nhất trên Meta; xem `KIEM-THU.md`.
 
 > Bổ sung APR-01: chính sách `2026-11-04-v4` chặn duyệt khi tiêu đề, nội dung, góc nhìn hoặc ghi chú kiểm chứng của mục được dùng còn dấu chưa xác minh. Bản duyệt theo policy cũ cần kiểm tra lại; snapshot lịch sử được giữ. Test service và hồi quy đạt; smoke UI v4 cho trường ghi chú được ghi ở cập nhật đầu tài liệu.
 
@@ -487,7 +487,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ### G6 — Nghiệm thu và tài liệu
 
-- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 06/11 sau bổ sung kiểm tra API: Python 223/223, JavaScript 62/62 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
+- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 06/11 sau sửa đối chiếu URL Threads: Python 225/225, JavaScript 62/62 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.
@@ -599,6 +599,7 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | Ngày | Task/mốc | Trạng thái | Bằng chứng / commit / người thực hiện | Bước tiếp theo |
 | --- | --- | --- | --- | --- |
+| 06/11/2026 | BASE-03 / PUB-02 / QA-02 | Đang làm | Sửa so trùng shortcode Threads có mã hóa ký tự URI không dành riêng; test service/HTTP và UI kho giả; Python 225/225, JS 62/62 | Chưa xác minh URL thực tế, các alias khác hoặc toàn bộ QA; bản cũ không tự hợp nhất |
 | 06/11/2026 | BASE-02 / POST-02/05/06 | Đang làm | HTTP kho giả: 128 yêu cầu sai của ghi nhận, đính chính và số liệu trả 400/409; đối chiếu dữ liệu không đổi; Python 223/223, JavaScript 62/62 | Chưa bao phủ mọi payload/kênh hoặc chính sách URL; xem `KIEM-THU.md` và tài liệu API |
 | 06/11/2026 | REL-01 / PILOT | Đang làm | Ba bản nháp giả chuẩn bị bằng service, duyệt qua UI; trích snapshot hash hợp lệ theo policy v6 vào `DAU-RA-PILOT-GIA-LAP-0.4-V6.md`, không có publication | Người dùng xem bản mẫu mới; chưa thay thế tệp pilot cũ hoặc QA đầu-cuối và chưa có quyết định triển khai |
 | 06/11/2026 | DOC-01 / REL-01 / BASE-02/03 | Đang làm | Lập ma trận liên kết 43 ID mục 8 với test, cấp bằng chứng và hạn chế; kiểm tra tên test Python và đường dẫn cục bộ tồn tại | Đối chiếu hợp đồng API/policy còn thiếu, hoàn tất QA và chốt nghiệm thu với người dùng; xem `MA-TRAN-BANG-CHUNG-0.4.md` |
