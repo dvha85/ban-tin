@@ -1235,8 +1235,12 @@ async function renderVariants(container, bulletin, focusSelector = false) {
         `Văn bản và bộ đếm tại policy ${history.policy_version}; không xác nhận phù hợp với quy tắc hiện hành.`, null, false);
       return;
     }
-    const result = await api(`/api/variants/${variant.id}/preview`, {segments: collect()});
+    const segments = collect();
+    const originalSegments = JSON.stringify(segments), generation = textDialogGeneration;
+    const result = await api(`/api/variants/${variant.id}/preview`, {segments});
     checkVisibleVariant();
+    if (JSON.stringify(collect()) !== originalSegments || textDialogGeneration !== generation)
+      throw new Error('Nội dung, nguồn hoặc hộp hiển thị đã thay đổi. Hãy xem trước lại.');
     const staleParentView = Number.isInteger(result.bulletin_revision) && result.bulletin_revision !== bulletin.revision;
     const sameParentView = Number.isInteger(result.bulletin_revision) && result.bulletin_revision === bulletin.revision;
     const omittedNames = result.omitted_item_ids.map(id => {
@@ -1274,15 +1278,19 @@ async function renderVariants(container, bulletin, focusSelector = false) {
   const exportButton = node('button', 'button secondary', 'Xem bản đã duyệt');
   listen(exportButton, 'click', async () => {
     checkExportStore(); checkVisibleVariant();
+    const generation = textDialogGeneration;
     const result = await api(`/api/variants/${variant.id}/export`);
     checkExportStore(); checkVisibleVariant();
+    if (generation !== textDialogGeneration) throw new Error('Hộp hiển thị đã thay đổi. Hãy mở lại bản duyệt.');
     showText('Bản đã duyệt', result.posts.map((post, i) => `Đoạn ${i + 1}\n${post}`).join('\n\n────────────\n\n'), 'Dùng nút sao chép riêng của từng đoạn để tự đăng.', null, false);
   });
   const archive = node('button', 'button secondary', 'Xem bản lưu lịch sử');
   listen(archive, 'click', async () => {
     checkVisibleVariant();
+    const generation = textDialogGeneration;
     const result = await api(`/api/variants/${variant.id}/archive`);
     checkVisibleVariant();
+    if (generation !== textDialogGeneration) throw new Error('Hộp hiển thị đã thay đổi. Hãy mở lại bản lịch sử.');
     showText('Bản lưu lịch sử', result.posts.map((post, i) => `Đoạn ${i + 1}\n${post}`).join('\n\n────────────\n\n'),
       `Lịch sử theo policy ${result.policy_version}; không xem là bản sẵn sàng đăng khi quy tắc hiện hành đã thay đổi.`, null, false);
   });

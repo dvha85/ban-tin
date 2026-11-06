@@ -161,6 +161,43 @@ test('variant preview split and save preserve unchanged CRLF and accept real edi
   assert.deepEqual(Array.from(calls.at(-1).data.segments[0].source_ids), ['s']);
 });
 
+test('variant preview does not show stale text or source selection after edits while loading', async () => {
+  const elements = new Map(), shown = [], messages = [], requests = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  let release;
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    shown, messages, requests, waitForResponse: () => new Promise(resolve => { release = resolve; }),
+    fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.container = new Element(); context.bulletin = {id: 7, revision: 4, items: [
+    {id: 1, title: 'Tin', sources: [{source_id: 's', url: 'https://example.com/a'}]}]};
+  vm.runInContext(`app.variantId = 3; app.bulletin = bulletin; app.view = 'bulletins';
+    api = async (path, data) => { if (path.endsWith('/variants')) return [{id: 3, revision: 2, platform: 'x',
+      account_label: 'A', status: 'draft', locked_at: null, checks: {},
+      segments: [{text: 'Nội dung A', item_ids: [1], source_ids: ['s']}]}];
+      requests.push(data); return await waitForResponse(); };
+    showText = (...args) => shown.push(args); toast = message => messages.push(message);`, context);
+  await vm.runInContext('renderVariants(container, bulletin)', context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const button = walk(context.container).find(el => el.tagName === 'button' && el.textContent === 'Xem trước');
+  const body = walk(context.container).find(el => el.tagName === 'textarea');
+  const checkbox = walk(context.container).find(el => el.tagName === 'input' && el.type === 'checkbox');
+  const response = {bulletin_revision: 4, omitted_item_ids: [], warning: 'Kiểm thử', policy_version: 'v',
+    posts: [{position: 0, length: 10, limit: 280, valid: true, text: 'Nội dung A'}]};
+  const start = async () => { button.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  await start(); body.value = 'Nội dung B'; release(response); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(shown.length, 0); assert.match(messages.at(-1), /thay đổi/i);
+  body.value = 'Nội dung A'; await start(); checkbox.checked = false; release(response); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(shown.length, 0); assert.match(messages.at(-1), /thay đổi/i);
+  checkbox.checked = true; await start(); release(response); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(shown.length, 1); assert.equal(requests.length, 3);
+  await start(); vm.runInContext('textDialogGeneration++', context); release(response);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(shown.length, 1); assert.match(messages.at(-1), /thay đổi/i);
+});
+
 test('variant approved preview does not open after switching variants while loading', async () => {
   const elements = new Map(), shown = [], messages = [];
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

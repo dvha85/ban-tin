@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## FMT-02 / APR-04 / QA-02: xem trước khi đoạn đang được sửa — 06/11/2026
+
+- Trước sửa, phản hồi xem trước có thể hiển thị nội dung/nguồn cũ sau khi người dùng sửa đoạn trong lúc chờ. UI nay đối chiếu các đoạn và lựa chọn mục/nguồn với dữ liệu đã gửi; nếu khác, giữ biểu mẫu và yêu cầu xem trước lại. Các phản hồi xem trước, bản duyệt và lịch sử cũng không thay thế hộp khác đã mở trong lúc chờ.
+- Test handler tái hiện trước sửa và kiểm tra sửa văn bản, đổi lựa chọn, mở hộp khác, cùng đường thành công khi không đổi. Trên trình duyệt tích hợp với kho giả X, giữ phản hồi A, sửa đoạn thành B rồi trả phản hồi: UI giữ B và báo xem trước lại; lần tiếp theo hiển thị B cùng nguồn giả. UI chỉ thử một đoạn và một thay đổi văn bản; đổi nguồn/hộp được kiểm thử bằng handler. Server và kho thử đã dọn, không đăng bài.
+- Hồi quy 237/237 Python, 77/77 JavaScript; `node --check` đạt. Kiểm tra theo dữ liệu hiển thị tại lúc phản hồi, không chứng minh toàn bộ lịch trình đồng thời hoặc policy nền tảng. FMT-02, APR-04 và QA-02 tổng thể vẫn mở.
+
 ## APR-03 / APR-04 / QA-02: chuyển ngữ cảnh khi đang lấy nội dung — 06/11/2026
 
 - Khi xem trước, xem bản đã duyệt hoặc lịch sử của phiên bản, UI kiểm tra bản tin, revision, phiên bản và vùng đang hiển thị trước/sau phản hồi; bản đã duyệt còn kiểm tra trạng thái phiên/kho. Nếu người dùng chuyển ngữ cảnh trong lúc chờ, không mở hộp cũ. Test handler tái hiện trước sửa việc đổi phiên bản vẫn mở bản A.
