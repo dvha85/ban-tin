@@ -460,6 +460,34 @@ class ServerTests(unittest.TestCase):
         status, _, _ = self.request('POST', path, payload, fresh)
         self.assertEqual(status, 409)
 
+    def test_absolute_form_api_target_requires_the_same_session_and_csrf(self):
+        article = self.room.import_article({'title': 'Tin thử bảo vệ API',
+            'url': 'https://example.com/security-test', 'summary': 'Dữ liệu thử.'})
+        absolute = f'http://127.0.0.1:{self.port}'
+        headers = self.session()
+        payload = {'article_ids': [article['id']], 'title': 'Bản tin thử'}
+        no_cookie = {key: value for key, value in headers.items() if key != 'Cookie'}
+        no_csrf = {key: value for key, value in headers.items() if key != 'X-CSRF-Token'}
+        get_paths = ('/api/state', '/api/bulletins', '/api/bulletin-stats',
+                     '/api/legacy-publication-duplicates', '/api/bulletins/1',
+                     '/api/bulletins/1/packet', '/api/bulletins/1/history', '/api/bulletins/1/variants',
+                     '/api/variants/1', '/api/variants/1/export', '/api/variants/1/archive',
+                     '/api/variants/1/download', '/api/variants/1/publications',
+                     '/api/drafts/1/packet', '/api/drafts/1/export', '/api/drafts/1/history')
+        for path in get_paths:
+            for target in (path, absolute + path):
+                with self.subTest(target=target):
+                    self.assertEqual(self.request('GET', target)[0], 401)
+        self.assertEqual(self.request('GET', absolute + '/api/state', headers=headers)[0], 200)
+        self.assertEqual(self.request('POST', absolute + '/api/bulletins', payload, no_cookie)[0], 401)
+        self.assertEqual(self.request('POST', absolute + '/api/bulletins', payload, no_csrf)[0], 403)
+        self.assertEqual(self.request('POST', absolute + '/api/bulletins', payload,
+                                      dict(headers, Origin='https://evil.example'))[0], 403)
+        self.assertEqual(self.room.bulletins(), [])
+        self.assertEqual(self.request('POST', absolute + '/api/bulletins', payload, headers)[0], 201)
+        self.assertEqual(len(self.room.bulletins()), 1)
+        self.assertEqual(self.request('GET', 'http://[bad', headers={'Host': f'127.0.0.1:{self.port}'})[0], 400)
+
     def test_every_multichannel_post_route_requires_session_csrf_and_origin_before_dispatch(self):
         headers = self.session()
         routes = [
@@ -486,12 +514,13 @@ class ServerTests(unittest.TestCase):
                    (dict(headers, **{'X-CSRF-Token': 'wrong'}), 403), (no_origin, 403),
                    (dict(headers, Origin='https://evil.example'), 403), (dict(headers, Host='evil.example'), 403)]
         for path, method, expected_success in routes:
-            with self.subTest(path=path), patch.object(self.room, method, return_value={}) as handler:
-                for rejected_headers, status in invalid:
-                    self.assertEqual(self.request('POST', path, {}, rejected_headers)[0], status)
-                    handler.assert_not_called()
-                self.assertEqual(self.request('POST', path, {}, headers)[0], expected_success)
-                handler.assert_called_once()
+            for target in (path, f'http://127.0.0.1:{self.port}{path}'):
+                with self.subTest(target=target), patch.object(self.room, method, return_value={}) as handler:
+                    for rejected_headers, status in invalid:
+                        self.assertEqual(self.request('POST', target, {}, rejected_headers)[0], status)
+                        handler.assert_not_called()
+                    self.assertEqual(self.request('POST', target, {}, headers)[0], expected_success)
+                    handler.assert_called_once()
 
     def test_host_and_static_traversal(self):
         self.assertEqual(self.request('GET', '/', headers={'Host': 'evil.example'})[0], 403)

@@ -5,6 +5,7 @@ Tài liệu này mô tả API nội bộ của nhánh phát triển 0.4, chưa p
 ## Phiên, lỗi và kích thước
 
 - Mở `GET /` để nhận cookie phiên, rồi `GET /api/state` lấy `csrf_token`. Các API dữ liệu cần cookie; POST cần thêm `X-CSRF-Token`, `Origin` hợp lệ và `Content-Type: application/json`. Server ràng buộc Host/Origin vào phiên cục bộ.
+- Kiểm tra phiên và CSRF dùng cùng đường dẫn đã phân tích với bộ định tuyến, kể cả khi HTTP request target là URL đầy đủ. Target không phân tích được trả 400; URL đầy đủ không thay thế kiểm tra Host, cookie hoặc Origin.
 - POST yêu cầu JSON object với `Content-Length` xác định, tối đa **128.000 byte** sau mã hóa UTF-8; không nhận `Transfer-Encoding`. Gói tư liệu có giới hạn riêng **65.536 byte** cho toàn bộ văn bản, bao gồm hướng dẫn.
 - Nếu kết nối kết thúc trước khi nhận đủ số byte đã khai báo, POST trả 400 và không thực hiện thao tác, kể cả phần đã nhận là JSON hoàn chỉnh. Nếu hết thời gian chờ khi đọc, yêu cầu cũng bị từ chối; phản hồi có thể không tới được client đã ngắt kết nối.
 - ID số trên đường dẫn phải gồm tối đa 19 chữ số ASCII và không vượt `9223372036854775807`. Route bản tin, phiên bản, ghi nhận và bản nháp từ chối ID sai bằng 404; route tác vụ thu thập trả 400. Quy tắc này không xác nhận ID có tồn tại.

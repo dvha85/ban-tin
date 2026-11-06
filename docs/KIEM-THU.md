@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## SAFE-01: kiểm tra phiên cho URL đầy đủ trong HTTP — 06/11/2026
+
+- Trên server và SQLite fixture, trước sửa `GET http://127.0.0.1:<port>/api/state` không có cookie trả **200**: kiểm tra phiên chỉ nhìn tiền tố của request target, trong khi định tuyến phân tích URL và dùng phần đường dẫn. Cùng cách kiểm tra được dùng trước POST. Chỉ thử trên server fixture cục bộ.
+- Kiểm tra phiên nay dùng đường dẫn đã phân tích giống bộ định tuyến; target không hợp lệ trả 400. Test HTTP kiểm tra 16 đường dẫn GET với cả hai dạng request target không có phiên, và kiểm tra tạo bản tin không có cookie, thiếu CSRF hoặc sai Origin, cùng yêu cầu hợp lệ. Ma trận 15 route POST đa kênh kiểm tra thiếu/sai cookie, CSRF, Origin và Host ở cả hai dạng, đồng thời xác nhận handler không được gọi khi bị từ chối.
+- Hồi quy trước sửa tại `e97dc56`: 219/219 Python và 59/59 JavaScript. Sau sửa: 220/220 Python và 59/59 JavaScript; sau khi mở rộng danh sách GET, test HTTP tương ứng chạy lại đạt. Đây là bằng chứng fixture, không chứng minh mọi biến thể giao thức hay áp dụng cho tiến trình đang chạy từ mã cũ. Không chạy hay sửa kho vận hành.
+
 ## QA-02 / FMT-01: tải danh sách phiên bản chậm sau khi lưu — 06/11/2026
 
 - Test handler tái hiện lỗi từ `b5a4ecc`: POST lưu đã thành công nhưng `app.busy` và vùng biên tập vẫn bị khóa khi GET danh sách phiên bản chưa trả. Sửa để kết thúc trạng thái bận sau POST, chờ danh sách ở nhánh riêng trước khi cân nhắc trả tiêu điểm; không giành tiêu điểm đã chuyển sang điều khiển khác. Test kiểm tra hai nhánh và trạng thái khóa trong lúc chờ.

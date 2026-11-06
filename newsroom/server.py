@@ -141,7 +141,12 @@ class Handler(BaseHTTPRequestHandler):
         if self.headers.get('Host') not in self.server.hosts:
             self.json_error(403, 'Chỉ truy cập qua địa chỉ nội bộ của ứng dụng.')
             return False
-        if not self.path.startswith('/api/'):
+        try:
+            path = urlsplit(self.path).path
+        except ValueError:
+            self.json_error(400, 'Đường dẫn yêu cầu không hợp lệ.')
+            return False
+        if not path.startswith('/api/'):
             return True
         try:
             cookies = SimpleCookie(self.headers.get('Cookie', ''))

@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> SAFE-01 ngày 06/11: sửa kiểm tra phiên với HTTP request target dạng URL đầy đủ; kiểm thử cả dạng đường dẫn và URL đầy đủ cho 15 route đa kênh. Chi tiết và phạm vi tại `KIEM-THU.md`.
+
 > QA-02 / FMT-01 ngày 06/11: sửa vùng biên tập bị khóa sau POST lưu thành công khi GET danh sách phiên bản chậm; test handler và thử trình duyệt với phản hồi trì hoãn 25 giây đạt. Hồi quy 219/219 Python, 59/59 JavaScript; phạm vi và giới hạn tại `KIEM-THU.md`.
 
 > QA-02 / FMT-01 ngày 05/11: sửa mất tiêu điểm sau khi lưu phiên bản; test handler và smoke bàn phím với Facebook trên kho giả đạt trong phạm vi ghi tại `KIEM-THU.md`. Hồi quy 219/219 Python, 58/58 JavaScript. QA-02 vẫn mở.
