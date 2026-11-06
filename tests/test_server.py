@@ -956,6 +956,86 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(get(path + '/packet'), packet)
         self.assertEqual(get(path + '/history'), history)
 
+    def test_locked_partial_publications_survive_parent_and_policy_change_over_http(self):
+        headers = self.session()
+
+        def post(path, payload, expected=200):
+            status, _, body = self.request('POST', path, payload, headers)
+            self.assertEqual(status, expected, body)
+            return json.loads(body)
+
+        def get(path, expected=200):
+            status, _, body = self.request('GET', path, headers=headers)
+            self.assertEqual(status, expected, body)
+            return json.loads(body)
+
+        article = self.room.import_article({'title': 'Tin giả kiểm tra khóa',
+            'url': 'https://example.com/locked-history', 'summary': 'Ghi chú nguồn giả để kiểm thử.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']], 'title': 'Bản gốc giả'})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'body': 'Nội dung giả được biên tập.', 'verification_note': 'Đối chiếu nguồn giả trên kho thử.',
+            'claims': [{'text': 'Thông tin giả', 'evidence': 'Fixture', 'checked': True}]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'verified': True,
+            'claims': [{**item['claims'][0], 'checked': True}]})
+        item = bulletin['items'][0]
+        snapshots = {}
+        first_requests = {}
+        for platform in ('x', 'threads'):
+            variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+                'platform': platform, 'account_label': f'Kênh giả {platform}'})
+            variant = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'segments': [
+                {'text': 'Đoạn giả đầu.', 'item_ids': [item['id']]},
+                {'text': 'Đoạn giả sau.', 'item_ids': [item['id']]}]})
+            variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                'checks': {key: True for key in ('sources', 'facts', 'original', 'rights', 'claims')}})
+            variant = self.room.approve_variant(variant['id'], {'revision': variant['revision']})
+            path = f"/api/variants/{variant['id']}"
+            snapshots[platform] = (variant['id'], get(path + '/archive'))
+            first_requests[platform] = {'revision': variant['revision'], 'position': 0,
+                'url': f"https://x.com/fake/status/101" if platform == 'x' else 'https://threads.com/@fake/post/AAA101',
+                'idempotency_key': f'{platform}_locked_first'}
+            first = post(path + '/publications', first_requests[platform])
+            self.assertEqual(first['active'], 1)
+            self.assertEqual(get(path)['publication_progress'], {'active': 1, 'total': 2})
+
+        self.room.save_bulletin(bulletin['id'], {'revision': bulletin['revision'], 'title': 'Bản gốc giả đã sửa'})
+        with patch('newsroom.variants.POLICY_VERSION', 'future-policy-fixture'):
+            for platform, (variant_id, archive) in snapshots.items():
+                with self.subTest(platform=platform):
+                    path = f'/api/variants/{variant_id}'
+                    current = get(path)
+                    self.assertTrue(current['policy_stale'])
+                    self.assertIsNotNone(current['locked_at'])
+                    get(path + '/export', expected=400)
+                    self.assertEqual(get(path + '/archive'), archive)
+                    retry = post(path + '/publications', first_requests[platform])
+                    self.assertEqual(retry['active'], 1)
+                    second_url = ('https://x.com/fake/status/102' if platform == 'x'
+                                  else 'https://threads.com/@fake/post/AAA102')
+                    second_request = {'revision': current['revision'], 'position': 1,
+                        'url': second_url, 'idempotency_key': f'{platform}_locked_second'}
+                    second = post(path + '/publications', second_request)
+                    self.assertEqual(second['approval_id'], archive['approval_id'])
+                    complete = get(path)
+                    self.assertEqual(complete['status'], 'recorded')
+                    self.assertEqual(complete['publication_progress'], {'active': 2, 'total': 2})
+                    post(f"/api/publications/{second['id']}/corrections", {
+                        'revision': complete['revision'], 'reason': 'Hủy liên kết giả nhập nhầm'})
+                    after = get(path)
+                    self.assertEqual(after['publication_progress'], {'active': 1, 'total': 2})
+                    self.assertEqual(after['locked_at'], current['locked_at'])
+                    retry_cancelled = post(path + '/publications', second_request)
+                    self.assertEqual((retry_cancelled['id'], retry_cancelled['active']), (second['id'], 0))
+                    self.assertEqual(get(path), after)
+                    post(path + '/save', {'revision': after['revision']}, expected=409)
+                    self.assertEqual(get(path + '/archive'), archive)
+                    events = get(path + '/publications')
+                    self.assertEqual([event['action'] for event in events[1]['events']], ['reported', 'cancelled'])
+
     def test_split_save_approve_and_export_preserve_per_item_sources_over_http(self):
         headers = self.session()
 

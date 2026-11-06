@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## APR-04 / PUB-02 / TEXT-06: khóa lịch sử qua HTTP — 06/11/2026
+
+- Test `test_locked_partial_publications_survive_parent_and_policy_change_over_http` chuẩn bị bằng service một bản tin và hai snapshot hai đoạn X/Threads trên SQLite giả; qua HTTP ghi nhận đoạn đầu của mỗi phiên bản. Sau đó sửa bản tin gốc và giả lập policy mới ở server.
+- Với mỗi kênh, HTTP chặn export theo policy cũ nhưng trả snapshot lưu trữ không đổi; retry khóa đoạn đầu trả bản ghi hiện có; ghi nhận URL giả của đoạn còn lại gắn đúng approval cũ. Sau khi hủy đoạn hai, trạng thái trở về 1/2, `locked_at` giữ nguyên, lưu nội dung bị chặn. Retry khóa đoạn đã hủy trả bản ghi cũ không còn hiệu lực, không thay trạng thái; lịch sử giữ sự kiện ghi nhận và hủy.
+- Đây là hai fixture qua HTTP với policy được giả lập, không kiểm tra nền tảng thật, mọi lịch trình đồng thời hoặc giao diện trong lượt này. Hồi quy: 232/232 Python, 63/63 JavaScript; không đăng bài hoặc dùng kho vận hành. APR-04, PUB-02, BASE-03 và QA-02 vẫn mở theo phạm vi toàn kế hoạch.
+
 ## FMT-03 / TEXT-01 / TEXT-04 / QA-02: chia và xuất theo nguồn — 06/11/2026
 
 - Test HTTP `test_split_save_approve_and_export_preserve_per_item_sources_over_http` dùng hai mục, mỗi mục có một nguồn giả, trên hai phiên bản X và Threads. Mỗi bản có hai đoạn quá giới hạn; đề xuất chia thành bốn đoạn, giữ toàn bộ văn bản trong các ô biên tập, đúng item ID và source ID tương ứng. Đề xuất không tự lưu. Sau khi lưu và duyệt xác nhận giả, đối chiếu chính xác từng đoạn từ đề xuất, preview, export, snapshot và tệp UTF-8, gồm số thứ tự và URL nguồn.

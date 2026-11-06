@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> APR-04 / PUB-02 / TEXT-06 ngày 06/11: HTTP kho giả kiểm tra X/Threads ghi nhận một phần, sau đó bản tin và policy thay đổi; xuất bị chặn, lưu trữ giữ nguyên, ghi nhận tiếp và hủy vẫn giữ khóa/lịch sử. Hồi quy 232/232 Python, 63/63 JavaScript; chi tiết tại `KIEM-THU.md`.
+
 > FMT-03 / TEXT-01 / QA-02 ngày 06/11: test HTTP hai kênh chia hai mục thành bốn đoạn, lưu, duyệt và đối chiếu nguồn, preview, snapshot, export và tệp. Trình duyệt kho giả thử chia/lưu/tải lại cho X. Hồi quy 231/231 Python, 63/63 JavaScript; chi tiết và giới hạn tại `KIEM-THU.md`.
 
 > FMT-04 / QA-02 ngày 06/11: xem trước nêu tên và mã mục bị lược khi revision khớp; kiểm thử handler và thử một phiên bản X trên kho giả đạt. Hồi quy 230/230 Python, 63/63 JavaScript; FMT-04 và QA-02 vẫn mở. Xem `KIEM-THU.md`.

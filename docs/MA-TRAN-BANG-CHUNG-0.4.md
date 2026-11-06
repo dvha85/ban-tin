@@ -1,6 +1,6 @@
 # Ma trận bằng chứng kiểm thử 0.4
 
-Cập nhật 06/11/2026 sau bổ sung kiểm thử chia, duyệt và xuất qua HTTP. Bảng này truy vết các tình huống ở mục 8 của [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) tới bằng chứng đã có; **không tự đánh dấu cổng phát hành là hoàn tất**. Xem diễn biến, lệnh, dữ liệu và giới hạn từng lần thử tại [KIEM-THU.md](KIEM-THU.md). Kết quả hồi quy gần nhất trên fixture: 231/231 Python, 63/63 JavaScript; cần chạy lại sau sửa mã và trước phát hành.
+Cập nhật 06/11/2026 sau bổ sung kiểm thử khóa lịch sử qua HTTP. Bảng này truy vết các tình huống ở mục 8 của [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) tới bằng chứng đã có; **không tự đánh dấu cổng phát hành là hoàn tất**. Xem diễn biến, lệnh, dữ liệu và giới hạn từng lần thử tại [KIEM-THU.md](KIEM-THU.md). Kết quả hồi quy gần nhất trên fixture: 232/232 Python, 63/63 JavaScript; cần chạy lại sau sửa mã và trước phát hành.
 
 Ký hiệu: **S** = service/SQLite giả; **H** = HTTP với server/kho giả; **J** = handler/helper JavaScript và DOM giả; **B** = trình duyệt với kho giả; **U** = người dùng đã thực hiện; **N** = nền tảng thật, không đăng. Tên test là điểm bắt đầu trong tệp được liên kết; không suy ra mọi tổ hợp được kiểm thử chỉ vì có tên trong bảng.
 
@@ -48,7 +48,7 @@ Ký hiệu: **S** = service/SQLite giả; **H** = HTTP với server/kho giả; *
 | APPROVE-03 | S/H: `test_corrupt_approval_fails_closed_before_read_export_or_record` và test HTTP trong KIEM-THU. | Các dạng hỏng snapshot được tiêm, không thay thế backup. |
 | APPROVE-04 | S: `test_record_separate_segments_retry_and_immutable_after_correction`, `test_cancel_all_preserves_lock_and_history_and_can_record_again`. | Không phải kiểm tra nội dung đã đăng thật. |
 | APPROVE-05 | S: `test_competing_edit_and_approval_have_exactly_one_winner`, `test_competing_edit_and_record_keep_approval_and_publication_consistent`, `test_parent_edit_and_record_serialize_in_both_orders`, `test_export_reads_variant_and_approval_in_one_snapshot`. | Test SQLite có điều phối; không bao phủ mọi lịch trình, lỗi mạng hoặc trình duyệt. |
-| APPROVE-06 | S: `test_policy_change_after_partial_recording_preserves_snapshot`, `test_record_separate_segments_retry_and_immutable_after_correction`; B: policy cũ với bản ghi nhận một phần dùng URL giả. | Phân biệt tiếp tục ghi nhận URL người dùng đã đăng với xuất để đăng tiếp; chưa thử mọi kênh. |
+| APPROVE-06 | S: `test_policy_change_after_partial_recording_preserves_snapshot`, `test_record_separate_segments_retry_and_immutable_after_correction`; H: `test_locked_partial_publications_survive_parent_and_policy_change_over_http`; B: policy cũ với bản ghi nhận một phần dùng URL giả. | Phân biệt tiếp tục ghi nhận URL người dùng đã đăng với xuất để đăng tiếp; HTTP thử hai kênh với policy giả lập. |
 
 ## Nhật ký và an toàn
 
