@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> APR-01 / APR-02 ngày 06/11: đối chiếu chức năng snapshot, checklist, điều kiện chặn và phạm vi hủy duyệt; test mới thử sửa đích, nội dung, nguồn và thứ tự đoạn cùng hai kênh đối chứng, trong đó một kênh đã ghi nhận. Hai mục hoàn tất phạm vi chức năng; G4, policy và QA tổng thể vẫn mở. Xem `KIEM-THU.md`.
+
 > FMT-03 / FMT-04 ngày 06/11: đối chiếu lại yêu cầu chức năng với test chia, biên 20 đoạn, preview/nguồn và các lượt UI X/Threads đã ghi; đánh dấu hai mục hoàn tất trong phạm vi chức năng theo policy hiện hành. G3, BASE-03 và QA-02 vẫn mở; xem `KIEM-THU.md`.
 
 > BASE-03 / PUB-01 ngày 06/11: một liên kết Threads `/share/...` quan sát từ menu email chuyển đến URL bài. Khi gặp dạng này, ứng dụng hướng dẫn tự mở và lấy URL bài để đối chiếu; test service/HTTP và thông báo UI kho giả được ghi tại `KIEM-THU.md`. Chưa chứng minh mọi alias; BASE-03 vẫn mở.
@@ -533,8 +535,8 @@ Gate: VAR-01…04, TEXT-01…06 đạt; không dùng độ dài body làm bằng
 
 ### G4 — Duyệt và xuất
 
-- [ ] **APR-01 / P0:** Approval snapshot/hash/version, checklist theo mục và biến thể, block các trạng thái chưa đủ điều kiện.
-- [ ] **APR-02 / P0:** Vô hiệu duyệt đúng phạm vi khi sửa nội dung/nguồn/đích/thứ tự/policy; giữ snapshot đã ghi nhận.
+- [x] **APR-01 / P0:** Approval snapshot/hash/version, checklist theo mục và biến thể, block các trạng thái chưa đủ điều kiện. Test service/HTTP và UI kho giả được đối chiếu trong `KIEM-THU.md`; hoàn tất phạm vi chức năng, chưa đóng G4 hoặc QA tổng thể.
+- [x] **APR-02 / P0:** Vô hiệu duyệt đúng phạm vi khi sửa nội dung/nguồn/đích/thứ tự/policy; giữ snapshot đã ghi nhận. Test phạm vi và thay đổi policy được đối chiếu trong `KIEM-THU.md`; hoàn tất phạm vi chức năng theo policy hiện hành, chưa đóng G4 hoặc QA tổng thể.
 - [ ] **APR-03 / P1:** Copy từng đoạn, `.txt` UTF-8, fallback thủ công; export chỉ từ snapshot hợp lệ.
 - [ ] **APR-04 / P0:** Bảo vệ conflict/race: sửa khi đang duyệt/xuất/ghi nhận không tạo hash hoặc nhật ký sai.
 

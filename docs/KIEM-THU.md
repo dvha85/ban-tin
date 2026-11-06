@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## APR-01 / APR-02: đối chiếu chức năng duyệt và phạm vi hủy duyệt — 06/11/2026
+
+- APR-01: đối chiếu `approve_variant`, `approval_snapshot` và các test service/HTTP về điều kiện nội dung, nguồn, checklist, khẳng định, hash trích đoạn, policy, snapshot và xuất. Các lượt UI kho giả trước đó đã duyệt các kênh và thử chặn ghi chú/hash; chi tiết ở các mục bên dưới.
+- APR-02: test mới `test_variant_edits_invalidate_only_the_changed_channel` thử lần lượt đổi tên đích, chữ, lựa chọn nguồn và thứ tự đoạn của các phiên bản Threads đã duyệt. Mỗi lần phiên bản sửa về nháp, bỏ checklist và chặn xuất; đối chứng Facebook đã duyệt và X đã ghi nhận giữ nguyên phiên bản và bản xuất/snapshot, kể cả sau mở lại kho. Test có sẵn kiểm tra sửa bản tin gốc reset biến thể chưa khóa, giữ snapshot đã ghi nhận; policy/renderer mới yêu cầu kiểm tra lại. Lưu không đổi vẫn giữ bản duyệt.
+- Nhóm 11 test Python liên quan và toàn bộ 243 test Python đã chạy lại trên mã ứng dụng ở commit `cba92b6` và đạt. Hai mục được đánh dấu hoàn tất **phạm vi chức năng**; chưa kiểm tra mọi lịch trình đồng thời, trình duyệt hoặc chính sách nền tảng. APR-03/04, gate G4, BASE-03 và QA-02 vẫn mở. Các ghi chú cũ nêu APR-01/02 đang làm phản ánh thời điểm kiểm tra tương ứng.
+
 ## FMT-03 / FMT-04: đối chiếu hoàn tất phạm vi chức năng — 06/11/2026
 
 - FMT-03: test chia theo câu/dòng trống kiểm tra giữ nguyên văn bản biên tập, URL, emoji, ID mục/nguồn và đánh số qua 9→10; test biên 20/21 đoạn kiểm tra từ chối không lưu dở. Test HTTP chia, lưu, duyệt và so từng đoạn preview/export/snapshot/tệp cho X và Threads. Các lượt UI kho giả đã thử X chia/lưu/tải lại, Threads chia/lưu/duyệt, và trường hợp ranh giới dòng trống. Đoạn không chia an toàn vẫn yêu cầu người dùng biên tập; bản xuất bỏ khoảng trắng đầu/cuối từng đoạn như hướng dẫn.

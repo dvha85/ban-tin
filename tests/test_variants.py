@@ -161,6 +161,53 @@ class VariantTests(unittest.TestCase):
                 self.assertEqual(reopened.variant(variant_id), old_variant)
                 self.assertEqual(reopened.export_variant(variant_id), old_export)
 
+    def test_variant_edits_invalidate_only_the_changed_channel(self):
+        item = self.bulletin['items'][0]
+        self.bulletin = self.room.save_bulletin_item(self.bulletin['id'], item['id'], {
+            'bulletin_revision': self.bulletin['revision'], 'revision': item['revision'],
+            'add_source': {'url': 'https://example.com/extra-source', 'title': 'Nguồn giả thứ hai',
+                           'summary': 'Nguồn đối chiếu giả.'}})
+        item = self.bulletin['items'][0]
+        self.bulletin = self.room.save_bulletin_item(self.bulletin['id'], item['id'], {
+            'bulletin_revision': self.bulletin['revision'], 'revision': item['revision'],
+            'verified': True, 'claims': [{**claim, 'checked': True} for claim in item['claims']]})
+        control = self.make_approved('facebook')
+        locked = self.make_approved('x')
+        self.room.record_publication(locked['id'], {'revision': locked['revision'], 'position': 0,
+            'url': 'https://x.com/fixture/status/987', 'idempotency_key': 'scope_fixture_987'})
+        control_before = self.room.variant(control['id'])
+        control_export = self.room.export_variant(control['id'])
+        locked_before = self.room.variant(locked['id'])
+        locked_archive = self.room.export_variant(locked['id'], archive=True)
+        for change in ('account', 'text', 'source', 'order'):
+            with self.subTest(change=change):
+                variant = self.make_approved('threads', two=True)
+                segments = [dict(segment) for segment in variant['segments']]
+                update = {'revision': variant['revision']}
+                if change == 'account':
+                    update['account_label'] = 'Kênh giả khác'
+                elif change == 'text':
+                    segments[0]['text'] = 'Nội dung đã thay đổi.'
+                    update['segments'] = segments
+                elif change == 'source':
+                    segments[0]['source_ids'] = [self.bulletin['items'][0]['sources'][0]['source_id']]
+                    update['segments'] = segments
+                else:
+                    update['segments'] = segments[::-1]
+                saved = self.room.save_variant(variant['id'], update)
+                self.assertEqual(saved['status'], 'draft')
+                self.assertIsNone(saved['approval_id'])
+                self.assertFalse(any(saved['checks'].values()))
+                with self.assertRaises(ValidationError):
+                    self.room.export_variant(saved['id'])
+                self.assertEqual(self.room.variant(control['id']), control_before)
+                self.assertEqual(self.room.export_variant(control['id']), control_export)
+                self.assertEqual(self.room.variant(locked['id']), locked_before)
+                self.assertEqual(self.room.export_variant(locked['id'], archive=True), locked_archive)
+        reopened = Newsroom(self.room.data_dir)
+        self.assertEqual(reopened.export_variant(control['id']), control_export)
+        self.assertEqual(reopened.export_variant(locked['id'], archive=True), locked_archive)
+
     def test_clone_edited_variant_and_reject_stale_save_without_overwriting(self):
         original = self.make_approved('x')
         edited = self.room.save_variant(original['id'], {'revision': original['revision'],
