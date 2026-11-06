@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> FMT-03 / TEXT-01 / QA-02 ngày 06/11: test HTTP hai kênh chia hai mục thành bốn đoạn, lưu, duyệt và đối chiếu nguồn, preview, snapshot, export và tệp. Trình duyệt kho giả thử chia/lưu/tải lại cho X. Hồi quy 231/231 Python, 63/63 JavaScript; chi tiết và giới hạn tại `KIEM-THU.md`.
+
 > FMT-04 / QA-02 ngày 06/11: xem trước nêu tên và mã mục bị lược khi revision khớp; kiểm thử handler và thử một phiên bản X trên kho giả đạt. Hồi quy 230/230 Python, 63/63 JavaScript; FMT-04 và QA-02 vẫn mở. Xem `KIEM-THU.md`.
 
 > NEWS-05 / DIG-01 ngày 06/11: sửa tin có mốc tương lai bị cộng điểm độ mới; kiểm thử biên và smoke Hộp tin đạt. Đã đối chiếu chọn 10/11, lọc, tìm kiếm và bỏ lựa chọn trong kho giả; DIG-01 hoàn tất trong phạm vi chức năng. Hồi quy 222/222 Python, 60/60 JavaScript; xem `KIEM-THU.md`.

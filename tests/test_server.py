@@ -956,6 +956,80 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(get(path + '/packet'), packet)
         self.assertEqual(get(path + '/history'), history)
 
+    def test_split_save_approve_and_export_preserve_per_item_sources_over_http(self):
+        headers = self.session()
+
+        def post(path, payload, expected=200):
+            status, _, body = self.request('POST', path, payload, headers)
+            self.assertEqual(status, expected, body)
+            return json.loads(body)
+
+        def get(path):
+            status, _, body = self.request('GET', path, headers=headers)
+            self.assertEqual(status, 200, body)
+            return json.loads(body)
+
+        articles = [self.room.import_article({'title': f'Tin chia giả {index}',
+                    'url': f'https://example.com/split-item-{index}',
+                    'summary': 'Ghi chú nguồn giả dùng để thử chia đoạn.'}) for index in range(2)]
+        bulletin = self.room.create_bulletin({'article_ids': [row['id'] for row in articles]})
+        for item_id in [item['id'] for item in bulletin['items']]:
+            item = next(item for item in bulletin['items'] if item['id'] == item_id)
+            bulletin = self.room.save_bulletin_item(bulletin['id'], item_id, {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'body': 'Nội dung giả đã biên tập.', 'verification_note': 'Đối chiếu nguồn giả trên kho thử.',
+                'claims': [{'text': 'Thông tin giả', 'evidence': 'Fixture', 'checked': True}]})
+            item = next(item for item in bulletin['items'] if item['id'] == item_id)
+            bulletin = self.room.save_bulletin_item(bulletin['id'], item_id, {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'verified': True, 'claims': [{**item['claims'][0], 'checked': True}]})
+
+        items = bulletin['items']
+        for platform, width in (('x', 150), ('threads', 270)):
+            with self.subTest(platform=platform):
+                variant = post(f"/api/bulletins/{bulletin['id']}/variants", {
+                    'bulletin_revision': bulletin['revision'], 'platform': platform, 'account_label': 'Kênh thử'})
+                path = f"/api/variants/{variant['id']}"
+                original = [{'text': (letter * width) + '. ' + (letter.lower() * width) + '.',
+                             'item_ids': [item['id']], 'source_ids': [item['sources'][0]['source_id']]}
+                            for item, letter in zip(items, ('A', 'B'))]
+                variant = post(path + '/save', {'revision': variant['revision'],
+                    'expected_bulletin_revision': bulletin['revision'], 'segments': original})
+                self.assertFalse(post(path + '/preview', {'segments': original})['valid'])
+                suggestion = post(path + '/split', {'revision': variant['revision'],
+                    'expected_bulletin_revision': bulletin['revision'], 'segments': original})
+                self.assertEqual(get(path), variant)  # A proposal alone does not save.
+                split = suggestion['segments']
+                self.assertEqual(len(split), 4)
+                self.assertEqual(''.join(row['text'] for row in split[:2]), original[0]['text'])
+                self.assertEqual(''.join(row['text'] for row in split[2:]), original[1]['text'])
+                self.assertTrue(suggestion['preview']['valid'])
+                expected_posts = []
+                for index, segment in enumerate(split):
+                    item = items[index // 2]
+                    self.assertEqual(segment['item_ids'], [item['id']])
+                    self.assertEqual(segment['source_ids'], [item['sources'][0]['source_id']])
+                    expected_posts.append(f"{index + 1}/4 {segment['text'].strip()}\n\nNguồn: {item['sources'][0]['url']}")
+                self.assertEqual([row['text'] for row in suggestion['preview']['posts']], expected_posts)
+                variant = post(path + '/save', {'revision': variant['revision'],
+                    'expected_bulletin_revision': bulletin['revision'], 'segments': split})
+                self.assertEqual(variant['segments'], split)
+                preview = post(path + '/preview', {'segments': split})
+                self.assertEqual([row['text'] for row in preview['posts']], expected_posts)
+                variant = post(path + '/save', {'revision': variant['revision'],
+                    'expected_bulletin_revision': bulletin['revision'],
+                    'checks': {key: True for key in ('sources', 'facts', 'original', 'rights', 'claims')}})
+                approved = post(path + '/approve', {'revision': variant['revision'],
+                    'expected_bulletin_revision': bulletin['revision']})
+                self.assertEqual(approved['status'], 'approved')
+                self.assertEqual(get(path + '/export')['posts'], expected_posts)
+                archive = get(path + '/archive')
+                self.assertEqual([row['text'] for row in archive['rendered_posts']], expected_posts)
+                status, response_headers, body = self.request('GET', path + '/download', headers=headers)
+                self.assertEqual(status, 200)
+                self.assertIn('text/plain; charset=utf-8', response_headers['Content-Type'])
+                self.assertEqual(body, '\n\n---\n\n'.join(expected_posts).encode('utf-8'))
+
     def test_three_channels_are_independent_and_export_exact_preview_over_http(self):
         headers = self.session()
 

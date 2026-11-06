@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## FMT-03 / TEXT-01 / TEXT-04 / QA-02: chia và xuất theo nguồn — 06/11/2026
+
+- Test HTTP `test_split_save_approve_and_export_preserve_per_item_sources_over_http` dùng hai mục, mỗi mục có một nguồn giả, trên hai phiên bản X và Threads. Mỗi bản có hai đoạn quá giới hạn; đề xuất chia thành bốn đoạn, giữ toàn bộ văn bản trong các ô biên tập, đúng item ID và source ID tương ứng. Đề xuất không tự lưu. Sau khi lưu và duyệt xác nhận giả, đối chiếu chính xác từng đoạn từ đề xuất, preview, export, snapshot và tệp UTF-8, gồm số thứ tự và URL nguồn.
+- Trên trình duyệt tích hợp, kho giả riêng cho X: mở hai đoạn, chọn đề xuất chia, xem trước bốn đoạn `1/4`–`4/4`, mỗi đoạn 188/280 và nguồn khớp mục; lưu rồi tải lại trang, mở lại phiên bản thấy bốn đoạn và các lựa chọn mục/nguồn được giữ. Dữ liệu ban đầu chuẩn bị bằng service; không thử duyệt qua UI trong lượt này.
+- Hồi quy sau bổ sung: 231/231 Python, 63/63 JavaScript. Đây là hai fixture cụ thể qua HTTP và một luồng UI X; người biên tập vẫn cần xem lại mối liên quan của nguồn ở từng đoạn. Không chứng minh mọi văn bản Unicode, policy nền tảng hoặc QA đa trình duyệt. FMT-03/04, BASE-03 và QA-02 tiếp tục mở; không đăng bài hoặc sử dụng kho vận hành.
+
 ## FMT-04 / QA-02: nhận diện mục bị lược khi xem trước — 06/11/2026
 
 - Hộp xem trước hiển thị mã và tiêu đề các mục không có trong phiên bản khi revision bản tin trên trang khớp revision server dùng để dựng. Nếu revision khác hoặc thiếu, chỉ hiển thị mã; vẫn giữ cảnh báo bản tin đã thay đổi khi có bằng chứng revision khác. Mã cũng giúp phân biệt các mục trùng tiêu đề; cảnh báo nằm ngoài nội dung bài.
