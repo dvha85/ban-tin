@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## APR-04 / QA-02: phản hồi danh sách đến sai thứ tự — 06/11/2026
+
+- Khi nhiều lượt tải danh sách chồng nhau, chỉ lượt được bắt đầu sau cùng được cập nhật danh sách, thống kê và cảnh báo trùng. Lỗi của lượt đã bị thay thế cũng không hiện đè lên kết quả mới; lỗi lượt mới nhất vẫn được báo. Khi tải lại sau ghi nhận bị lượt khác thay thế, không thông báo lượt cũ đã tải thành công.
+- Test DOM giả tái hiện trước sửa phản hồi cũ ghi đè tiêu đề mới; sau sửa kiểm tra cả kết quả cũ, lỗi cũ và lỗi lượt mới nhất. Test riêng tái hiện thông báo hoàn tất sai khi lượt tải bị thay thế. Toàn bộ JavaScript 81/81 và `node --check` đạt sau sửa; Python 237/237 đạt trên cùng mã backend, trước bổ sung điều kiện thông báo JavaScript cuối cùng.
+- Trên trình duyệt tích hợp với kho giả, giữ phản hồi danh sách cũ, đổi tiêu đề bản tin trong kho thử, chuyển Cách sử dụng rồi quay lại để tải danh sách mới. Sau khi thả phản hồi cũ, tiêu đề và revision mới vẫn hiện. Lượt thứ hai đưa tiêu điểm bằng Tab tới nút bản tin mới: sau khi thả phản hồi cũ, tiêu điểm vẫn ở nút đó. Server và kho thử đã dọn; chưa thử mọi kiểu lỗi, mọi lịch trình hoặc QA bàn phím tổng thể.
+
 ## PUB-02 / PUB-03 / QA-02: tải lại sau ghi nhận hoặc đính chính — 06/11/2026
 
 - Sau khi lưu thành công, giao diện báo ngay kết quả và mở khóa trong khi tải lại danh sách và phiên bản. Nếu tải lại thất bại, thông báo nêu rõ phần chưa tải và hướng dẫn mở lại kiểm tra lịch sử. Đây là xử lý kết quả tải lại, không tự ghi thêm hay gửi lại thao tác.

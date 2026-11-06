@@ -8,6 +8,7 @@ const app = {state: null, view: 'inbox', category: 'all', articleId: null, draft
   selectedArticles: new Set(), bulletin: null, bulletinDirty: false, variantId: null, publicationKeys: new Map(), conflictTarget: null,
   storeChanged: false, storeFileId: null, sessionUnverified: false};
 let pollTimer, toastTimer, dialogCopyAction = null, legacyExportSnapshot = null, textDialogGeneration = 0;
+let bulletinListGeneration = 0;
 
 // All external/source/model text is inserted as text or input values, never HTML.
 function node(tag, className, text) {
@@ -650,7 +651,15 @@ function bulletinAction(button, action, afterSuccess = null) {
   });
 }
 async function loadBulletinList() {
-  const [entries, stats, duplicates] = await Promise.all([api('/api/bulletins'), api('/api/bulletin-stats'), api('/api/legacy-publication-duplicates')]);
+  const generation = ++bulletinListGeneration;
+  let entries, stats, duplicates;
+  try {
+    [entries, stats, duplicates] = await Promise.all([api('/api/bulletins'), api('/api/bulletin-stats'), api('/api/legacy-publication-duplicates')]);
+  } catch (error) {
+    if (generation !== bulletinListGeneration) return false;
+    throw error;
+  }
+  if (generation !== bulletinListGeneration) return false;
   $('bulletin-stats').textContent = `${stats.bulletins} bản tin · ${stats.variants} phiên bản kênh · ${stats.recorded_bulletins} bản tin có ghi nhận · ${stats.recorded_posts} đoạn đã ghi nhận. Số liệu gồm cả bản tin lưu trữ; không cộng với thống kê bài cũ ở trên.`;
   const notice = $('legacy-duplicate-notice');
   notice.replaceChildren();
@@ -1055,12 +1064,12 @@ function refreshAfterPublication(message, warning = false) {
   let detail;
   try { detail = Promise.resolve(renderBulletin(false, true)).then(result => result !== false, () => false); }
   catch (_) { detail = Promise.resolve(false); }
-  const list = Promise.resolve().then(() => loadBulletinList()).then(() => true, () => false);
+  const list = Promise.resolve().then(() => loadBulletinList()).then(result => result === false ? null : true, () => false);
   toast(`${message} Đang tải lại dữ liệu.`, warning);
   Promise.all([detail, list]).then(([detailOk, listOk]) => {
-    const failed = [...(!listOk ? ['danh sách'] : []), ...(!detailOk ? ['phiên bản'] : [])];
+    const failed = [...(listOk === false ? ['danh sách'] : []), ...(!detailOk ? ['phiên bản'] : [])];
     if (failed.length) toast(`${message} Chưa tải lại được ${failed.join(' và ')}. Hãy mở lại để kiểm tra lịch sử.`, true);
-    else toast(message, warning);
+    else if (listOk !== null) toast(message, warning);
   });
 }
 function variantStatus(variant) {

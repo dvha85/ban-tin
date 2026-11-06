@@ -1553,6 +1553,58 @@ test('successful publication and correction report saved when refresh fails', as
   }
 });
 
+test('a late bulletin list response cannot replace a newer list or raise a stale error', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const batches = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    batches, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`api = path => new Promise((resolve, reject) => {
+    if (path === '/api/bulletins') batches.push({});
+    batches.at(-1)[path] = {resolve, reject};
+  });`, context);
+  const resolveBatch = (index, title, count) => {
+    batches[index]['/api/bulletins'].resolve([{id: count, title, edition_date: '2026-11-06', item_count: 1, revision: 1}]);
+    batches[index]['/api/bulletin-stats'].resolve({bulletins: count, variants: 0, recorded_bulletins: 0, recorded_posts: 0});
+    batches[index]['/api/legacy-publication-duplicates'].resolve([]);
+  };
+  const old = vm.runInContext('loadBulletinList()', context);
+  const latest = vm.runInContext('loadBulletinList()', context);
+  resolveBatch(1, 'Danh sách mới', 2); await latest;
+  resolveBatch(0, 'Danh sách cũ', 1); await old;
+  assert.equal(get('bulletin-list').children[0].children[0].textContent, 'Danh sách mới');
+  assert.match(get('bulletin-stats').textContent, /^2 bản tin/);
+  const staleFailure = vm.runInContext('loadBulletinList()', context);
+  const newest = vm.runInContext('loadBulletinList()', context);
+  resolveBatch(3, 'Danh sách mới nhất', 3); await newest;
+  batches[2]['/api/bulletins'].reject(new Error('stale error'));
+  await assert.doesNotReject(staleFailure);
+  assert.equal(get('bulletin-list').children[0].children[0].textContent, 'Danh sách mới nhất');
+  const obsolete = vm.runInContext('loadBulletinList()', context);
+  const failedLatest = vm.runInContext('loadBulletinList()', context);
+  batches[5]['/api/bulletins'].reject(new Error('latest error'));
+  await assert.rejects(failedLatest, /latest error/);
+  resolveBatch(4, 'Không được dùng', 4); await obsolete;
+  assert.equal(get('bulletin-list').children[0].children[0].textContent, 'Danh sách mới nhất');
+});
+
+test('superseded publication list refresh does not announce a successful reload', async () => {
+  const messages = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    messages, fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: () => new Element(), querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`toast = message => messages.push(message); renderBulletin = async () => true;
+    loadBulletinList = async () => false; refreshAfterPublication('Đã ghi nhận.');`, context);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(messages, ['Đã ghi nhận. Đang tải lại dữ liệu.']);
+});
+
 test('successful publication releases the editor while both refresh requests are pending', async () => {
   const elements = new Map(), messages = [], calls = [];
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

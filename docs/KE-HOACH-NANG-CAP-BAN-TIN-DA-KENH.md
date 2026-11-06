@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> APR-04 / QA-02 ngày 06/11: lượt tải danh sách cũ không ghi đè lượt mới; test DOM giả và UI kho giả có giữ phản hồi, kể cả kiểm tra tiêu điểm Tab, đạt trong phạm vi `KIEM-THU.md`. Hồi quy 237/237 Python trên cùng backend và 81/81 JavaScript; QA tổng thể vẫn mở.
+
 > PUB-02 / PUB-03 / QA-02 ngày 06/11: sau khi ghi nhận/đính chính, mở khóa giao diện trong lúc tải lại và phân biệt lỗi danh sách, phiên bản hoặc cả hai. Test handler và một lượt UI kho giả có tiêm lỗi đạt theo phạm vi `KIEM-THU.md`; hồi quy 237/237 Python, 79/79 JavaScript. QA tổng thể vẫn mở.
 
 > PUB-02 / PUB-03 / QA-02 ngày 06/11: phân biệt ghi nhận/đính chính đã lưu với lỗi tải lại danh sách sau đó; test handler và hai nhánh trên kho giả đạt theo `KIEM-THU.md`. Hồi quy 237/237 Python, 78/78 JavaScript; QA tổng thể vẫn mở.
