@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> BASE-02 ngày 06/11: kiểm thử HTTP ba thao tác lưu/xem trước/chia với ID mục, nguồn sai hoặc thuộc bản tin khác; giữ nguyên dữ liệu, đồng thời thử đầu vào hợp lệ. Phạm vi chi tiết tại `KIEM-THU.md`; hợp đồng tổng thể vẫn mở.
+
 > QA-02 ngày 06/11: sửa CSS checkbox bị kéo rộng khiến dấu chọn xa nhãn; hồi quy JavaScript 83/83 trước và sau. Edge trên kho giả kiểm tra bố cục các ô bản tin, Tab và Space trong phạm vi `KIEM-THU.md`; QA tổng thể vẫn mở.
 
 > PUB-03 / QA-02 ngày 06/11: UI kho giả ba kênh thử đính chính, hủy và ghi lại URL Facebook; publication/số liệu hai kênh khác và snapshot được đối chiếu. Sửa tiêu điểm sau lưu đính chính bằng bàn phím; hồi quy 238/238 Python, 83/83 JavaScript. Phạm vi và giới hạn tại `KIEM-THU.md`; QA tổng thể vẫn mở.

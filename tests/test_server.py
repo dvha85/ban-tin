@@ -402,6 +402,42 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.room.bulletin(bulletin['id']), bulletin)
         self.assertEqual(self.room.bulletin_history(bulletin['id']), history_before)
 
+    def test_variant_rejects_foreign_and_invalid_attribution_over_http(self):
+        headers = self.session()
+        articles = [self.room.import_article({'title': f'Tin giả {i}',
+            'url': f'https://example.com/attribution-{i}', 'summary': 'Nguồn thử.'}) for i in (1, 2)]
+        bulletin = self.room.create_bulletin({'article_ids': [articles[0]['id']]})
+        foreign = self.room.create_bulletin({'article_ids': [articles[1]['id']]})
+        item, other_item = bulletin['items'][0], foreign['items'][0]
+        variant = self.room.create_variant(bulletin['id'], {
+            'bulletin_revision': bulletin['revision'], 'platform': 'x'})
+        path = f"/api/variants/{variant['id']}"
+        history = self.room.bulletin_history(bulletin['id'])
+        segment = {'text': 'Một câu thử.', 'item_ids': [item['id']]}
+        invalid_segments = [
+            {**segment, 'item_ids': [item['id'], other_item['id']]},
+            {**segment, 'item_ids': [item['id'], item['id']]},
+            *[{**segment, 'item_ids': [value]} for value in (True, 1.0, str(item['id']), 2**63)],
+            {**segment, 'source_ids': [other_item['sources'][0]['source_id']]},
+            {**segment, 'source_ids': [item['sources'][0]['source_id'], item['sources'][0]['source_id']]},
+        ]
+        for action in ('save', 'preview', 'split'):
+            for invalid in invalid_segments:
+                with self.subTest(action=action, segment=invalid):
+                    status, _, body = self.request('POST', f'{path}/{action}', {
+                        'revision': variant['revision'], 'segments': [invalid]}, headers)
+                    self.assertEqual(status, 400, body)
+                    self.assertIn('error', json.loads(body))
+        self.assertEqual(self.room.bulletin(bulletin['id']), bulletin)
+        self.assertEqual(self.room.bulletin(foreign['id']), foreign)
+        self.assertEqual(self.room.variant(variant['id']), variant)
+        self.assertEqual(self.room.bulletin_history(bulletin['id']), history)
+        for action in ('preview', 'split', 'save'):
+            with self.subTest(valid_action=action):
+                status, _, body = self.request('POST', f'{path}/{action}', {
+                    'revision': variant['revision'], 'segments': [segment]}, headers)
+                self.assertEqual(status, 200, body)
+
     def test_variant_save_contract_over_http(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử hợp đồng lưu',

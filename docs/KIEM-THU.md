@@ -1,5 +1,9 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## BASE-02: định danh mục và nguồn trong đoạn qua HTTP — 06/11/2026
+
+- Trên hai bản tin trong kho giả, thử `save`, `preview`, `split` với mục thuộc bản tin khác, mục trùng, ID boolean/số thực/chuỗi/vượt 64-bit, nguồn thuộc bản tin khác và nguồn trùng. Mỗi yêu cầu trả HTTP 400; hai bản tin, phiên bản và lịch sử của bản tin đang sửa không đổi. Cùng ba thao tác chấp nhận đoạn có ID hợp lệ. Bộ Python đầy đủ đạt 239/239. Kiểm thử này bổ sung bằng chứng về quan hệ mục/nguồn trong payload, chưa bao phủ mọi trường, mọi lỗi hoặc toàn bộ hợp đồng API; BASE-02 vẫn mở.
+
 ## QA-02: bố cục checkbox — 06/11/2026
 
 - Trên Edge ở lượt kiểm tra đính chính trước, ô checkbox trong biểu mẫu bản tin có chiều rộng kéo theo quy tắc chung của ô nhập liệu; dấu chọn nằm xa nhãn và phần chữ bị thu hẹp. Bổ sung CSS cho checkbox với kích thước cố định và không co giãn trong hàng, không đổi handler hoặc dữ liệu.
