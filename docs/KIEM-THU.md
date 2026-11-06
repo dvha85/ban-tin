@@ -1,5 +1,16 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## BASE-03 / TEXT-03: mẫu biên trên Threads và X — 06/11/2026
+
+- Sau khi người dùng đăng nhập Edge, thử trực tiếp trong ô soạn Threads: `a` lặp 488 lần cùng `e` + dấu sắc tổ hợp và `🫱🏽‍🫲🏻🇻🇳🧑‍💻` (500 điểm mã) hiện còn 0; thêm `a` hiện −1 và nút thêm vào thread bị vô hiệu. Mẫu `a` lặp 450 lần, dấu cách và URL `https://example.com/` + 29 chữ `b` cũng hiện 0; thêm `b` vào URL hiện −1. Bộ đếm Threads v6 trả 500/501 tương ứng cho hai mẫu.
+- Trong ô soạn X, `a` lặp 249 lần cùng chuỗi Unicode trên, dấu cách và URL mẫu đó hiện còn 0; thêm `a` vào cuối URL vẫn còn 0; thêm dấu cách rồi `a` ngoài URL hiện −2, xóa chữ `a` cuối còn −1 và nút đăng bị vô hiệu. Bộ đếm ứng dụng trả lần lượt 280, 280, 282 và 281. Các ô soạn đã xóa nội dung thử, bản xem trước liên kết Threads được gỡ, không đăng bài. `test_composer_observed_mixed_unicode_and_long_url_boundaries` lưu lại các mẫu; test conformance 11/11 đạt. Những quan sát này không đặc tả đầy đủ Unicode, URL, phiên bản ứng dụng hoặc mọi loại tài khoản; Threads vẫn là ước lượng và BASE-03 còn mở.
+- Toàn bộ Python đạt 240/240 trên cùng mã ứng dụng; lượt chạy bắt đầu trước khi đổi ký tự thêm vào URL Threads trong test từ `a` thành đúng `b` đã quan sát. Sau chỉnh test, chạy lại riêng nhóm conformance đạt 11/11; không thay đổi mã ứng dụng.
+
+## FMT-03 / TEXT-01 / QA-02: chia bốn đoạn Threads — 06/11/2026
+
+- Trên trình duyệt tích hợp với kho giả hai mục và bản nháp Threads chuẩn bị sẵn, đề xuất chia hai đoạn dài thành bốn đoạn. Trước khi lưu, kho vẫn có hai đoạn ở revision 2; xem trước hiện 1/4–4/4, mỗi đoạn 318/500 và nguồn thứ nhất cho hai đoạn đầu, nguồn thứ hai cho hai đoạn cuối. Lưu, xác nhận checklist và duyệt qua UI: bốn ô đầu ra đã duyệt hiển thị số thứ tự và nguồn tương ứng như xem trước; đọc kho xác nhận revision 5, trạng thái approved và quan hệ mục/nguồn của bốn đoạn. Không đăng hoặc ghi nhận URL.
+- Đây là một fixture chuỗi ASCII và hai URL giả; chưa đối chiếu clipboard/tệp trong lượt này, không chứng minh bộ đếm Threads khớp mọi chuỗi hoặc toàn bộ QA. Các gate vẫn mở.
+
 ## PUB-02 / PUB-03 / QA-02: thông báo tải lại đến muộn — 06/11/2026
 
 - Sau khi ghi nhận hoặc đính chính, giao diện báo ngay đã lưu và đang tải lại. Trước sửa, kết quả tải lại đến muộn vẫn có thể hiển thị khi người dùng đã chuyển bản tin, phiên bản hoặc có lượt tải lại ghi nhận mới hơn. Nay kết quả muộn chỉ được thông báo nếu lượt đó vẫn mới nhất và trang, bản tin, phiên bản vẫn là ngữ cảnh lúc bắt đầu tải. Đây không hủy request hay thay thế việc đối chiếu lịch sử khi kết quả ghi chưa rõ.

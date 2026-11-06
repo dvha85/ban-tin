@@ -10,6 +10,21 @@ from newsroom._vendor.twitter_text import extract_urls, extract_urls_with_indice
 
 
 class TwitterTextConformance(unittest.TestCase):
+    def test_composer_observed_mixed_unicode_and_long_url_boundaries(self):
+        # Observed in the signed-in web composers on 2026-11-06, without posting.
+        # These examples do not establish complete platform counting rules.
+        mixed = 'e\u0301🫱🏽‍🫲🏻🇻🇳🧑‍💻'
+        url = 'https://example.com/' + 'b' * 29
+        for text, extra in (('a' * 488 + mixed, 'a'), ('a' * 450 + ' ' + url, 'b')):
+            with self.subTest(platform='threads', sample=text[-50:]):
+                self.assertEqual(count_text('threads', text), (500, True))
+                self.assertEqual(count_text('threads', text + extra), (501, False))
+        text = 'a' * 249 + mixed + ' ' + url
+        self.assertEqual(count_text('x', text), (280, True))
+        self.assertEqual(count_text('x', text + 'a'), (280, True))
+        self.assertEqual(count_text('x', text + 'a '), (281, False))
+        self.assertEqual(count_text('x', text + 'a a'), (282, False))
+
     def test_url_extraction_matches_upstream_corpus(self):
         path = Path(__file__).parent / 'fixtures' / 'twitter-text-url-extract.json'
         fixture = json.loads(path.read_text(encoding='utf-8'))

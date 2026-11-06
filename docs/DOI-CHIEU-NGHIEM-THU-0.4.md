@@ -1,5 +1,7 @@
 # Đối chiếu điều kiện nghiệm thu 0.4
 
+> Cập nhật 06/11: người dùng đăng nhập lại; composer Threads/X được đối chiếu thêm với Unicode kết hợp và URL dài ở ranh giới, không đăng bài. UI kho giả cũng đã chia và duyệt bốn đoạn Threads giữ nguồn. Chi tiết và giới hạn tại `KIEM-THU.md`; BASE-03 và QA-02 vẫn mở.
+
 > Ngày 06/11: chạy lại hồi quy trên mã `bf3be22`: 237/237 Python và 77/77 JavaScript đạt. Các lần kiểm tra mới gồm giữ CRLF/CR và nguồn mặc định khi lưu, đối chiếu clipboard/tệp bài cũ, chặn xem hoặc sao chép nhầm khi phản hồi chậm và người dùng đổi ngữ cảnh. Phạm vi từng lượt tại `KIEM-THU.md`; policy, QA tổng thể, xem mẫu v6 và quyết định triển khai vẫn mở.
 
 > Ngày 06/11: bổ sung đối chiếu HTTP cho chia/lưu/duyệt/xuất Threads và X, cùng tình huống bản tin và policy thay đổi sau ghi nhận một phần; thử chia/lưu/tải lại X trên giao diện kho giả. Tại thời điểm đó hồi quy 232/232 Python, 63/63 JavaScript. Các điều kiện policy, QA tổng thể và quyết định triển khai vẫn mở; xem `KIEM-THU.md`.
