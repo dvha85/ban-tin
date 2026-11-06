@@ -8,6 +8,7 @@ const app = {state: null, view: 'inbox', category: 'all', articleId: null, draft
   selectedArticles: new Set(), bulletin: null, bulletinDirty: false, variantId: null, publicationKeys: new Map(), conflictTarget: null,
   storeChanged: false, storeFileId: null, sessionUnverified: false};
 let pollTimer, toastTimer, dialogCopyAction = null, legacyExportSnapshot = null, textDialogGeneration = 0;
+let publicationRefreshGeneration = 0;
 let bulletinListGeneration = 0;
 
 // All external/source/model text is inserted as text or input values, never HTML.
@@ -1062,12 +1063,16 @@ function renderBulletin(focusVariantSelector = false, quietErrors = false) {
   });
 }
 function refreshAfterPublication(message, warning = false, focusVariantSelector = false) {
+  const generation = ++publicationRefreshGeneration;
+  const view = app.view, bulletinId = app.bulletin?.id, variantId = app.variantId;
   let detail;
   try { detail = Promise.resolve(renderBulletin(focusVariantSelector, true)).then(result => result !== false, () => false); }
   catch (_) { detail = Promise.resolve(false); }
   const list = Promise.resolve().then(() => loadBulletinList()).then(result => result === false ? null : true, () => false);
   toast(`${message} Đang tải lại dữ liệu.`, warning);
   Promise.all([detail, list]).then(([detailOk, listOk]) => {
+    if (generation !== publicationRefreshGeneration || app.view !== view ||
+        app.bulletin?.id !== bulletinId || app.variantId !== variantId) return;
     const failed = [...(listOk === false ? ['danh sách'] : []), ...(!detailOk ? ['phiên bản'] : [])];
     if (failed.length) toast(`${message} Chưa tải lại được ${failed.join(' và ')}. Hãy mở lại để kiểm tra lịch sử.`, true);
     else if (listOk !== null) toast(message, warning);

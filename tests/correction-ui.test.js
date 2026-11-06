@@ -1675,6 +1675,32 @@ test('superseded publication list refresh does not announce a successful reload'
   assert.deepEqual(messages, ['Đã ghi nhận. Đang tải lại dữ liệu.']);
 });
 
+test('late publication refresh does not overwrite feedback in a newer context', async () => {
+  const messages = [], pending = [];
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    messages, pending, fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: () => new Element(), querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.view = 'bulletins'; app.bulletin = {id: 1}; app.variantId = 10;
+    toast = message => messages.push(message);
+    renderBulletin = () => new Promise(resolve => pending.push(resolve));
+    loadBulletinList = async () => true;`, context);
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  vm.runInContext("refreshAfterPublication('Lượt đầu.'); app.bulletin = {id: 2}; app.variantId = 20;", context);
+  vm.runInContext("toast('Đang sửa bản tin khác.');", context);
+  pending[0](false); await tick();
+  assert.equal(messages.at(-1), 'Đang sửa bản tin khác.');
+  vm.runInContext("refreshAfterPublication('Lượt thứ hai.'); refreshAfterPublication('Lượt mới nhất.');", context);
+  pending[2](true); await tick();
+  assert.equal(messages.at(-1), 'Lượt mới nhất.');
+  pending[1](false); await tick();
+  assert.equal(messages.at(-1), 'Lượt mới nhất.');
+  vm.runInContext("refreshAfterPublication('Phiên bản cũ.'); app.variantId = 21; toast('Đã chuyển phiên bản.');", context);
+  pending[3](false); await tick();
+  assert.equal(messages.at(-1), 'Đã chuyển phiên bản.');
+});
+
 test('successful publication releases the editor while both refresh requests are pending', async () => {
   const elements = new Map(), messages = [], calls = [];
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

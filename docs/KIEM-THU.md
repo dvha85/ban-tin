@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## PUB-02 / PUB-03 / QA-02: thông báo tải lại đến muộn — 06/11/2026
+
+- Sau khi ghi nhận hoặc đính chính, giao diện báo ngay đã lưu và đang tải lại. Trước sửa, kết quả tải lại đến muộn vẫn có thể hiển thị khi người dùng đã chuyển bản tin, phiên bản hoặc có lượt tải lại ghi nhận mới hơn. Nay kết quả muộn chỉ được thông báo nếu lượt đó vẫn mới nhất và trang, bản tin, phiên bản vẫn là ngữ cảnh lúc bắt đầu tải. Đây không hủy request hay thay thế việc đối chiếu lịch sử khi kết quả ghi chưa rõ.
+- Test handler tái hiện thông báo cũ ghi đè trước sửa; sau sửa thử đổi bản tin, đổi phiên bản và hai lượt tải hoàn thành ngược thứ tự. Các test lỗi tải trong cùng ngữ cảnh vẫn đạt; JavaScript đầy đủ 84/84. Trình duyệt tích hợp trên kho giả ghi nhận một URL X, chuyển sang Cách sử dụng trong lúc tải phiên bản chờ; khi trả lỗi SQLite giả, không hiện thông báo lỗi cũ tại trang đó. Kiểm tra kho có một ghi nhận hiệu lực. Đây là một lịch trình UI và lỗi tiêm, không phải lỗi mạng thật hoặc kiểm tra mọi thao tác; QA tổng thể vẫn mở.
+
 ## FMT-04 / QA-02: xác nhận bỏ đoạn — 06/11/2026
 
 - Trình duyệt tích hợp với SQLite giả, một bản nháp X có hai đoạn và một nguồn: mở xác nhận bỏ đoạn 2 rồi hủy, hai đoạn vẫn còn. Mở lại xác nhận, sửa nội dung đoạn 2 rồi bấm xác nhận cũ: ứng dụng báo đoạn đã thay đổi và giữ cả hai đoạn. Mở xác nhận lần nữa rồi đồng ý: đoạn 2 biến mất trên trang, tiêu điểm về đoạn 1. Trước khi lưu, kho vẫn có hai đoạn ở revision 2; sau **Lưu phiên bản**, kho có một đoạn ở revision 3. Tải lại trang sau khi lưu và mở phiên bản: đoạn 1 cùng lựa chọn mục/nguồn còn hiển thị.

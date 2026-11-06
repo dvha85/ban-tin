@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> PUB-02 / PUB-03 / QA-02 ngày 06/11: chặn thông báo tải lại của lượt ghi nhận/đính chính cũ khi đã chuyển ngữ cảnh hoặc có lượt mới; test handler và một luồng UI kho giả có tiêm lỗi đạt, JavaScript 84/84. Xem phạm vi tại `KIEM-THU.md`; QA tổng thể vẫn mở.
+
 > FMT-04 / QA-02 ngày 06/11: trên kho giả, thử hủy, từ chối xác nhận bỏ đoạn đã đổi, xác nhận lại, lưu và tải lại; đối chiếu trước/sau lưu và nguồn đoạn còn lại. Phạm vi tại `KIEM-THU.md`; QA tổng thể vẫn mở.
 
 > BASE-02 ngày 06/11: kiểm thử HTTP ba thao tác lưu/xem trước/chia với ID mục, nguồn sai hoặc thuộc bản tin khác; giữ nguyên dữ liệu, đồng thời thử đầu vào hợp lệ. Phạm vi chi tiết tại `KIEM-THU.md`; hợp đồng tổng thể vẫn mở.
