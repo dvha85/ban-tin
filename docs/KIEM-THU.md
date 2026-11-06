@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## DIG-04 / QA-02: đóng hộp sao chép khi thử lại đang chờ — 06/11/2026
+
+- Trên trình duyệt tích hợp với một bản tin và nguồn giả, server thử cung cấp bản `app.js` thay riêng lời gọi clipboard bằng hàm giả luôn báo từ chối và ghi số lần gọi. Lượt đầu mở hộp sao chép thủ công; bấm sao chép lại, giữ phản hồi gói tư liệu thứ hai rồi đóng hộp. Khi trả phản hồi, hộp vẫn đóng và tiêu điểm trở lại nút gói tư liệu. Bộ đếm server ghi hai lượt lấy gói nhưng chỉ một lần gọi clipboard giả, tức lượt thử lại không gọi clipboard sau khi hộp đóng.
+- Đây là một luồng gói tư liệu với clipboard bị giả lập từ chối, không phải kiểm tra quyền hoặc nội dung clipboard hệ điều hành; không thử các hộp xuất bản duyệt, thay nội dung hoặc mở hộp khác khi đang chờ. Test handler `fallback packet retry cannot copy after its dialog closes while waiting` bổ trợ ở mức DOM giả. Không sửa mã ứng dụng trong lượt UI; kho và server thử đã dọn. QA-02 tổng thể vẫn mở.
+
 ## APR-04 / QA-02: phản hồi danh sách đến sai thứ tự — 06/11/2026
 
 - Khi nhiều lượt tải danh sách chồng nhau, chỉ lượt được bắt đầu sau cùng được cập nhật danh sách, thống kê và cảnh báo trùng. Lỗi của lượt đã bị thay thế cũng không hiện đè lên kết quả mới; lỗi lượt mới nhất vẫn được báo. Khi tải lại sau ghi nhận bị lượt khác thay thế, không thông báo lượt cũ đã tải thành công.
