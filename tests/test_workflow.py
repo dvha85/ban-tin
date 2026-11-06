@@ -130,13 +130,21 @@ class WorkflowTests(unittest.TestCase):
         approved = self.room.approve(draft['id'], draft['revision'])
         before_history = self.room.history(approved['id'])
         before_stats = self.room.state()['stats']
-        for url in ('', 'https://evil.example/post', 'https://facebook.com/'):
+        for url in ('', 'https://evil.example/post', 'https://facebook.com/',
+                    'https://@facebook.com/example/posts/123', 'https://:@facebook.com/example/posts/123'):
             with self.subTest(url=url):
                 with self.assertRaises(ValidationError):
                     self.room.mark_published(approved['id'], approved['revision'], url)
                 self.assertEqual(self.room.draft(approved['id']), approved)
                 self.assertEqual(self.room.history(approved['id']), before_history)
                 self.assertEqual(self.room.state()['stats'], before_stats)
+
+    def test_manual_article_rejects_empty_userinfo_without_saving(self):
+        before = self.room.articles()
+        for url in ('https://@example.com/news/other', 'https://:@example.com/news/other'):
+            with self.subTest(url=url), self.assertRaises(ValidationError):
+                self.room.import_article({'title': 'Bài thử không hợp lệ', 'url': url, 'summary': 'Giả lập.'})
+            self.assertEqual(self.room.articles(), before)
 
     def test_manual_source_is_not_automatically_fetched(self):
         result = self.room.import_article({

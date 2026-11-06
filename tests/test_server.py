@@ -212,7 +212,8 @@ class ServerTests(unittest.TestCase):
         record_cases = {
             'position': (None, True, -1, 1, 1.5, '0', [], {}),
             'idempotency_key': (None, True, 1, 'short', 'x' * 101, 'invalid:key'),
-            'url': (None, True, [], {}, '', 'https://example.com/not-x', 'https://x.com/account'),
+            'url': (None, True, [], {}, '', 'https://example.com/not-x', 'https://x.com/account',
+                    'https://@x.com/fixture/status/441', 'https://:@x.com/fixture/status/441'),
             'reported_at': (True, [], {}, 'không phải ngày', '2026-11-06T10:00:00'),
         }
         for field, values in record_cases.items():
@@ -677,6 +678,7 @@ class ServerTests(unittest.TestCase):
         status, response_headers, body = self.request('GET', '/', headers=headers)
         self.assertIn('Content-Security-Policy', response_headers)
         self.assertIn(b'lang="vi"', body)
+        self.assertIn(b'id="import-error" class="notice warning" role="alert" hidden', body)
         self.assertNotIn('Access-Control-Allow-Origin', response_headers)
         status, _, body = self.request('POST', '/api/articles/import', {
             'title': 'Một nguồn tin thử nghiệm', 'url': 'https://example.com/safe',

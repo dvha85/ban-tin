@@ -36,6 +36,45 @@ class Element {
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
 }
 
+test('manual import displays errors in the dialog and distinguishes a saved import from refresh failure', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const messages = [];
+  let response = 'invalid', resets = 0, closes = 0;
+  get('import-form').reset = () => { resets++; };
+  get('import-dialog').close = () => { closes++; };
+  get('import-dialog').showModal = () => {};
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    Event: class { constructor(type) { this.type = type; } }, messages, mode: () => response,
+    fetch: () => new Promise(() => {}), sourceWarnings: () => [],
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`toast = message => messages.push(message); view = () => {};
+    api = async () => { if (mode() !== 'saved') { const error = new Error('Liên kết không hợp lệ');
+      error.outcomeUnknown = mode() === 'unknown'; throw error; } return {id: 42}; };
+    loadState = async () => { throw new Error('Không tải được'); };`, context);
+  get('import-url').value = 'https://@example.com/story';
+  get('import-title').value = 'Tin thử';
+  get('import-summary').value = 'Ghi chú thử';
+  const submit = async () => { get('import-form').dispatchEvent({type: 'submit', preventDefault() {}});
+    await new Promise(resolve => setImmediate(resolve)); };
+  await submit();
+  assert.equal(get('import-error').hidden, false);
+  assert.match(get('import-error').textContent, /không hợp lệ/);
+  assert.equal(get('import-url').value, 'https://@example.com/story');
+  assert.equal(get('import-title').value, 'Tin thử');
+  assert.equal(resets, 0); assert.equal(closes, 0);
+  response = 'unknown'; await submit();
+  assert.match(get('import-error').textContent, /chưa rõ.*kiểm tra/i);
+  assert.equal(resets, 0); assert.equal(closes, 0);
+  response = 'saved'; await submit();
+  assert.equal(resets, 1); assert.equal(closes, 1);
+  assert.match(messages.at(-1), /đã.*lưu.*chưa tải lại/i);
+  assert.equal(vm.runInContext('app.articleId', context), 42);
+});
+
 test('packet copy rejects stale or changed editor state and copies matching snapshot', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

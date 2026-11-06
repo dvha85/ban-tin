@@ -487,7 +487,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ### G6 — Nghiệm thu và tài liệu
 
-- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 06/11 sau sửa đối chiếu URL Threads: Python 225/225, JavaScript 62/62 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
+- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 06/11 sau sửa URL userinfo rỗng và thông báo nhập thủ công: Python 228/228, JavaScript 63/63 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.
@@ -599,9 +599,10 @@ Trạng thái dùng thống nhất: `Chưa bắt đầu` / `Đang làm` / `Chờ
 
 | Ngày | Task/mốc | Trạng thái | Bằng chứng / commit / người thực hiện | Bước tiếp theo |
 | --- | --- | --- | --- | --- |
+| 06/11/2026 | SAFE-01/02 / POST-02 / QA-02 | Đang làm | Chặn URL có userinfo rỗng trong bộ kiểm tra chung; sửa thông báo ngay trong hộp nhập thủ công, smoke kho giả; Python 228/228, JS 63/63 | Tiếp tục đối chiếu URL/policy và QA, chưa thử lỗi mạng thật; xem `KIEM-THU.md` |
 | 06/11/2026 | BASE-03 / PUB-02 / QA-02 | Đang làm | Sửa so trùng shortcode Threads có mã hóa ký tự URI không dành riêng; test service/HTTP và UI kho giả; Python 225/225, JS 62/62 | Chưa xác minh URL thực tế, các alias khác hoặc toàn bộ QA; bản cũ không tự hợp nhất |
 | 06/11/2026 | BASE-02 / POST-02/05/06 | Đang làm | HTTP kho giả: 128 yêu cầu sai của ghi nhận, đính chính và số liệu trả 400/409; đối chiếu dữ liệu không đổi; Python 223/223, JavaScript 62/62 | Chưa bao phủ mọi payload/kênh hoặc chính sách URL; xem `KIEM-THU.md` và tài liệu API |
-| 06/11/2026 | REL-01 / PILOT | Đang làm | Ba bản nháp giả chuẩn bị bằng service, duyệt qua UI; trích snapshot hash hợp lệ theo policy v6 vào `DAU-RA-PILOT-GIA-LAP-0.4-V6.md`, không có publication | Người dùng xem bản mẫu mới; chưa thay thế tệp pilot cũ hoặc QA đầu-cuối và chưa có quyết định triển khai |
+| 06/11/2026 | REL-01 / PILOT | Đang làm | Ba bản nháp giả chuẩn bị bằng service, duyệt qua UI; trích snapshot hash hợp lệ theo policy v6 vào `DAU-RA-PILOT-GIA-LAP-0.4-V6.md`, không có publication | Người dùng chọn xem mẫu mới sau; chưa thay thế tệp pilot cũ hoặc QA đầu-cuối và chưa có quyết định triển khai |
 | 06/11/2026 | DOC-01 / REL-01 / BASE-02/03 | Đang làm | Lập ma trận liên kết 43 ID mục 8 với test, cấp bằng chứng và hạn chế; kiểm tra tên test Python và đường dẫn cục bộ tồn tại | Đối chiếu hợp đồng API/policy còn thiếu, hoàn tất QA và chốt nghiệm thu với người dùng; xem `MA-TRAN-BANG-CHUNG-0.4.md` |
 | 06/11/2026 | DIG-02 / QA-02 | Đang làm | Bỏ nguồn và bỏ mục bằng Enter trên kho giả; tiêu điểm về mục đang sửa hoặc mục còn lại, Tab tới ô tiêu đề; Python 222/222 và JavaScript 62/62 | Tiếp tục QA toàn luồng, chưa thử trình đọc màn hình; xem `KIEM-THU.md` |
 | 06/11/2026 | NEWS-04 / DIG-02 / QA-02 | Đang làm | Trình duyệt trên kho giả xác nhận bỏ nguồn và bỏ mục vẫn giữ nguồn chung; sửa nhãn số lần sử dụng cũ, test 222/222 Python và 61/61 JavaScript | Tiếp tục QA toàn luồng và các điều kiện còn mở; xem `KIEM-THU.md` |

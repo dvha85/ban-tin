@@ -56,7 +56,7 @@ def safe_url(value):
     try:
         parts = urllib.parse.urlsplit(value)
         host = parts.hostname
-        if (parts.scheme != 'https' or not host or parts.username or parts.password
+        if (parts.scheme != 'https' or not host or parts.username is not None or parts.password is not None
                 or parts.port not in (None, 443) or '.' not in host
                 or host.endswith(('.local', '.localhost', '.internal'))):
             raise ValueError()

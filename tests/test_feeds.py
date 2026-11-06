@@ -18,6 +18,17 @@ class FeedTests(unittest.TestCase):
             with self.subTest(url=url), self.assertRaises(ValueError):
                 safe_url(url)
 
+    def test_reject_empty_userinfo_without_rejecting_at_in_path_or_query(self):
+        for url in ('https://@example.com/story', 'https://:@example.com/story',
+                    'https://@example.com:443/story', 'https://:@example.com:443/story',
+                    'https://user:@example.com/story', 'https://:password@example.com/story'):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                safe_url(url)
+        self.assertEqual(safe_url('https://example.com/a@b?email=x%40y'),
+                         'https://example.com/a@b?email=x%40y')
+        self.assertEqual(canonical_url('https://EXAMPLE.com:443/a@b?email=x%40y'),
+                         'https://example.com/a@b?email=x%40y')
+
     def test_rss_strips_html_and_records_unknown_date(self):
         raw = b'''<rss><channel><item><title>New &amp; useful</title>
         <link>https://example.com/a?utm_campaign=x</link>

@@ -1,6 +1,6 @@
 # Ma trận bằng chứng kiểm thử 0.4
 
-Cập nhật 06/11/2026 sau sửa so trùng URL Threads. Bảng này truy vết các tình huống ở mục 8 của [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) tới bằng chứng đã có; **không tự đánh dấu cổng phát hành là hoàn tất**. Xem diễn biến, lệnh, dữ liệu và giới hạn từng lần thử tại [KIEM-THU.md](KIEM-THU.md). Kết quả hồi quy gần nhất trên fixture: 225/225 Python, 62/62 JavaScript; cần chạy lại sau sửa mã và trước phát hành.
+Cập nhật 06/11/2026 sau sửa URL userinfo rỗng. Bảng này truy vết các tình huống ở mục 8 của [kế hoạch](KE-HOACH-NANG-CAP-BAN-TIN-DA-KENH.md) tới bằng chứng đã có; **không tự đánh dấu cổng phát hành là hoàn tất**. Xem diễn biến, lệnh, dữ liệu và giới hạn từng lần thử tại [KIEM-THU.md](KIEM-THU.md). Kết quả hồi quy gần nhất trên fixture: 228/228 Python, 63/63 JavaScript; cần chạy lại sau sửa mã và trước phát hành.
 
 Ký hiệu: **S** = service/SQLite giả; **H** = HTTP với server/kho giả; **J** = handler/helper JavaScript và DOM giả; **B** = trình duyệt với kho giả; **U** = người dùng đã thực hiện; **N** = nền tảng thật, không đăng. Tên test là điểm bắt đầu trong tệp được liên kết; không suy ra mọi tổ hợp được kiểm thử chỉ vì có tên trong bảng.
 

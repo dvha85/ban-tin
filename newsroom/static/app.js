@@ -1538,7 +1538,10 @@ listen($('refresh-button'), 'click', async () => {
   await loadState();
   poll();
 });
-listen($('import-button'), 'click', () => $('import-dialog').showModal());
+listen($('import-button'), 'click', () => {
+  $('import-error').hidden = true; $('import-error').textContent = '';
+  $('import-dialog').showModal();
+});
 let addingSource = false;
 let followScopeAuto = true;
 function followFields() {
@@ -1591,20 +1594,33 @@ listen($('follow-form'), 'submit', async event => {
 });
 listen($('import-form'), 'submit', async event => {
   event.preventDefault();
-  await mutation(async () => {
-    const article = await api('/api/articles/import', {url: $('import-url').value,
-      title: $('import-title').value, summary: $('import-summary').value});
-    app.articleId = article.id;
-    $('age-filter').value = 'all';
-    $('search-input').value = '';
-    app.category = 'all';
-    document.querySelectorAll('[data-category]').forEach(item => item.classList.toggle('active', item.dataset.category === 'all'));
-    await loadState();
-    $('import-dialog').close();
-    $('import-form').reset();
-    view('inbox');
-    toast('Đã thêm bài thủ công vào Hộp tin. Không tạo nguồn theo dõi, không tự tải trang.');
-  });
+  if (app.busy) {
+    $('import-error').textContent = 'Đang lưu thao tác trước. Vui lòng chờ một chút.';
+    $('import-error').hidden = false;
+    return;
+  }
+  $('import-error').hidden = true; $('import-error').textContent = '';
+  try {
+    await mutation(async () => {
+      const article = await api('/api/articles/import', {url: $('import-url').value,
+        title: $('import-title').value, summary: $('import-summary').value});
+      app.articleId = article.id;
+      $('age-filter').value = 'all';
+      $('search-input').value = '';
+      app.category = 'all';
+      document.querySelectorAll('[data-category]').forEach(item => item.classList.toggle('active', item.dataset.category === 'all'));
+      $('import-dialog').close();
+      $('import-form').reset();
+      try { await loadState(); }
+      catch (_) { toast('Bài đã được lưu nhưng chưa tải lại dữ liệu. Hãy kiểm tra Hộp tin trước khi thêm lại.', true); return; }
+      view('inbox');
+      toast('Đã thêm bài thủ công vào Hộp tin. Không tạo nguồn theo dõi, không tự tải trang.');
+    });
+  } catch (error) {
+    $('import-error').textContent = error.message + (error.outcomeUnknown ?
+      ' Kết quả chưa rõ; hãy kiểm tra Hộp tin trước khi thử lại.' : '');
+    $('import-error').hidden = false;
+  }
 });
 listen($('draft-form'), 'submit', event => { event.preventDefault(); return saveDraft(); });
 for (const id of ['field-page', 'field-title', 'field-body', 'field-angle', 'field-category']) listen($(id), 'input', markDirty);

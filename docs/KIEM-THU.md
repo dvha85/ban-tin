@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## SAFE-01/02 / POST-02 / QA-02: URL có thông tin đăng nhập rỗng — 06/11/2026
+
+- Trước sửa, `safe_url` kiểm tra giá trị tên/mật khẩu bằng tính đúng-sai, nên `https://@example.com/...` và `https://:@example.com/...` được chấp nhận và bị bỏ phần userinfo khi chuẩn hóa. Sau sửa, từ chối mọi userinfo kể cả rỗng; `@` trong đường dẫn hoặc query vẫn hợp lệ. Bộ kiểm tra được dùng chung cho nhập thủ công, nguồn theo dõi, bài legacy và ghi nhận đa kênh; không viết lại các URL hoặc dữ liệu đã lưu.
+- Test mới thất bại trước sửa với bốn URL userinfo rỗng, sau sửa đạt. Test service/HTTP kiểm tra từ chối nguồn thủ công, hai URL bài Facebook cũ và hai URL X đa kênh mà không đổi dữ liệu; test nguồn theo dõi xác nhận từ chối trước `read_public` và không lưu nguồn. Phạm vi đã thử là các fixture cụ thể; không kiểm tra mọi URL hoặc toàn bộ transport.
+- Trên trình duyệt kho giả, trước sửa giao diện lỗi hiển thị sau hộp nhập. Sau sửa, lỗi nằm trong hộp và giữ URL, tiêu đề, ghi chú; thay URL bằng `https://example.com/news/a@b` và lưu thành công. Test handler DOM giả kiểm tra lỗi thường, kết quả ghi chưa rõ và ghi thành công nhưng tải trạng thái lỗi; nhánh lỗi mạng chưa được thử qua trình duyệt. Server và kho thử đã dọn; QA-02 vẫn mở.
+- Trước sửa hồi quy 225/225 Python, 62/62 JavaScript; sau sửa 228/228 Python, 63/63 JavaScript và `node --check newsroom/static/app.js` đạt. Người dùng chọn xem bộ đầu ra giả lập v6 sau; chưa có quyết định triển khai.
+
 ## BASE-03 / PUB-02: đối chiếu shortcode Threads mã hóa — 06/11/2026
 
 - Trước sửa, test tái hiện hai chiều `/@user/post/%41bc%5F12` ↔ `/t/Abc_12` và `/t/XyZ_456` ↔ `/@user/post/X%79Z_456`: bản ghi có thể không bị nhận là trùng, kể cả khi đính chính sang cách biểu diễn còn lại. Dữ liệu, URL và xác nhận là giả.

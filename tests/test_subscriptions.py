@@ -55,6 +55,17 @@ class SubscriptionTests(unittest.TestCase):
         self.assertEqual(self.room.articles()[0]['source_name'], 'DEV Community')
         self.assertEqual(self.room.drafts(), [])
 
+    def test_empty_userinfo_is_rejected_before_discovery_or_storage(self):
+        before = self.room.collection_sources()
+        with patch('newsroom.subscriptions.read_public') as read:
+            for url in ('https://@dev.to/', 'https://:@dev.to/feed'):
+                with self.subTest(url=url), self.assertRaises(ValidationError):
+                    self.room.add_source(dict(self.data, url=url))
+            read.assert_not_called()
+        self.assertEqual(self.room.collection_sources(), before)
+        with self.room.connection() as conn:
+            self.assertEqual(conn.execute('SELECT COUNT(*) FROM custom_sources').fetchone()[0], 0)
+
     def test_declared_relative_atom_and_malformed_html_attributes(self):
         home = b'<html><head><link rel type href="/bad"><link rel="alternate" type="application/atom+xml" href="feed.xml"></head></html>'
         atom = b'<feed xmlns="http://www.w3.org/2005/Atom"><title>Example</title><entry><title>Public update</title><link href="https://dev.to/blog/update"/></entry></feed>'
