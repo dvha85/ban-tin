@@ -170,6 +170,46 @@ test('saving a variant restores keyboard focus without stealing focus moved duri
   assert.equal(await run(true), false);
 });
 
+test('variant save unlocks while the refreshed variant list is delayed', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const body = new Element('body');
+  const document = {body, activeElement: body, getElementById: get, querySelectorAll: () => [],
+    querySelector: () => new Element(), createElement: tag => new Element(tag), createTextNode: text => text};
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+    setTimeout, clearTimeout, fetch: () => new Promise(() => {}), document,
+    window: {location: {search: ''}, addEventListener() {}}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.bulletin = {id: 7, revision: 4, items: [{id: 1, title: 'Tin giả',
+    sources: [{source_id: 'source-1', url: 'https://example.com/a'}]}]};
+  vm.runInContext(`app.view = 'bulletins'; app.bulletin = bulletin; app.variantId = 3;
+    api = async path => path.endsWith('/variants') ? [{id: 3, revision: 2, platform: 'x', account_label: 'Kênh thử',
+      status: 'draft', locked_at: null, needs_update: false, policy_stale: false, checks: {},
+      segments: [{text: 'Tin giả', item_ids: [1], source_ids: ['source-1']}]}] : {id: 3};
+    renderBulletin = () => refreshed; toast = () => {};`, context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const run = async moveFocus => {
+    context.container = new Element();
+    await vm.runInContext('renderVariants(container, bulletin)', context);
+    const save = walk(context.container).find(el => el.tagName === 'button' && el.textContent === 'Lưu phiên bản');
+    document.activeElement = save;
+    let finish;
+    context.refreshed = new Promise(resolve => { finish = resolve; });
+    save.dispatchEvent({type: 'click'});
+    await new Promise(resolve => setImmediate(resolve));
+    document.activeElement = moveFocus ? new Element('button') : body;
+    assert.equal(vm.runInContext('app.busy', context), false);
+    assert.equal(get('bulletin-editor').inert, false);
+    assert.notEqual(get('variant-save').focused, true);
+    finish();
+    await new Promise(resolve => setImmediate(resolve));
+    return get('variant-save').focused === true;
+  };
+  assert.equal(await run(false), true);
+  get('variant-save').focused = false;
+  assert.equal(await run(true), false);
+});
+
 test('removing an edited segment requires confirmation and preserves it on cancel or later edits', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> QA-02 / FMT-01 ngày 06/11: sửa vùng biên tập bị khóa sau POST lưu thành công khi GET danh sách phiên bản chậm; test handler và thử trình duyệt với phản hồi trì hoãn 25 giây đạt. Hồi quy 219/219 Python, 59/59 JavaScript; phạm vi và giới hạn tại `KIEM-THU.md`.
+
 > QA-02 / FMT-01 ngày 05/11: sửa mất tiêu điểm sau khi lưu phiên bản; test handler và smoke bàn phím với Facebook trên kho giả đạt trong phạm vi ghi tại `KIEM-THU.md`. Hồi quy 219/219 Python, 58/58 JavaScript. QA-02 vẫn mở.
 
 > BASE-02 ngày 05/11: bổ sung test HTTP cho trường phản hồi preview/split và xác nhận không ghi dữ liệu với một đoạn giả; sửa tài liệu API cho đúng ba trường ngữ cảnh của preview. Hồi quy 219/219 Python, 57/57 JavaScript. Chưa bao phủ toàn bộ hợp đồng; xem `KIEM-THU.md`.

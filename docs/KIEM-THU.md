@@ -1,4 +1,10 @@
-# Bằng chứng kiểm thử — cập nhật 05/11/2026
+# Bằng chứng kiểm thử — cập nhật 06/11/2026
+
+## QA-02 / FMT-01: tải danh sách phiên bản chậm sau khi lưu — 06/11/2026
+
+- Test handler tái hiện lỗi từ `b5a4ecc`: POST lưu đã thành công nhưng `app.busy` và vùng biên tập vẫn bị khóa khi GET danh sách phiên bản chưa trả. Sửa để kết thúc trạng thái bận sau POST, chờ danh sách ở nhánh riêng trước khi cân nhắc trả tiêu điểm; không giành tiêu điểm đã chuyển sang điều khiển khác. Test kiểm tra hai nhánh và trạng thái khóa trong lúc chờ.
+- Trên trình duyệt tích hợp với SQLite fixture và server cố ý trì hoãn GET danh sách 25 giây sau mỗi lần lưu: lưu bản X giả rồi chuyển tiêu điểm sang tiêu đề bản tin trong lúc chờ; sau khi tải xong, tiêu điểm vẫn ở tiêu đề và nội dung bản X đã lưu hiển thị. Ở lượt lưu tiếp theo không đổi tiêu điểm, nút lưu nhận lại tiêu điểm sau khi tải xong. Server và dữ liệu giả đã dọn.
+- Trước sửa, hồi quy `b5a4ecc` đạt 219/219 Python và 58/58 JavaScript; test mới thất bại tại trạng thái bận. Sau sửa, 219/219 Python, 59/59 JavaScript và `node --check newsroom/static/app.js` đạt. Đây là một tình huống trì hoãn được tạo giả, chưa bao phủ mọi lỗi mạng hoặc các hành động khác; QA-02 vẫn mở.
 
 ## QA-02 / FMT-01: tiêu điểm sau lưu phiên bản — 05/11/2026
 
