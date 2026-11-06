@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> DOC-01 ngày 06/11: rà và cập nhật lối vào README cho quy trình đa kênh, hướng dẫn mục bị lược/nguồn khi chia, kiến trúc snapshot và số hồi quy gần nhất trong đối chiếu nghiệm thu. Rà tĩnh theo mã hiện tại; DOC-01/REL-01 vẫn mở để rà lại trước phát hành. Xem `KIEM-THU.md`.
+
 > APR-04 / PUB-02 / TEXT-06 ngày 06/11: HTTP kho giả kiểm tra X/Threads ghi nhận một phần, sau đó bản tin và policy thay đổi; xuất bị chặn, lưu trữ giữ nguyên, ghi nhận tiếp và hủy vẫn giữ khóa/lịch sử. Hồi quy 232/232 Python, 63/63 JavaScript; chi tiết tại `KIEM-THU.md`.
 
 > FMT-03 / TEXT-01 / QA-02 ngày 06/11: test HTTP hai kênh chia hai mục thành bốn đoạn, lưu, duyệt và đối chiếu nguồn, preview, snapshot, export và tệp. Trình duyệt kho giả thử chia/lưu/tải lại cho X. Hồi quy 231/231 Python, 63/63 JavaScript; chi tiết và giới hạn tại `KIEM-THU.md`.

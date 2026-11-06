@@ -22,7 +22,17 @@ Máy hiện có Python 3.13.13, đã được dùng để kiểm thử. Phần R
 
 Muốn tập thao tác với dữ liệu giả: nhấp đúp **`MO-BAN-MINH-HOA.cmd`**. Bản này có nhãn MINH HỌA, cổng 8878 và thư mục dữ liệu riêng; không tải RSS thật. Không đăng các bài ví dụ.
 
-## Một bài đầu tiên
+## Bắt đầu với bản tin nhiều mục
+
+1. Trong **Hộp tin**, đánh dấu 1–10 tin rồi chọn **Tạo bản tin từ tin đã chọn**. Mở **Bản tin**, chọn bản vừa tạo, đọc nguồn và lưu nội dung, ghi chú kiểm chứng của từng mục.
+2. Với mỗi mục được sử dụng, thêm khẳng định và bằng chứng, lưu, sau đó xác nhận đã kiểm tra và lưu lại. Bạn có thể dùng **Sao chép gói tư liệu** để tự chuyển tư liệu sang công cụ AI và nhập lại kết quả; vẫn cần tự đối chiếu nguồn.
+3. Trong **Phiên bản theo kênh**, chọn Facebook, Threads hoặc X, nhấn **Tạo phiên bản**, nhập tên tài khoản và nội dung, chọn đúng mục và nguồn cho từng đoạn. Có thể chỉ làm một kênh. Dùng **Xem trước** để kiểm tra nguồn, độ dài và mục bị lược; Threads/X có nút **Đề xuất chia đoạn**.
+4. Nhấn **Lưu phiên bản**. Sau khi sửa nội dung, kiểm tra lại năm xác nhận, lưu lần nữa rồi nhấn **Duyệt phiên bản**. Trong **Xuất và ghi nhận đăng thủ công**, sao chép từng đoạn hoặc tải `.txt`. Kiểm tra trên nền tảng và tự đăng.
+5. Sau khi đăng, nhập URL đúng kênh và đoạn, chọn **Ghi nhận đã đăng** rồi xác nhận. Có thể ghi số liệu hoặc đính chính URL sau đó. Phiên bản đã ghi nhận bị khóa; chọn **Tạo bản sao** nếu cần sửa nội dung.
+
+Xem [hướng dẫn chi tiết bản tin nhiều mục](docs/HUONG-DAN-SU-DUNG.md#thử-quy-trình-bản-tin-nhiều-mục-đang-phát-triển) để xử lý nguồn, chia đoạn, clipboard, thay đổi chưa lưu và lịch sử. Luồng này vẫn đang nghiệm thu; dữ liệu demo chỉ để tập thao tác.
+
+## Một bài Facebook theo quy trình cũ
 
 1. Trong **Hộp tin**, nhấn **Lấy tin mới**. Chọn một tin, mở và đọc nguồn gốc.
 2. Nhấn **Tạo bản nháp** → **Sao chép sang ChatGPT** → **Mở ChatGPT**. Bạn tự đăng nhập Plus và dán tư liệu, không đưa mật khẩu cho ứng dụng này.

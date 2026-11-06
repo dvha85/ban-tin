@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## DOC-01: rà lối vào và quy trình nhiều kênh — 06/11/2026
+
+- Đối chiếu README và hướng dẫn với nhãn, xử lý preview/chia/lưu/duyệt/xuất/ghi nhận trong `newsroom/static/app.js`, cùng policy trong `social_formats.py`. README có đường bắt đầu riêng cho bản tin nhiều mục và phân biệt luồng một bài cũ; hướng dẫn nêu cách nhận diện mục lược và yêu cầu tự rà nguồn sau chia. Kiến trúc bổ sung phạm vi snapshot của preview và bản duyệt.
+- Cập nhật đối chiếu nghiệm thu theo hồi quy và bằng chứng gần nhất. Đây là rà tài liệu tĩnh cho các phần nêu trên, không phải lượt QA mới hoặc chốt trạng thái 0.4; cần rà lại toàn bộ tài liệu sau thay đổi cuối và trước phát hành. Hồi quy gần nhất vẫn là 232/232 Python, 63/63 JavaScript; lượt sửa tài liệu không thay đổi mã chạy.
+
 ## APR-04 / PUB-02 / TEXT-06: khóa lịch sử qua HTTP — 06/11/2026
 
 - Test `test_locked_partial_publications_survive_parent_and_policy_change_over_http` chuẩn bị bằng service một bản tin và hai snapshot hai đoạn X/Threads trên SQLite giả; qua HTTP ghi nhận đoạn đầu của mỗi phiên bản. Sau đó sửa bản tin gốc và giả lập policy mới ở server.
