@@ -1,4 +1,10 @@
-# Bằng chứng kiểm thử — cập nhật 06/11/2026
+# Bằng chứng kiểm thử — cập nhật 07/11/2026
+
+## PUB-03 / POST-05: đối chiếu phạm vi đính chính — 07/11/2026
+
+- Test `test_correcting_second_segment_keeps_first_segment_and_other_channel_unchanged` dùng hai đoạn cho từng phiên bản Threads/X và một Facebook đối chứng đã ghi nhận. Thử thay URL đoạn hai bằng URL đoạn một bị conflict và không đổi bản ghi/revision; thay bằng URL giả khác thì đoạn một giữ nguyên, đoạn hai cũ cùng lý do và số liệu được lưu trong lịch sử, lượt thay thế giữ đúng vị trí và bản duyệt. Đối chiếu sau mở lại kho cho thấy bản lưu và Facebook đối chứng không đổi. URL Threads được chuẩn hóa host theo hợp đồng hiện tại.
+- Cùng với test ba nền tảng, test HTTP và các lượt UI đính chính/hủy/ghi lại ghi bên dưới, PUB-03 được đánh dấu hoàn tất **phạm vi chức năng**. Chưa kiểm thử mọi lỗi mạng hoặc hành vi URL thực tế; G5, BASE-03 và QA-02 vẫn mở. Không sửa mã ứng dụng hoặc tác động bài trên nền tảng.
+- Bộ Python đầy đủ đạt 247/247 sau khi bổ sung test; lượt JavaScript gần nhất trên cùng mã ứng dụng đạt 86/86.
 
 ## APR-03 / TEXT-01 / QA-02: đối chiếu hộp sao chép ba kênh — 06/11/2026
 

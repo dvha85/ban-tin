@@ -1451,6 +1451,55 @@ class VariantTests(unittest.TestCase):
                 self.assertEqual(reopened.publications(variant['id']), records)
                 self.assertEqual(reopened.export_variant(variant['id'], archive=True), archive)
 
+    def test_correcting_second_segment_keeps_first_segment_and_other_channel_unchanged(self):
+        cases = (
+            ('threads', ['https://threads.com/@fixture/post/First101', 'https://threads.com/@fixture/post/Second102'],
+             'https://threads.com/@fixture/post/Second103'),
+            ('x', ['https://x.com/fixture/status/101', 'https://x.com/fixture/status/102'],
+             'https://x.com/fixture/status/103'),
+        )
+        control = self.make_approved('facebook')
+        control_record = self.room.record_publication(control['id'], {'revision': control['revision'], 'position': 0,
+            'url': 'https://facebook.com/fixture/posts/200', 'idempotency_key': 'correction_control_200'})
+        self.room.save_publication_metrics(control_record['id'], {'observed_at': '2026-11-06T10:00:00+07:00', 'views': 17})
+        control_before = self.room.publications(control['id'])
+        control_archive = self.room.export_variant(control['id'], archive=True)
+        for platform, urls, replacement_url in cases:
+            with self.subTest(platform=platform):
+                variant = self.make_approved(platform, two=True)
+                first = self.room.record_publication(variant['id'], {'revision': variant['revision'], 'position': 0,
+                    'url': urls[0], 'idempotency_key': f'correction_{platform}_first'})
+                current = self.room.variant(variant['id'])
+                second = self.room.record_publication(variant['id'], {'revision': current['revision'], 'position': 1,
+                    'url': urls[1], 'idempotency_key': f'correction_{platform}_second'})
+                self.room.save_publication_metrics(second['id'], {'observed_at': '2026-11-06T11:00:00+07:00', 'likes': 0})
+                before = self.room.publications(variant['id'])
+                archive = self.room.export_variant(variant['id'], archive=True)
+                current = self.room.variant(variant['id'])
+                with self.assertRaises(Conflict):
+                    self.room.correct_publication(second['id'], {'revision': current['revision'],
+                        'url': urls[0], 'reason': 'Đính chính URL giả bị trùng'})
+                self.assertEqual(self.room.publications(variant['id']), before)
+                self.assertEqual(self.room.variant(variant['id']), current)
+                result = self.room.correct_publication(second['id'], {'revision': current['revision'],
+                    'url': replacement_url, 'reason': 'Đính chính URL đoạn hai'})
+                records = self.room.publications(variant['id'])
+                self.assertEqual(records[0], before[0])
+                self.assertEqual((records[0]['id'], records[0]['position'], records[0]['active']), (first['id'], 0, 1))
+                self.assertEqual((records[1]['id'], records[1]['position'], records[1]['active']), (second['id'], 1, 0))
+                self.assertEqual(json.loads(records[1]['events'][-1]['payload'])['reason'], 'Đính chính URL đoạn hai')
+                self.assertEqual(json.loads(records[1]['metrics'][0]['payload'])['likes'], 0)
+                self.assertEqual((records[2]['id'], records[2]['position'], records[2]['url']),
+                                 (result['replacement_id'], 1, normalize_post_url(platform, replacement_url)))
+                self.assertEqual(records[2]['approval_id'], second['approval_id'])
+                self.assertEqual(records[2]['metrics'], [])
+                self.assertEqual(self.room.variant(variant['id'])['publication_progress'], {'active': 2, 'total': 2})
+                self.assertEqual(self.room.export_variant(variant['id'], archive=True), archive)
+                reopened = Newsroom(self.room.data_dir)
+                self.assertEqual(reopened.publications(variant['id']), records)
+                self.assertEqual(reopened.publications(control['id']), control_before)
+                self.assertEqual(reopened.export_variant(control['id'], archive=True), control_archive)
+
     def test_three_channel_metrics_and_dashboard_remain_separate_through_correction_and_archive(self):
         variants = {platform: self.make_approved(platform) for platform in ('facebook', 'threads', 'x')}
         urls = {'facebook': 'https://www.facebook.com/fixture/posts/76001',
