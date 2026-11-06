@@ -1344,6 +1344,14 @@ async function renderVariantPublication(area, variant) {
   catch (_) { ready = false; output = await api(`/api/variants/${variant.id}/archive`); }
   const publications = await api(`/api/variants/${variant.id}/publications`);
   if (!area.isConnected) return;
+  // Separate reads may straddle an edit, re-approval and publication in another tab.
+  // Never place an active URL beside text from a different approval snapshot.
+  if (!Number.isSafeInteger(variant.approval_id) || variant.approval_id < 1 ||
+      !output || output.approval_id !== variant.approval_id || !Array.isArray(output.posts) ||
+      !Array.isArray(publications) || publications.some(record => record.active && (
+        record.approval_id !== variant.approval_id || !Number.isInteger(record.position) ||
+        record.position < 0 || record.position >= output.posts.length)))
+    throw new Error('Bản duyệt hoặc ghi nhận đã thay đổi. Hãy mở lại phiên bản để đối chiếu.');
   const section = node('section', 'bulletin-block');
   section.append(node('h4', '', 'Xuất và ghi nhận đăng thủ công'),
     node('p', 'small-note', 'Ứng dụng không đăng bài và không xác minh bài trên mạng xã hội.'));

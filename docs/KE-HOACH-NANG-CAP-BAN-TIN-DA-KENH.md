@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> APR-04 / QA-02 ngày 07/11: chặn ghép snapshot và ghi nhận khác approval khi các phản hồi tải xen kẽ. Test handler và Edge với kho giả, thao tác thay đổi được tiêm giữa hai lần đọc; xem phạm vi tại `KIEM-THU.md`. APR-04 và QA tổng thể vẫn mở.
+
 > BASE-03 / PUB-02 ngày 07/11: sửa so trùng URL Threads với chữ số hex `%XX` khác hoa/thường; không giải mã byte dành riêng hay viết lại lịch sử. Test service/HTTP và giới hạn tại `KIEM-THU.md`; chưa xác minh mọi URL nền tảng.
 
 > APR-04 / APPROVE-05 ngày 07/11: thử HTTP đồng thời sửa và duyệt cùng revision, điều phối lần lượt mỗi thao tác thắng; đối chiếu bản duyệt, hash, export và lịch sử trong kho giả. Xem phạm vi tại `KIEM-THU.md`; APR-04 và QA tổng thể vẫn mở.
@@ -571,7 +573,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ### G6 — Nghiệm thu và tài liệu
 
-- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 07/11 sau sửa so trùng URI Threads: Python 256/256, JavaScript 87/87 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
+- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 07/11 sau sửa ghép bản duyệt và ghi nhận: Python 256/256, JavaScript 88/88 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.

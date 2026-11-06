@@ -1183,6 +1183,37 @@ test('variant dirty tracking ignores publication and metric fields but tracks ed
   assert.equal(vm.runInContext('app.bulletinDirty', context), true);
 });
 
+test('publication area rejects mixed approval snapshots and active records', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.variant = {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Kênh giả'};
+  context.area = new Element();
+  vm.runInContext(`let output = {approval_id: 21, posts: ['Bản duyệt A']};
+    let records = [{id: 11, approval_id: 22, position: 0, active: 1, url: 'https://x.com/a/status/123', metrics: []}];
+    api = async path => path.endsWith('/publications') ? records : output;`, context);
+  await assert.rejects(vm.runInContext('renderVariantPublication(area, variant)', context), /thay đổi|không khớp/i);
+  assert.equal(context.area.children.length, 0);
+  vm.runInContext("output = {approval_id: 22, posts: ['Bản duyệt B']}; records = [];", context);
+  await assert.rejects(vm.runInContext('renderVariantPublication(area, variant)', context), /thay đổi|không khớp/i);
+  assert.equal(context.area.children.length, 0);
+  vm.runInContext("output = {posts: ['Thiếu ID']}; records = [];", context);
+  await assert.rejects(vm.runInContext('renderVariantPublication(area, variant)', context), /thay đổi|không khớp/i);
+  assert.equal(context.area.children.length, 0);
+  vm.runInContext("output = {approval_id: 21, posts: ['Bản duyệt A']}; records = [{id: 11, approval_id: 21, position: 1, active: 1}];", context);
+  await assert.rejects(vm.runInContext('renderVariantPublication(area, variant)', context), /thay đổi|không khớp/i);
+  assert.equal(context.area.children.length, 0);
+  vm.runInContext("records = [{id: 11, approval_id: 21, position: 0, active: 1, url: 'https://x.com/a/status/123', metrics: []}];", context);
+  await vm.runInContext('renderVariantPublication(area, variant)', context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  assert.ok(walk(context.area).some(el => el.tagName === 'textarea' && el.value === 'Bản duyệt A'));
+  assert.ok(walk(context.area).some(el => el.tagName === 'a' && el.href === 'https://x.com/a/status/123'));
+});
+
 test('publication URL fields have a distinct accessible label for each segment', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
@@ -1192,9 +1223,9 @@ test('publication URL fields have a distinct accessible label for each segment',
     document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
-  vm.runInContext("api = async path => path.endsWith('/publications') ? [] : {posts: ['một', 'hai']};", context);
+  vm.runInContext("api = async path => path.endsWith('/publications') ? [] : {approval_id: 21, posts: ['một', 'hai']};", context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   const inputs = walk(area).filter(el => el.dataset.publicationUrl);
   assert.equal(inputs.length, 2);
@@ -1213,7 +1244,7 @@ test('historical export guidance distinguishes unlocked and locked variants', as
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
   vm.runInContext(`api = async path => {
     if (path.endsWith('/export')) throw new Error('stale policy');
-    if (path.endsWith('/archive')) return {posts: ['historical']};
+    if (path.endsWith('/archive')) return {approval_id: 21, posts: ['historical']};
     if (path.endsWith('/publications')) return [];
     throw new Error('Unexpected path');
   };`, context);
@@ -1223,7 +1254,7 @@ test('historical export guidance distinguishes unlocked and locked variants', as
     ['2026-11-04T00:00:00Z', 'tạo bản sao', 'lưu và duyệt lại phiên bản này'],
   ]) {
     context.area = new Element();
-    context.variant = {id: 3, revision: 4, platform: 'x', account_label: 'Thử', locked_at: lockedAt};
+    context.variant = {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử', locked_at: lockedAt};
     await vm.runInContext('renderVariantPublication(area, variant)', context);
     const message = walk(context.area).find(el => el.className === 'notice warning');
     assert.ok(message);
@@ -1245,13 +1276,13 @@ test('approved and historical post fields identify their saved state and segment
   vm.runInContext(`let stale = false; api = async path => {
     if (path.endsWith('/export') && stale) throw new Error('stale policy');
     if (path.endsWith('/publications')) return [];
-    return {posts: ['Một', 'Hai']};
+    return {approval_id: 21, posts: ['Một', 'Hai']};
   };`, context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   for (const stale of [false, true]) {
     context.area = new Element(); context.staleValue = stale;
     vm.runInContext('stale = staleValue', context);
-    await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+    await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
     const all = walk(context.area), fields = all.filter(el => el.tagName === 'textarea');
     const label = stale ? 'Nội dung lịch sử' : 'Nội dung đã duyệt';
     assert.deepEqual(fields.map(field => field['aria-label']), [`${label} cho đoạn 1`, `${label} cho đoạn 2`]);
@@ -1277,7 +1308,7 @@ test('download verifies the displayed approval and all posts and blocks unsaved 
     api = async path => { if (path.endsWith('/publications')) return []; if (failExport) throw new Error('không còn duyệt'); if (unverify) app.sessionUnverified = true; return structuredClone(current); };
     toast = message => messages.push(message);`, Object.assign(context, {structuredClone}));
   context.area = new Element();
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   const button = walk(context.area).find(el => el.textContent === 'Tải bản đã duyệt (.txt)');
   assert.equal(button.tagName, 'button');
@@ -1505,7 +1536,7 @@ test('retrying copy from fallback checks the approval and leaves a visible warni
     api = async path => path.endsWith('/publications') ? [] : structuredClone(current);
     toast = message => messages.push(message);`, context);
   context.area = new Element();
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   const copyButton = walk(context.area).find(el => el.textContent === 'Sao chép đoạn 1');
   const click = async el => { el.dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
@@ -1600,10 +1631,10 @@ test('publication retry reuses its key but a later new recording gets a new key'
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
   vm.runInContext(`api = async (path, body) => { if (path.endsWith('/publications') && body) {
     calls.push(body); if (calls.length === 1) throw Object.assign(new Error('Mất kết nối'), {outcomeUnknown: true}); return {active: 1}; }
-    return path.endsWith('/publications') ? [] : {posts: ['test']}; };
+    return path.endsWith('/publications') ? [] : {approval_id: 21, posts: ['test']}; };
     renderBulletin = () => {}; loadBulletinList = async () => {}; toast = () => {};`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   const url = walk(area).find(el => el.dataset.publicationUrl);
   const report = walk(area).find(el => el.tagName === 'button' && el.textContent === 'Ghi nhận đã đăng');
@@ -1636,10 +1667,10 @@ test('retrying a cancelled publication warns and an incomplete response keeps th
       if (calls.length === 1) throw Object.assign(new Error('Mất kết nối'), {outcomeUnknown: true});
       return calls.length === 2 ? {} : {id: 11, active: 0};
     }
-    return path.endsWith('/publications') ? [] : {posts: ['test']};
+    return path.endsWith('/publications') ? [] : {approval_id: 21, posts: ['test']};
   }; renderBulletin = () => {}; loadBulletinList = async () => {}; toast = message => messages.push(message);`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   const button = name => walk(area).find(el => el.tagName === 'button' && el.textContent === name);
   const url = walk(area).find(el => el.dataset.publicationUrl);
@@ -1672,13 +1703,13 @@ test('successful publication and correction report saved when refresh fails', as
       if (path.endsWith('/corrections')) { calls.push(path); return {corrected_id: 11, replacement_id: 12}; }
       if (path.endsWith('/publications') && body) { calls.push(path); return {id: 11, active: 1}; }
       if (path.endsWith('/publications')) return mode === 'correct' ?
-        [{id: 11, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : [];
-      return {posts: ['Nội dung giả']};
+        [{id: 11, approval_id: 21, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : [];
+      return {approval_id: 21, posts: ['Nội dung giả']};
     }; renderBulletin = async () => failed !== 'detail' && failed !== 'both';
     loadBulletinList = async () => { if (failed !== 'detail') throw new Error('refresh failed'); };
     toast = message => messages.push(message);`, context);
     const area = new Element(); get('bulletin-editor').append(area); context.area = area;
-    await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+    await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
     const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
     const button = name => walk(area).find(el => el.tagName === 'button' && el.textContent === name);
     const tick = () => new Promise(resolve => setImmediate(resolve));
@@ -1714,14 +1745,14 @@ test('saving a correction requests keyboard focus on the refreshed variant selec
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
   vm.runInContext(`app.view = 'bulletins'; app.bulletin = {id: 7, revision: 4}; app.variantId = 3;
     api = async (path, data) => path.endsWith('/corrections') ? {corrected_id: 11, replacement_id: 12} :
-      path.endsWith('/publications') ? [{id: 11, position: 0, active: 1, url: 'https://x.com/a/status/123', metrics: []}] : {posts: ['Nội dung giả']};
+      path.endsWith('/publications') ? [{id: 11, approval_id: 21, position: 0, active: 1, url: 'https://x.com/a/status/123', metrics: []}] : {approval_id: 21, posts: ['Nội dung giả']};
     renderBulletin = async focus => { focusRequests.push(focus); return true; };
     loadBulletinList = async () => {}; toast = () => {};`, context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   const tick = () => new Promise(resolve => setImmediate(resolve));
   for (const keyboard of [true, false]) {
     context.area = new Element(); get('bulletin-editor').replaceChildren(context.area);
-    await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+    await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
     const button = name => walk(context.area).find(el => el.tagName === 'button' && el.textContent === name);
     button('Đính chính liên kết').dispatchEvent({type: 'click'}); await tick();
     const field = name => walk(context.area).find(el => el.dataset.correctionField === name);
@@ -1824,11 +1855,11 @@ test('successful publication releases the editor while both refresh requests are
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
   vm.runInContext(`api = async (path, body) => path.endsWith('/publications') ?
-      (body ? (calls.push(body), {id: 11, active: 1}) : []) : {posts: ['Nội dung giả']};
+      (body ? (calls.push(body), {id: 11, active: 1}) : []) : {approval_id: 21, posts: ['Nội dung giả']};
     renderBulletin = () => detailPending; loadBulletinList = () => listPending;
     toast = message => messages.push(message);`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   const button = name => walk(area).find(el => el.tagName === 'button' && el.textContent === name);
   const tick = () => new Promise(resolve => setImmediate(resolve));
@@ -1851,10 +1882,10 @@ test('publication confirmation identifies destination and invalidates when URL c
     document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
-  vm.runInContext(`api = async (path, body) => path.endsWith('/publications') ? (body ? (calls.push(body), {active: 1}) : []) : {posts: ['test']};
+  vm.runInContext(`api = async (path, body) => path.endsWith('/publications') ? (body ? (calls.push(body), {active: 1}) : []) : {approval_id: 21, posts: ['test']};
     renderBulletin = () => {}; loadBulletinList = async () => {}; toast = () => {};`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Kênh thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Kênh thử'})", context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   const button = name => walk(area).find(el => el.tagName === 'button' && el.textContent === name);
   const url = walk(area).find(el => el.dataset.publicationUrl);
@@ -1916,14 +1947,14 @@ test('historical publications show readable events and retain their metrics', as
     document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
-  vm.runInContext(`api = async path => path.endsWith('/publications') ? [{id: 11, position: 0, active: false,
+  vm.runInContext(`api = async path => path.endsWith('/publications') ? [{id: 11, approval_id: 21, position: 0, active: false,
     url: 'https://x.com/a/status/123', recorded_at: '2026-11-03T10:00:00Z',
     events: [{action: 'reported', at: '2026-11-03T10:00:00Z', payload: '{}'},
       {action: 'corrected', at: '2026-11-03T11:00:00Z', payload: JSON.stringify({reason: 'Sai liên kết', replacement_url: 'https://x.com/a/status/456'})},
       {action: 'future_action', at: '2026-11-03T12:00:00Z', payload: '{broken'}],
-    metrics: [{observed_at: '2026-11-03T10:30:00Z', payload: JSON.stringify({views: 10, likes: 0})}]}] : {posts: ['test']};`, context);
+    metrics: [{observed_at: '2026-11-03T10:30:00Z', payload: JSON.stringify({views: 10, likes: 0})}]}] : {approval_id: 21, posts: ['test']};`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   const texts = walk(area).map(el => el.textContent).join('\n');
   assert.match(texts, /Đã ghi nhận/); assert.match(texts, /Đã đính chính/);
@@ -1944,9 +1975,9 @@ test('metric form retains edits on error and retries the same payload idempotent
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
   vm.runInContext(`api = async (path, body) => path.endsWith('/metrics') ? (calls.push(body), Promise.reject(Object.assign(new Error('Lỗi thử'), {outcomeUnknown: true}))) : path.endsWith('/publications') ?
-    [{id: 11, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : {posts: ['test']};`, context);
+    [{id: 11, approval_id: 21, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : {approval_id: 21, posts: ['test']};`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   const button = name => walk(area).find(el => el.tagName === 'button' && el.textContent === name);
   const field = name => walk(area).find(el => el.dataset.metricField === name);
@@ -1979,9 +2010,9 @@ test('correction form preserves inputs and requires confirmation before submitti
       createElement: tag => new Element(tag), createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
   vm.runInContext(`api = async (path, body) => path.endsWith('/corrections') ? (calls.push(body), Promise.reject(new Error('Liên kết không hợp lệ'))) : path.endsWith('/publications') ?
-    [{id: 11, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : {posts: ['test']};`, context);
+    [{id: 11, approval_id: 21, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : {approval_id: 21, posts: ['test']};`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
   const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
   const button = name => walk(area).find(el => el.tagName === 'button' && el.textContent === name);
   const field = name => walk(area).find(el => el.dataset.correctionField === name);
@@ -2029,12 +2060,12 @@ test('pending correction remains dirty until explicitly discarded', async () => 
   const source = fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8');
   vm.runInContext(source, context, {filename: 'app.js'});
   vm.runInContext(`api = async path => path.endsWith('/corrections') ? Promise.reject(new Error('Liên kết không hợp lệ')) : path.endsWith('/publications') ?
-    [{id: 11, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] :
-    {posts: ['test']};`, context);
+    [{id: 11, approval_id: 21, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] :
+    {approval_id: 21, posts: ['test']};`, context);
   const editor = get('bulletin-editor');
   const area = new Element(); editor.append(area);
   context.area = area;
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
   const walk = element => [element, ...element.children.filter(child => child instanceof Element).flatMap(walk)];
   const button = text => walk(area).find(el => el.tagName === 'button' && el.textContent === text);
   button('Đính chính liên kết').listeners.click[0]({});
@@ -2082,12 +2113,12 @@ test('X metrics handler keeps the order, zero and unknown values, and displays l
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context, {filename: 'app.js'});
   vm.runInContext(`api = async (path, body) => {
     if (path.endsWith('/metrics')) { calls.push({path, body}); return {}; }
-    if (path.endsWith('/publications')) return [{id: 11, position: 0, active: true,
+    if (path.endsWith('/publications')) return [{id: 11, approval_id: 21, position: 0, active: true,
       url: 'https://x.com/a/status/123', metrics: [{observed_at: '2026-11-03T10:00:00+07:00', payload: old}]}];
-    return {posts: ['test']};
+    return {approval_id: 21, posts: ['test']};
   }; renderBulletin = () => {}; toast = () => {};`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
   const walk = element => [element, ...element.children.filter(child => child instanceof Element).flatMap(walk)];
   assert.ok(walk(area).some(el => el.textContent.includes('Lượt chia sẻ: 0')));
   walk(area).find(el => el.tagName === 'button' && el.textContent === 'Nhập số liệu').listeners.click[0]({});
@@ -2121,9 +2152,9 @@ test('cancelled metric entry remains available and blocks navigation until disca
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context, {filename: 'app.js'});
   vm.runInContext(`api = async (path, body) => path.endsWith('/metrics') ? (calls.push(body), Promise.reject(new Error('Thời điểm không hợp lệ'))) : path.endsWith('/publications') ?
-    [{id: 11, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : {posts: ['test']};`, context);
+    [{id: 11, approval_id: 21, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : {approval_id: 21, posts: ['test']};`, context);
   const area = new Element(); get('bulletin-editor').append(area); context.area = area;
-  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, approval_id: 21, platform: 'x', account_label: 'Thử'})", context);
   const walk = element => [element, ...element.children.filter(child => child instanceof Element).flatMap(walk)];
   const button = text => walk(area).find(el => el.tagName === 'button' && el.textContent === text);
   button('Nhập số liệu').listeners.click[0]({});

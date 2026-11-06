@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 07/11/2026
 
+## APR-04 / QA-02: không ghép bản duyệt với ghi nhận khác — 07/11/2026
+
+- Trước sửa, test handler tái hiện vùng xuất chấp nhận snapshot cũ và ghi nhận hiệu lực thuộc approval ID mới. Các phản hồi phiên bản, export và publications được tải riêng, nên thao tác sửa/duyệt lại/ghi nhận tại cửa sổ khác có thể xen giữa các lần đọc.
+- UI nay đối chiếu approval ID của phiên bản và snapshot với mọi ghi nhận hiệu lực, đồng thời kiểm tra vị trí đoạn; thiếu ID, khác ID hoặc vị trí ngoài bản duyệt làm vùng xuất không hiển thị và báo mở lại. Test handler kiểm tra cả hai kiểu lệch ID, thiếu ID, sai vị trí và trường hợp khớp. Các fixture handler cũ được bổ sung approval ID theo cấu trúc API thực tế, không bỏ điều kiện kiểm tra cũ.
+- Trên Edge với kho SQLite giả, server thử tiêm sửa phiên bản X, duyệt lại và ghi URL giả giữa phản hồi export cũ và danh sách ghi nhận mới. UI hiện cảnh báo và không ghép URL mới vào vùng xuất cũ; mở lại bản tin thấy bản duyệt mới cùng URL giả đúng. Đây là một lịch trình được tiêm, không phải nhiều cửa sổ hay lỗi mạng thật; không kết nối X. Kiểm tra không khóa các cửa sổ khác và không bảo đảm phát hiện thay đổi sau phản hồi. APR-04 và QA-02 vẫn mở.
+- Hồi quy sau sửa đạt 256/256 Python, 88/88 JavaScript và `node --check` đạt.
+
 ## BASE-03 / PUB-02: so trùng chữ hoa/thường của mã URI Threads — 07/11/2026
 
 - Hồi quy nền ba test URL Threads/Facebook liên quan đạt. Test service mới tái hiện ba cặp URL dạng đầy đủ hiện được validator chấp nhận nhưng chỉ khác chữ hoa/thường trong `%XX` như `a%2fb`/`a%2Fb`: trước sửa cả ba cặp đều được ghi thành hai lượt. Đây là URL giả; chưa xác minh Meta chấp nhận dạng này.
