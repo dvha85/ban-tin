@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> FMT-02 / APR-02 / QA-02 ngày 06/11: biểu mẫu đa kênh giữ chuỗi CRLF/CR và cấu trúc lựa chọn nguồn khi không sửa, tránh hủy kiểm chứng/duyệt sai; test handler và UI kho giả đạt trong phạm vi `KIEM-THU.md`. Hồi quy 237/237 Python, 73/73 JavaScript.
+
 > APR-03 / QA-02 ngày 06/11: trên trình duyệt tích hợp, đối chiếu clipboard phiên và tệp UTF-8 với một bản duyệt bài cũ chứa CRLF/CR; cả hai khớp chuỗi/byte bản giả. Phạm vi và giới hạn tại `KIEM-THU.md`; QA tổng thể vẫn mở.
 
 > APR-02 / QA-02 ngày 06/11: khi lưu bài cũ, giữ xuống dòng gốc ở các trường không sửa để tránh hủy duyệt hoặc mất dấu vết nguồn do chuẩn hóa của biểu mẫu. Test handler và UI kho giả đạt trong phạm vi `KIEM-THU.md`; hồi quy 237/237 Python, 71/71 JavaScript. Lượt dán clipboard chưa đối chiếu được và không được tính là đạt.

@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## FMT-02 / APR-02 / QA-02: giữ nguyên dữ liệu biểu mẫu đa kênh — 06/11/2026
+
+- Trước sửa, trình duyệt chuẩn hóa CRLF/CR ở ô nhập có thể khiến lưu bản tin, mục hoặc phiên bản không sửa lại gửi chuỗi khác, làm mất kiểm chứng/duyệt; xem trước hoặc đề xuất chia cũng có thể dùng chuỗi khác. UI nay gửi lại chuỗi gốc khi giá trị hiển thị không đổi, gồm tiêu đề, lời mở/kết, mục, khẳng định, đích và đoạn; khi người dùng sửa, gửi giá trị mới.
+- Khi lựa chọn mục/nguồn của đoạn không đổi, UI giữ nguyên cấu trúc và thứ tự lưu trước đó, kể cả `source_ids` vắng mặt với nghĩa dùng nguồn mặc định. Trước sửa, UI tự thay bằng danh sách tường minh hoặc đổi thứ tự, khiến một phiên bản được duyệt trở lại nháp khi lưu không sửa. Khi người dùng thay đổi lựa chọn, UI vẫn gửi danh sách mục/nguồn mới.
+- Hai test handler tái hiện lỗi CRLF và khác thứ tự/nguồn mặc định trước sửa, sau sửa kiểm tra dữ liệu của lưu bản tin/mục, xem trước/chia/lưu phiên bản và các thay đổi thực tế. Hồi quy 237/237 Python, 73/73 JavaScript; `node --check` đạt.
+- Trên trình duyệt tích hợp với kho giả gồm một mục và phiên bản X đã duyệt chứa CRLF/CR, không có `source_ids` tường minh: trước sửa phần nguồn, lưu phiên bản không sửa làm mất duyệt; sau sửa, lưu thông tin bản tin, mục và phiên bản vẫn giữ duyệt. Đọc kho xác nhận toàn bộ bản tin, phiên bản và bản xuất bằng trước thao tác. Lượt UI chỉ thử một cấu hình; thay thứ tự/nguồn và xem trước/chia được kiểm tra ở handler. Server và kho thử đã dọn; FMT-02, APR-02 và QA-02 tổng thể vẫn mở.
+
 ## APR-03 / QA-02: đối chiếu clipboard và tệp bài cũ — 06/11/2026
 
 - Trên trình duyệt tích hợp với kho giả mới, một bài cũ được duyệt có nội dung chứa CRLF và CR. Mở bản xuất, bấm sao chép rồi đọc clipboard của chính phiên trình duyệt: chuỗi khớp chính xác bản xuất dự kiến, kể cả CRLF/CR và URL nguồn giả. Clipboard của phiên được đặt một chuỗi kiểm thử trước khi bấm để tránh nhầm với nội dung trước đó.

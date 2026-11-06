@@ -111,6 +111,56 @@ test('packet copy rejects stale or changed editor state and copies matching snap
   assert.deepEqual(copies, ['Gói đúng']);
 });
 
+test('variant preview split and save preserve unchanged CRLF and accept real edits', async () => {
+  const elements = new Map(), calls = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const createElement = tag => {
+    const element = new Element(tag);
+    if (tag === 'input' || tag === 'textarea') {
+      let value = '';
+      Object.defineProperty(element, 'value', {get: () => value,
+        set: text => { value = tag === 'textarea' ? String(text).replace(/\r\n?/g, '\n') : String(text).replace(/[\r\n]/g, ''); }});
+    }
+    return element;
+  };
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    calls, fetch: () => new Promise(() => {}), window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement, createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  context.container = new Element();
+  context.bulletin = {id: 7, revision: 4, items: [
+    {id: 1, title: 'Tin A', sources: [{source_id: 's', url: 'https://example.com/a'}]},
+    {id: 2, title: 'Tin B', sources: [{source_id: 's2', url: 'https://example.com/b'}]}]};
+  vm.runInContext(`app.variantId = 3; api = async (path, data) => {
+      if (path.endsWith('/variants')) return [{id: 3, revision: 2, platform: 'x', account_label: 'Trang\\r\\nA', status: 'draft',
+        locked_at: null, needs_update: false, policy_stale: false, checks: {},
+        segments: [{text: 'Một\\r\\nHai\\rBa', item_ids: [2, 1], source_ids: ['s2', 's']},
+          {text: 'Đoạn cũ', item_ids: [1]}]}];
+      calls.push({path, data}); throw new Error('fixture');
+    }; toast = () => {};`, context);
+  await vm.runInContext('renderVariants(container, bulletin)', context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const find = text => walk(context.container).find(el => el.tagName === 'button' && el.textContent === text);
+  const click = async text => { find(text).dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  for (const name of ['Xem trước', 'Đề xuất chia đoạn', 'Lưu phiên bản']) await click(name);
+  assert.equal(calls.length, 3);
+  for (const call of calls) {
+    assert.equal(call.data.segments[0].text, 'Một\r\nHai\rBa');
+    assert.deepEqual(Array.from(call.data.segments[0].item_ids), [2, 1]);
+    assert.deepEqual(Array.from(call.data.segments[0].source_ids), ['s2', 's']);
+    assert.equal(Object.hasOwn(call.data.segments[1], 'source_ids'), false);
+  }
+  assert.equal(calls[2].data.account_label, 'Trang\r\nA');
+  walk(context.container).find(el => el.tagName === 'textarea').value = 'Sửa\nmới';
+  await click('Lưu phiên bản'); assert.equal(calls.at(-1).data.segments[0].text, 'Sửa\nmới');
+  const selections = walk(context.container).filter(el => el.tagName === 'input' && el.type === 'checkbox');
+  selections[2].checked = false;
+  await click('Lưu phiên bản');
+  assert.deepEqual(Array.from(calls.at(-1).data.segments[0].item_ids), [1]);
+  assert.deepEqual(Array.from(calls.at(-1).data.segments[0].source_ids), ['s']);
+});
+
 test('variant actions carry the displayed bulletin revision', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
@@ -553,6 +603,47 @@ test('confirmed source and item removals restore keyboard focus without stealing
   await click(confirm);
   heading = walk(get('bulletin-editor')).find(el => el.id === 'bulletin-item-heading-6');
   assert.ok(heading && heading.focused);
+});
+
+test('bulletin and item save preserve unchanged CRLF and accept real edits', async () => {
+  const elements = new Map(), calls = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const createElement = tag => {
+    const element = new Element(tag);
+    if (tag === 'input' || tag === 'textarea') {
+      let value = '';
+      Object.defineProperty(element, 'value', {get: () => value,
+        set: text => { value = tag === 'textarea' ? String(text).replace(/\r\n?/g, '\n') : String(text).replace(/[\r\n]/g, ''); }});
+    }
+    return element;
+  };
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    calls, sourceWarnings: () => [], fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement, createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.state = {articles: [], bulletin_usage: {}};
+    app.bulletin = {id: 7, revision: 4, title: 'Bản\\r\\ntin', edition_date: '2026-11-04',
+      introduction: 'Mở\\r\\nđầu', conclusion: 'Kết\\rluận', items: [{id: 5, article_id: 1, revision: 2,
+        title: 'Tiêu\\r\\nđề', body: 'Một\\r\\nHai', angle: 'Góc\\rnhìn', verification_note: 'Kiểm\\r\\nchứng',
+        verified: true, claims: [{text: 'Khẳng\\r\\nđịnh', evidence: 'Nguồn\\r\\nkiểm', checked: true}],
+        sources: [{source_id: 's', url: 'https://example.com/a', title: 'Nguồn', date_kind: 'unknown'}]}]};
+    renderVariants = async () => {}; toast = () => {}; api = async (path, data) => { calls.push({path, data}); throw new Error('fixture'); };
+    renderBulletin();`, context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const find = (tag, text) => walk(get('bulletin-editor')).find(el => el.tagName === tag && el.textContent === text);
+  const click = async text => { find('button', text).dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
+  await click('Lưu thông tin bản tin'); await click('Lưu mục');
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].data.title, 'Bản\r\ntin'); assert.equal(calls[0].data.introduction, 'Mở\r\nđầu');
+  assert.equal(calls[0].data.conclusion, 'Kết\rluận');
+  assert.equal(calls[1].data.title, 'Tiêu\r\nđề'); assert.equal(calls[1].data.body, 'Một\r\nHai');
+  assert.equal(calls[1].data.angle, 'Góc\rnhìn'); assert.equal(calls[1].data.verification_note, 'Kiểm\r\nchứng');
+  assert.equal(calls[1].data.claims[0].text, 'Khẳng\r\nđịnh');
+  assert.equal(calls[1].data.claims[0].evidence, 'Nguồn\r\nkiểm');
+  find('label', 'Nội dung').children[0].value = 'Đã sửa\nmới';
+  await click('Lưu mục'); assert.equal(calls.at(-1).data.body, 'Đã sửa\nmới');
 });
 
 test('inline source form keeps pending fields, blocks unrelated saves, and retains failed input', async () => {

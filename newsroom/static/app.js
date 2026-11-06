@@ -672,7 +672,7 @@ function bulletinField(label, value, multiline = false) {
   if (multiline) input.rows = 4;
   input.value = value || '';
   wrapper.append(input);
-  return {wrapper, input};
+  return {wrapper, input, value: () => unchangedDraftField(input.value, value || '', multiline)};
 }
 function trackBulletinSection(section, fields) {
   const original = fields.map(field => field.type === 'checkbox' ? field.checked : field.value);
@@ -844,7 +844,7 @@ function renderBulletin(focusVariantSelector = false) {
     if (hasPendingBulletinUrl() || hasPendingPublicationEdit() || (app.bulletinDirty && [...editor.querySelectorAll('.bulletin-item, .variant-editor')].some(el => el.dataset.dirty === 'true')))
       throw new Error('Hãy lưu hoặc bỏ thay đổi ở mục tin trước.');
     app.bulletin = await api(`/api/bulletins/${bulletin.id}/save`, {revision: bulletin.revision,
-      title: title.input.value, edition_date: edition.input.value, introduction: intro.input.value, conclusion: conclusion.input.value});
+      title: title.value(), edition_date: edition.input.value, introduction: intro.value(), conclusion: conclusion.value()});
     app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã lưu bản tin.');
   });
   trackBulletinSection(top, [title.input, edition.input, intro.input, conclusion.input]);
@@ -876,7 +876,7 @@ function renderBulletin(focusVariantSelector = false) {
       listen(remove, 'click', () => {
         row.remove(); syncClaims(); claimState.dispatchEvent(new Event('input', {bubbles: true}));
       });
-      row.collect = () => ({text: text.input.value, evidence: evidence.input.value, checked: checked.checked});
+      row.collect = () => ({text: text.value(), evidence: evidence.value(), checked: checked.checked});
       row.addEventListener('input', syncClaims); row.addEventListener('change', syncClaims);
       row.append(text.wrapper, evidence.wrapper, label, remove); claimList.append(row);
     }
@@ -924,7 +924,7 @@ function renderBulletin(focusVariantSelector = false) {
         throw new Error('Hãy lưu hoặc bỏ thay đổi ở các phần khác trước.');
       const data = {bulletin_revision: bulletin.revision, revision: item.revision, verified: verified.checked,
         claims: collectClaims()};
-      for (const [key, field] of Object.entries(fields)) data[key] = field.input.value;
+      for (const [key, field] of Object.entries(fields)) data[key] = field.value();
       app.bulletin = await api(`/api/bulletins/${bulletin.id}/items/${item.id}/save`, data);
       app.bulletinDirty = false; renderBulletin(); await loadBulletinList(); toast('Đã lưu mục tin.');
     });
@@ -1148,8 +1148,14 @@ async function renderVariants(container, bulletin, focusSelector = false) {
     });
     confirmation.append(message, confirm, cancel);
     block.append(remove, confirmation); segmentList.append(block);
-    block.collect = () => ({text: body.input.value, item_ids: rows.filter(row => row.selected.checked).map(row => row.id),
-      source_ids: rows.filter(row => row.selected.checked).flatMap(row => row.sourceChecks.filter(source => source.check.checked).map(source => source.id))});
+    const originalSelection = rows.map(row => [row.selected.checked, ...row.sourceChecks.map(source => source.check.checked)]);
+    block.collect = () => {
+      const selectionUnchanged = rows.every((row, index) => row.selected.checked === originalSelection[index][0] &&
+        row.sourceChecks.every((source, sourceIndex) => source.check.checked === originalSelection[index][sourceIndex + 1]));
+      if (selectionUnchanged) return {...segment, text: body.value()};
+      return {...segment, text: body.value(), item_ids: rows.filter(row => row.selected.checked).map(row => row.id),
+        source_ids: rows.filter(row => row.selected.checked).flatMap(row => row.sourceChecks.filter(source => source.check.checked).map(source => source.id))};
+    };
   }
   displaySegments.forEach(addSegment);
   area.append(segmentList);
@@ -1185,7 +1191,7 @@ async function renderVariants(container, bulletin, focusSelector = false) {
     if (hasPendingBulletinUrl() || hasPendingPublicationEdit() || container.previousElementSibling?.dataset.dirty === 'true' || [...$('bulletin-editor').querySelectorAll('.bulletin-item, .bulletin-block')].some(el => el !== area && !el.contains(area) && el.dataset.dirty === 'true'))
       throw new Error('Hãy lưu các phần bản tin khác trước.');
     const saved = await api(`/api/variants/${variant.id}/save`, {revision: variant.revision,
-      expected_bulletin_revision: bulletin.revision, account_label: account.input.value,
+      expected_bulletin_revision: bulletin.revision, account_label: account.value(),
       segments: collect(), checks: Object.fromEntries(Object.entries(checks).map(([key, value]) => [key, value.checked])),
       adopt_bulletin_revision: adopt.checked, attribution_reviewed: attributionReview.checked});
     app.variantId = saved.id; app.bulletinDirty = false; refreshed = renderBulletin();
