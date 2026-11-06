@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## QA-02 / APR-04: không nhận phiên mới khi thiếu định danh kho — 06/11/2026
+
+- Trước sửa, khôi phục phiên có thể nhận token mới chỉ vì đường dẫn giống nhau, kể cả khi một phía không có `store_file_id`. Nay khi token phiên đổi, ứng dụng chỉ nhận token nếu đối chiếu được ID tệp cũ/mới; nếu thiếu thì giữ nguyên nội dung, hiển thị thông báo thường trực và chặn POST cùng thao tác sao chép/tải đầu ra đa kênh. Cập nhật nền không tự bỏ trạng thái chờ; có thể thử **Khôi phục kết nối** lại. Nếu ID hiện lại và khớp, người dùng tự kiểm tra rồi lưu; nếu ID cũ chưa từng có, cần sao chép nội dung thủ công và tải lại trang.
+- Test handler tái hiện lỗi trước sửa; sau sửa thử ID đầu cũ có/không, ID mới là `null`, thiếu hoặc rỗng, cả hai đường cập nhật nền/khôi phục. Kiểm tra token cũ không đổi, không gửi POST, chặn sao chép, không tự thoát trạng thái chờ; ID cũ có sẵn và khớp cho phép khôi phục lại. Test bổ sung chặn sao chép và tải nếu trạng thái chuyển sang chưa xác định trong lúc chờ phản hồi.
+- Trên trình duyệt kho giả, giữ tiêu đề chưa lưu, khởi động lại server với ID tạm thời `null`, thử khôi phục và lưu: thông báo chưa xác định hiện, lưu bị chặn. Sau khi ID khớp xuất hiện lại, khôi phục thành công và tự lưu tiêu đề; server/kho thử đã dọn. Chỉ thử một biểu mẫu và tình huống tiêm lỗi; không thử nội dung thật.
+- Hồi quy 235/235 Python, 66/66 JavaScript, `node --check` đạt. Khi token không đổi, thiếu ID vẫn hoạt động theo đường dẫn; không ngăn request đã gửi, ghi đè cùng tệp hoặc file ID tái sử dụng. QA-02/APR-04 vẫn mở.
+
 ## QA-02 / APR-04: giữ định danh tệp khi trạng thái tạm thời thiếu — 06/11/2026
 
 - Trước sửa, phản hồi trạng thái có `store_file_id` rỗng hoặc thiếu thay toàn bộ trạng thái cũ; một lần đọc sau với ID khác tại cùng đường dẫn vì vậy có thể không bị phát hiện. Trang nay giữ ID hợp lệ đầu tiên đã biết trong phiên để so sánh các lần đọc sau, không thay bằng giá trị rỗng hoặc thiếu. Nếu từ đầu chưa có ID thì vẫn không thể chứng minh kho không đổi.

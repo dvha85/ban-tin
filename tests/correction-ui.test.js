@@ -100,8 +100,13 @@ test('packet copy rejects stale or changed editor state and copies matching snap
   vm.runInContext(`app.bulletin = {id: 7, revision: 4};
     api = async () => { app.storeChanged = true; return {text: 'Gói cũ', bulletin_revision: 4}; }`, context);
   await assert.rejects(vm.runInContext('copyBulletinPacket(app.bulletin)', context), /thay đổi/i);
+  vm.runInContext(`app.storeChanged = false;
+    api = async () => { app.sessionUnverified = true; return {text: 'Gói cũ', bulletin_revision: 4}; }`, context);
+  await assert.rejects(vm.runInContext('copyBulletinPacket(app.bulletin)', context), /chưa xác định/i);
+  vm.runInContext('app.sessionUnverified = false', context);
+  await assert.rejects(vm.runInContext('copyApprovedVariant(3, {}, 0)', context), /chưa xác định/i);
   assert.equal(copies.length, 0);
-  vm.runInContext(`app.storeChanged = false; api = async () => ({text: 'Gói đúng', bulletin_revision: 4});`, context);
+  vm.runInContext(`app.sessionUnverified = false; api = async () => ({text: 'Gói đúng', bulletin_revision: 4});`, context);
   await vm.runInContext('copyBulletinPacket(app.bulletin)', context);
   assert.deepEqual(copies, ['Gói đúng']);
 });
@@ -685,6 +690,56 @@ test('session recovery and refresh reject a replacement file in the same directo
   }
 });
 
+test('a new session without a comparable store identity cannot authorize writes', async () => {
+  for (const initialId of ['old-file', null]) {
+    for (const missing of [null, undefined, '']) {
+      for (const action of ['loadState()', 'recoverSession()']) {
+        const elements = new Map();
+        const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+        const calls = [];
+        let nextId = missing;
+        const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise,
+          setTimeout, clearTimeout, requestJson: JSON.stringify, calls, nextId: () => nextId,
+          initialId: () => initialId, fetch: () => new Promise(() => {}),
+          window: {location: {search: ''}, addEventListener() {}},
+          document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+            createElement: tag => new Element(tag), createTextNode: text => text}});
+        vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+        vm.runInContext(`app.state = {data_dir: 'fixture', store_file_id: initialId(), articles: []};
+          app.csrf = 'old-token'; app.bulletinDirty = true; renderState = () => {};
+          fetch = async (url, options) => { calls.push([url, options.method]);
+            if (url === '/') return {ok: true};
+            return {ok: true, headers: {get: () => 'application/json'},
+              json: async () => ({data_dir: 'fixture', store_file_id: nextId(), csrf_token: 'new-token', articles: []})}; };`, context);
+        get('field-title').value = 'Giữ nội dung chưa lưu';
+        await assert.rejects(vm.runInContext(action, context), /chưa xác định/i);
+        assert.equal(vm.runInContext('app.csrf', context), 'old-token');
+        assert.equal(get('field-title').value, 'Giữ nội dung chưa lưu');
+        assert.equal(get('session-recovery').hidden, false);
+        assert.equal(get('session-unverified-warning').hidden, false);
+        await assert.rejects(vm.runInContext("api('/api/bulletins/1/save', {})", context), /chưa xác định/i);
+        vm.runInContext('app.bulletinDirty = false', context);
+        await assert.rejects(vm.runInContext("copyBulletinPacket({id: 1, revision: 1})", context), /chưa xác định/i);
+        await assert.rejects(vm.runInContext("copyApprovedVariant(1, {}, 0)", context), /chưa xác định/i);
+        vm.runInContext('app.bulletinDirty = true', context);
+        assert.ok(calls.every(row => row[1] !== 'POST'));
+        nextId = 'old-file';
+        await assert.rejects(vm.runInContext('loadState()', context), /chưa xác định/i);
+        assert.equal(vm.runInContext('app.csrf', context), 'old-token');
+        if (initialId) {
+          await vm.runInContext('recoverSession()', context);
+          assert.equal(vm.runInContext('app.csrf', context), 'new-token');
+          assert.equal(get('session-recovery').hidden, true);
+        } else {
+          await assert.rejects(vm.runInContext('recoverSession()', context), /chưa xác định/i);
+          assert.equal(vm.runInContext('app.csrf', context), 'old-token');
+        }
+        assert.equal(get('field-title').value, 'Giữ nội dung chưa lưu');
+      }
+    }
+  }
+});
+
 test('temporary missing file ID does not erase the last known store identity', async () => {
   for (const missing of [null, undefined, '']) {
     for (const action of ['loadState()', 'recoverSession()']) {
@@ -869,8 +924,8 @@ test('download verifies the displayed approval and all posts and blocks unsaved 
       createElement: tag => { const el = new Element(tag); el.click = () => { saved.at(-1).filename = el.download; }; return el; },
       createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
-  vm.runInContext(`let current = {approval_id: 21, posts: ['Một\\nnguồn', 'Hai']}, failExport = false;
-    api = async path => { if (path.endsWith('/publications')) return []; if (failExport) throw new Error('không còn duyệt'); return structuredClone(current); };
+  vm.runInContext(`let current = {approval_id: 21, posts: ['Một\\nnguồn', 'Hai']}, failExport = false, unverify = false;
+    api = async path => { if (path.endsWith('/publications')) return []; if (failExport) throw new Error('không còn duyệt'); if (unverify) app.sessionUnverified = true; return structuredClone(current); };
     toast = message => messages.push(message);`, Object.assign(context, {structuredClone}));
   context.area = new Element();
   await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
@@ -884,6 +939,11 @@ test('download verifies the displayed approval and all posts and blocks unsaved 
   await click(); assert.equal(saved.length, 0); assert.match(messages.at(-1), /thay đổi/i);
   vm.runInContext('current.approval_id = 21; app.storeChanged = true', context);
   await click(); assert.equal(saved.length, 0); assert.match(messages.at(-1), /Kho dữ liệu/);
+  vm.runInContext('app.storeChanged = false; app.sessionUnverified = true', context);
+  await click(); assert.equal(saved.length, 0); assert.match(messages.at(-1), /chưa xác định/i);
+  vm.runInContext('app.sessionUnverified = false; unverify = true', context);
+  await click(); assert.equal(saved.length, 0); assert.match(messages.at(-1), /chưa xác định/i);
+  vm.runInContext('app.sessionUnverified = false; unverify = false', context);
   vm.runInContext('app.storeChanged = false; failExport = true', context);
   await click(); assert.equal(saved.length, 0); assert.match(messages.at(-1), /không còn duyệt/);
   vm.runInContext('failExport = false', context);

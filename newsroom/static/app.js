@@ -6,7 +6,7 @@ const labelStatus = value => ({draft: 'Đang soạn', approved: 'Đã duyệt', 
 const app = {state: null, view: 'inbox', category: 'all', articleId: null, draft: null,
   dirty: false, reviewDirty: false, tab: 'packet', csrf: '', busy: false, exportId: null,
   selectedArticles: new Set(), bulletin: null, bulletinDirty: false, variantId: null, publicationKeys: new Map(), conflictTarget: null,
-  storeChanged: false, storeFileId: null};
+  storeChanged: false, storeFileId: null, sessionUnverified: false};
 let pollTimer, toastTimer, dialogCopyAction = null;
 
 // All external/source/model text is inserted as text or input values, never HTML.
@@ -28,6 +28,7 @@ function toast(message, error = false) {
 }
 async function api(path, body) {
   if (body !== undefined && app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
+  if (body !== undefined && app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi tiếp tục.');
   const payload = body === undefined ? undefined : requestJson(body);
   let response;
   try {
@@ -65,6 +66,7 @@ function markStoreChanged() {
   app.storeChanged = true;
   $('session-recovery').hidden = false;
   $('store-changed-warning').hidden = false;
+  $('session-unverified-warning').hidden = true;
   $('recover-session').hidden = true;
 }
 function differentStore(previous, current) {
@@ -73,6 +75,16 @@ function differentStore(previous, current) {
   return typeof previousId === 'string' && previousId !== '' &&
     typeof current.store_file_id === 'string' && current.store_file_id !== '' &&
     previousId !== current.store_file_id;
+}
+function hasComparableStore(previous, current) {
+  const previousId = app.storeFileId || previous.store_file_id;
+  return typeof previousId === 'string' && previousId !== '' &&
+    typeof current.store_file_id === 'string' && current.store_file_id !== '' && previousId === current.store_file_id;
+}
+function markSessionUnverified() {
+  app.sessionUnverified = true;
+  $('session-recovery').hidden = false;
+  $('session-unverified-warning').hidden = false;
 }
 async function recoverSession() {
   if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
@@ -90,9 +102,17 @@ async function recoverSession() {
     markStoreChanged();
     throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
   }
-  if (typeof state.csrf_token !== 'string' || !state.csrf_token)
-    throw new Error('Kho dữ liệu hoặc phiên mới không khớp. Sao chép nội dung trước khi tải lại.');
+  if (typeof state.csrf_token !== 'string' || !state.csrf_token) {
+    markSessionUnverified();
+    throw new Error('Chưa xác định được kho của phiên mới. Giữ nội dung và thử khôi phục lại.');
+  }
+  if ((app.sessionUnverified || state.csrf_token !== app.csrf) && !hasComparableStore(app.state, state)) {
+    markSessionUnverified();
+    throw new Error('Chưa xác định được kho của phiên mới. Giữ nội dung và thử khôi phục lại.');
+  }
   app.csrf = state.csrf_token;
+  app.sessionUnverified = false;
+  $('session-unverified-warning').hidden = true;
   $('session-recovery').hidden = true;
   toast('Đã khôi phục kết nối. Kiểm tra dữ liệu và lịch sử trước khi tự lưu lại.');
 }
@@ -180,9 +200,18 @@ async function loadState() {
   const wasBusy = app.state && app.state.busy;
   const state = await api('/api/state');
   if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
+  if (app.state && (typeof state.csrf_token !== 'string' || !state.csrf_token)) {
+    markSessionUnverified();
+    throw new Error('Chưa xác định được kho của phiên mới. Giữ nội dung và thử khôi phục lại.');
+  }
   if (app.state && differentStore(app.state, state)) {
     markStoreChanged();
     throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
+  }
+  if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Giữ nội dung và thử khôi phục lại.');
+  if (app.state && state.csrf_token !== app.csrf && !hasComparableStore(app.state, state)) {
+    markSessionUnverified();
+    throw new Error('Chưa xác định được kho của phiên mới. Giữ nội dung và thử khôi phục lại.');
   }
   const knownFileId = app.storeFileId || app.state?.store_file_id || state.store_file_id;
   if (typeof knownFileId === 'string' && knownFileId) app.storeFileId = knownFileId;
@@ -532,9 +561,11 @@ function showText(title, text, note, exportId = null, canCopy = true) {
   if (!$('text-dialog').open) $('text-dialog').showModal();
 }
 async function copyBulletinPacket(bulletin) {
+  if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi sao chép.');
   if (app.bulletinDirty || app.storeChanged) throw new Error('Hãy lưu thay đổi và kiểm tra kho trước khi lấy gói tư liệu.');
   const id = bulletin.id, revision = bulletin.revision;
   const result = await api(`/api/bulletins/${id}/packet`);
+  if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi sao chép.');
   if (app.bulletinDirty || app.storeChanged || app.bulletin?.id !== id || app.bulletin?.revision !== revision)
     throw new Error('Bản tin hoặc kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
   if (result.bulletin_revision !== revision)
@@ -555,9 +586,11 @@ async function copy(text, retryAction = null) {
   }
 }
 async function copyApprovedVariant(variantId, shown, position) {
+  if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi sao chép.');
   if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi sao chép bản đã duyệt.');
   if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
   const current = await api(`/api/variants/${variantId}/export`);
+  if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi sao chép.');
   if (app.bulletinDirty || app.storeChanged) throw new Error('Nội dung hoặc kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
   await copy(verifiedCopyText(shown, current, position), () => copyApprovedVariant(variantId, shown, position));
 }
@@ -1226,9 +1259,11 @@ async function renderVariantPublication(area, variant) {
   if (ready) {
     const download = node('button', 'button secondary', 'Tải bản đã duyệt (.txt)');
     bulletinAction(download, async () => {
+      if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi tải.');
       if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi tải bản đã duyệt.');
       if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi tải.');
       const current = await api(`/api/variants/${variant.id}/export`);
+      if (app.sessionUnverified) throw new Error('Chưa xác định được kho của phiên mới. Hãy khôi phục kết nối trước khi tải.');
       if (app.bulletinDirty || app.storeChanged) throw new Error('Nội dung hoặc kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi tải.');
       if (!Array.isArray(output.posts) || !Array.isArray(current.posts) || !output.posts.length ||
           output.posts.length !== current.posts.length)
