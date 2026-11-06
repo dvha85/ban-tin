@@ -398,6 +398,29 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.room.publications(second['id']), [])
         self.assertEqual(self.room.variant(second['id']), second)
 
+        variants = []
+        for account in ('Kênh mã hóa 1', 'Kênh mã hóa 2'):
+            variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+                'platform': 'threads', 'account_label': account})
+            variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                'segments': [{'text': 'Nội dung thử.', 'item_ids': [item['id']]}]})
+            variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                'checks': {key: True for key in CHECKS}})
+            variants.append(self.room.approve_variant(variant['id'], {'revision': variant['revision']}))
+        first, second = variants
+        original = self.room.record_publication(first['id'], {'revision': first['revision'], 'position': 0,
+            'url': 'https://threads.com/@fixture/post/a%2fb', 'idempotency_key': 'escape_case_first'})
+        before = self.room.publications(first['id'])
+        status, _, body = self.request('POST', f"/api/variants/{second['id']}/publications", {
+            'revision': second['revision'], 'position': 0, 'url': 'https://threads.net/@fixture/post/a%2Fb',
+            'idempotency_key': 'escape_case_second'}, headers)
+        self.assertEqual(status, 409, body)
+        self.assertEqual(json.loads(body)['target']['publication_id'], original['id'])
+        self.assertEqual(self.room.publications(first['id']), before)
+        self.assertTrue(before[0]['url'].endswith('a%2fb'))
+        self.assertEqual(self.room.publications(second['id']), [])
+        self.assertEqual(self.room.variant(second['id']), second)
+
     def test_facebook_encoded_url_conflict_over_http_keeps_records_unchanged(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử URL Facebook',

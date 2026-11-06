@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> BASE-03 / PUB-02 ngày 07/11: sửa so trùng URL Threads với chữ số hex `%XX` khác hoa/thường; không giải mã byte dành riêng hay viết lại lịch sử. Test service/HTTP và giới hạn tại `KIEM-THU.md`; chưa xác minh mọi URL nền tảng.
+
 > APR-04 / APPROVE-05 ngày 07/11: thử HTTP đồng thời sửa và duyệt cùng revision, điều phối lần lượt mỗi thao tác thắng; đối chiếu bản duyệt, hash, export và lịch sử trong kho giả. Xem phạm vi tại `KIEM-THU.md`; APR-04 và QA tổng thể vẫn mở.
 
 > APR-03 / QA-02 ngày 07/11: thử Tab qua vùng xuất X hai đoạn và Enter sao chép đoạn 2 trên Edge với kho giả. Lượt dán thử Facebook qua công cụ nhận nội dung cũ; Windows từ chối mở Notepad++ để đối chiếu clipboard hệ điều hành. Chưa xác định nguyên nhân, không coi clipboard thật đã đạt; xem `KIEM-THU.md`.
@@ -569,7 +571,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ### G6 — Nghiệm thu và tài liệu
 
-- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 07/11 sau bổ sung test cạnh tranh HTTP: Python 255/255; JavaScript gần nhất 87/87 trên cùng mã ứng dụng; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
+- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 07/11 sau sửa so trùng URI Threads: Python 256/256, JavaScript 87/87 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.

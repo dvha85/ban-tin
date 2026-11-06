@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 07/11/2026
 
+## BASE-03 / PUB-02: so trùng chữ hoa/thường của mã URI Threads — 07/11/2026
+
+- Hồi quy nền ba test URL Threads/Facebook liên quan đạt. Test service mới tái hiện ba cặp URL dạng đầy đủ hiện được validator chấp nhận nhưng chỉ khác chữ hoa/thường trong `%XX` như `a%2fb`/`a%2Fb`: trước sửa cả ba cặp đều được ghi thành hai lượt. Đây là URL giả; chưa xác minh Meta chấp nhận dạng này.
+- Theo [RFC 3986 mục 2.1](https://www.rfc-editor.org/rfc/rfc3986#section-2.1), chữ số hex trong một octet mã hóa không phân biệt hoa/thường. Khóa so trùng nay chuẩn hóa chữ số hex của các byte vẫn mã hóa; không giải mã byte dành riêng hoặc giải mã hai lần, không đổi chữ thường/hoa ngoài escape và không viết lại URL đã lưu. Test service xác nhận chặn ghi trùng và đính chính cùng khóa, giữ nguyên trạng thái/lịch sử sau mở lại; test HTTP xác nhận 409 với đích đối soát và không thêm ghi nhận.
+- Hồi quy sau sửa đạt 256/256 Python và 87/87 JavaScript. Quy tắc là so sánh URI trong phạm vi bộ nhận diện hiện có, không chứng minh URL thật tồn tại, mọi alias, hay phát hiện tự động các bản ghi trùng đã có. BASE-03 và QA tổng thể vẫn mở; không kết nối nền tảng hoặc thay dữ liệu vận hành.
+
 ## APR-04 / APPROVE-05: sửa và duyệt cạnh tranh qua HTTP — 07/11/2026
 
 - Hồi quy nền của hai test service về sửa/duyệt và sửa bản tin/ghi nhận đạt 2/2. Test HTTP mới dùng hai request cùng revision trên server và SQLite giả; giữ transaction đầu sau khi lấy phiên bản, chờ request thứ hai đến `BEGIN IMMEDIATE`, rồi thả transaction. Thực hiện riêng cả hai thứ tự: lưu trước và duyệt trước.

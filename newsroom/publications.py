@@ -12,12 +12,13 @@ from .feeds import canonical_url
 _UNRESERVED_URI_CHARS = frozenset(string.ascii_letters + string.digits + '-._~')
 
 
-def _normalize_unreserved_percent_encoding(value):
+def _normalize_percent_encoding_for_comparison(value):
     # RFC 3986 permits decoding only unreserved octets for URI comparison.
-    # Keep reserved octets and malformed escapes untouched; never decode twice.
+    # Other octets remain encoded, but hex digits are case-insensitive.
+    # Keep malformed escapes untouched and never decode twice.
     def replace(match):
         character = chr(int(match.group(1), 16))
-        return character if character in _UNRESERVED_URI_CHARS else match.group(0)
+        return character if character in _UNRESERVED_URI_CHARS else '%' + match.group(1).upper()
     return re.sub(r'%([0-9A-Fa-f]{2})', replace, value)
 
 
@@ -65,8 +66,8 @@ def _post_identity(platform, url):
     if platform == 'x':
         return ('x', parts.path.rsplit('/', 1)[-1])
     if platform == 'threads':
-        return ('threads', _normalize_unreserved_percent_encoding(parts.path.rsplit('/', 1)[-1]))
-    return ('facebook', _normalize_unreserved_percent_encoding(parts.path).casefold(), parts.query)
+        return ('threads', _normalize_percent_encoding_for_comparison(parts.path.rsplit('/', 1)[-1]))
+    return ('facebook', _normalize_percent_encoding_for_comparison(parts.path).casefold(), parts.query)
 
 
 def _reported_time(value):

@@ -1486,6 +1486,34 @@ class VariantTests(unittest.TestCase):
         self.assertNotEqual(_post_identity('threads', 'https://threads.com/@a/post/a%2Fb'),
                             _post_identity('threads', 'https://threads.com/@a/post/a%252Fb'))
 
+    def test_threads_percent_escape_case_does_not_create_duplicate_records(self):
+        for index, (original, equivalent) in enumerate((
+                ('a%2fb', 'a%2Fb'), ('Q%3aR', 'Q%3AR'), ('A%e2%80%99B', 'A%E2%80%99B'))):
+            with self.subTest(original=original, equivalent=equivalent):
+                first = self.make_approved('threads')
+                second = self.make_approved('threads')
+                record = self.room.record_publication(first['id'], {'revision': first['revision'], 'position': 0,
+                    'url': f'https://threads.com/@fixture/post/{original}', 'idempotency_key': f'hex_first_{index}'})
+                before = self.room.publications(first['id'])
+                before_variant = self.room.variant(second['id'])
+                with self.assertRaises(Conflict) as caught:
+                    self.room.record_publication(second['id'], {'revision': second['revision'], 'position': 0,
+                        'url': f'https://threads.net/@fixture/post/{equivalent}',
+                        'idempotency_key': f'hex_second_{index}'})
+                self.assertEqual(caught.exception.target['publication_id'], record['id'])
+                self.assertEqual(self.room.variant(second['id']), before_variant)
+                self.assertEqual(self.room.publications(second['id']), [])
+                with self.assertRaises(ValidationError):
+                    self.room.correct_publication(record['id'], {'revision': self.room.variant(first['id'])['revision'],
+                        'reason': 'Đối chiếu liên kết', 'url': f'https://threads.com/@fixture/post/{equivalent}'})
+                self.assertEqual(Newsroom(self.room.data_dir).publications(first['id']), before)
+                self.assertTrue(before[0]['url'].endswith(original))
+
+        self.assertNotEqual(_post_identity('threads', 'https://threads.com/@a/post/A%2fB'),
+                            _post_identity('threads', 'https://threads.com/@a/post/A%252FB'))
+        self.assertNotEqual(_post_identity('threads', 'https://threads.com/@a/post/A%2fB'),
+                            _post_identity('threads', 'https://threads.com/@a/post/a%2FB'))
+
     def test_threads_alias_correction_conflicts_and_release_preserve_history(self):
         first = self.make_approved('threads')
         second = self.make_approved('threads')
