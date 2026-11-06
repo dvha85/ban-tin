@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## QA-02: bố cục checkbox — 06/11/2026
+
+- Trên Edge ở lượt kiểm tra đính chính trước, ô checkbox trong biểu mẫu bản tin có chiều rộng kéo theo quy tắc chung của ô nhập liệu; dấu chọn nằm xa nhãn và phần chữ bị thu hẹp. Bổ sung CSS cho checkbox với kích thước cố định và không co giãn trong hàng, không đổi handler hoặc dữ liệu.
+- JavaScript 83/83 đạt trước và sau sửa CSS; `git diff --check` đạt. Trên Edge với kho giả, ô hiện bản tin lưu trữ và hai ô xác nhận trong mục bản tin nằm cạnh nhãn, chữ không bị ép hẹp. Nhấp chọn ô lưu trữ rồi nhấn Space bỏ chọn; dùng Tab từ ô nguồn tới ô đối chiếu khẳng định, thấy viền tiêu điểm và dùng Space bật/tắt. Kiểm tra lại kho giả không có xác nhận nào được lưu. Phạm vi này chưa bao gồm mọi màn hình, kích thước và trình đọc màn hình; QA-02 tổng thể vẫn mở.
+
 ## PUB-03 / QA-02: đính chính ba kênh và tiêu điểm sau lưu — 06/11/2026
 
 - Trên Edge với kho giả có ba phiên bản một đoạn được duyệt, ghi nhận và gắn số liệu bằng service: đính chính URL Facebook `1001` sang `1002`, hủy lượt `1002` rồi ghi lại `1001` qua giao diện. Tổng số đoạn hiệu lực hiển thị 3 → 2 → 3. Đọc lại kho xác nhận hai lượt Facebook trước giữ lịch sử và số liệu gốc 100 lượt xem/0 lượt thích, lượt ghi lại hiệu lực; snapshot ba kênh cùng publication/số liệu Threads và X không đổi. Đây là URL và dữ liệu giả, không kiểm tra bài thật hay tất cả lỗi mạng.
