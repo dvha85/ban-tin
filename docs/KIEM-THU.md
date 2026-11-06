@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 07/11/2026
 
+## SOURCE-01 / TEXT-01: hai mục cùng URL nguồn — 07/11/2026
+
+- Test `test_shared_source_url_retains_per_item_attribution_across_channels` tạo hai mục cùng URL nguồn nhưng mỗi mục có ID và ghi chú riêng. Ở cả ba kênh, phiên bản chọn hai mục và hai ID nguồn: preview chỉ in URL một lần nhưng giữ cả hai ID, bản xuất khớp preview, snapshot duyệt giữ ghi chú của từng mục và bản lưu lịch sử giữ quan hệ mục/nguồn sau mở lại kho. Thử bỏ nguồn của một trong hai mục bị từ chối và không đổi phiên bản.
+- Đây là kiểm thử service/SQLite với nguồn giả; chưa xác nhận mọi thay đổi nguồn hoặc thao tác giao diện cho trường hợp này. Không sửa mã ứng dụng hay đóng thêm gate.
+- Bộ Python 248/248 đạt trên cùng mã ứng dụng trước khi bổ sung đối chiếu ghi chú trong test mới; sau bổ sung, chạy lại riêng test đó đạt. JavaScript gần nhất đạt 86/86 trên cùng mã ứng dụng.
+
 ## PUB-03 / POST-05: đối chiếu phạm vi đính chính — 07/11/2026
 
 - Test `test_correcting_second_segment_keeps_first_segment_and_other_channel_unchanged` dùng hai đoạn cho từng phiên bản Threads/X và một Facebook đối chứng đã ghi nhận. Thử thay URL đoạn hai bằng URL đoạn một bị conflict và không đổi bản ghi/revision; thay bằng URL giả khác thì đoạn một giữ nguyên, đoạn hai cũ cùng lý do và số liệu được lưu trong lịch sử, lượt thay thế giữ đúng vị trí và bản duyệt. Đối chiếu sau mở lại kho cho thấy bản lưu và Facebook đối chứng không đổi. URL Threads được chuẩn hóa host theo hợp đồng hiện tại.

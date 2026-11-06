@@ -144,6 +144,56 @@ class VariantTests(unittest.TestCase):
             'revision': draft['revision'], 'checks': {key: True for key in self.room.CHECKS}})
         return self.room.approve(draft['id'], draft['revision'])
 
+    def test_shared_source_url_retains_per_item_attribution_across_channels(self):
+        bulletin = self.bulletin
+        shared_url = 'https://example.org/source-for-both-items'
+        for item_id in [item['id'] for item in bulletin['items']]:
+            item = next(row for row in bulletin['items'] if row['id'] == item_id)
+            bulletin = self.room.save_bulletin_item(bulletin['id'], item_id, {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+                'add_source': {'url': shared_url, 'title': f'Nguồn chung cho mục {item_id}',
+                               'summary': f'Ghi chú riêng của mục {item_id}'}})
+            item = next(row for row in bulletin['items'] if row['id'] == item_id)
+            bulletin = self.room.save_bulletin_item(bulletin['id'], item_id, {
+                'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'verified': True,
+                'claims': [{**item['claims'][0], 'checked': True}]})
+        item_ids = [item['id'] for item in bulletin['items']]
+        source_ids = [item['sources'][-1]['source_id'] for item in bulletin['items']]
+        self.assertNotEqual(source_ids[0], source_ids[1])
+        for platform in ('facebook', 'threads', 'x'):
+            with self.subTest(platform=platform):
+                variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+                    'platform': platform, 'account_label': 'Kênh thử'})
+                segment = {'text': 'Hai mục dùng chung một liên kết.', 'item_ids': item_ids, 'source_ids': source_ids}
+                variant = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'segments': [segment]})
+                with self.assertRaises(ValidationError):
+                    self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                        'segments': [{**segment, 'source_ids': source_ids[:1]}]})
+                self.assertEqual(self.room.variant(variant['id']), variant)
+                preview = self.room.preview_variant(variant['id'])
+                self.assertEqual(preview['posts'][0]['item_ids'], item_ids)
+                self.assertEqual(preview['posts'][0]['source_ids'], source_ids)
+                self.assertEqual(preview['posts'][0]['urls'], [shared_url])
+                self.assertEqual(preview['posts'][0]['text'].count(shared_url), 1)
+                variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+                    'checks': {key: True for key in CHECKS}})
+                variant = self.room.approve_variant(variant['id'], {'revision': variant['revision']})
+                exported = self.room.export_variant(variant['id'])
+                archive = self.room.export_variant(variant['id'], archive=True)
+                self.assertEqual(exported['posts'], [preview['posts'][0]['text']])
+                self.assertEqual(archive['rendered_posts'][0]['source_ids'], source_ids)
+                with self.room.connection() as conn:
+                    saved_snapshot = json.loads(conn.execute('SELECT snapshot FROM variant_approvals WHERE id=?',
+                                                            (variant['approval_id'],)).fetchone()['snapshot'])
+                for item_id, source_id in zip(item_ids, source_ids):
+                    item = next(row for row in archive['items'] if row['id'] == item_id)
+                    self.assertIn({'source_id': source_id, 'url': shared_url}, item['sources'])
+                    item = next(row for row in saved_snapshot['bulletin']['items'] if row['id'] == item_id)
+                    source = next(row for row in item['sources'] if row['source_id'] == source_id)
+                    self.assertEqual(source['summary'], f'Ghi chú riêng của mục {item_id}')
+                reopened = Newsroom(self.room.data_dir)
+                self.assertEqual(reopened.export_variant(variant['id'], archive=True), archive)
+
     def test_editing_facebook_preserves_other_approved_variants_after_reopen(self):
         facebook = self.make_approved('facebook')
         threads = self.make_approved('threads')
