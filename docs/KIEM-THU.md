@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## QA-02 / APR-04: giữ định danh tệp khi trạng thái tạm thời thiếu — 06/11/2026
+
+- Trước sửa, phản hồi trạng thái có `store_file_id` rỗng hoặc thiếu thay toàn bộ trạng thái cũ; một lần đọc sau với ID khác tại cùng đường dẫn vì vậy có thể không bị phát hiện. Trang nay giữ ID hợp lệ đầu tiên đã biết trong phiên để so sánh các lần đọc sau, không thay bằng giá trị rỗng hoặc thiếu. Nếu từ đầu chưa có ID thì vẫn không thể chứng minh kho không đổi.
+- Test `temporary missing file ID does not erase the last known store identity` thất bại trước sửa và sau sửa kiểm tra `null`, thiếu trường và chuỗi rỗng, tiếp theo là refresh hoặc khôi phục phiên có ID khác; xác nhận giữ nội dung và không gửi POST sau cảnh báo. Trên trình duyệt tích hợp, server kho giả được tiêm phản hồi thiếu ID, sau đó dừng và thay tệp SQLite tại cùng đường dẫn; khôi phục phiên phát hiện kho đổi, giữ tiêu đề và chặn lưu. Server và kho giả đã dọn.
+- Hồi quy: 235/235 Python, 65/65 JavaScript; `node --check` đạt. Chưa phát hiện được ghi đè trên cùng tệp, file ID bị tái sử dụng, thay tệp trong khoảng không có ID hoặc request đã gửi; việc tự làm mới lại không thay thế đối soát thủ công. QA-02/APR-04 vẫn mở.
+
 ## QA-02 / APR-04: nhận biết tệp kho bị thay — 06/11/2026
 
 - `GET /api/state` trả thêm `store_file_id` là hash thiết bị/file ID khi hệ điều hành cung cấp; giao diện so với trạng thái ban đầu khi cập nhật nền hoặc khôi phục phiên. Nếu cả hai ID có giá trị và khác nhau, trang giữ nội dung và chặn các POST sau đó. Định danh tệp không thay đổi schema hay tệp dữ liệu; khi thiếu ID ở một phía giao diện vẫn chỉ so đường dẫn như trước.

@@ -685,6 +685,38 @@ test('session recovery and refresh reject a replacement file in the same directo
   }
 });
 
+test('temporary missing file ID does not erase the last known store identity', async () => {
+  for (const missing of [null, undefined, '']) {
+    for (const action of ['loadState()', 'recoverSession()']) {
+      const elements = new Map();
+      const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+      const calls = [];
+      let nextId = missing;
+      const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+        requestJson: JSON.stringify, fetch: () => new Promise(() => {}), calls, nextId: () => nextId,
+        window: {location: {search: ''}, addEventListener() {}},
+        document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+          createElement: tag => new Element(tag), createTextNode: text => text}});
+      vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+      vm.runInContext(`app.state = {data_dir: 'fixture', store_file_id: 'old-file', articles: []};
+        app.csrf = 'old-token'; app.bulletinDirty = true; renderState = () => {};
+        fetch = async (url, options) => { calls.push([url, options.method]);
+          if (url === '/') return {ok: true};
+          return {ok: true, headers: {get: () => 'application/json'},
+            json: async () => ({data_dir: 'fixture', store_file_id: nextId(), csrf_token: 'old-token', articles: []})}; };`, context);
+      get('field-title').value = 'Giữ nội dung chưa lưu';
+      await vm.runInContext('loadState()', context);
+      assert.equal(vm.runInContext('app.storeChanged', context), false);
+      nextId = 'replacement-file';
+      await assert.rejects(vm.runInContext(action, context), /kho dữ liệu/i);
+      assert.equal(get('field-title').value, 'Giữ nội dung chưa lưu');
+      assert.equal(get('store-changed-warning').hidden, false);
+      await assert.rejects(vm.runInContext("api('/api/bulletins/1/save', {})", context), /kho dữ liệu/i);
+      assert.ok(calls.every(row => row[1] !== 'POST'));
+    }
+  }
+});
+
 test('periodic refresh cannot silently switch the open editor to another data directory', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

@@ -6,7 +6,7 @@ const labelStatus = value => ({draft: 'Đang soạn', approved: 'Đã duyệt', 
 const app = {state: null, view: 'inbox', category: 'all', articleId: null, draft: null,
   dirty: false, reviewDirty: false, tab: 'packet', csrf: '', busy: false, exportId: null,
   selectedArticles: new Set(), bulletin: null, bulletinDirty: false, variantId: null, publicationKeys: new Map(), conflictTarget: null,
-  storeChanged: false};
+  storeChanged: false, storeFileId: null};
 let pollTimer, toastTimer, dialogCopyAction = null;
 
 // All external/source/model text is inserted as text or input values, never HTML.
@@ -69,9 +69,10 @@ function markStoreChanged() {
 }
 function differentStore(previous, current) {
   if (previous.data_dir !== current.data_dir) return true;
-  return typeof previous.store_file_id === 'string' && previous.store_file_id !== '' &&
+  const previousId = app.storeFileId || previous.store_file_id;
+  return typeof previousId === 'string' && previousId !== '' &&
     typeof current.store_file_id === 'string' && current.store_file_id !== '' &&
-    previous.store_file_id !== current.store_file_id;
+    previousId !== current.store_file_id;
 }
 async function recoverSession() {
   if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
@@ -183,6 +184,8 @@ async function loadState() {
     markStoreChanged();
     throw new Error('Kho dữ liệu đã thay đổi. Sao chép nội dung chưa lưu trước khi tải lại trang.');
   }
+  const knownFileId = app.storeFileId || app.state?.store_file_id || state.store_file_id;
+  if (typeof knownFileId === 'string' && knownFileId) app.storeFileId = knownFileId;
   app.state = state;
   app.csrf = app.state.csrf_token;
   if (!app.articleId && app.state.articles.length) app.articleId = app.state.articles[0].id;

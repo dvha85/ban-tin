@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> QA-02 / APR-04 ngày 06/11: giữ định danh tệp đã biết khi một lần cập nhật thiếu ID; test handler và trình duyệt kho giả thử thiếu ID rồi thay tệp đạt. Hồi quy 235/235 Python, 65/65 JavaScript; giới hạn tại `KIEM-THU.md`.
+
 > QA-02 / APR-04 ngày 06/11: trạng thái nền và khôi phục phiên đối chiếu thêm định danh tệp SQLite khi có ở cả hai phía. Đã thử thay tệp kho giả trong cùng thư mục, giữ tiêu đề chưa lưu và chặn lưu trên trình duyệt. Phạm vi và các trường hợp không phát hiện được xem `KIEM-THU.md`; QA-02 và APR-04 vẫn mở.
 
 > BASE-03 / PUB-02 / QA-02 ngày 06/11: URL Facebook khác chữ hoa/thường nhưng trùng theo khóa nội bộ nay báo có thể trùng và yêu cầu đối soát, vẫn chặn ghi; test service và trình duyệt kho giả đạt. Hồi quy 233/233 Python, 63/63 JavaScript; chưa xác nhận quy tắc của Meta. Xem `KIEM-THU.md`.
