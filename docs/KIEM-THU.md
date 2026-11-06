@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 07/11/2026
 
+## BASE-03 / TEXT-03: đối chiếu lại bộ đếm trên Edge — 07/11/2026
+
+- Trong composer Threads đã đăng nhập, `a` lặp 499 lần cộng `😀` hiện còn 0; `a` lặp 498 lần cộng `e` và dấu sắc tổ hợp U+0301 cũng còn 0; `a` lặp 499 lần cộng `👨‍👩‍👧‍👦` hiện −6 và nút thêm vào thread bị vô hiệu. Bộ đếm cục bộ lần lượt trả 500, 500 và 506.
+- Trong composer X đã đăng nhập, `a` lặp 278 lần cộng `😀`, rồi cùng 278 chữ `a` cộng `👨‍👩‍👧‍👦`, đều hiện còn 0. Mẫu `a` lặp 256 lần, một dấu cách và `https://example.com/long-example` cũng hiện còn 0. Bộ đếm cục bộ trả 280 cho cả ba mẫu; riêng URL mẫu tương ứng 23 đơn vị.
+- Đây là quan sát trên giao diện và tài khoản đã thử, không chứng minh mọi chuỗi Unicode, URL, loại tài khoản hoặc hành vi đăng. Đã xóa các chuỗi thử khỏi hai ô soạn và không đăng bài. BASE-03 và FMT-02 vẫn mở; Threads tiếp tục được ghi là ước lượng.
+
 ## DB-02 / QA-03: tránh ghi đè tệp sao lưu trùng tên — 07/11/2026
 
 - Trên kho giả, test tái hiện trước sửa hai lần sao lưu cùng tên có thể ghi đè tệp trước, và sao lưu lỗi để lại tệp chưa hoàn tất. Test riêng tái hiện cùng vấn đề tên trùng ở sao lưu trước migration schema 3 → 4. Sau sửa, hai đường dùng chế độ tạo tệp độc quyền và thử tên khác nếu trùng; lỗi trong quá trình sao lưu cố gắng dọn tệp vừa tạo, giữ tệp có sẵn. Nếu cả mười tên đều trùng thì dừng, không ghi đè.

@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> BASE-03 / TEXT-03 ngày 07/11: đối chiếu thêm sáu mẫu biên trên composer Threads và X đã đăng nhập; bộ đếm cục bộ khớp các mẫu quan sát, gồm emoji ghép và URL. Không đăng bài; phạm vi và giới hạn tại `KIEM-THU.md`. BASE-03 và FMT-02 vẫn mở.
+
 > DB-02 / QA-03 ngày 07/11: sửa sao lưu và sao lưu trước migration để không ghi đè khi tên tệp trùng, dọn tệp chưa hoàn tất khi gặp ngoại lệ nếu có thể. Test dữ liệu giả và giới hạn tại `KIEM-THU.md`; không thao tác kho vận hành.
 
 > APR-03 / QA-02 ngày 06/11: khi giả lập clipboard từ chối, hộp sao chép thủ công hiển thị đúng năm đoạn thử của ba kênh, gồm nguồn và thứ tự; thử Tab/Enter trên một đoạn X. Công cụ không đọc lại được clipboard phiên ở lượt không giả lập nên chưa đối chiếu được byte thực tế. Xem `KIEM-THU.md`; APR-03 và QA-02 vẫn mở.
