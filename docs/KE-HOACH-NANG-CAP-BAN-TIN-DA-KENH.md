@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> DOC-01 / REL-01 / QA-01 ngày 06/11: cập nhật hướng dẫn, kiến trúc và bảng đối chiếu; kiểm tra 61 liên kết tệp cục bộ trong tám tài liệu, không kiểm tra neo. Hồi quy trên `bf3be22`: 237/237 Python, 77/77 JavaScript. DOC-01/REL-01, policy và QA tổng thể vẫn mở; xem `KIEM-THU.md`.
+
 > FMT-02 / APR-04 / QA-02 ngày 06/11: không mở kết quả xem trước cũ nếu đoạn/nguồn hoặc hộp hiển thị thay đổi trong lúc chờ; test handler và trình duyệt kho giả đạt theo phạm vi `KIEM-THU.md`. Hồi quy 237/237 Python, 77/77 JavaScript.
 
 > APR-03 / APR-04 / QA-02 ngày 06/11: kiểm tra lại bản tin/kênh khi phản hồi xem bản duyệt đến muộn và khi thử sao chép trong hộp thủ công; handler và một lượt đổi X→Threads trên kho giả đạt. Hồi quy 237/237 Python, 76/76 JavaScript; nhánh clipboard bị từ chối chưa thử được trên UI ở lượt này, xem `KIEM-THU.md`.
@@ -521,7 +523,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ### G6 — Nghiệm thu và tài liệu
 
-- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 06/11 sau bổ sung vòng đời HTTP bản tin: Python 230/230, JavaScript 63/63 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
+- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 06/11 trên mã `bf3be22`: Python 237/237, JavaScript 77/77 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.

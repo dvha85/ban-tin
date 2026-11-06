@@ -12,6 +12,8 @@ Nếu trình duyệt không cho phép sao chép gói, hộp sao chép thủ côn
 
 Khi lưu phiên bản, nếu ứng dụng báo bản tin đang hiển thị đã thay đổi, hãy sao chép phần đang soạn ra nơi an toàn, mở lại bản tin và kiểm tra nội dung, nguồn mới trước khi nhập lại hoặc lưu. Việc đánh dấu đã kiểm tra ở trang cũ không thay thế bước đối chiếu bản tin mới.
 
+Nếu sửa đoạn, đổi mục/nguồn hoặc chuyển phiên bản trong khi **Xem trước** đang tải, kết quả cũ có thể bị từ chối. Giữ phần đang nhập và chọn **Xem trước** lại để đối chiếu nội dung mới. Việc kiểm tra trên trang không thay thế việc đọc lại bài và nguồn trước khi tự đăng.
+
 Để thêm nguồn cho một mục, chọn **Bổ sung nguồn**, nhập URL HTTPS, tiêu đề và ghi chú trong biểu mẫu, rồi chọn **Xác nhận thêm nguồn**. Khi có lỗi, nội dung vẫn ở trong biểu mẫu; sửa lại hoặc chọn **Hủy thêm nguồn**. Nếu kết nối gián đoạn và chưa rõ nguồn đã được thêm hay chưa, giữ nội dung và kiểm tra bản tin ở thẻ khác trước khi thử lại. Lưu hoặc bỏ các phần đang sửa khác trước khi thêm nguồn.
 
 Để bỏ nguồn hoặc mục, chọn nút tương ứng và đọc tên mục, liên kết trong vùng xác nhận trước khi chọn **Xác nhận bỏ nguồn** hoặc **Xác nhận bỏ mục**. Có thể chọn **Hủy** để giữ nguyên. Hãy lưu hoặc bỏ các thay đổi khác trước; khi mất kết nối và chưa rõ kết quả, kiểm tra bản tin ở thẻ khác trước khi thử lại.
@@ -28,7 +30,7 @@ Nếu URL Facebook được báo **có thể trùng** do khác chữ hoa/thườ
 
 Mở **Lịch sử ghi nhận đã đính chính** để xem URL cũ, lý do, liên kết thay thế và số liệu từng ghi cho lượt cũ. Số liệu thuộc lượt ghi nhận cũ, không tự chuyển sang lượt thay thế.
 
-Nếu trình duyệt từ chối quyền clipboard, hộp **Sao chép thủ công** sẽ hiện nội dung đã chọn sẵn. Nhấn `Ctrl+C`, sau đó chuyển đến nơi cần dán và nhấn `Ctrl+V`; kiểm tra lại cả nội dung và nguồn trước khi đăng. Nếu bản tin có thể đã thay đổi ở cửa sổ khác, hãy đóng hộp và mở lại bản duyệt trước khi dùng `Ctrl+C`. Nút **Sao chép nội dung** trong hộp sẽ kiểm tra lại bản duyệt khi thử lại. Bạn cũng có thể tải tệp `.txt` của bản duyệt.
+Nếu trình duyệt từ chối quyền clipboard, hộp **Sao chép thủ công** sẽ hiện nội dung đã chọn sẵn. Nhấn `Ctrl+C`, sau đó chuyển đến nơi cần dán và nhấn `Ctrl+V`; kiểm tra lại cả nội dung và nguồn trước khi đăng. Nếu bản tin có thể đã thay đổi ở cửa sổ khác, hãy đóng hộp và mở lại bản duyệt trước khi dùng `Ctrl+C`. Nút **Sao chép nội dung** trong hộp sẽ kiểm tra lại bản duyệt khi thử lại; giữ hộp mở và chờ kết quả. Nếu chuyển bản tin/kênh hoặc đóng hộp khi thao tác đang chờ, hãy mở lại nội dung đúng và thử lại. Việc kiểm tra này không ngăn thay đổi xảy ra sau phản hồi hoặc kiểm tra được `Ctrl+C` trực tiếp. Bạn cũng có thể tải tệp `.txt` của bản duyệt.
 
 Trong **Bàn biên tập**, nút **Tạo bản sao sang bản tin** sao chép bài cũ đã lưu thành bản tin và phiên bản Facebook chưa duyệt. Bài cũ và lịch sử của nó được giữ nguyên. Nếu bài dài hơn 4.000 ký tự, toàn văn nằm trong phiên bản Facebook; bạn cần viết lại nội dung mục để kiểm chứng trước khi duyệt.
 

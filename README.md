@@ -93,6 +93,7 @@ node --test tests/draft-state.test.js tests/source-warnings.test.js tests/reques
 Node.js chỉ cần cho kiểm thử JavaScript; kiểm thử DOM giả không thay thế kiểm tra trên trình duyệt.
 
 - [Kết quả và giới hạn kiểm thử](docs/KIEM-THU.md)
+- [Đối chiếu điều kiện nghiệm thu 0.4](docs/DOI-CHIEU-NGHIEM-THU-0.4.md) và [ma trận bằng chứng](docs/MA-TRAN-BANG-CHUNG-0.4.md)
 - [Thiết kế, dữ liệu và cách bảo trì](docs/KIEN-TRUC.md)
 - [Phạm vi và nhật ký được duyệt](WORKLOG.md)
 

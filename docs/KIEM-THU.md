@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## DOC-01 / REL-01 / QA-01: đối chiếu tài liệu và hồi quy — 06/11/2026
+
+- Trên mã `bf3be22`, chạy `python -B -m unittest discover -s tests -q` đạt 237/237 và `node --test tests/*.test.js` đạt 77/77. Các kiểm thử chạy với fixture; cần chạy lại sau thay đổi chức năng và trước phát hành.
+- Đã đối chiếu hướng dẫn và kiến trúc với luồng giữ giá trị biểu mẫu, xem trước và sao chép hiện tại; cập nhật bảng nghiệm thu, số hồi quy, liên kết từ README và các giới hạn còn mở. Kiểm tra tĩnh tám tài liệu liên quan thấy 61 liên kết tới tệp cục bộ có đích tồn tại; không kiểm tra nội dung từng đích, neo trong trang hoặc mọi URL bên ngoài bằng phép kiểm tra này.
+- Đây chưa phải rà soát cuối trước phát hành: BASE-03 và QA-02 tiếp tục mở, người dùng chọn xem bộ mẫu v6 sau và chưa quyết định triển khai. DOC-01 và REL-01 chưa đóng; không nâng cấp kho vận hành hoặc đăng bài.
+
 ## FMT-02 / APR-04 / QA-02: xem trước khi đoạn đang được sửa — 06/11/2026
 
 - Trước sửa, phản hồi xem trước có thể hiển thị nội dung/nguồn cũ sau khi người dùng sửa đoạn trong lúc chờ. UI nay đối chiếu các đoạn và lựa chọn mục/nguồn với dữ liệu đã gửi; nếu khác, giữ biểu mẫu và yêu cầu xem trước lại. Các phản hồi xem trước, bản duyệt và lịch sử cũng không thay thế hộp khác đã mở trong lúc chờ.
