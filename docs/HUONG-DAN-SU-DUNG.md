@@ -24,6 +24,8 @@ Nếu sửa đoạn, đổi mục/nguồn hoặc chuyển phiên bản trong khi
 
 Khi ghi nhận URL, kiểm tra đoạn, kênh và URL trong vùng xác nhận rồi chọn **Xác nhận ghi nhận**. Có thể quay lại chỉnh URL; sửa URL sẽ đóng xác nhận cũ. Nếu kết nối bị gián đoạn, kiểm tra trạng thái và lịch sử trước khi thử lại.
 
+Nếu Threads đưa liên kết dạng `/share/...`, hãy tự mở liên kết đó trong trình duyệt, kiểm tra đúng bài của mình và sao chép URL bài viết sau khi trang mở để ghi nhận. Ứng dụng không tự mở liên kết chia sẻ để xác định bài hoặc kiểm tra trùng.
+
 Nếu ứng dụng báo đã ghi nhận hoặc đã lưu đính chính nhưng chưa tải lại được danh sách hay phiên bản, thông tin bạn vừa nhập đã được lưu; hãy mở lại để kiểm tra lịch sử. Nếu kết quả ghi chưa rõ vì kết nối bị gián đoạn, đối chiếu lịch sử trước khi thử lại.
 
 Nếu URL Facebook được báo **có thể trùng** do khác chữ hoa/thường, mở bản ghi được chỉ dẫn để đối soát. Ứng dụng vẫn chặn ghi trong trường hợp này, kể cả khi hai URL có thể là bài khác; không tự coi cảnh báo là xác minh trên Facebook.

@@ -38,6 +38,9 @@ def normalize_post_url(platform, value):
         target_host = 'www.facebook.com'
     elif platform == 'threads':
         valid_host = host in ('threads.net', 'www.threads.net', 'threads.com', 'www.threads.com')
+        if valid_host and re.fullmatch(r'/share/[A-Za-z0-9_-]+', path):
+            raise ValidationError('Đây là liên kết chia sẻ Threads. Hãy mở liên kết trong trình duyệt, '
+                                  'rồi sao chép URL bài viết từ thanh địa chỉ để ghi nhận.')
         valid_path = (bool(re.fullmatch(r'/@[^/]+/post/[^/]+', path)) or
                       bool(re.fullmatch(r'/t/[A-Za-z0-9_-]+', path)))
         target_host = 'www.threads.com'

@@ -1237,6 +1237,21 @@ class VariantTests(unittest.TestCase):
         self.assertIsNone(metric['views'])
         self.assertEqual(metric['likes'], 0)
 
+    def test_threads_share_link_guides_user_to_permalink_without_recording(self):
+        variant = self.make_approved('threads')
+        before_variant = self.room.variant(variant['id'])
+        before_publications = self.room.publications(variant['id'])
+        with patch('socket.socket.connect', side_effect=AssertionError('network forbidden')):
+            with self.assertRaisesRegex(ValidationError, 'mở liên kết trong trình duyệt'):
+                self.room.record_publication(variant['id'], {
+                    'revision': variant['revision'], 'position': 0,
+                    'url': 'https://www.threads.com/share/Example_123',
+                    'idempotency_key': 'threads_share_fixture'})
+        self.assertEqual(self.room.variant(variant['id']), before_variant)
+        self.assertEqual(self.room.publications(variant['id']), before_publications)
+        self.assertEqual(normalize_post_url('threads', 'https://www.threads.com/@example/post/AbC_123?xmt=fixture'),
+                         'https://www.threads.com/@example/post/AbC_123')
+
     def test_threads_shorthand_and_permalink_share_post_identity(self):
         self.assertEqual(normalize_post_url('threads', 'https://threads.net/t/AbC_12-3/?ref=test'),
                          'https://www.threads.com/t/AbC_12-3')

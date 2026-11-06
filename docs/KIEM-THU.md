@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## BASE-03 / PUB-01: hướng dẫn liên kết chia sẻ Threads — 06/11/2026
+
+- Trên Threads web đã đăng nhập, menu chia sẻ của một bài công khai đưa một liên kết `/share/...` vào tùy chọn email. Mở liên kết đó trong trình duyệt dẫn tới trang bài dạng `/@tên/post/mã` có query `xmt`. Đây là một ví dụ quan sát được, không khẳng định mọi liên kết chia sẻ có cùng hành vi; không gửi email, đăng hoặc ghi nhận bài thật. Thao tác sao chép trong menu không đọc được clipboard phiên nên không kết luận nội dung của nút sao chép.
+- Ứng dụng tiếp tục từ chối URL `/share/{mã}` thay vì tự truy cập mạng hoặc suy luận bài đích, nhưng nay nêu cách tự mở và lấy URL bài. Test service chặn kết nối mạng, kiểm tra lỗi, không tạo bản ghi hay đổi phiên bản; test HTTP kiểm tra lỗi 400, giữ phiên bản, lịch sử và danh sách, sau đó URL bài giả được ghi với cùng key. Một lượt trình duyệt trên kho giả hiện đúng thông báo sau xác nhận; máy chủ thử dừng trước khi đối chiếu kho trong lượt UI nên bằng chứng không ghi dữ liệu dựa trên test service/HTTP. BASE-03 và QA-02 vẫn mở.
+- Hồi quy trên mã sau sửa: Python 242/242 và JavaScript 84/84 đạt; kiểm tra URL hợp lệ và alias Threads hiện có đạt cả trước và sau sửa.
+
 ## BASE-03 / TEXT-03: mẫu biên trên Threads và X — 06/11/2026
 
 - Sau khi người dùng đăng nhập Edge, thử trực tiếp trong ô soạn Threads: `a` lặp 488 lần cùng `e` + dấu sắc tổ hợp và `🫱🏽‍🫲🏻🇻🇳🧑‍💻` (500 điểm mã) hiện còn 0; thêm `a` hiện −1 và nút thêm vào thread bị vô hiệu. Mẫu `a` lặp 450 lần, dấu cách và URL `https://example.com/` + 29 chữ `b` cũng hiện 0; thêm `b` vào URL hiện −1. Bộ đếm Threads v6 trả 500/501 tương ứng cho hai mẫu.

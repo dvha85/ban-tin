@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> BASE-03 / PUB-01 ngày 06/11: một liên kết Threads `/share/...` quan sát từ menu email chuyển đến URL bài. Khi gặp dạng này, ứng dụng hướng dẫn tự mở và lấy URL bài để đối chiếu; test service/HTTP và thông báo UI kho giả được ghi tại `KIEM-THU.md`. Chưa chứng minh mọi alias; BASE-03 vẫn mở.
+
 > BASE-03 / TEXT-03 / FMT-03 ngày 06/11: sau khi đăng nhập, composer Threads/X khớp bộ đếm cục bộ ở các mẫu biên Unicode và URL dài được ghi tại `KIEM-THU.md`; không đăng. Trên kho giả, UI chia và duyệt bốn đoạn Threads, giữ nguồn. Phạm vi hữu hạn; policy và QA tổng thể vẫn mở.
 
 > PUB-02 / PUB-03 / QA-02 ngày 06/11: chặn thông báo tải lại của lượt ghi nhận/đính chính cũ khi đã chuyển ngữ cảnh hoặc có lượt mới; test handler và một luồng UI kho giả có tiêm lỗi đạt, JavaScript 84/84. Xem phạm vi tại `KIEM-THU.md`; QA tổng thể vẫn mở.

@@ -195,6 +195,43 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.room.bulletin_history(bulletin['id']), before_history)
         self.assertEqual(len(self.room.bulletins()), 1)
 
+    def test_threads_share_hint_and_permalink_recording_over_http(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử liên kết Threads',
+            'url': 'https://example.com/threads-share-source', 'summary': 'Nguồn giả.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'body': 'Nội dung giả.', 'verification_note': 'Kiểm chứng nguồn giả cho kiểm thử.',
+            'claims': [{'text': 'Thông tin giả', 'evidence': 'Fixture', 'checked': True}]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'verified': True,
+            'claims': [{**item['claims'][0], 'checked': True}]})
+        variant = self.room.create_variant(bulletin['id'], {
+            'bulletin_revision': bulletin['revision'], 'platform': 'threads', 'account_label': 'Kênh giả'})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+            'segments': [{'text': 'Bản tin giả.', 'item_ids': [item['id']]}]})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+            'checks': {key: True for key in ('sources', 'facts', 'original', 'rights', 'claims')}})
+        variant = self.room.approve_variant(variant['id'], {'revision': variant['revision']})
+        path = f"/api/variants/{variant['id']}/publications"
+        payload = {'revision': variant['revision'], 'position': 0,
+            'url': 'https://www.threads.com/share/Example_123', 'idempotency_key': 'share_fixture_1'}
+        history = self.room.bulletin_history(bulletin['id'])
+        status, _, body = self.request('POST', path, payload, headers)
+        self.assertEqual(status, 400, body)
+        self.assertIn('mở liên kết trong trình duyệt', json.loads(body)['error'])
+        self.assertEqual(self.room.variant(variant['id']), variant)
+        self.assertEqual(self.room.publications(variant['id']), [])
+        self.assertEqual(self.room.bulletin_history(bulletin['id']), history)
+        payload['url'] = 'https://www.threads.com/@fixture/post/AbC_123?xmt=fixture'
+        status, _, body = self.request('POST', path, payload, headers)
+        self.assertEqual(status, 200, body)
+        self.assertEqual(json.loads(body)['url'], 'https://www.threads.com/@fixture/post/AbC_123')
+        self.assertEqual(len(self.room.publications(variant['id'])), 1)
+
     def test_publication_fields_reject_invalid_input_without_partial_writes(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin giả kiểm tra nhật ký',
