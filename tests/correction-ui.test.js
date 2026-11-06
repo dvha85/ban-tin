@@ -693,17 +693,24 @@ test('session recovery and refresh reject a replacement file in the same directo
 test('legacy approved export cannot cross an unverified session or changed store', async () => {
   const elements = new Map();
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  get('text-dialog').showModal = () => { get('text-dialog').open = true; };
   const requests = [], shown = [], copies = [], downloads = [], messages = [];
-  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+  class TestURL extends URL {}
+  TestURL.createObjectURL = blob => { downloads.push({blob}); return 'blob:fixture'; };
+  TestURL.revokeObjectURL = () => {};
+  const context = vm.createContext({...helpers, URL: TestURL, URLSearchParams, Intl, Date, Error, Promise, Blob,
+    setTimeout: (fn, ms) => ms === 30000 ? 0 : setTimeout(fn, ms), clearTimeout,
     requests, shown, copies, downloads, messages, fetch: () => new Promise(() => {}),
     window: {location: {search: '', assign: url => downloads.push(url)}, addEventListener() {}},
     document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
-      createElement: tag => new Element(tag), createTextNode: text => text}});
+      createElement: tag => { const el = new Element(tag); el.click = () => { downloads.at(-1).filename = el.download; }; return el; },
+      createTextNode: text => text}});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
   vm.runInContext(`app.draft = {id: 7, revision: 4, page_name: 'Trang thử'}; app.exportId = 7;
-    let changeDuringExport = false;
-    api = async path => { requests.push(path); if (changeDuringExport) app.sessionUnverified = true; return 'Bài giả'; };
-    showText = (...args) => shown.push(args); copy = async text => copies.push(text);
+    let changeDuringExport = false, current = {id: 7, revision: 4, page_name: 'Trang thử', approved_hash: 'hash', text: 'Bài giả'};
+    api = async path => { requests.push(path); if (changeDuringExport) app.sessionUnverified = true; return {...current}; };
+    const originalShowText = showText; showText = (...args) => { shown.push(args); originalShowText(...args); };
+    copy = async text => copies.push(text);
     toast = message => messages.push(message);`, context);
   const click = async id => { get(id).dispatchEvent({type: 'click'}); await new Promise(resolve => setImmediate(resolve)); };
   get('dialog-text').value = 'Bài giả';
@@ -722,10 +729,40 @@ test('legacy approved export cannot cross an unverified session or changed store
   vm.runInContext('app.sessionUnverified = false; changeDuringExport = false', context);
   await click('export-button'); await click('copy-dialog'); await click('download-export');
   assert.equal(shown.length, 1); assert.deepEqual(copies, ['Bài giả']);
-  assert.deepEqual(downloads, ['/api/drafts/7/export']);
+  assert.equal(downloads.length, 1); assert.equal(downloads[0].filename, 'bai-da-duyet-7.txt');
+  assert.equal(await downloads[0].blob.text(), 'Bài giả');
+  vm.runInContext("current = {...current, revision: 5, approved_hash: 'new', text: 'Nội dung khác'}", context);
+  await click('copy-dialog'); await click('download-export');
+  assert.deepEqual(copies, ['Bài giả']); assert.equal(downloads.length, 1);
+  assert.match(get('text-dialog-note').textContent, /thay đổi/i);
+  assert.match(get('text-dialog-note').textContent, /trước khi tải/i);
   vm.runInContext('app.exportId = null; app.sessionUnverified = true', context);
   await click('copy-dialog');
   assert.deepEqual(copies, ['Bài giả', 'Bài giả']); // Manual text remains recoverable.
+});
+
+test('legacy export does not show the wrong draft after selection changes while loading', async () => {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  const shown = [], messages = [];
+  let release;
+  const response = new Promise(resolve => { release = resolve; });
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    shown, messages, response, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`app.draft = {id: 7, revision: 4, page_name: 'Trang A'};
+    api = async () => response; showText = (...args) => shown.push(args);
+    toast = message => messages.push(message);`, context);
+  get('export-button').dispatchEvent({type: 'click'});
+  await new Promise(resolve => setImmediate(resolve));
+  vm.runInContext("app.draft = {id: 8, revision: 1, page_name: 'Trang B'}", context);
+  release('Nội dung A');
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(shown.length, 0);
+  assert.match(messages.at(-1), /thay đổi/i);
 });
 
 test('a new session without a comparable store identity cannot authorize writes', async () => {

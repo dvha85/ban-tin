@@ -320,10 +320,15 @@ class Newsroom(PublicationMixin, VariantMixin, BulletinMixin, CollectionMixin):
             raise ValidationError('Chỉ được xuất / ghi nhận đăng đúng phiên bản đã duyệt.')
 
     def export(self, draft_id):
+        return self.approved_export(draft_id)['text']
+
+    def approved_export(self, draft_id):
         draft = self.draft(draft_id)
         self._approved(draft)
         sources = '\n'.join(f"- {source['url']}" for source in draft['sources'])
-        return f"{draft['title']}\n\n{draft['body']}\n\nNguồn tham khảo:\n{sources}\n"
+        return {'id': draft['id'], 'revision': draft['revision'], 'approved_hash': draft['approved_hash'],
+                'page_name': draft['page_name'],
+                'text': f"{draft['title']}\n\n{draft['body']}\n\nNguồn tham khảo:\n{sources}\n"}
 
     def mark_published(self, draft_id, revision, post_url):
         try:

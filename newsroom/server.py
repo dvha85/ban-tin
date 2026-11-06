@@ -233,6 +233,8 @@ class Handler(BaseHTTPRequestHandler):
                 action = parts[4]
                 if action == 'packet':
                     self.respond(200, {'text': self.server.room.packet(draft_id)})
+                elif action == 'approved-export':
+                    self.respond(200, self.server.room.approved_export(draft_id))
                 elif action == 'export':
                     self.respond(200, self.server.room.export(draft_id), 'text/plain; charset=utf-8',
                                  {'Content-Disposition': f'attachment; filename="bai-da-duyet-{draft_id}.txt"'})

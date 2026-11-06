@@ -7,7 +7,7 @@ const app = {state: null, view: 'inbox', category: 'all', articleId: null, draft
   dirty: false, reviewDirty: false, tab: 'packet', csrf: '', busy: false, exportId: null,
   selectedArticles: new Set(), bulletin: null, bulletinDirty: false, variantId: null, publicationKeys: new Map(), conflictTarget: null,
   storeChanged: false, storeFileId: null, sessionUnverified: false};
-let pollTimer, toastTimer, dialogCopyAction = null;
+let pollTimer, toastTimer, dialogCopyAction = null, legacyExportSnapshot = null;
 
 // All external/source/model text is inserted as text or input values, never HTML.
 function node(tag, className, text) {
@@ -556,6 +556,7 @@ function renderSources() {
 }
 function showText(title, text, note, exportId = null, canCopy = true) {
   dialogCopyAction = null;
+  legacyExportSnapshot = null;
   app.exportId = exportId;
   $('text-dialog-title').textContent = title;
   $('dialog-text').value = text;
@@ -1707,29 +1708,76 @@ listen($('approve-button'), 'click', async () => {
     toast('Đã duyệt đúng phiên bản này. Ứng dụng chưa đăng bài.');
   });
 });
+function checkLegacyExportSelection(snapshot) {
+  checkExportStore();
+  if (app.dirty || app.reviewDirty || !app.draft || app.draft.id !== snapshot.id ||
+      app.draft.revision !== snapshot.revision || app.draft.page_name !== snapshot.page_name)
+    throw new Error('Bài hoặc nội dung đã thay đổi. Hãy kiểm tra và mở lại bản xuất.');
+}
+async function verifyLegacyExport(snapshot) {
+  checkLegacyExportSelection(snapshot);
+  const current = await api(`/api/drafts/${snapshot.id}/approved-export`);
+  checkLegacyExportSelection(snapshot);
+  if (!current || ['id', 'revision', 'approved_hash', 'page_name', 'text'].some(key => current[key] !== snapshot[key]))
+    throw new Error('Bản duyệt đã thay đổi. Hãy kiểm tra và mở lại bản xuất.');
+  return current.text;
+}
+async function copyLegacyExport(snapshot, stillVisible) {
+  const text = await verifyLegacyExport(snapshot);
+  if (!stillVisible()) throw new Error('Bản xuất đã thay đổi. Hãy mở lại bản xuất.');
+  const retry = () => copyLegacyExport(snapshot, () => dialogCopyAction === retry &&
+    $('text-dialog').open && app.exportId === null && $('dialog-text').value === snapshot.text);
+  await copy(text, retry);
+}
 listen($('export-button'), 'click', async () => {
   checkExportStore();
-  const text = await api(`/api/drafts/${app.draft.id}/export`);
-  checkExportStore();
-  showText('Bài đã duyệt — đăng thủ công', text,
-    `Đích dự kiến: ${app.draft.page_name}. Tự kiểm tra lại trước khi dán. Nếu sửa nội dung, hãy quay về cập nhật và duyệt lại.`, app.draft.id);
+  if (!app.draft) throw new Error('Hãy chọn bài trước khi xuất.');
+  const selection = {id: app.draft.id, revision: app.draft.revision, page_name: app.draft.page_name};
+  checkLegacyExportSelection(selection);
+  const snapshot = await api(`/api/drafts/${selection.id}/approved-export`);
+  checkLegacyExportSelection(selection);
+  if (!snapshot || snapshot.id !== selection.id || snapshot.revision !== selection.revision ||
+      snapshot.page_name !== selection.page_name || typeof snapshot.approved_hash !== 'string' || typeof snapshot.text !== 'string')
+    throw new Error('Bản duyệt đã thay đổi. Hãy kiểm tra và mở lại bản xuất.');
+  showText('Bài đã duyệt — đăng thủ công', snapshot.text,
+    `Đích dự kiến: ${snapshot.page_name}. Tự kiểm tra lại trước khi dán. Nếu sửa nội dung, hãy quay về cập nhật và duyệt lại.`, snapshot.id);
+  legacyExportSnapshot = snapshot;
 });
 listen($('copy-dialog'), 'click', async () => {
   const button = $('copy-dialog');
   if (button.disabled) return;
   button.disabled = true;
   try {
-    if (app.exportId !== null) checkExportStore();
-    if (dialogCopyAction) await dialogCopyAction();
+    if (app.exportId !== null) {
+      checkExportStore();
+      if (!legacyExportSnapshot || $('dialog-text').value !== legacyExportSnapshot.text)
+        throw new Error('Bản xuất đã thay đổi. Hãy mở lại bản xuất.');
+      const snapshot = legacyExportSnapshot;
+      await copyLegacyExport(snapshot, () => legacyExportSnapshot === snapshot &&
+        $('text-dialog').open && app.exportId === snapshot.id && $('dialog-text').value === snapshot.text);
+    } else if (dialogCopyAction) await dialogCopyAction();
     else await copy($('dialog-text').value);
   } catch (error) {
     $('text-dialog-note').textContent = `${error.message} Đóng hộp và kiểm tra lại trước khi sao chép thủ công.`;
   } finally { button.disabled = false; }
 });
-listen($('download-export'), 'click', () => {
+listen($('download-export'), 'click', async () => {
   if (app.exportId !== null) {
-    checkExportStore();
-    window.location.assign(`/api/drafts/${app.exportId}/export`);
+    try {
+      checkExportStore();
+      const snapshot = legacyExportSnapshot;
+      if (!snapshot || $('dialog-text').value !== snapshot.text)
+        throw new Error('Bản xuất đã thay đổi. Hãy mở lại bản xuất.');
+      const text = await verifyLegacyExport(snapshot);
+      if (!$('text-dialog').open || legacyExportSnapshot !== snapshot || app.exportId !== snapshot.id || $('dialog-text').value !== text)
+        throw new Error('Bản xuất đã thay đổi. Hãy mở lại bản xuất.');
+      const objectUrl = URL.createObjectURL(new Blob([text], {type: 'text/plain;charset=utf-8'}));
+      try {
+        const link = node('a'); link.href = objectUrl; link.download = `bai-da-duyet-${snapshot.id}.txt`; link.click();
+      } finally { setTimeout(() => URL.revokeObjectURL(objectUrl), 30000); }
+    } catch (error) {
+      $('text-dialog-note').textContent = `${error.message} Đóng hộp và kiểm tra lại trước khi tải hoặc sao chép thủ công.`;
+    }
   }
 });
 let legacyPublishConfirmation = null;

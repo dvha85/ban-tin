@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## APR-03 / QA-02: bản xuất bài cũ khớp bài được chọn — 06/11/2026
+
+- Trước sửa, khi yêu cầu lấy bài A bị chậm rồi chọn B, hộp có thể ghép nội dung A với tên Page và ID của B. Test handler tái hiện lỗi trước sửa; sau sửa UI đối chiếu ID, revision và Page trước/sau khi lấy dữ liệu. API mới trả nội dung cùng thông tin duyệt từ một bản ghi SQLite đã đọc; API tải cũ vẫn giữ nguyên nội dung và tên tệp.
+- Khi bấm sao chép hoặc tải trong hộp, UI lấy lại bản duyệt và so với nội dung đang hiển thị, kiểm tra bài đang chọn, thay đổi chưa lưu và trạng thái phiên/kho. Tệp tạo từ chính chuỗi đã đối chiếu; lỗi tải hoặc sao chép hiển thị trong hộp. Test handler kiểm tra bản duyệt đổi, phiên/kho không xác định, tệp và khả năng giữ bản sao thủ công; test HTTP kiểm tra xác thực, bản chưa duyệt, metadata, nội dung UTF-8 khớp API cũ và từ chối sau khi sửa.
+- Trên trình duyệt tích hợp, dùng hai bài giả và trì hoãn phản hồi A: chọn B trước khi phản hồi A về, UI giữ B, không mở hộp và báo bài thay đổi. Một lượt khác mở A rồi sửa dữ liệu giả phía server: sao chép bị từ chối; sau lần nạp lại và thử tương tự, nút tải cũng hiện lỗi trong hộp. Server và kho thử đã dừng, dọn; không đăng bài. Chưa đối chiếu clipboard hoặc tệp tải bằng trình duyệt ở lượt này; test handler kiểm tra chuỗi và tên tệp.
+- Hồi quy 237/237 Python, 68/68 JavaScript. Kiểm tra lại chỉ xác nhận dữ liệu tại thời điểm phản hồi, không ngăn sửa sau phản hồi hoặc thao tác Ctrl+C trực tiếp trong ô; client/đường dẫn tải cũ vẫn có hợp đồng cũ. QA-02/APR-03 tổng thể vẫn mở.
+
 ## FMT-03 / TEXT-04: chia đoạn qua dòng trống — 06/11/2026
 
 - Trước sửa, hai đoạn dài không có dấu câu có thể bị báo không chia được nếu dòng trống chứa dấu cách/tab hoặc dùng hai CRLF. Bản sửa nhận diện dòng trống với LF, CRLF, CR và một số cách kết hợp, kể cả khoảng trắng trên dòng trống; không cắt giữa CR và LF. Đây là thay đổi đề xuất chia, không đổi renderer, policy hay snapshot đã duyệt.

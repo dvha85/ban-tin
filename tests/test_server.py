@@ -72,6 +72,30 @@ class ServerTests(unittest.TestCase):
         headers['Origin'] = 'https://evil.example'
         self.assertEqual(self.request('POST', '/api/articles/import', {}, headers)[0], 403)
 
+    def test_legacy_approved_export_snapshot_matches_download_and_rejects_stale_approval(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin thử', 'url': 'https://example.com/legacy-export',
+                                            'summary': 'Ghi chú nguồn giả đủ dài để kiểm tra.'})
+        draft = self.room.create_draft(article['id'])
+        draft = self.room.save_draft(draft['id'], {'revision': draft['revision'], 'title': 'Tiêu đề giả',
+            'body': 'Nội dung kiểm thử không đăng bài. ' * 4, 'angle': 'Góc nhìn thử nghiệm', 'page_name': 'Trang giả'})
+        draft = self.room.save_draft(draft['id'], {'revision': draft['revision'],
+            'checks': {key: True for key in self.room.CHECKS}})
+        path = f"/api/drafts/{draft['id']}/approved-export"
+        self.assertEqual(self.request('GET', path)[0], 401)
+        self.assertEqual(self.request('GET', path, headers=headers)[0], 400)
+        draft = self.room.approve(draft['id'], draft['revision'])
+        status, _, body = self.request('GET', path, headers=headers)
+        self.assertEqual(status, 200)
+        snapshot = json.loads(body)
+        self.assertEqual({key: snapshot[key] for key in ('id', 'revision', 'approved_hash', 'page_name')},
+                         {key: draft[key] for key in ('id', 'revision', 'approved_hash', 'page_name')})
+        status, _, downloaded = self.request('GET', f"/api/drafts/{draft['id']}/export", headers=headers)
+        self.assertEqual(status, 200)
+        self.assertEqual(snapshot['text'].encode('utf-8'), downloaded)
+        self.room.save_draft(draft['id'], {'revision': draft['revision'], 'title': 'Tiêu đề đã sửa'})
+        self.assertEqual(self.request('GET', path, headers=headers)[0], 400)
+
     def test_short_request_body_is_rejected_before_mutation(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử độ dài',
