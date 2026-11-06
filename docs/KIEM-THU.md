@@ -1,5 +1,17 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## DIG-04 / APR-04 / QA-02: kết quả clipboard đến muộn — 06/11/2026
+
+- Kết quả sao chép đến muộn chỉ mở lại hộp sao chép thủ công hoặc báo thành công nếu hộp và ngữ cảnh vẫn còn phù hợp; không thể thu hồi một thao tác ghi clipboard đã bắt đầu. Test handler tái hiện trước sửa và sau sửa bao phủ gói tư liệu, bản duyệt và bài cũ; mỗi loại thử đóng hoặc thay hộp, với kết quả thành công hoặc bị từ chối.
+- Trên trình duyệt tích hợp và kho giả, clipboard được thay bằng hàm giả từ chối. Thử lại sao chép gói, giữ kết quả clipboard 90 giây, đóng hộp và mở lịch sử bản tin; sau thời gian chờ, tiêu đề, nội dung lịch sử và tiêu điểm vẫn ở hộp mới. Đây là một lịch trình UI với clipboard giả, chưa kiểm tra mọi lịch trình hoặc clipboard hệ điều hành.
+- Sau sửa, toàn bộ 243 test Python, 85 test JavaScript, `node --check` và `git diff --check` đạt. QA-02 và APR-04 vẫn mở; các kết quả không chứng minh mọi tình huống đồng thời hay trình duyệt.
+
+## BASE-03: đối chiếu bổ sung bộ đếm trên Edge — 06/11/2026
+
+- Trong ô soạn Threads, 501 chữ `a` hiện −1; 499 chữ `a` và `😀` hiện 0; 499 chữ `a` và `e` + dấu sắc tổ hợp hiện −1. Mẫu 470 chữ `a`, một dấu cách và `https://example.com/story-1234567890` hiện −7, tương ứng 507 điểm mã. Đây là quan sát các mẫu cụ thể, phù hợp cách ước lượng điểm mã của policy v6, không chứng minh mọi trường hợp.
+- Trong ô soạn X của tài khoản đang dùng, 281 chữ `a` hiện −1; 279 chữ `a` và `😀` hiện −1; 279 chữ `a` và `中` hiện −1; 279 chữ `a` và `e` + dấu sắc tổ hợp hiện 0. Mẫu 250 chữ `a`, một dấu cách và URL trên hiện còn 6, tương ứng URL có trọng số 23. Kết quả phù hợp các quy tắc cục bộ cho các mẫu này; không suy rộng sang mọi URL, emoji hoặc loại tài khoản.
+- Đã xóa văn bản mẫu trong cả hai ô soạn, gỡ bản xem trước URL trên Threads và không đăng bài. BASE-03 vẫn mở; tiếp tục đối chiếu bộ đếm trên nền tảng khi sử dụng.
+
 ## APR-01 / APR-02: đối chiếu chức năng duyệt và phạm vi hủy duyệt — 06/11/2026
 
 - APR-01: đối chiếu `approve_variant`, `approval_snapshot` và các test service/HTTP về điều kiện nội dung, nguồn, checklist, khẳng định, hash trích đoạn, policy, snapshot và xuất. Các lượt UI kho giả trước đó đã duyệt các kênh và thử chặn ghi chú/hash; chi tiết ở các mục bên dưới.

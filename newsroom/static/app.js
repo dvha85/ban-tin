@@ -593,14 +593,16 @@ async function copyBulletinPacket(bulletin, stillVisible = () => true, expectedT
     throw new Error('Gói tư liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
   const retry = () => copyBulletinPacket(bulletin, () => dialogCopyAction === retry && $('text-dialog').open &&
     $('dialog-text').value === result.text.replace(/\r\n?/g, '\n'), result.text);
-  await copy(result.text, retry);
+  await copy(result.text, retry, () => !app.sessionUnverified && !app.bulletinDirty && !app.storeChanged &&
+    app.bulletin?.id === id && app.bulletin?.revision === revision && stillVisible());
 }
 
-async function copy(text, retryAction = null) {
+async function copy(text, retryAction = null, stillVisible = () => true) {
   try {
     await navigator.clipboard.writeText(text);
-    toast('Đã sao chép. Bạn có thể dán vào nơi cần dùng.');
+    if (stillVisible()) toast('Đã sao chép. Bạn có thể dán vào nơi cần dùng.');
   } catch (_) {
+    if (!stillVisible()) return;
     showText('Sao chép thủ công', text, 'Trình duyệt chưa cho phép clipboard. Chọn ô dưới, nhấn Ctrl+A rồi Ctrl+C.' +
       (retryAction ? ' Nội dung được kiểm tra lúc mở hộp; nếu có thay đổi ở cửa sổ khác, hãy đóng hộp và kiểm tra lại trước khi sao chép thủ công.' : ''));
     dialogCopyAction = retryAction;
@@ -613,9 +615,10 @@ async function copyApprovedVariant(variantId, shown, position, selection = null,
   if (app.bulletinDirty) throw new Error('Hãy lưu các thay đổi trước khi sao chép bản đã duyệt.');
   if (app.storeChanged) throw new Error('Kho dữ liệu đã thay đổi. Hãy kiểm tra lại trước khi sao chép.');
   selection ||= app.bulletin ? {id: app.bulletin.id, revision: app.bulletin.revision} : null;
+  const selectionIsCurrent = () => selection && app.view === 'bulletins' && app.bulletin?.id === selection.id &&
+    app.bulletin?.revision === selection.revision && app.variantId === variantId && stillVisible();
   const checkSelection = () => {
-    if (!selection || app.view !== 'bulletins' || app.bulletin?.id !== selection.id ||
-        app.bulletin?.revision !== selection.revision || app.variantId !== variantId || !stillVisible())
+    if (!selectionIsCurrent())
       throw new Error('Bản tin, phiên bản hoặc hộp sao chép đã thay đổi. Hãy kiểm tra và thử lại.');
   };
   checkSelection();
@@ -626,7 +629,7 @@ async function copyApprovedVariant(variantId, shown, position, selection = null,
   const text = verifiedCopyText(shown, current, position);
   const retry = () => copyApprovedVariant(variantId, shown, position, selection, () =>
     dialogCopyAction === retry && $('text-dialog').open && $('dialog-text').value === text.replace(/\r\n?/g, '\n'));
-  await copy(text, retry);
+  await copy(text, retry, () => !app.sessionUnverified && !app.bulletinDirty && !app.storeChanged && selectionIsCurrent());
 }
 
 function updateBulletinSelection() {
@@ -1812,7 +1815,9 @@ async function copyLegacyExport(snapshot, stillVisible) {
   if (!stillVisible()) throw new Error('Bản xuất đã thay đổi. Hãy mở lại bản xuất.');
   const retry = () => copyLegacyExport(snapshot, () => dialogCopyAction === retry &&
     $('text-dialog').open && app.exportId === null && $('dialog-text').value === legacyDisplayedText(snapshot));
-  await copy(text, retry);
+  await copy(text, retry, () => {
+    try { checkLegacyExportSelection(snapshot); return stillVisible(); } catch (_) { return false; }
+  });
 }
 listen($('export-button'), 'click', async () => {
   checkExportStore();
@@ -1842,7 +1847,7 @@ listen($('copy-dialog'), 'click', async () => {
       await copyLegacyExport(snapshot, () => legacyExportSnapshot === snapshot &&
         $('text-dialog').open && app.exportId === snapshot.id && $('dialog-text').value === legacyDisplayedText(snapshot));
     } else if (dialogCopyAction) await dialogCopyAction();
-    else await copy($('dialog-text').value);
+    else await copy($('dialog-text').value, null, () => $('text-dialog').open && generation === textDialogGeneration);
   } catch (error) {
     if ($('text-dialog').open && generation === textDialogGeneration)
       $('text-dialog-note').textContent = `${error.message} Đóng hộp và kiểm tra lại trước khi sao chép thủ công.`;

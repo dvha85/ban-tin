@@ -1308,6 +1308,56 @@ test('fallback packet retry cannot copy after its dialog closes while waiting', 
   assert.deepEqual(writes, []);
 });
 
+test('late clipboard result does not reopen or overwrite a closed or replaced fallback', async () => {
+  for (const kind of ['packet', 'variant', 'legacy']) for (const mode of ['closed', 'replaced'])
+    for (const outcome of ['denied', 'success']) {
+    const elements = new Map(), messages = [];
+    const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+    get('text-dialog').showModal = () => { get('text-dialog').open = true; };
+    get('dialog-text').select = () => {};
+    let call = 0, finish;
+    const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+      fetch: () => new Promise(() => {}), messages,
+      navigator: {clipboard: {writeText: () => ++call === 1 ? Promise.reject(new Error('denied')) :
+        new Promise((resolve, reject) => { finish = outcome === 'denied' ? () => reject(new Error('denied')) : resolve; })}},
+      window: {location: {search: ''}, addEventListener() {}},
+      document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+        createElement: tag => new Element(tag), createTextNode: text => text}});
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+    vm.runInContext('toast = message => messages.push(message)', context);
+    if (kind === 'packet') {
+      vm.runInContext(`app.bulletin = {id: 7, revision: 4};
+        api = async () => ({text: 'Gói cũ', bulletin_revision: 4});`, context);
+      await vm.runInContext('copyBulletinPacket(app.bulletin)', context);
+    } else if (kind === 'variant') {
+      vm.runInContext(`app.view = 'bulletins'; app.bulletin = {id: 7, revision: 4}; app.variantId = 3;
+        let shown = {approval_id: 21, posts: ['Bản giả cũ']}; api = async () => shown;`, context);
+      await vm.runInContext('copyApprovedVariant(3, shown, 0)', context);
+    } else {
+      vm.runInContext(`app.view = 'drafts'; app.draft = {id: 8, revision: 4, page_name: 'Trang giả'};
+        let snapshot = {id: 8, revision: 4, page_name: 'Trang giả', approved_hash: 'hash', text: 'Bản cũ'};
+        api = async () => snapshot; showText('Bài đã duyệt', snapshot.text, '', snapshot.id);
+        legacyExportSnapshot = snapshot;`, context);
+      get('copy-dialog').dispatchEvent({type: 'click'});
+      await new Promise(resolve => setImmediate(resolve));
+    }
+    assert.equal(call, 1, `${kind}/${mode}/${outcome}`);
+    get('copy-dialog').dispatchEvent({type: 'click'});
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(call, 2, `${kind}/${mode}/${outcome}`);
+    get('text-dialog').open = false;
+    if (mode === 'replaced') vm.runInContext("showText('Hộp mới', 'Nội dung mới', 'Ghi chú mới')", context);
+    finish(); await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(messages, [], `${kind}/${mode}/${outcome}`);
+    assert.equal(get('text-dialog').open, mode === 'replaced', `${kind}/${mode}/${outcome}`);
+    if (mode === 'replaced') {
+      assert.equal(get('text-dialog-title').textContent, 'Hộp mới');
+      assert.equal(get('dialog-text').value, 'Nội dung mới');
+      assert.equal(get('text-dialog-note').textContent, 'Ghi chú mới');
+    }
+  }
+});
+
 test('fallback variant retry cannot copy after the selected variant changes while waiting', async () => {
   const elements = new Map(), writes = [];
   const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };

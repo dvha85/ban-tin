@@ -1,5 +1,7 @@
 # Đối chiếu điều kiện nghiệm thu 0.4
 
+> Cập nhật 06/11: đối chiếu thêm bộ đếm Threads/X trên Edge và sửa kết quả clipboard đến muộn có thể ghi đè hộp khác; hồi quy 243 Python, 85 JavaScript đạt. Một lịch trình UI dùng clipboard giả được thử trên kho giả. BASE-03, APR-04 và QA-02 vẫn mở; xem `KIEM-THU.md`.
+
 > Cập nhật 06/11: người dùng đăng nhập lại; composer Threads/X được đối chiếu thêm với Unicode kết hợp và URL dài ở ranh giới, không đăng bài. UI kho giả cũng đã chia và duyệt bốn đoạn Threads giữ nguồn. Chi tiết và giới hạn tại `KIEM-THU.md`; BASE-03 và QA-02 vẫn mở.
 
 > Ngày 06/11: chạy lại hồi quy trên mã `bf3be22`: 237/237 Python và 77/77 JavaScript đạt. Các lần kiểm tra mới gồm giữ CRLF/CR và nguồn mặc định khi lưu, đối chiếu clipboard/tệp bài cũ, chặn xem hoặc sao chép nhầm khi phản hồi chậm và người dùng đổi ngữ cảnh. Phạm vi từng lượt tại `KIEM-THU.md`; policy, QA tổng thể, xem mẫu v6 và quyết định triển khai vẫn mở.
