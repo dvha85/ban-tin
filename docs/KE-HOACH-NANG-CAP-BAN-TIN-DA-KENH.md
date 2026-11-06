@@ -1,5 +1,7 @@
 # Kế hoạch sửa lỗi và nâng cấp Bàn tin đa kênh
 
+> BASE-03 / PUB-02 / QA-02 ngày 06/11: URL Facebook khác chữ hoa/thường nhưng trùng theo khóa nội bộ nay báo có thể trùng và yêu cầu đối soát, vẫn chặn ghi; test service và trình duyệt kho giả đạt. Hồi quy 233/233 Python, 63/63 JavaScript; chưa xác nhận quy tắc của Meta. Xem `KIEM-THU.md`.
+
 > DOC-01 ngày 06/11: rà và cập nhật lối vào README cho quy trình đa kênh, hướng dẫn mục bị lược/nguồn khi chia, kiến trúc snapshot và số hồi quy gần nhất trong đối chiếu nghiệm thu. Rà tĩnh theo mã hiện tại; DOC-01/REL-01 vẫn mở để rà lại trước phát hành. Xem `KIEM-THU.md`.
 
 > APR-04 / PUB-02 / TEXT-06 ngày 06/11: HTTP kho giả kiểm tra X/Threads ghi nhận một phần, sau đó bản tin và policy thay đổi; xuất bị chặn, lưu trữ giữ nguyên, ghi nhận tiếp và hủy vẫn giữ khóa/lịch sử. Hồi quy 232/232 Python, 63/63 JavaScript; chi tiết tại `KIEM-THU.md`.

@@ -258,6 +258,37 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(groups[0]['match'], 'exact')
         self.assertEqual([entry['id'] for entry in groups[0]['drafts']], [drafts[0]['id'], drafts[1]['id']])
 
+    def test_facebook_case_only_claim_is_flagged_as_possible_duplicate_without_writes(self):
+        first = self.make_approved('facebook')
+        second = self.make_approved('facebook')
+        first_url = 'https://facebook.com/Page/posts/PfbIDaBc'
+        record = self.room.record_publication(first['id'], {'revision': first['revision'], 'position': 0,
+            'url': first_url, 'idempotency_key': 'case_first_123'})
+        before = self.room.publications(first['id'])
+        current = self.room.variant(first['id'])
+        differing_case = 'https://facebook.com/Page/posts/PfbIDabc'
+        with self.assertRaisesRegex(Conflict, 'có thể trùng') as caught:
+            self.room.record_publication(second['id'], {'revision': second['revision'], 'position': 0,
+                'url': differing_case, 'idempotency_key': 'case_second_123'})
+        self.assertEqual(caught.exception.target['publication_id'], record['id'])
+        self.assertEqual(self.room.publications(second['id']), [])
+        with self.assertRaisesRegex(ValidationError, 'có thể trùng'):
+            self.room.correct_publication(record['id'], {'revision': current['revision'],
+                'reason': 'Đối chiếu lại URL giả', 'url': differing_case})
+        self.assertEqual(self.room.publications(first['id']), before)
+        with self.assertRaisesRegex(Conflict, 'đã thuộc'):
+            self.room.record_publication(second['id'], {'revision': second['revision'], 'position': 0,
+                'url': 'https://m.facebook.com/Page/posts/PfbIDaBc?ref=share',
+                'idempotency_key': 'case_exact_123'})
+
+        legacy = self.make_approved_legacy()
+        self.room.mark_published(legacy['id'], legacy['revision'], 'https://facebook.com/Page/posts/LegacyAbC')
+        with self.assertRaisesRegex(Conflict, 'có thể trùng') as caught:
+            self.room.record_publication(second['id'], {'revision': second['revision'], 'position': 0,
+                'url': 'https://facebook.com/Page/posts/Legacyabc', 'idempotency_key': 'case_legacy_123'})
+        self.assertEqual(caught.exception.target['draft_id'], legacy['id'])
+        self.assertEqual(self.room.publications(second['id']), [])
+
     def test_legacy_and_variant_cannot_claim_same_facebook_post_in_either_order(self):
         legacy = self.make_approved_legacy()
         variant = self.make_approved('facebook')

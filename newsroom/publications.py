@@ -137,7 +137,10 @@ class PublicationMixin:
             if _post_identity(platform, existing_url) == identity:
                 target = {'kind': 'publication', 'bulletin_id': row['bulletin_id'],
                           'variant_id': row['variant_id'], 'publication_id': row['id'], 'position': row['position']}
-                raise Conflict(f"Liên kết đã thuộc bản tin #{row['bulletin_id']}, phiên bản #{row['variant_id']}, đoạn {row['position'] + 1} (ghi nhận #{row['id']}).", target)
+                description = f"bản tin #{row['bulletin_id']}, phiên bản #{row['variant_id']}, đoạn {row['position'] + 1} (ghi nhận #{row['id']})"
+                if platform == 'facebook' and existing_url != url:
+                    raise Conflict(f'Liên kết có thể trùng với {description}; khác biệt chữ hoa/thường cần được đối soát.', target)
+                raise Conflict(f'Liên kết đã thuộc {description}.', target)
         if platform != 'facebook':
             return
         for row in conn.execute('SELECT id,post_url FROM drafts WHERE post_url IS NOT NULL'):
@@ -146,7 +149,9 @@ class PublicationMixin:
             except ValueError:
                 continue
             if _post_identity('facebook', old) == identity:
-                raise Conflict(f"Liên kết đã thuộc bài cũ #{row['id']}. Hãy kiểm tra nhật ký.",
+                message = (f"Liên kết có thể trùng với bài cũ #{row['id']}; khác biệt chữ hoa/thường cần được đối soát."
+                           if old != url else f"Liên kết đã thuộc bài cũ #{row['id']}. Hãy kiểm tra nhật ký.")
+                raise Conflict(message,
                                {'kind': 'legacy_draft', 'draft_id': row['id']})
 
     def _publication_progress(self, conn, variant_id, approval_id):
@@ -225,8 +230,10 @@ class PublicationMixin:
             if not publication['active']:
                 raise Conflict('Lượt ghi nhận này đã được đính chính hoặc hủy.')
             new_url = normalize_post_url(variant['platform'], replacement) if replacement else None
-            if new_url and _post_identity(variant['platform'], new_url) == _post_identity(
-                    variant['platform'], normalize_post_url(variant['platform'], publication['url'])):
+            old_url = normalize_post_url(variant['platform'], publication['url']) if new_url else None
+            if new_url and _post_identity(variant['platform'], new_url) == _post_identity(variant['platform'], old_url):
+                if variant['platform'] == 'facebook' and new_url != old_url:
+                    raise ValidationError('Liên kết mới có thể trùng liên kết cũ; khác biệt chữ hoa/thường cần được đối soát.')
                 raise ValidationError('Liên kết mới giống liên kết cũ.')
             conn.execute('UPDATE publications SET active=0 WHERE id=?', (publication_id,))
             at = _now()

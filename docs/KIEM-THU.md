@@ -1,5 +1,12 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## BASE-03 / PUB-02: cảnh báo URL Facebook khác chữ hoa/thường — 06/11/2026
+
+- [Meta Embeds](https://github.com/facebook/meta-embeds-for-wordpress) minh họa URL Facebook với mã bài gồm chữ hoa/thường; tài liệu nhúng này không xác nhận hai cách viết là cùng hoặc khác bài. [RFC 3986 mục 6.2.2.1](https://www.rfc-editor.org/rfc/rfc3986#section-6.2.2.1) phân biệt quy tắc chung của host và các thành phần khác, nhưng không chứng minh riêng cách Facebook xử lý từng URL.
+- Bộ đối chiếu Facebook hiện vẫn so đường dẫn không phân biệt hoa/thường và chặn khi nghi trùng để tránh ghi đúp. Với hai URL chuẩn hóa khác cách viết nhưng cùng khóa so sánh, thông báo nay nói **có thể trùng**, yêu cầu đối soát; URL giống hệt sau chuẩn hóa vẫn dùng thông báo trùng. Áp dụng cả xung đột với bản ghi đa kênh, bài cũ và đính chính chính bản ghi. Không đổi quy tắc nhận dạng hoặc dữ liệu đã lưu; có thể vẫn chặn hai URL thực sự khác nhau và chưa có thao tác ghi đè trong UI.
+- Test `test_facebook_case_only_claim_is_flagged_as_possible_duplicate_without_writes` tái hiện thông báo khẳng định chắc trước sửa; sau sửa kiểm tra cả ba nhánh, đích đối soát, trường hợp giống hệt và dữ liệu không đổi. Trình duyệt tích hợp trên kho giả: thử ghi URL chỉ khác chữ hoa/thường, thấy thông báo có thể trùng, liên kết mở bản cũ và URL đang nhập được giữ. Không đối chiếu hai bài thật hoặc đăng bài; server và tệp thử đã dừng/dọn.
+- Hồi quy sau sửa: 233/233 Python, 63/63 JavaScript. BASE-03 và PUB-02 vẫn mở: chưa chứng minh quy tắc hoa/thường của Meta hoặc mọi alias, vẫn cần đối soát thủ công; QA-02 tổng thể vẫn mở.
+
 ## DOC-01: rà lối vào và quy trình nhiều kênh — 06/11/2026
 
 - Đối chiếu README và hướng dẫn với nhãn, xử lý preview/chia/lưu/duyệt/xuất/ghi nhận trong `newsroom/static/app.js`, cùng policy trong `social_formats.py`. README có đường bắt đầu riêng cho bản tin nhiều mục và phân biệt luồng một bài cũ; hướng dẫn nêu cách nhận diện mục lược và yêu cầu tự rà nguồn sau chia. Kiến trúc bổ sung phạm vi snapshot của preview và bản duyệt.
