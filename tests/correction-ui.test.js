@@ -1509,12 +1509,12 @@ test('retrying a cancelled publication warns and an incomplete response keeps th
   assert.doesNotMatch(messages.at(-1), /đã ghi nhận thông tin/i);
 });
 
-test('successful publication and correction report saved when list refresh fails', async () => {
-  for (const mode of ['record', 'correct']) {
+test('successful publication and correction report saved when refresh fails', async () => {
+  for (const mode of ['record', 'correct']) for (const failed of ['list', 'detail', 'both']) {
     const elements = new Map(), messages = [], calls = [];
     const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
     const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
-      calls, messages, mode, crypto: {randomUUID: () => 'fixture-key'}, fetch: () => new Promise(() => {}),
+      calls, messages, mode, failed, crypto: {randomUUID: () => 'fixture-key'}, fetch: () => new Promise(() => {}),
       window: {location: {search: ''}, addEventListener() {}},
       document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
         createElement: tag => new Element(tag), createTextNode: text => text}});
@@ -1525,7 +1525,8 @@ test('successful publication and correction report saved when list refresh fails
       if (path.endsWith('/publications')) return mode === 'correct' ?
         [{id: 11, position: 0, active: true, url: 'https://x.com/a/status/123', metrics: []}] : [];
       return {posts: ['Nội dung giả']};
-    }; renderBulletin = () => {}; loadBulletinList = async () => { throw new Error('refresh failed'); };
+    }; renderBulletin = async () => failed !== 'detail' && failed !== 'both';
+    loadBulletinList = async () => { if (failed !== 'detail') throw new Error('refresh failed'); };
     toast = message => messages.push(message);`, context);
     const area = new Element(); get('bulletin-editor').append(area); context.area = area;
     await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
@@ -1545,9 +1546,41 @@ test('successful publication and correction report saved when list refresh fails
     }
     assert.equal(calls.length, 1);
     assert.match(messages.at(-1), mode === 'record' ? /đã ghi nhận/i : /đã lưu đính chính/i);
-    assert.match(messages.at(-1), /chưa tải lại.*danh sách/i);
+    assert.match(messages.at(-1), /chưa tải lại/i);
+    if (failed !== 'detail') assert.match(messages.at(-1), /danh sách/i);
+    if (failed !== 'list') assert.match(messages.at(-1), /phiên bản/i);
     assert.doesNotMatch(messages.at(-1), /chưa rõ|refresh failed/i);
   }
+});
+
+test('successful publication releases the editor while both refresh requests are pending', async () => {
+  const elements = new Map(), messages = [], calls = [];
+  const get = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
+  let finishDetail, failList;
+  const detailPending = new Promise(resolve => { finishDetail = resolve; });
+  const listPending = new Promise((resolve, reject) => { failList = reject; });
+  const context = vm.createContext({...helpers, URL, URLSearchParams, Intl, Date, Error, Promise, setTimeout, clearTimeout,
+    calls, messages, detailPending, listPending, crypto: {randomUUID: () => 'fixture-key'}, fetch: () => new Promise(() => {}),
+    window: {location: {search: ''}, addEventListener() {}},
+    document: {getElementById: get, querySelectorAll: () => [], querySelector: () => new Element(),
+      createElement: tag => new Element(tag), createTextNode: text => text}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../newsroom/static/app.js'), 'utf8'), context);
+  vm.runInContext(`api = async (path, body) => path.endsWith('/publications') ?
+      (body ? (calls.push(body), {id: 11, active: 1}) : []) : {posts: ['Nội dung giả']};
+    renderBulletin = () => detailPending; loadBulletinList = () => listPending;
+    toast = message => messages.push(message);`, context);
+  const area = new Element(); get('bulletin-editor').append(area); context.area = area;
+  await vm.runInContext("renderVariantPublication(area, {id: 3, revision: 4, platform: 'x', account_label: 'Thử'})", context);
+  const walk = el => [el, ...el.children.filter(child => child instanceof Element).flatMap(walk)];
+  const button = name => walk(area).find(el => el.tagName === 'button' && el.textContent === name);
+  const tick = () => new Promise(resolve => setImmediate(resolve));
+  walk(area).find(el => el.dataset.publicationUrl).value = 'https://x.com/a/status/123';
+  button('Ghi nhận đã đăng').dispatchEvent({type: 'click'}); await tick();
+  button('Xác nhận ghi nhận').dispatchEvent({type: 'click'}); await tick();
+  assert.equal(calls.length, 1); assert.equal(vm.runInContext('app.busy', context), false);
+  assert.equal(get('bulletin-editor').inert, false); assert.match(messages.at(-1), /đã ghi nhận.*đang tải/i);
+  finishDetail(false); failList(new Error('fixture')); await tick();
+  assert.match(messages.at(-1), /đã ghi nhận.*chưa tải lại.*danh sách.*phiên bản/i);
 });
 
 test('publication confirmation identifies destination and invalidates when URL changes', async () => {

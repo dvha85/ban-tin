@@ -786,11 +786,11 @@ function removalConfirmation(trigger, bulletin, item, source = null) {
   panel.append(node('p', '', message), confirm, cancel);
   return panel;
 }
-function renderBulletin(focusVariantSelector = false) {
+function renderBulletin(focusVariantSelector = false, quietErrors = false) {
   const bulletin = app.bulletin;
   const editor = $('bulletin-editor');
   editor.replaceChildren();
-  if (!bulletin) return;
+  if (!bulletin) return Promise.resolve(false);
   editor.append(node('h3', '', bulletin.title || `Bản tin #${bulletin.id}`),
     node('p', 'small-note', `Phiên bản ${bulletin.revision}.${bulletin.archived ? ' Đã lưu trữ.' : ''} Lưu từng phần trước khi chuyển sang phần khác.`));
   if (typeof bulletin.archived === 'boolean' && Number.isSafeInteger(bulletin.archive_revision) && bulletin.archive_revision >= 0) {
@@ -1046,7 +1046,22 @@ function renderBulletin(focusVariantSelector = false) {
   const variants = node('section', 'bulletin-block');
   variants.append(node('h3', '', 'Phiên bản theo kênh'));
   editor.append(variants);
-  return renderVariants(variants, bulletin, focusVariantSelector).catch(error => toast(error.message, true));
+  return renderVariants(variants, bulletin, focusVariantSelector).then(() => true).catch(error => {
+    if (!quietErrors) toast(error.message, true);
+    return false;
+  });
+}
+function refreshAfterPublication(message, warning = false) {
+  let detail;
+  try { detail = Promise.resolve(renderBulletin(false, true)).then(result => result !== false, () => false); }
+  catch (_) { detail = Promise.resolve(false); }
+  const list = Promise.resolve().then(() => loadBulletinList()).then(() => true, () => false);
+  toast(`${message} Đang tải lại dữ liệu.`, warning);
+  Promise.all([detail, list]).then(([detailOk, listOk]) => {
+    const failed = [...(!listOk ? ['danh sách'] : []), ...(!detailOk ? ['phiên bản'] : [])];
+    if (failed.length) toast(`${message} Chưa tải lại được ${failed.join(' và ')}. Hãy mở lại để kiểm tra lịch sử.`, true);
+    else toast(message, warning);
+  });
 }
 function variantStatus(variant) {
   const progress = variant.publication_progress;
@@ -1465,10 +1480,8 @@ async function renderVariantPublication(area, variant) {
           }
           try { await api(`/api/publications/${existing.id}/corrections`, {revision: variant.revision, reason: reason.value, url: url.value}); }
           catch (error) { showClaimConflict(errors, error, {reason: reason.value, url: url.value}); return; }
-          app.bulletinDirty = false; renderBulletin();
-          try { await loadBulletinList(); }
-          catch (_) { toast('Đã lưu đính chính nhưng chưa tải lại được danh sách. Hãy mở lại để kiểm tra lịch sử.', true); return; }
-          toast('Đã lưu đính chính.');
+          app.bulletinDirty = false;
+          refreshAfterPublication('Đã lưu đính chính.');
         });
         const discard = node('button', 'button secondary', 'Bỏ nội dung biểu mẫu');
         listen(discard, 'click', () => {
@@ -1521,15 +1534,12 @@ async function renderVariantPublication(area, variant) {
             showClaimConflict(conflict, error); return;
           }
           app.publicationKeys.delete(key);
-          app.bulletinDirty = false; renderBulletin();
+          app.bulletinDirty = false;
           if (recorded.active === 0) {
-            try { await loadBulletinList(); } catch (_) { /* History can still be checked after reopening. */ }
-            toast('Lượt ghi nhận cũ không còn hiệu lực. Hãy kiểm tra lịch sử trước khi ghi nhận lại.', true);
+            refreshAfterPublication('Lượt ghi nhận cũ không còn hiệu lực. Hãy kiểm tra lịch sử trước khi ghi nhận lại.', true);
             return;
           }
-          try { await loadBulletinList(); }
-          catch (_) { toast('Đã ghi nhận thông tin nhưng chưa tải lại được danh sách. Hãy mở lại để kiểm tra lịch sử.', true); return; }
-          toast('Đã ghi nhận thông tin do bạn nhập.');
+          refreshAfterPublication('Đã ghi nhận thông tin do bạn nhập.');
         });
         listen(back, 'click', () => { confirmedUrl = null; confirmation.hidden = true; url.focus(); });
         confirmation.append(confirm, back); confirmation.hidden = false;

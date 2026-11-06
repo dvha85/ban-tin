@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 06/11/2026
 
+## PUB-02 / PUB-03 / QA-02: tải lại sau ghi nhận hoặc đính chính — 06/11/2026
+
+- Sau khi lưu thành công, giao diện báo ngay kết quả và mở khóa trong khi tải lại danh sách và phiên bản. Nếu tải lại thất bại, thông báo nêu rõ phần chưa tải và hướng dẫn mở lại kiểm tra lịch sử. Đây là xử lý kết quả tải lại, không tự ghi thêm hay gửi lại thao tác.
+- Test handler bao phủ ghi nhận và đính chính khi lỗi danh sách, phiên bản hoặc cả hai; test riêng giữ cả hai phản hồi đang chờ và xác nhận vùng biên tập được mở khóa. Trường hợp lỗi phiên bản đã được tái hiện trước khi sửa. Hồi quy 237/237 Python, 79/79 JavaScript; `node --check` đạt.
+- Trên trình duyệt tích hợp với kho giả, ghi nhận một URL X giả, giữ chậm hai yêu cầu tải lại rồi mở được trang Cách sử dụng. Sau khi cho cả hai yêu cầu trả lỗi, giao diện báo rõ cả danh sách và phiên bản chưa tải; đọc kho thấy một ghi nhận hiệu lực với một sự kiện `reported`. Đây là lỗi được tiêm, không phải lỗi mạng thật; lượt UI chỉ thử một kênh và một đường ghi nhận, không thử đính chính hoặc mọi lịch trình đồng thời. Kho thử đã dọn; không đăng bài. QA-02 và các cổng phát hành liên quan vẫn mở.
+
 ## PUB-02 / PUB-03 / QA-02: đã lưu nhưng tải danh sách thất bại — 06/11/2026
 
 - Trước sửa, sau khi server xác nhận ghi nhận hoặc đính chính thành công, lỗi tải lại danh sách chỉ hiện lỗi chung, dễ khiến người dùng tưởng chưa lưu. UI nay báo rõ thao tác đã lưu nhưng danh sách chưa tải lại được và hướng dẫn mở lại kiểm tra lịch sử. Nếu phản hồi ghi chưa rõ, thông báo đối soát cũ vẫn được giữ; thay đổi này không tự gửi lại hoặc ghi thêm.
