@@ -800,6 +800,62 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(status, 200, body)
         self.assertEqual(json.loads(body)['segments'][0]['text'], 'Nội dung đang soạn')
 
+    def test_variant_adoption_requires_separate_checklist_over_http(self):
+        headers = self.session()
+        article = self.room.import_article({'title': 'Tin giả kiểm tra nhận thay đổi',
+            'url': 'https://example.com/http-adoption', 'summary': 'Nguồn giả.'})
+        bulletin = self.room.create_bulletin({'article_ids': [article['id']]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'],
+            'body': 'Nội dung đã biên tập.', 'verification_note': 'Đối chiếu với nguồn giả để kiểm thử.',
+            'claims': [{'text': 'Thông tin giả', 'evidence': 'Nguồn giả', 'checked': True}]})
+        item = bulletin['items'][0]
+        bulletin = self.room.save_bulletin_item(bulletin['id'], item['id'], {
+            'bulletin_revision': bulletin['revision'], 'revision': item['revision'], 'verified': True,
+            'claims': [{**item['claims'][0], 'checked': True}]})
+        variant = self.room.create_variant(bulletin['id'], {'bulletin_revision': bulletin['revision'],
+            'platform': 'x', 'account_label': 'Kênh giả'})
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'],
+            'segments': [{'text': 'Nội dung giả.', 'item_ids': [bulletin['items'][0]['id']]}]})
+        checks = {key: True for key in ('sources', 'facts', 'original', 'rights', 'claims')}
+        variant = self.room.save_variant(variant['id'], {'revision': variant['revision'], 'checks': checks})
+        updated = self.room.save_bulletin(bulletin['id'], {'revision': bulletin['revision'], 'title': 'Tiêu đề mới'})
+        current = self.room.variant(variant['id'])
+        path = f"/api/variants/{variant['id']}"
+        payload = {'revision': current['revision'], 'expected_bulletin_revision': updated['revision'], 'checks': checks}
+
+        status, _, body = self.request('POST', path + '/save', payload, headers)
+        self.assertEqual(status, 409, body)
+        self.assertEqual(self.room.variant(variant['id']), current)
+
+        payload['adopt_bulletin_revision'] = True
+        status, _, body = self.request('POST', path + '/save', payload, headers)
+        self.assertEqual(status, 200, body)
+        adopted = json.loads(body)
+        self.assertFalse(adopted['needs_update'])
+        self.assertFalse(any(adopted['checks'].values()))
+        self.assertEqual(adopted['segments'][0]['text'], 'Nội dung giả.')
+        status, _, body = self.request('POST', path + '/approve', {
+            'revision': adopted['revision'], 'expected_bulletin_revision': updated['revision']}, headers)
+        self.assertEqual(status, 400, body)
+        self.assertIn('5 mục kiểm tra', json.loads(body)['error'])
+        self.assertEqual(self.room.variant(variant['id']), adopted)
+
+        status, _, body = self.request('POST', path + '/save', {
+            'revision': adopted['revision'], 'expected_bulletin_revision': updated['revision'], 'checks': checks}, headers)
+        self.assertEqual(status, 200, body)
+        checked = json.loads(body)
+        self.assertEqual(checked['checks'], checks)
+        self.assertEqual(self.room.variant(variant['id']), checked)
+        status, _, body = self.request('POST', path + '/approve', {
+            'revision': checked['revision'], 'expected_bulletin_revision': updated['revision']}, headers)
+        self.assertEqual(status, 200, body)
+        self.assertEqual(json.loads(body)['status'], 'approved')
+        status, _, body = self.request('GET', path + '/export', headers=headers)
+        self.assertEqual(status, 200, body)
+        self.assertIn('Nội dung giả.', json.loads(body)['posts'][0])
+
     def test_bulletin_rejects_article_ids_outside_sqlite_range(self):
         headers = self.session()
         article = self.room.import_article({'title': 'Tin thử giới hạn ID',

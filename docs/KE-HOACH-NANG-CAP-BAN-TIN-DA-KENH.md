@@ -4,6 +4,8 @@
 
 > BASE-03 / PUB-02 ngày 07/11: sửa so trùng URL Threads với chữ số hex `%XX` khác hoa/thường; không giải mã byte dành riêng hay viết lại lịch sử. Test service/HTTP và giới hạn tại `KIEM-THU.md`; chưa xác minh mọi URL nền tảng.
 
+> BASE-02 / APR-02 ngày 09/11: test HTTP xác nhận việc nhận bản tin gốc đã thay đổi bỏ checklist gửi cùng, yêu cầu xác nhận riêng trước khi duyệt và xuất; chưa bao phủ toàn bộ hợp đồng. Xem `KIEM-THU.md`.
+>
 > APR-04 / QA-02 ngày 09/11: kiểm tra lại revision phiên bản trước khi ghép dữ liệu ghi nhận; khóa tương tác vùng sửa trong lúc chờ và yêu cầu mở lại khi dữ liệu thay đổi. Test và một lịch trình trên Edge/kho giả đạt; xem giới hạn tại `KIEM-THU.md`. APR-04 và QA tổng thể vẫn mở.
 >
 > APR-04 / APPROVE-05 ngày 07/11: thử HTTP đồng thời sửa và duyệt cùng revision, điều phối lần lượt mỗi thao tác thắng; đối chiếu bản duyệt, hash, export và lịch sử trong kho giả. Xem phạm vi tại `KIEM-THU.md`; APR-04 và QA tổng thể vẫn mở.

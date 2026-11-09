@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 09/11/2026
 
+## BASE-02 / APR-02: nhận bản tin thay đổi qua HTTP — 09/11/2026
+
+- Với kho giả có mục đã kiểm chứng, test `test_variant_adoption_requires_separate_checklist_over_http` kiểm tra lưu khi thiếu xác nhận nhận bản tin trả 409 và không đổi phiên bản; gửi xác nhận cùng checklist thì lưu được nhưng checklist vẫn bị xóa. Duyệt trước khi xác nhận lại bị từ chối vì thiếu năm mục kiểm tra; sau lần lưu checklist riêng, duyệt và xuất thành công.
+- Đây là một chuỗi HTTP cụ thể; chưa chứng minh mọi tổ hợp request, lỗi mạng hoặc hành vi giao diện. BASE-02 vẫn mở để đối chiếu hợp đồng đầy đủ.
+
 ## APR-04 / QA-02: kiểm tra revision khi tải vùng ghi nhận — 09/11/2026
 
 - Khi ghi nhận xảy ra giữa các lần tải, ID bản duyệt có thể không đổi dù revision phiên bản đã đổi. UI đọc lại phiên bản, đối chiếu ID, revision và ID bản duyệt; trong lúc kiểm tra, vùng sửa phiên bản đã duyệt tạm thời không tương tác được. Nếu dữ liệu không khớp, vùng sửa cũ được thay bằng cảnh báo mở lại.
