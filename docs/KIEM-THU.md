@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 09/11/2026
 
+## APR-03 / QA-02: dán đoạn Facebook giả từ Edge — 09/11/2026
+
+- Trên kho SQLite tạm, chọn phiên bản Facebook đã duyệt và bấm **Sao chép đoạn 1** trong Edge; giao diện báo đã sao chép. Người dùng tự dán vào trang soạn thảo và xác nhận có nội dung tiếng Việt, emoji 😀, dòng mới và URL `https://example.com/clipboard-source` như mẫu. Không có bài đăng thật; server và kho giả đã dừng và dọn.
+- Đây là xác nhận một đoạn Facebook qua Edge và thao tác dán của người dùng, không phải đối chiếu byte, không bao phủ mọi trình duyệt, kênh hay fallback. QA-02 và APR-03 vẫn mở cho phạm vi còn lại.
+
 ## DB-02 / khởi động: cổng bận không mở kho — 09/11/2026
 
 - Trước sửa, tiến trình mở `Newsroom` trước khi giữ cổng: test với cổng đã có listener và thư mục đích chưa tồn tại thất bại vì kho vẫn được tạo. Nay chế độ server giữ cổng trước khi mở hoặc nâng cấp kho; nếu khởi tạo kho lỗi thì đóng cổng. Lệnh một lần `--backup` và `--collect` không cần giữ cổng server.

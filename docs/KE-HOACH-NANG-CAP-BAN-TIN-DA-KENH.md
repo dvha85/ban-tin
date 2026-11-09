@@ -8,7 +8,7 @@ Các mục dưới đây là lối tắt tới điều kiện gốc và bằng c
 | --- | --- |
 | Hợp đồng API và xung đột (BASE-02, APR-04) | Các quyết định giới hạn và các luồng HTTP/chạy đồng thời đã có bằng chứng trong [API](API-BAN-TIN-DA-KENH.md) và [ma trận](MA-TRAN-BANG-CHUNG-0.4.md). Đối chiếu những điều kiện còn thiếu với hợp đồng và các lịch trình quan trọng; xử lý lỗi cụ thể nếu phát hiện. Không coi một số lịch trình đã thử là bằng chứng cho mọi trường hợp. |
 | Định dạng và URL (BASE-03, FMT-02, PUB-01) | Đã có fixture, nguồn và mẫu composer thực tế; Threads vẫn được gắn nhãn ước lượng và X có giới hạn dữ liệu emoji. Chỉ khảo sát hoặc thử thêm khi có quy tắc, mẫu URL hay sai lệch cụ thể cần làm rõ; duy trì các cảnh báo và không đánh dấu policy là xác minh toàn diện. |
-| Xuất và QA (APR-03, QA-02) | Đã có test và nhiều lượt UI trên kho giả. Còn đối chiếu clipboard hệ điều hành cho lượt đa kênh gần nhất và các luồng giao diện chưa có bằng chứng; việc rời trang/tải lại khi chưa lưu được người dùng chọn **để sau**. Xem kết quả và giới hạn tại [KIEM-THU.md](KIEM-THU.md). |
+| Xuất và QA (APR-03, QA-02) | Đã có test và nhiều lượt UI trên kho giả. Ngày 09/11 người dùng xác nhận dán đúng một đoạn Facebook giả từ Edge; còn các luồng giao diện và clipboard khác chưa có bằng chứng. Việc rời trang/tải lại khi chưa lưu được người dùng chọn **để sau**. Xem kết quả và giới hạn tại [KIEM-THU.md](KIEM-THU.md). |
 | Tài liệu và quyết định phát hành (DOC-01, REL-01) | Sau thay đổi cuối, đối chiếu lại [bảng nghiệm thu](DOI-CHIEU-NGHIEM-THU-0.4.md), tài liệu sử dụng và mục 10. Ngày 09/11 người dùng xác nhận [mẫu policy v6](DAU-RA-PILOT-GIA-LAP-0.4-V6.md) phù hợp; chưa có quyết định triển khai kho vận hành. Việc chấp nhận mẫu không thay thế QA hay quyết định triển khai. |
 
 Không thử migration trên bản sao SQLite cũ vì người dùng xác nhận chưa có dữ liệu cũ; các fixture vẫn được dùng. Hồi quy gần nhất sau sửa khởi động: 263/263 Python và 90/90 JavaScript. Phải chạy lại sau thay đổi mã và trước phát hành.
@@ -16,6 +16,8 @@ Không thử migration trên bản sao SQLite cũ vì người dùng xác nhận
 > APR-04 / QA-02 ngày 07/11: chặn ghép snapshot và ghi nhận khác approval khi các phản hồi tải xen kẽ. Test handler và Edge với kho giả, thao tác thay đổi được tiêm giữa hai lần đọc; xem phạm vi tại `KIEM-THU.md`. APR-04 và QA tổng thể vẫn mở.
 
 > REL-01 / PILOT ngày 09/11: người dùng đã xem và xác nhận mẫu đầu ra giả lập policy v6 phù hợp. Đây là phản hồi về mẫu trình bày, không phải xác nhận đăng bài, nghiệm thu toàn bộ hoặc quyết định triển khai kho vận hành.
+
+> APR-03 / QA-02 ngày 09/11: người dùng xác nhận dán đúng một đoạn Facebook giả từ Edge, gồm tiếng Việt, emoji, dòng mới và nguồn. Xem phạm vi tại `KIEM-THU.md`; các mục tổng thể vẫn mở.
 
 > BASE-03 / PUB-02 ngày 07/11: sửa so trùng URL Threads với chữ số hex `%XX` khác hoa/thường; không giải mã byte dành riêng hay viết lại lịch sử. Test service/HTTP và giới hạn tại `KIEM-THU.md`; chưa xác minh mọi URL nền tảng.
 
