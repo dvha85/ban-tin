@@ -1,5 +1,11 @@
 # Bằng chứng kiểm thử — cập nhật 09/11/2026
 
+## DB-02 / khởi động: cổng bận không mở kho — 09/11/2026
+
+- Trước sửa, tiến trình mở `Newsroom` trước khi giữ cổng: test với cổng đã có listener và thư mục đích chưa tồn tại thất bại vì kho vẫn được tạo. Nay chế độ server giữ cổng trước khi mở hoặc nâng cấp kho; nếu khởi tạo kho lỗi thì đóng cổng. Lệnh một lần `--backup` và `--collect` không cần giữ cổng server.
+- Năm test trong `tests/test_startup.py` đạt: cổng bận không tạo kho mới; fixture schema 3 giữ byte/version và không tạo backup khi cổng bận; lỗi khởi tạo giải phóng cổng; server mới phục vụ `/api/state` từ kho tạm; backup vẫn chạy khi cổng bận. Schema 3 chỉ là fixture; không dùng SQLite vận hành. Có một lượt test đầu lỗi dọn thư mục vì kết nối test chưa đóng; đã sửa test và dọn thư mục tạm đó.
+- Hồi quy đầy đủ sau sửa đạt 263/263 Python và 90/90 JavaScript trên cùng mã ứng dụng. Chưa thử mọi lỗi hệ thống hoặc các tiến trình khác dùng cùng kho trên các cổng khác nhau.
+
 ## QA-01: hồi quy đầy đủ trên commit cb33088 — 09/11/2026
 
 - `python -B -m unittest discover -s tests -q`: 258/258; `node --test` với sáu tệp được liệt kê trong README: 90/90. Hai bộ chạy trên cùng commit `cb33088`; dữ liệu kiểm thử và khôi phục đều ở thư mục tạm.

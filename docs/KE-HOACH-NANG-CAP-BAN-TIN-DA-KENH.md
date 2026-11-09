@@ -4,6 +4,8 @@
 
 > BASE-03 / PUB-02 ngày 07/11: sửa so trùng URL Threads với chữ số hex `%XX` khác hoa/thường; không giải mã byte dành riêng hay viết lại lịch sử. Test service/HTTP và giới hạn tại `KIEM-THU.md`; chưa xác minh mọi URL nền tảng.
 
+> DB-02 ngày 09/11: sửa thứ tự khởi động server để cổng bận không tạo hoặc nâng cấp kho; kiểm tra kho mới và fixture schema 3, giải phóng cổng khi lỗi, server bình thường và backup một lần. Phạm vi và hồi quy tại `KIEM-THU.md`; không thử SQLite vận hành.
+>
 > DOC-01 ngày 09/11: sửa hướng dẫn mở nhánh phát triển để ưu tiên kho minh họa, nêu rõ lệnh kho mặc định có thể chạy migration và việc tải lại trang không cập nhật server đang chạy. Đối chiếu tĩnh launcher, khởi tạo `Newsroom` và thư mục dữ liệu; chưa chạy hoặc nâng cấp kho vận hành. DOC-01 và REL-01 vẫn mở đến lần rà soát cuối.
 >
 > QA-01 ngày 09/11: hồi quy đầy đủ trên commit `cb33088` đạt 258/258 Python và 90/90 JavaScript; các giới hạn QA và policy vẫn mở. Xem `KIEM-THU.md`.
@@ -583,7 +585,7 @@ Gate: POST-01…06 đạt; không phát sinh request đăng bài hoặc gọi t�
 
 ### G6 — Nghiệm thu và tài liệu
 
-- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 09/11 trên `cb33088`: Python 258/258, JavaScript 90/90 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
+- [x] **QA-01 / P0:** Toàn bộ kiểm thử cũ + mới đạt; không xóa/nới test an toàn để làm bản mới pass. Lần chạy ngày 09/11 sau sửa khởi động: Python 263/263, JavaScript 90/90 trên fixture; phải chạy lại nếu mã thay đổi và trước phát hành. Kỳ vọng đếm Threads cũ được cập nhật theo thay đổi được mô tả tại `KIEM-THU.md`.
 - [ ] **QA-02 / P1:** QA giao diện Windows trên kho thử: bàn phím, đổi tab, chưa lưu, clipboard/fallback, file UTF-8, restart.
 - [x] **QA-03 / P0:** Migration/restore end-to-end và đường lui trên fixture; bước thử bản sao SQLite cũ không áp dụng theo xác nhận của người dùng.
 - [ ] **DOC-01 / P1:** Cập nhật README, KIEN-TRUC, HUONG-DAN-SU-DUNG, KIEM-THU; ghi rõ giới hạn theo nền tảng và nội dung chưa thử.

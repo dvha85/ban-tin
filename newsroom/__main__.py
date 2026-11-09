@@ -101,23 +101,33 @@ def main():
         parser.error('Cong phai tu 1024 den 65535')
     if args.demo and args.data_dir:
         parser.error('Ban demo luon dung thu muc demo rieng; khong nhan --data-dir')
-    room = Newsroom(args.data_dir or default_data_dir(args.demo), demo=args.demo)
-    if args.backup:
-        print(room.backup())
-        return
-    if args.demo:
-        seed_demo(room)
-    if args.collect:
-        if args.demo:
-            parser.error('Ban demo khong doc tin that')
-        import json
-        print(json.dumps(room.refresh(), ensure_ascii=True, indent=2))
-        return
+    server = None
+    if not args.backup and not args.collect:
+        try:
+            # Reserve the actual listening socket before opening or migrating a store.
+            # No request is served until the initialized room is attached below.
+            server = make_server(None, args.port)
+        except OSError:
+            print(f'Khong mo duoc cong {args.port}. Ung dung co the da chay; mo http://127.0.0.1:{args.port}/')
+            raise SystemExit(1)
     try:
-        server = make_server(room, args.port)
-    except OSError:
-        print(f'Khong mo duoc cong {args.port}. Ung dung co the da chay; mo http://127.0.0.1:{args.port}/')
-        raise SystemExit(1)
+        room = Newsroom(args.data_dir or default_data_dir(args.demo), demo=args.demo)
+        if args.backup:
+            print(room.backup())
+            return
+        if args.demo:
+            seed_demo(room)
+        if args.collect:
+            if args.demo:
+                parser.error('Ban demo khong doc tin that')
+            import json
+            print(json.dumps(room.refresh(), ensure_ascii=True, indent=2))
+            return
+        server.room = room
+    except BaseException:
+        if server is not None:
+            server.server_close()
+        raise
     url = f'http://127.0.0.1:{args.port}/'
     print(f'Ban tin dang chay: {url}\nDu lieu: {room.data_dir}')
     print('Giu cua so nay mo. Nhan Ctrl+C de dung. Khong tu dang; AI chi chay khi ban xac nhan rieng.')
