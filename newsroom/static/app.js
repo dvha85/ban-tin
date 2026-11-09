@@ -1336,17 +1336,29 @@ async function renderVariants(container, bulletin, focusSelector = false) {
       expected_bulletin_revision: bulletin.revision}); app.variantId = result.id; renderBulletin(); await loadBulletinList();
   });
   actions.append(save, preview, split, approve, exportButton, archive, clone); area.append(actions, approvalError);
-  if (variant.status !== 'draft') await renderVariantPublication(area, variant);
+  if (variant.status !== 'draft') {
+    // Prevent editing stale controls until publication state is verified.
+    area.inert = true;
+    try { await renderVariantPublication(area, variant); }
+    catch (error) {
+      if (area.isConnected)
+        area.replaceChildren(node('p', 'notice warning', 'Chưa xác minh được bản duyệt và ghi nhận. Hãy mở lại phiên bản để đối chiếu.'));
+      throw error;
+    } finally { area.inert = false; }
+  }
 }
 async function renderVariantPublication(area, variant) {
   let ready = true, output;
   try { output = await api(`/api/variants/${variant.id}/export`); }
   catch (_) { ready = false; output = await api(`/api/variants/${variant.id}/archive`); }
   const publications = await api(`/api/variants/${variant.id}/publications`);
+  const current = await api(`/api/variants/${variant.id}`);
   if (!area.isConnected) return;
   // Separate reads may straddle an edit, re-approval and publication in another tab.
   // Never place an active URL beside text from a different approval snapshot.
-  if (!Number.isSafeInteger(variant.approval_id) || variant.approval_id < 1 ||
+  if (!Number.isSafeInteger(variant.id) || variant.id < 1 || !Number.isSafeInteger(variant.revision) || variant.revision < 1 ||
+      !current || current.id !== variant.id || current.revision !== variant.revision ||
+      current.approval_id !== variant.approval_id || !Number.isSafeInteger(variant.approval_id) || variant.approval_id < 1 ||
       !output || output.approval_id !== variant.approval_id || !Array.isArray(output.posts) ||
       !Array.isArray(publications) || publications.some(record => record.active && (
         record.approval_id !== variant.approval_id || !Number.isInteger(record.position) ||

@@ -24,7 +24,7 @@ Nếu sửa đoạn, đổi mục/nguồn hoặc chuyển phiên bản trong khi
 
 Khi ghi nhận URL, kiểm tra đoạn, kênh và URL trong vùng xác nhận rồi chọn **Xác nhận ghi nhận**. Có thể quay lại chỉnh URL; sửa URL sẽ đóng xác nhận cũ. Nếu kết nối bị gián đoạn, kiểm tra trạng thái và lịch sử trước khi thử lại.
 
-Nếu vùng xuất báo **Bản duyệt hoặc ghi nhận đã thay đổi**, các dữ liệu vừa tải không còn khớp nhau. Giữ phần đang soạn, mở lại bản tin và phiên bản rồi đối chiếu bản duyệt, URL và lịch sử trước khi tiếp tục.
+Khi mở phiên bản đã duyệt, vùng sửa tạm thời không tương tác trong lúc ứng dụng kiểm tra dữ liệu. Nếu vùng xuất báo **Bản duyệt hoặc ghi nhận đã thay đổi**, các dữ liệu vừa tải không còn khớp nhau. Giữ phần đang soạn ở các vùng khác, mở lại bản tin và phiên bản rồi đối chiếu bản duyệt, URL và lịch sử trước khi tiếp tục.
 
 Nếu Threads đưa liên kết dạng `/share/...`, hãy tự mở liên kết đó trong trình duyệt, kiểm tra đúng bài của mình và sao chép URL bài viết sau khi trang mở để ghi nhận. Ứng dụng không tự mở liên kết chia sẻ để xác định bài hoặc kiểm tra trùng.
 

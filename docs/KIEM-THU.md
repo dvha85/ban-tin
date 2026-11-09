@@ -1,4 +1,11 @@
-# Bằng chứng kiểm thử — cập nhật 07/11/2026
+# Bằng chứng kiểm thử — cập nhật 09/11/2026
+
+## APR-04 / QA-02: kiểm tra revision khi tải vùng ghi nhận — 09/11/2026
+
+- Khi ghi nhận xảy ra giữa các lần tải, ID bản duyệt có thể không đổi dù revision phiên bản đã đổi. UI đọc lại phiên bản, đối chiếu ID, revision và ID bản duyệt; trong lúc kiểm tra, vùng sửa phiên bản đã duyệt tạm thời không tương tác được. Nếu dữ liệu không khớp, vùng sửa cũ được thay bằng cảnh báo mở lại.
+- Hai test JavaScript kiểm tra lịch trình ghi nhận xen giữa các phản hồi và trạng thái không tương tác trong lúc chờ. Test tái hiện lỗi trước sửa; hồi quy sau sửa đạt 256/256 Python và 90/90 JavaScript; `node --check` và `git diff --check` đạt.
+- Trên Edge với SQLite và URL giả, trì hoãn phản hồi và ghi nhận xen giữa các lần đọc: vùng sửa không xuất hiện trong cây trợ năng khi chờ, Tab đi từ chọn phiên bản sang chọn kênh rồi nút tạo; sau đó cảnh báo mở lại xuất hiện. Mở lại bản tin hiển thị tiến độ 1/2, URL giả và phiên bản bị khóa. Không kết nối hay đăng lên X, không dùng kho vận hành.
+- Đây là kiểm tra các lịch trình cụ thể, không ngăn thay đổi sau lần kiểm tra cuối hoặc bao phủ mọi lỗi mạng, trình duyệt và cuộc đua. APR-04 và QA-02 vẫn mở.
 
 ## APR-04 / QA-02: không ghép bản duyệt với ghi nhận khác — 07/11/2026
 
