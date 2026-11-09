@@ -8,7 +8,7 @@ Các mục dưới đây là lối tắt tới điều kiện gốc và bằng c
 | --- | --- |
 | Hợp đồng API và xung đột (BASE-02, APR-04) | Các quyết định giới hạn và các luồng HTTP/chạy đồng thời đã có bằng chứng trong [API](API-BAN-TIN-DA-KENH.md) và [ma trận](MA-TRAN-BANG-CHUNG-0.4.md). Đối chiếu những điều kiện còn thiếu với hợp đồng và các lịch trình quan trọng; xử lý lỗi cụ thể nếu phát hiện. Không coi một số lịch trình đã thử là bằng chứng cho mọi trường hợp. |
 | Định dạng và URL (BASE-03, FMT-02, PUB-01) | Đã có fixture, nguồn và mẫu composer thực tế; Threads vẫn được gắn nhãn ước lượng và X có giới hạn dữ liệu emoji. Chỉ khảo sát hoặc thử thêm khi có quy tắc, mẫu URL hay sai lệch cụ thể cần làm rõ; duy trì các cảnh báo và không đánh dấu policy là xác minh toàn diện. |
-| Xuất và QA (APR-03, QA-02) | Đã có test và nhiều lượt UI trên kho giả. Ngày 09/11 người dùng xác nhận dán đúng một đoạn Facebook giả từ Edge; còn các luồng giao diện và clipboard khác chưa có bằng chứng. Việc rời trang/tải lại khi chưa lưu được người dùng chọn **để sau**. Xem kết quả và giới hạn tại [KIEM-THU.md](KIEM-THU.md). |
+| Xuất và QA (APR-03, QA-02) | APR-03 đã đối chiếu đủ trong phạm vi chức năng: test HTTP ba kênh, test sao chép/tải/fallback và người dùng xác nhận dán đúng một đoạn Facebook giả từ Edge. QA-02 còn mở cho các luồng giao diện khác; việc rời trang/tải lại khi chưa lưu được người dùng chọn **để sau**. Xem kết quả và giới hạn tại [KIEM-THU.md](KIEM-THU.md). |
 | Tài liệu và quyết định phát hành (DOC-01, REL-01) | Sau thay đổi cuối, đối chiếu lại [bảng nghiệm thu](DOI-CHIEU-NGHIEM-THU-0.4.md), tài liệu sử dụng và mục 10. Ngày 09/11 người dùng xác nhận [mẫu policy v6](DAU-RA-PILOT-GIA-LAP-0.4-V6.md) phù hợp; chưa có quyết định triển khai kho vận hành. Việc chấp nhận mẫu không thay thế QA hay quyết định triển khai. |
 
 Không thử migration trên bản sao SQLite cũ vì người dùng xác nhận chưa có dữ liệu cũ; các fixture vẫn được dùng. Hồi quy gần nhất sau sửa khởi động: 263/263 Python và 90/90 JavaScript. Phải chạy lại sau thay đổi mã và trước phát hành.
@@ -586,7 +586,7 @@ Gate: VAR-01…04, TEXT-01…06 đạt; không dùng độ dài body làm bằng
 
 - [x] **APR-01 / P0:** Approval snapshot/hash/version, checklist theo mục và biến thể, block các trạng thái chưa đủ điều kiện. Test service/HTTP và UI kho giả được đối chiếu trong `KIEM-THU.md`; hoàn tất phạm vi chức năng, chưa đóng G4 hoặc QA tổng thể.
 - [x] **APR-02 / P0:** Vô hiệu duyệt đúng phạm vi khi sửa nội dung/nguồn/đích/thứ tự/policy; giữ snapshot đã ghi nhận. Test phạm vi và thay đổi policy được đối chiếu trong `KIEM-THU.md`; hoàn tất phạm vi chức năng theo policy hiện hành, chưa đóng G4 hoặc QA tổng thể.
-- [ ] **APR-03 / P1:** Copy từng đoạn, `.txt` UTF-8, fallback thủ công; export chỉ từ snapshot hợp lệ.
+- [x] **APR-03 / P1:** Copy từng đoạn, `.txt` UTF-8, fallback thủ công; export chỉ từ snapshot hợp lệ. Test HTTP ba kênh so preview/export/tệp, test snapshot hỏng và handler sao chép/tải/fallback; người dùng xác nhận dán một đoạn Facebook giả trên Edge. Hoàn tất trong phạm vi chức năng đã thử; G4, policy và QA-02 tổng thể vẫn mở. Xem `KIEM-THU.md`.
 - [ ] **APR-04 / P0:** Bảo vệ conflict/race: sửa khi đang duyệt/xuất/ghi nhận không tạo hash hoặc nhật ký sai.
 
 Gate: APPROVE-01…06 đạt; preview/copy/file/approval tương đương chính xác ở cấp đoạn văn bản.
