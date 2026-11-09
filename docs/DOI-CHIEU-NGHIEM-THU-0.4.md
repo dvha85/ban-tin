@@ -26,7 +26,7 @@
 
 > BASE-02 ngày 06/11: test HTTP mới kiểm tra 128 đầu vào sai của ghi nhận, đính chính và số liệu trên kho giả; dữ liệu không đổi sau từng yêu cầu. Hồi quy 223/223 Python và 62/62 JavaScript; chưa đóng hợp đồng tổng thể. Xem `KIEM-THU.md`.
 
-> Ngày 06/11 đã lưu [ba đầu ra giả lập policy v6](DAU-RA-PILOT-GIA-LAP-0.4-V6.md) trích từ snapshot duyệt sau thao tác UI. Các bản nháp được chuẩn bị sẵn bằng service; đây không phải tệp của ba pilot cũ hoặc lượt thử đầu-cuối mới. Người dùng chưa xác nhận xem bộ này hay quyết định triển khai.
+> Ngày 06/11 đã lưu [ba đầu ra giả lập policy v6](DAU-RA-PILOT-GIA-LAP-0.4-V6.md) trích từ snapshot duyệt sau thao tác UI. Các bản nháp được chuẩn bị sẵn bằng service; đây không phải tệp của ba pilot cũ hoặc lượt thử đầu-cuối mới. Đến ngày 09/11 người dùng xác nhận đã xem và thấy mẫu phù hợp; chưa có quyết định triển khai.
 
 > Đối chiếu từng mã của ma trận kiểm thử mục 8, cấp bằng chứng và phần chưa thử: [MA-TRAN-BANG-CHUNG-0.4.md](MA-TRAN-BANG-CHUNG-0.4.md). Ma trận không thay cho kiểm thử hoặc quyết định triển khai.
 
@@ -87,14 +87,14 @@ Ngày cập nhật bảng đối chiếu: 06/11/2026. Đối chiếu mục 10 c�
 | Legacy giữ nội dung/hash/export/history; migration và restore vượt test lỗi | Fixture schema 3 từ mã cũ và fixture schema 1/2 mô phỏng trong `tests/test_migrations_v4.py`; test lỗi backup/migration/restore, cấu trúc schema 4 và restore liên thông ba kênh; thử phục hồi backup schema 3 rồi mở bằng mã 0.3.1 trên fixture. | Không áp dụng thử trên bản sao SQLite cũ trong đợt này vì người dùng xác nhận chưa có dữ liệu cũ; fixture 1/2 không phải snapshot lịch sử. Chưa kiểm chứng mọi payload hoặc lỗi hệ thống tập tin. |
 | Test đạt và có QA trình duyệt/clipboard | Hồi quy gần nhất: 263/263 Python và 90/90 JavaScript; đã có bằng chứng dán clipboard và fallback trên Edge với dữ liệu giả. Trình duyệt tích hợp đã kiểm tra một số thao tác bàn phím, ngắt phản hồi, hộp gói tư liệu, chia/lưu/tải lại một phiên bản X và phản hồi xem trước chậm như ghi trong `KIEM-THU.md`. Clipboard phiên và tệp một bài cũ CRLF/CR cũng được đối chiếu; năm hộp fallback ba kênh được xem với clipboard giả từ chối. | QA-02 chưa hoàn tất toàn bộ bàn phím, tab, trạng thái chưa lưu và các luồng mới; lượt clipboard đa kênh không giả lập gần nhất chưa đọc lại được nội dung. Cần chạy lại hồi quy sau mỗi thay đổi chức năng và trước phát hành. |
 | README, hướng dẫn, kiến trúc, kiểm thử cập nhật | `README.md`, `docs/HUONG-DAN-SU-DUNG.md`, `docs/KIEN-TRUC.md`, `docs/KIEM-THU.md` và `docs/API-BAN-TIN-DA-KENH.md` đã có nội dung cho 0.4. | Cần rà soát lại tính nhất quán theo trạng thái cuối trước phát hành, bao gồm policy và kết quả QA còn mở. |
-| Người dùng xem pilot và quyết định triển khai | Ba lượt pilot fixture đã ghi thời gian và vấn đề trong `KIEM-THU.md`. Ngày 04/11/2026 người dùng xác nhận [mẫu đầu ra giả lập](MAU-DAU-RA-GIA-LAP-0.4.md) cho ba kênh phù hợp với quy trình dự kiến. Ngày 06/11 có thêm [đầu ra giả lập policy v6](DAU-RA-PILOT-GIA-LAP-0.4-V6.md) trích từ các snapshot duyệt qua UI. | Cả hai bộ mẫu không phải tệp của ba pilot cũ; bộ v6 bắt đầu từ bản nháp chuẩn bị sẵn. Người dùng chọn xem bộ v6 sau và chưa quyết định triển khai lên kho vận hành. Các điều kiện QA và chính sách còn mở. |
+| Người dùng xem pilot và quyết định triển khai | Ba lượt pilot fixture đã ghi thời gian và vấn đề trong `KIEM-THU.md`. Ngày 04/11/2026 người dùng xác nhận [mẫu đầu ra giả lập](MAU-DAU-RA-GIA-LAP-0.4.md) cho ba kênh phù hợp với quy trình dự kiến. Ngày 09/11 người dùng xác nhận đã xem và thấy [đầu ra giả lập policy v6](DAU-RA-PILOT-GIA-LAP-0.4-V6.md) phù hợp. | Cả hai bộ mẫu không phải tệp của ba pilot cũ; bộ v6 bắt đầu từ bản nháp chuẩn bị sẵn. Người dùng chưa quyết định triển khai lên kho vận hành. Các điều kiện QA và chính sách còn mở. |
 
 ## Các việc tiếp theo có phụ thuộc bên ngoài
 
 1. Hoàn tất QA-02 trên kho giả, gồm các thao tác bàn phím và tổ hợp kênh/đoạn còn thiếu. Phần rời trang và tải lại khi có nội dung chưa lưu được người dùng chọn để sau; hai lựa chọn khi chuyển bản tin đã được người dùng thử. Các lượt có bằng chứng UI được ghi riêng trong `KIEM-THU.md`.
 2. Hoàn tất BASE-03 bằng bằng chứng phù hợp cho cách đếm và mẫu URL của các nền tảng; khi chưa chứng minh được thì giữ nhãn ước lượng và gate mở.
 3. Không áp dụng thử migration/restore trên bản sao SQLite cũ trong đợt này: người dùng xác nhận chưa có dữ liệu cũ. Các kiểm thử migration/restore bằng fixture vẫn được giữ; không coi đó là thử dữ liệu vận hành.
-4. Tổng hợp bằng chứng mới, đối chiếu lại toàn bộ mục 10 và để người dùng xem pilot trước quyết định triển khai.
+4. Tổng hợp bằng chứng mới, đối chiếu lại toàn bộ mục 10; người dùng đã xem mẫu v6 nhưng chưa quyết định triển khai.
 
 Không suy ra bài đã đăng hoặc nguồn đã được xác minh từ URL, kiểm thử fixture hay bản duyệt nội bộ.
 

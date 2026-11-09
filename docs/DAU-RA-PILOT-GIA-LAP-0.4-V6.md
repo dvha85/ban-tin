@@ -2,6 +2,8 @@
 
 > **Chỉ để kiểm thử:** nội dung, nguồn và các xác nhận đều giả lập; không dùng làm tin thật hoặc đăng. Không có bài đăng mạng xã hội.
 
+Ngày 09/11/2026, người dùng xác nhận đã xem mẫu này và thấy phù hợp. Đây là đánh giá cách trình bày, không phải quyết định triển khai hay nghiệm thu toàn bộ.
+
 Ngày 06/11/2026: ba bản tin có 1, 2 và 3 mục, được chuẩn bị bằng service trong SQLite tạm. Từ các bản nháp đã chuẩn bị sẵn, đã chọn và duyệt từng kênh qua giao diện trình duyệt; nội dung dưới đây trích nguyên văn từ snapshot duyệt, sau khi kiểm tra hash và policy. Đây không phải tệp của ba pilot có đo thời gian trước, cũng không phải lần thử đầu-cuối từ bước chọn tin.
 
 ## Facebook · 1 mục

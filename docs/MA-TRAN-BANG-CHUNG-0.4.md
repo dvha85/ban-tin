@@ -69,6 +69,6 @@ Ký hiệu: **S** = service/SQLite giả; **H** = HTTP với server/kho giả; *
 1. BASE-02: tiếp tục đối chiếu kiểu, trạng thái, lỗi và hợp đồng API; tài liệu [API](API-BAN-TIN-DA-KENH.md) mô tả mã hiện tại nhưng không chứng minh toàn bộ tổ hợp qua HTTP.
 2. BASE-03: duy trì cảnh báo đếm Threads và giới hạn của bộ nhận diện X; đối chiếu URL nền tảng theo nguồn có thể kiểm chứng. [X](https://help.x.com/en/using-x/post-and-moment-url) hướng dẫn sao chép URL bài, nhưng không liệt kê mọi alias; [X Media Studio](https://help.x.com/en/using-twitter/media-studio-faqs.html) có ví dụ `x.com/USERNAME/STATUS/postID`. Hai nguồn này không chứng minh allowlist hiện tại đầy đủ. Tài liệu Facebook truy cập qua công cụ công khai yêu cầu đăng nhập; không suy đoán từ đó.
 3. QA-02: hoàn thiện bàn phím, clipboard, đổi kênh và lỗi chưa lưu theo phạm vi còn thiếu. Người dùng chọn **để sau** việc thử rời trang/tải lại có nội dung chưa lưu.
-4. G6: rà lại tài liệu và toàn bộ checklist mục 10 sau thay đổi cuối; người dùng cần xem kết quả pilot và quyết định riêng về triển khai. Mẫu giả đã được xác nhận phù hợp không phải tệp của ba pilot cũ.
+4. G6: rà lại tài liệu và toàn bộ checklist mục 10 sau thay đổi cuối; ngày 09/11 người dùng xác nhận mẫu giả policy v6 phù hợp, nhưng chưa quyết định triển khai. Mẫu này không phải tệp của ba pilot cũ và không thay thế QA đầu-cuối.
 
 Không thử migration trên bản sao SQLite cũ trong đợt này vì người dùng xác nhận chưa có dữ liệu cũ. Không có bài đăng hay dữ liệu vận hành trong các lượt thử trên.
