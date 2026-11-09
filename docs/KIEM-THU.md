@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 09/11/2026
 
+## QA-01: hồi quy đầy đủ trên commit cb33088 — 09/11/2026
+
+- `python -B -m unittest discover -s tests -q`: 258/258; `node --test` với sáu tệp được liệt kê trong README: 90/90. Hai bộ chạy trên cùng commit `cb33088`; dữ liệu kiểm thử và khôi phục đều ở thư mục tạm.
+- Kết quả tự động không thay thế QA trình duyệt, clipboard hệ điều hành, đối chiếu policy nền tảng hoặc quyết định vận hành. Cần chạy lại sau thay đổi mã và trước phát hành.
+
 ## BASE-03 / TEXT-03: tập emoji Unicode 15.1 phía X — 09/11/2026
 
 - `test_x_counts_each_fully_qualified_unicode_151_emoji` đọc đủ 3.773 chuỗi `fully-qualified` trong tệp emoji 15.1 đã ghim và kiểm tra bộ đếm X cho mỗi chuỗi đứng riêng, đứng giữa hai chữ ASCII và lặp hai lần. Bộ `tests.test_social_conformance` đạt 12/12 test, gồm kiểm tra hash tệp nguồn.
