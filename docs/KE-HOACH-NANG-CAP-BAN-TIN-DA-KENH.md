@@ -4,6 +4,8 @@
 
 > BASE-03 / PUB-02 ngày 07/11: sửa so trùng URL Threads với chữ số hex `%XX` khác hoa/thường; không giải mã byte dành riêng hay viết lại lịch sử. Test service/HTTP và giới hạn tại `KIEM-THU.md`; chưa xác minh mọi URL nền tảng.
 
+> DOC-01 ngày 09/11: sửa hướng dẫn mở nhánh phát triển để ưu tiên kho minh họa, nêu rõ lệnh kho mặc định có thể chạy migration và việc tải lại trang không cập nhật server đang chạy. Đối chiếu tĩnh launcher, khởi tạo `Newsroom` và thư mục dữ liệu; chưa chạy hoặc nâng cấp kho vận hành. DOC-01 và REL-01 vẫn mở đến lần rà soát cuối.
+>
 > QA-01 ngày 09/11: hồi quy đầy đủ trên commit `cb33088` đạt 258/258 Python và 90/90 JavaScript; các giới hạn QA và policy vẫn mở. Xem `KIEM-THU.md`.
 >
 > BASE-03 / TEXT-03 ngày 09/11: kiểm tra cục bộ 3.773 emoji `fully-qualified` Unicode 15.1 đã ghim, mỗi emoji đứng riêng, giữa hai chữ và lặp; chưa xác minh toàn bộ với X thực tế. Xem `KIEM-THU.md`; BASE-03 vẫn mở.

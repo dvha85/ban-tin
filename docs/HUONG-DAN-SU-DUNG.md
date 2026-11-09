@@ -1,5 +1,7 @@
 # Hướng dẫn cho người mới
 
+> **Nhánh 0.4 đang nghiệm thu:** để tập thao tác, mở `MO-BAN-MINH-HOA.cmd` và kiểm tra nhãn MINH HỌA cùng cổng 8878. `MO-BAN-TIN.cmd` dùng kho mặc định và khi mở có thể nâng cấp schema; chưa dùng nhánh này với kho vận hành trước khi quyết định triển khai. Tải lại trang không thay mã của tiến trình đang chạy. Bản demo có thư mục riêng nhưng có thể giữ dữ liệu demo từ lần trước.
+
 ## Thử quy trình bản tin nhiều mục đang phát triển
 
 1. Trong **Hộp tin**, đánh dấu 1–10 tin rồi chọn **Tạo bản tin từ tin đã chọn**. Lựa chọn được giữ khi đổi bộ lọc trong cùng phiên; số tin đang ẩn được hiển thị và có nút bỏ toàn bộ lựa chọn. Có thể lọc 24 giờ, 48 giờ, 7 ngày hoặc số ngày tùy chọn. Tin đã có trong bản tin khác được ghi số lần sử dụng và yêu cầu xác nhận nếu chọn lại; bạn vẫn có thể dùng lại để cập nhật. Với tin có hơn ba nguồn, đánh dấu 1–3 nguồn trong hộp **Chọn nguồn cho bản tin**, rồi chọn **Chọn nguồn**. Có thể chọn **Hủy** hoặc nhấn Escape để dừng thao tác. Hộp chọn này cũng xuất hiện khi thêm tin hoặc tạo bản sao bài cũ có hơn ba nguồn.
@@ -48,9 +50,9 @@ Chính sách duyệt hiện là `2026-11-05-v6`: bộ đếm Threads ước lư�
 
 ## 1. Mở, dừng và mở lại
 
-Mở thư mục mã nguồn, nhấp đúp `MO-BAN-TIN.cmd`. Một cửa sổ chạy và một trang trình duyệt sẽ xuất hiện. Đây là ứng dụng của riêng bạn, không cần tài khoản để mở bàn biên tập.
+Để thử nhánh này, mở thư mục mã nguồn và nhấp đúp `MO-BAN-MINH-HOA.cmd`. Một cửa sổ chạy và một trang trình duyệt sẽ xuất hiện. Bàn biên tập không cần tài khoản; dùng dữ liệu giả và không đăng bài ví dụ. Chỉ dùng `MO-BAN-TIN.cmd` với kho vận hành sau khi đã quyết định triển khai và chuẩn bị phương án sao lưu phù hợp.
 
-Địa chỉ chính: [http://127.0.0.1:8877/](http://127.0.0.1:8877/). Không gửi địa chỉ này cho người khác: nó chỉ có ý nghĩa trên máy của bạn.
+Địa chỉ bản minh họa: [http://127.0.0.1:8878/](http://127.0.0.1:8878/). Bản dùng kho mặc định dùng cổng 8877. Những địa chỉ này chỉ có ý nghĩa trên máy của bạn.
 
 - Giữ cửa sổ chạy mở. Đóng riêng tab trình duyệt không nhất thiết dừng ứng dụng.
 - Muốn dừng: lưu bản nháp trước, quay lại cửa sổ chạy và nhấn Ctrl+C hoặc đóng cửa sổ đó.
@@ -166,8 +168,8 @@ Bản 0.4 đang phát triển cũng kiểm tra cấu trúc và khóa ngoại tr�
 
 | Hiện tượng | Cách xử lý |
 | --- | --- |
-| Trình duyệt không mở / báo mất kết nối | Nếu đang có trang soạn thảo, giữ trang đó và sao chép nội dung chưa lưu ra nơi an toàn trước khi tải lại hoặc mở trang khác. Kiểm tra cửa sổ chạy; nếu đã dừng, mở lại `MO-BAN-TIN.cmd`. Trên trang soạn thảo cũ, xử lý theo dòng **Phiên hết hạn sau khi khởi động lại** bên dưới. Nếu không có trang đang soạn, mở địa chỉ 8877. |
-| Báo cổng đang dùng | Có thể ứng dụng đã chạy; thử mở địa chỉ 8877, không chạy thêm nhiều cửa sổ. Nếu đó là phần mềm khác, nhờ hỗ trợ đổi cổng. |
+| Trình duyệt không mở / báo mất kết nối | Nếu đang có trang soạn thảo, giữ trang đó và sao chép nội dung chưa lưu ra nơi an toàn trước khi tải lại hoặc mở trang khác. Kiểm tra cửa sổ chạy; nếu đã dừng, mở lại đúng bản đang dùng: bản minh họa dùng `MO-BAN-MINH-HOA.cmd`. Trên trang soạn thảo cũ, xử lý theo dòng **Phiên hết hạn sau khi khởi động lại** bên dưới. Nếu không có trang đang soạn, mở cổng 8878 cho bản minh họa hoặc 8877 cho bản dùng kho mặc định. |
+| Báo cổng đang dùng | Có thể ứng dụng đã chạy; kiểm tra tiến trình và mở đúng cổng 8878 của bản minh họa hoặc 8877 của bản dùng kho mặc định, không chạy thêm nhiều cửa sổ. Nếu đó là phần mềm khác, nhờ hỗ trợ đổi cổng. |
 | Phiên hết hạn sau khi khởi động lại | Giữ trang đang mở, chọn **Khôi phục kết nối** nếu nút xuất hiện. Nếu ứng dụng báo **Chưa xác định được kho của phiên mới**, giữ nội dung và thử lại; nếu không khôi phục được, sao chép nội dung thủ công ra nơi an toàn trước khi tải lại. Sau khi khôi phục, kiểm tra dữ liệu và lịch sử trước khi tự lưu lại vì thao tác trước có thể đã hoàn tất. Ứng dụng có thể nhận ra khi tệp kho bị thay tại cùng đường dẫn, nhưng không bảo đảm phát hiện mọi trường hợp; nếu bạn biết kho đã bị thay hoặc khôi phục từ bản sao, hãy sao chép nội dung và tải lại. |
 | Nguồn lỗi | Xem mục **Nguồn tin**, thử lại sau hoặc nhập URL và ghi chú thủ công. Dữ liệu đã có không bị xóa. |
 | Không thấy tin cũ | Đổi khoảng thời gian sang **Tất cả**; danh sách vẫn giới hạn 500 tin gần nhất. |

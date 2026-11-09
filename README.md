@@ -14,13 +14,15 @@ Trợ lý biên tập tiếng Việt cho hướng nội dung **“Công nghệ m
 
 ## Mở ứng dụng
 
-1. Nhấp đúp **`MO-BAN-TIN.cmd`** trong thư mục này.
-2. Giữ cửa sổ chạy mở. Trình duyệt sẽ mở tại [Bàn tin trên máy này](http://127.0.0.1:8877/).
-3. Nếu trang đang được mở sẵn, chỉ cần quay lại trang và tải lại.
+**Nhánh 0.4 đang phát triển:** để thử, nhấp đúp **`MO-BAN-MINH-HOA.cmd`**; bản này dùng cổng 8878 và thư mục dữ liệu demo riêng. Không đăng nội dung minh họa. Bản demo có thể giữ lại dữ liệu thử từ lần mở trước.
+
+`MO-BAN-TIN.cmd` mở kho mặc định của người dùng tại cổng 8877. Khi khởi động mã trong nhánh này, ứng dụng mở kho đó và có thể tự nâng cấp schema; **chưa chạy lệnh này với kho vận hành khi chưa quyết định triển khai**. Việc xác nhận không có SQLite cũ chỉ áp dụng tại thời điểm đã trao đổi; nếu sau này có dữ liệu cần giữ, hãy lập phương án sao lưu và thử trên bản sao trước.
+
+Giữ cửa sổ chạy mở khi sử dụng. Nếu một trang đã mở sẵn, kiểm tra nhãn MINH HỌA, cổng, thư mục dữ liệu và cửa sổ tiến trình trước khi tiếp tục: tải lại trang chỉ kết nối đến server đang chạy, không thay mã của server đó. Khi cần chạy phiên bản khác, lưu phần đang sửa và dừng đúng tiến trình cũ trước khi mở lại phiên bản cần dùng.
 
 Máy hiện có Python 3.13.13, đã được dùng để kiểm thử. Phần RSS/API và biên tập yêu cầu Python 3.11 trở lên, không cần thư viện ngoài. Phần web dùng môi trường công cụ riêng; không cần Node.js, Docker hoặc WSL để vận hành.
 
-Muốn tập thao tác với dữ liệu giả: nhấp đúp **`MO-BAN-MINH-HOA.cmd`**. Bản này có nhãn MINH HỌA, cổng 8878 và thư mục dữ liệu riêng; không tải RSS thật. Không đăng các bài ví dụ.
+Bản minh họa không tải RSS thật.
 
 ## Bắt đầu với bản tin nhiều mục
 
