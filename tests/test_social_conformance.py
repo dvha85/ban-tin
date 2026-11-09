@@ -151,6 +151,23 @@ class TwitterTextConformance(unittest.TestCase):
         self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),
                          'd876ee249aa28eaa76cfa6dfaa702847a8d13b062aa488d465d0395ee8137ed9')
 
+    def test_x_counts_each_fully_qualified_unicode_151_emoji(self):
+        path = Path(__file__).parents[1] / 'newsroom' / 'data' / 'emoji-test-15.1.txt'
+        cases = []
+        for line in path.read_text(encoding='utf-8').splitlines():
+            data = line.partition('#')[0].strip()
+            if not data or ';' not in data:
+                continue
+            codepoints, status = (part.strip() for part in data.split(';', 1))
+            if status == 'fully-qualified':
+                cases.append(''.join(chr(int(value, 16)) for value in codepoints.split()))
+        self.assertEqual(len(cases), 3773)
+        for emoji in cases:
+            with self.subTest(emoji=emoji):
+                self.assertEqual(count_text('x', emoji), (2, True))
+                self.assertEqual(count_text('x', 'a' + emoji + 'b'), (4, True))
+                self.assertEqual(count_text('x', emoji + emoji), (4, True))
+
 
 if __name__ == '__main__':
     unittest.main()

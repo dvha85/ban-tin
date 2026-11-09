@@ -1,5 +1,10 @@
 # Bằng chứng kiểm thử — cập nhật 09/11/2026
 
+## BASE-03 / TEXT-03: tập emoji Unicode 15.1 phía X — 09/11/2026
+
+- `test_x_counts_each_fully_qualified_unicode_151_emoji` đọc đủ 3.773 chuỗi `fully-qualified` trong tệp emoji 15.1 đã ghim và kiểm tra bộ đếm X cho mỗi chuỗi đứng riêng, đứng giữa hai chữ ASCII và lặp hai lần. Bộ `tests.test_social_conformance` đạt 12/12 test, gồm kiểm tra hash tệp nguồn.
+- Đây là đối chiếu chính sách và dữ liệu đã chọn trong ứng dụng, không phải so sánh 3.773 chuỗi với composer X; không bao phủ emoji mới hơn, mọi dạng ghép, URL hay khác biệt của nền tảng. BASE-03 vẫn mở. Lần truy cập tài liệu `developers.facebook.com/docs/threads/posts` trả HTTP 429 nên không dùng nội dung của trang đó làm bằng chứng về cách đếm Threads.
+
 ## BASE-02 / APR-02: nhận bản tin thay đổi qua HTTP — 09/11/2026
 
 - Với kho giả có mục đã kiểm chứng, test `test_variant_adoption_requires_separate_checklist_over_http` kiểm tra lưu khi thiếu xác nhận nhận bản tin trả 409 và không đổi phiên bản; gửi xác nhận cùng checklist thì lưu được nhưng checklist vẫn bị xóa. Duyệt trước khi xác nhận lại bị từ chối vì thiếu năm mục kiểm tra; sau lần lưu checklist riêng, duyệt và xuất thành công.
